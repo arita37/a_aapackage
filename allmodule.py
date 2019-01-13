@@ -22,7 +22,7 @@ from matplotlib.collections import LineCollection
 import util
 # import datanalysis as da, fast
 
-#####################################################################################
+#############################################################################################
 
 
 #if sys.version.find('Continuum') > 0 and  sys.platform.find('linux') > -1 :  #Import the Packages for Ananconda

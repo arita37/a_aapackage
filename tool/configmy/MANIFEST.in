@@ -1,0 +1,9 @@
+include LICENSE.MIT
+include MANIFEST.in
+include README.*
+include docs/*
+include docs/api/*.*
+include pkg/*
+include setup.py
+recursive-include anyconfig *.py
+recursive-include tests *.py *.yml *.txt

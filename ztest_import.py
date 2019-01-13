@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-from __future__ import division; from __future__ import print_function
+from __future__ import division
+from __future__ import print_function
 
 
 
 ############################################################################################
 print("Start")
 
-import os, sys; from attrdict import AttrDict as dict2
-
-import numpy as np, pandas as pd, scipy as sci
-
+import os, sys
+from attrdict import AttrDict as dict2
 
 import numpy as np,  pandas as pd, copy, scipy as sci, math as mth
-import requests,  re; from bs4 import BeautifulSoup
+import requests,  re
+from bs4 import BeautifulSoup
 from collections import OrderedDict
 
 from tabulate import tabulate
@@ -22,18 +22,36 @@ from datetime import datetime; from datetime import timedelta; from calendar imp
 
 import tensorflow as tf
 import arrow
-from tabulate import tabulate
 
 
+############################################################################################
+import allmodule
+import datanalysis
+import fast
+import function_custom
+import globalvar
+
+import multiprocessfunc
+import portfolio
+import portfolio_withdate
+import rstatpy
 
 
-
-
-import util_min
+import util
 import util_ml 
+import util_aws
+import util_release
+import util_search
+import util_spark
+import util_sql
+import util_web
 
 
 
+
+
+
+############################################################################################
 try :
   import matplotlib.pyplot as plt
   from matplotlib.collections import LineCollection

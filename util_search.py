@@ -38,6 +38,9 @@ __version__= "1.0.0"
 __file__= "util.py"
 
 
+config - { "login" : 78  ,  "password" : 78}
+
+
 
 ####################################################################################################
 from selenium import webdriver
@@ -59,9 +62,9 @@ driver.get('https://github.com/login')
 username = driver.find_element_by_id("login_field")
 password = driver.find_element_by_id("password")
 username.clear()
-username.send_keys("noelkev0@gmail.com")
+username.send_keys(config.login)
 password.clear()
-password.send_keys("tokyoparis237.")
+password.send_keys(config.password)
 driver.find_element_by_name("commit").click()
 
 
@@ -111,9 +114,9 @@ username = driver.find_element_by_id("login_field")
 password = driver.find_element_by_id("password")
 
 username.clear()
-username.send_keys("noelkev0@gmail.com")
+username.send_keys(config.login)
 password.clear()
-password.send_keys("tokyoparis237.")
+password.send_keys(config.password)
 driver.find_element_by_name("commit").click()
 
 
@@ -141,8 +144,8 @@ import pandas as pd
 import wget
 
 
-LOGIN= "noelkev0@gmail.com"
-PASSWORD= "tokyoparis237."
+LOGIN= ""
+PASSWORD= ""
 
 
 import sys

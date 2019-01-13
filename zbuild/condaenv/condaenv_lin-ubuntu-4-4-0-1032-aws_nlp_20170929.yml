@@ -1,0 +1,54 @@
+name: nlp
+channels:
+- anaconda
+- conda-forge
+- defaults
+dependencies:
+- boto=2.48.0=py36_0
+- bz2file=0.98=py36_0
+- libgfortran=3.0.0=1
+- mkl=2017.0.3=0
+- requests=2.14.2=py36_0
+- six=1.10.0=py36_0
+- smart_open=1.5.3=py36_0
+- ca-certificates=2017.7.27.1=0
+- certifi=2017.7.27.1=py36_0
+- cymem=1.31.2=py36_0
+- cytoolz=0.8.2=py36_0
+- dill=0.2.6=py36_0
+- ftfy=4.4.2=py36_0
+- gensim=2.3.0=py36_0
+- html5lib=0.999999999=py36_0
+- murmurhash=0.26.4=py36_0
+- ncurses=5.9=10
+- openssl=1.0.2l=0
+- pip=9.0.1=py36_0
+- preshed=1.0.0=py36_0
+- python=3.6.2=0
+- readline=6.2=0
+- regex=2017.09.23=py36_0
+- setuptools=36.3.0=py36_0
+- spacy=1.9.0=np112py36_1
+- sqlite=3.13.0=1
+- termcolor=1.1.0=py36_1
+- thinc=6.5.2=np112py36_0
+- tk=8.5.19=2
+- toolz=0.8.2=py36_0
+- tqdm=4.15.0=py36_0
+- wcwidth=0.1.7=py36_0
+- webencodings=0.5=py36_0
+- wheel=0.29.0=py36_0
+- wrapt=1.10.11=py36_0
+- xz=5.2.3=0
+- zlib=1.2.11=0
+- libgcc=5.2.0=0
+- numpy=1.12.1=py36_0
+- plac=0.9.6=py36_0
+- scipy=0.19.1=np112py36_0
+- ujson=1.35=py36_0
+- pip:
+  - arrow==0.10.0
+  - attrdict==2.0.0
+  - configmy==0.14.13
+  - smart-open==1.5.3
+prefix: /home/ubuntu/anaconda3/envs/nlp

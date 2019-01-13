@@ -1,0 +1,301 @@
+[2017-10-29 00:41:23] --Starting up--
+[2017-10-29 00:41:23] found task folder: task1_finished
+[2017-10-29 00:41:23] created the folder structure for: testing/task1_finished
+[2017-10-29 00:41:23] found script: test01.py
+[2017-10-29 00:41:23] found task folder: task2_finished
+[2017-10-29 00:41:23] created the folder structure for: testing/task2_finished
+[2017-10-29 00:41:23] found script: test02.py
+[2017-10-29 00:41:23] Scanning header for testing/task1_finished/test01.py
+[2017-10-29 00:41:23] script test01.py has been processed, and the header has been executed
+[2017-10-29 00:41:23] Scanning header for testing/task2_finished/test02.py
+[2017-10-29 00:41:23] script test02.py has been processed, and the header has been executed
+[2017-10-29 00:41:23] running script: testing/task1_finished/test01.py
+[2017-10-29 00:41:23] [*] testing/task1_finished/test01.py's pid is : 5800
+[2017-10-29 00:41:23] running script: testing/task2_finished/test02.py
+[2017-10-29 00:41:23] [*] testing/task2_finished/test02.py's pid is : 6948
+[2017-10-29 00:41:23] --going into monitor loop--
+[2017-10-29 00:41:23] task task1_finished is finished
+[2017-10-29 00:41:23] task task2_finished is finished
+[2017-10-29 00:41:23] All task are finished!
+[2017-10-29 11:16:09] --Starting up--
+[2017-10-29 11:16:09] found task folder: task1_finished
+[2017-10-29 11:16:09] created the folder structure for: testing/task1_finished
+[2017-10-29 11:16:09] found script: test01.py
+[2017-10-29 11:16:09] found task folder: task2_finished
+[2017-10-29 11:16:09] created the folder structure for: testing/task2_finished
+[2017-10-29 11:16:09] found script: test02.py
+[2017-10-29 11:16:09] Scanning header for testing/task1_finished/test01.py
+[2017-10-29 11:16:09] script test01.py has been processed, and the header has been executed
+[2017-10-29 11:16:09] Scanning header for testing/task2_finished/test02.py
+[2017-10-29 11:16:09] script test02.py has been processed, and the header has been executed
+[2017-10-29 11:16:09] running script: testing/task1_finished/test01.py
+[2017-10-29 11:16:09] [*] testing/task1_finished/test01.py's pid is : 5816
+[2017-10-29 11:16:09] running script: testing/task2_finished/test02.py
+[2017-10-29 11:16:09] [*] testing/task2_finished/test02.py's pid is : 3664
+[2017-10-29 11:16:09] --going into monitor loop--
+[2017-10-29 11:16:09] task task1_finished is finished
+[2017-10-29 11:16:09] task task2_finished is finished
+[2017-10-29 11:16:09] All task are finished!
+[2017-10-29 11:23:42] --Starting up--
+[2017-10-29 11:23:42] found task folder: task1_finished
+[2017-10-29 11:23:42] created the folder structure for: testing/task1_finished
+[2017-10-29 11:23:42] found script: test01.py
+[2017-10-29 11:23:42] found task folder: task2_finished
+[2017-10-29 11:23:42] created the folder structure for: testing/task2_finished
+[2017-10-29 11:23:42] found script: test02.py
+[2017-10-29 11:23:42] Scanning header for testing/task1_finished/test01.py
+[2017-10-29 11:23:42] script test01.py has been processed, and the header has been executed
+[2017-10-29 11:23:42] Scanning header for testing/task2_finished/test02.py
+[2017-10-29 11:23:42] script test02.py has been processed, and the header has been executed
+[2017-10-29 11:23:42] running script: testing/task1_finished/test01.py
+[2017-10-29 11:23:42] [*] testing/task1_finished/test01.py's pid is : 6988
+[2017-10-29 11:23:42] running script: testing/task2_finished/test02.py
+[2017-10-29 11:23:42] [*] testing/task2_finished/test02.py's pid is : 6048
+[2017-10-29 11:23:42] --going into monitor loop--
+[2017-10-29 11:23:42] task task1_finished is finished
+[2017-10-29 11:23:42] task task2_finished is finished
+[2017-10-29 11:23:42] All task are finished!
+[2017-10-29 11:25:43] --Starting up--
+[2017-10-29 11:25:43] found task folder: task1_finished
+[2017-10-29 11:25:43] created the folder structure for: testing/task1_finished
+[2017-10-29 11:25:43] found script: test01.py
+[2017-10-29 11:25:43] found task folder: task2_finished
+[2017-10-29 11:25:43] created the folder structure for: testing/task2_finished
+[2017-10-29 11:25:43] found script: test02.py
+[2017-10-29 11:25:43] Scanning header for testing/task1_finished/test01.py
+[2017-10-29 11:25:43] script test01.py has been processed, and the header has been executed
+[2017-10-29 11:25:43] Scanning header for testing/task2_finished/test02.py
+[2017-10-29 11:25:43] script test02.py has been processed, and the header has been executed
+[2017-10-29 11:25:43] running script: testing/task1_finished/test01.py
+[2017-10-29 11:25:43] [*] testing/task1_finished/test01.py's pid is : 5268
+[2017-10-29 11:25:43] running script: testing/task2_finished/test02.py
+[2017-10-29 11:25:43] [*] testing/task2_finished/test02.py's pid is : 7788
+[2017-10-29 11:25:43] --going into monitor loop--
+[2017-10-29 11:25:43] task task1_finished is finished
+[2017-10-29 11:25:43] task task2_finished is finished
+[2017-10-29 11:25:43] All task are finished!
+[2017-10-29 11:33:36] --Starting up--
+[2017-10-29 11:33:36] found task folder: task1_finished
+[2017-10-29 11:33:36] created the folder structure for: testing/task1_finished
+[2017-10-29 11:33:36] found script: test01.py
+[2017-10-29 11:33:36] found task folder: task2_finished
+[2017-10-29 11:33:36] created the folder structure for: testing/task2_finished
+[2017-10-29 11:33:36] found script: test02.py
+[2017-10-29 11:33:36] Scanning header for testing/task1_finished/test01.py
+[2017-10-29 11:33:36] script test01.py has been processed, and the header has been executed
+[2017-10-29 11:33:36] Scanning header for testing/task2_finished/test02.py
+[2017-10-29 11:33:36] script test02.py has been processed, and the header has been executed
+[2017-10-29 11:33:36] running script: testing/task1_finished/test01.py
+[2017-10-29 11:33:36] [*] testing/task1_finished/test01.py's pid is : 7288
+[2017-10-29 11:33:36] running script: testing/task2_finished/test02.py
+[2017-10-29 11:33:36] [*] testing/task2_finished/test02.py's pid is : 5324
+[2017-10-29 11:33:36] --going into monitor loop--
+[2017-10-29 11:33:36] task task1_finished is finished
+[2017-10-29 11:33:36] task task2_finished is finished
+[2017-10-29 11:33:36] All task are finished!
+[2017-10-29 11:53:16] --Starting up--
+[2017-10-29 11:53:16] found task folder: task1_finished
+[2017-10-29 11:53:16] created the folder structure for: testing/task1_finished
+[2017-10-29 11:53:16] found script: test01.py
+[2017-10-29 11:53:16] found task folder: task2_finished
+[2017-10-29 11:53:16] created the folder structure for: testing/task2_finished
+[2017-10-29 11:53:16] found script: test02.py
+[2017-10-29 11:54:04] --Starting up--
+[2017-10-29 11:54:04] found task folder: task1_finished
+[2017-10-29 11:54:04] created the folder structure for: testing/task1_finished
+[2017-10-29 11:54:04] found script: test01.py
+[2017-10-29 11:54:04] found task folder: task2_finished
+[2017-10-29 11:54:04] created the folder structure for: testing/task2_finished
+[2017-10-29 11:54:04] found script: test02.py
+[2017-10-29 11:54:49] --Starting up--
+[2017-10-29 11:54:49] found task folder: task1_finished
+[2017-10-29 11:54:49] created the folder structure for: testing/task1_finished
+[2017-10-29 11:54:49] found script: test01.py
+[2017-10-29 11:54:49] found task folder: task2_finished
+[2017-10-29 11:54:49] created the folder structure for: testing/task2_finished
+[2017-10-29 11:54:49] found script: test02.py
+[2017-10-29 11:54:49] running script: testing/task1_finished/test01.py
+[2017-10-29 11:54:49] [*] testing/task1_finished/test01.py's pid is : 7620
+[2017-10-29 11:54:49] running script: testing/task2_finished/test02.py
+[2017-10-29 11:54:49] [*] testing/task2_finished/test02.py's pid is : 7196
+[2017-10-29 11:54:49] --going into monitor loop--
+[2017-10-29 11:54:49] task task1_finished is finished
+[2017-10-29 11:54:49] task task2_finished is finished
+[2017-10-29 11:54:49] All task are finished!
+[2017-10-29 11:55:30] --Starting up--
+[2017-10-29 11:55:30] found task folder: task1_finished
+[2017-10-29 11:55:30] created the folder structure for: testing/task1_finished
+[2017-10-29 11:55:30] found script: test01.py
+[2017-10-29 11:55:30] found task folder: task2_finished
+[2017-10-29 11:55:30] created the folder structure for: testing/task2_finished
+[2017-10-29 11:55:30] found script: test02.py
+[2017-10-29 11:55:30] running script: testing/task1_finished/test01.py
+[2017-10-29 11:55:30] [*] testing/task1_finished/test01.py's pid is : 5148
+[2017-10-29 11:55:30] running script: testing/task2_finished/test02.py
+[2017-10-29 11:55:30] [*] testing/task2_finished/test02.py's pid is : 7188
+[2017-10-29 11:55:30] --going into monitor loop--
+[2017-10-29 11:55:30] task task1_finished is finished
+[2017-10-29 11:55:30] task task2_finished is finished
+[2017-10-29 11:55:30] All task are finished!
+[2017-10-29 17:47:05] --Starting up--
+[2017-10-29 17:47:05] found task folder: task1_finished
+[2017-10-29 17:47:05] created the folder structure for: testing/task1_finished
+[2017-10-29 17:47:05] found script: test01.py
+[2017-10-29 17:47:05] found task folder: task2_finished
+[2017-10-29 17:47:05] created the folder structure for: testing/task2_finished
+[2017-10-29 17:47:05] found script: test02.py
+[2017-10-29 17:47:05] running script: testing/task1_finished/test01.py
+[2017-10-29 17:47:05] [*] testing/task1_finished/test01.py's pid is : 7700
+[2017-10-29 17:47:05] running script: testing/task2_finished/test02.py
+[2017-10-29 17:47:05] [*] testing/task2_finished/test02.py's pid is : 4556
+[2017-10-29 17:47:05] --going into monitor loop--
+[2017-10-29 17:47:05] task task1_finished is finished
+[2017-10-29 17:47:05] task task2_finished is finished
+[2017-10-29 17:47:05] All task are finished!
+[2017-11-05 20:41:06] --Starting up--
+[2017-11-05 20:41:06] found task folder: task1_finished
+[2017-11-05 20:41:06] created the folder structure for: testing\task1_finished
+[2017-11-05 20:41:06] found script: test01.py
+[2017-11-05 20:41:06] found task folder: task2_finished
+[2017-11-05 20:41:06] created the folder structure for: testing\task2_finished
+[2017-11-05 20:41:06] found script: test02.py
+[2017-11-05 20:41:06] found task folder: task3_write_a_file
+[2017-11-05 20:41:06] created the folder structure for: testing\task3_write_a_file
+[2017-11-05 20:41:06] creating tmpfolder folder
+[2017-11-05 20:41:06] creating output folder
+[2017-11-05 20:41:06] creating input folder
+[2017-11-05 20:41:06] found script: test03.py
+[2017-11-05 20:41:06] found task folder: task4_stdout
+[2017-11-05 20:41:06] created the folder structure for: testing\task4_stdout
+[2017-11-05 20:41:06] creating tmpfolder folder
+[2017-11-05 20:41:06] creating output folder
+[2017-11-05 20:41:06] creating input folder
+[2017-11-05 20:41:06] found script: test04.py
+[2017-11-05 20:41:06] found task folder: task5_write_stderr
+[2017-11-05 20:41:06] created the folder structure for: testing\task5_write_stderr
+[2017-11-05 20:41:06] creating tmpfolder folder
+[2017-11-05 20:41:06] creating output folder
+[2017-11-05 20:41:06] creating input folder
+[2017-11-05 20:41:06] found script: test05.py
+[2017-11-05 20:41:06] running script: testing\task5_write_stderr\test05.py
+[2017-11-05 20:41:06] name 'LPDWORD' is not defined
+[2017-11-05 20:41:06] [*] testing\task5_write_stderr\test05.py failed
+[2017-11-05 20:41:06] running script: testing\task3_write_a_file\test03.py
+[2017-11-05 20:41:06] name 'LPDWORD' is not defined
+[2017-11-05 20:41:06] [*] testing\task3_write_a_file\test03.py failed
+[2017-11-05 20:41:06] running script: testing\task2_finished\test02.py
+[2017-11-05 20:41:06] name 'LPDWORD' is not defined
+[2017-11-05 20:41:06] [*] testing\task2_finished\test02.py failed
+[2017-11-05 20:41:06] running script: testing\task4_stdout\test04.py
+[2017-11-05 20:41:06] name 'LPDWORD' is not defined
+[2017-11-05 20:41:06] [*] testing\task4_stdout\test04.py failed
+[2017-11-05 20:41:06] running script: testing\task1_finished\test01.py
+[2017-11-05 20:41:06] name 'LPDWORD' is not defined
+[2017-11-05 20:41:06] [*] testing\task1_finished\test01.py failed
+[2017-11-05 20:41:06] --going into monitor loop--
+[2017-11-05 20:41:06] task task5_write_stderr is finished
+[2017-11-05 20:41:06] renamed testing\task5_write_stderr to testing\task5_write_stderr_finished\
+[2017-11-05 20:41:06] task task3_write_a_file is finished
+[2017-11-05 20:41:06] renamed testing\task3_write_a_file to testing\task3_write_a_file_finished\
+[2018-01-02 23:34:35] --Starting up--
+[2018-01-02 23:34:35] found task folder: task1_finished
+[2018-01-02 23:34:35] created the folder structure for: testing\task1_finished
+[2018-01-02 23:34:35] found script: test01.py
+[2018-01-02 23:34:35] found task folder: task2_finished
+[2018-01-02 23:34:35] created the folder structure for: testing\task2_finished
+[2018-01-02 23:34:35] found script: test02.py
+[2018-01-02 23:34:35] found task folder: task3_write_a_file
+[2018-01-02 23:34:35] created the folder structure for: testing\task3_write_a_file
+[2018-01-02 23:34:35] found script: test03.py
+[2018-01-02 23:34:35] found task folder: task4_stdout
+[2018-01-02 23:34:35] created the folder structure for: testing\task4_stdout
+[2018-01-02 23:34:35] found script: test04.py
+[2018-01-02 23:34:35] found task folder: task5_write_stderr_finished
+[2018-01-02 23:34:35] created the folder structure for: testing\task5_write_stderr_finished
+[2018-01-02 23:34:35] found script: test05.py
+[2018-01-02 23:34:35] running script: testing\task5_write_stderr_finished\test05.py
+[2018-01-02 23:34:35] name 'LPDWORD' is not defined
+[2018-01-02 23:34:35] [*] testing\task5_write_stderr_finished\test05.py failed
+[2018-01-02 23:34:35] running script: testing\task2_finished\test02.py
+[2018-01-02 23:34:35] name 'LPDWORD' is not defined
+[2018-01-02 23:34:35] [*] testing\task2_finished\test02.py failed
+[2018-01-02 23:34:35] running script: testing\task3_write_a_file\test03.py
+[2018-01-02 23:34:35] name 'LPDWORD' is not defined
+[2018-01-02 23:34:35] [*] testing\task3_write_a_file\test03.py failed
+[2018-01-02 23:34:35] running script: testing\task1_finished\test01.py
+[2018-01-02 23:34:35] name 'LPDWORD' is not defined
+[2018-01-02 23:34:35] [*] testing\task1_finished\test01.py failed
+[2018-01-02 23:34:35] running script: testing\task4_stdout\test04.py
+[2018-01-02 23:34:35] name 'LPDWORD' is not defined
+[2018-01-02 23:34:35] [*] testing\task4_stdout\test04.py failed
+[2018-01-02 23:34:35] --going into monitor loop--
+[2018-01-02 23:34:35] task task3_write_a_file is finished
+[2018-01-02 23:34:35] renamed testing\task3_write_a_file to testing\task3_write_a_file_finished\
+[2018-01-02 23:38:00] --Starting up--
+[2018-01-02 23:38:00] found task folder: task1
+[2018-01-02 23:38:00] created the folder structure for: testing\task1
+[2018-01-02 23:38:00] found script: test01.py
+[2018-01-02 23:38:00] found task folder: task2
+[2018-01-02 23:38:00] created the folder structure for: testing\task2
+[2018-01-02 23:38:00] found script: test02.py
+[2018-01-02 23:38:00] found task folder: task3_write_a_file
+[2018-01-02 23:38:00] created the folder structure for: testing\task3_write_a_file
+[2018-01-02 23:38:00] found script: test03.py
+[2018-01-02 23:38:00] found task folder: task4_stdout
+[2018-01-02 23:38:00] created the folder structure for: testing\task4_stdout
+[2018-01-02 23:38:00] found script: test04.py
+[2018-01-02 23:38:00] found task folder: task5_write_stderr
+[2018-01-02 23:38:00] created the folder structure for: testing\task5_write_stderr
+[2018-01-02 23:38:00] found script: test05.py
+[2018-01-02 23:38:00] running script: testing\task3_write_a_file\test03.py
+[2018-01-02 23:38:00] name 'LPDWORD' is not defined
+[2018-01-02 23:38:00] [*] testing\task3_write_a_file\test03.py failed
+[2018-01-02 23:38:00] running script: testing\task5_write_stderr\test05.py
+[2018-01-02 23:38:00] name 'LPDWORD' is not defined
+[2018-01-02 23:38:00] [*] testing\task5_write_stderr\test05.py failed
+[2018-01-02 23:38:00] running script: testing\task2\test02.py
+[2018-01-02 23:38:00] name 'LPDWORD' is not defined
+[2018-01-02 23:38:00] [*] testing\task2\test02.py failed
+[2018-01-02 23:38:00] running script: testing\task4_stdout\test04.py
+[2018-01-02 23:38:00] name 'LPDWORD' is not defined
+[2018-01-02 23:38:00] [*] testing\task4_stdout\test04.py failed
+[2018-01-02 23:38:00] running script: testing\task1\test01.py
+[2018-01-02 23:38:00] name 'LPDWORD' is not defined
+[2018-01-02 23:38:00] [*] testing\task1\test01.py failed
+[2018-01-02 23:38:00] --going into monitor loop--
+[2018-01-02 23:38:00] task task3_write_a_file is finished
+[2018-01-02 23:38:00] renamed testing\task3_write_a_file to testing\task3_write_a_file_finished\
+[2018-01-08 22:20:25] --Starting up--
+[2018-01-08 22:20:25] found task folder: task1
+[2018-01-08 22:20:25] created the folder structure for: testing\task1
+[2018-01-08 22:20:25] found script: test01.py
+[2018-01-08 22:20:25] found task folder: task2
+[2018-01-08 22:20:25] created the folder structure for: testing\task2
+[2018-01-08 22:20:25] found script: test02.py
+[2018-01-08 22:20:25] found task folder: task3_write_a_file
+[2018-01-08 22:20:25] created the folder structure for: testing\task3_write_a_file
+[2018-01-08 22:20:25] found script: test03.py
+[2018-01-08 22:20:25] found task folder: task4_stdout
+[2018-01-08 22:20:25] created the folder structure for: testing\task4_stdout
+[2018-01-08 22:20:25] found script: test04.py
+[2018-01-08 22:20:25] found task folder: task5_write_stderr
+[2018-01-08 22:20:25] created the folder structure for: testing\task5_write_stderr
+[2018-01-08 22:20:25] found script: test05.py
+[2018-01-08 22:20:25] running script: testing\task4_stdout\test04.py
+[2018-01-08 22:20:25] name 'LPDWORD' is not defined
+[2018-01-08 22:20:25] [*] testing\task4_stdout\test04.py failed
+[2018-01-08 22:20:25] running script: testing\task1\test01.py
+[2018-01-08 22:20:25] name 'LPDWORD' is not defined
+[2018-01-08 22:20:25] [*] testing\task1\test01.py failed
+[2018-01-08 22:20:25] running script: testing\task5_write_stderr\test05.py
+[2018-01-08 22:20:25] name 'LPDWORD' is not defined
+[2018-01-08 22:20:25] [*] testing\task5_write_stderr\test05.py failed
+[2018-01-08 22:20:25] running script: testing\task2\test02.py
+[2018-01-08 22:20:25] name 'LPDWORD' is not defined
+[2018-01-08 22:20:25] [*] testing\task2\test02.py failed
+[2018-01-08 22:20:25] running script: testing\task3_write_a_file\test03.py
+[2018-01-08 22:20:25] name 'LPDWORD' is not defined
+[2018-01-08 22:20:25] [*] testing\task3_write_a_file\test03.py failed
+[2018-01-08 22:20:25] --going into monitor loop--
+[2018-01-08 22:20:25] task task4_stdout is finished
+[2018-01-08 22:20:25] renamed testing\task4_stdout to testing\task4_stdout_finished\

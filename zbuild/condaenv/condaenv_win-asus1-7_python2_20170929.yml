@@ -1,0 +1,15 @@
+name: python2
+channels:
+- conda-forge
+- anaconda
+- r
+- defaults
+dependencies:
+- vs2008_runtime=9.00.30729.5054=0
+- certifi=2017.7.27.1=py27_0
+- pip=9.0.1=py27_0
+- python=2.7.13=1
+- setuptools=36.3.0=py27_0
+- wheel=0.30.0=py_1
+- wincertstore=0.2=py27_0
+prefix: D:\_devs\Python01\Anaconda27\envs\python2
