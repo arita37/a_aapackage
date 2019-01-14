@@ -10,22 +10,8 @@ standard_library.install_aliases()
 import os, sys
 # DIRCWD=   'G:/_devs/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/project27/' if os.environ['HOME'].find('ubuntu')>-1 else '/home/ubuntu/project27'
 # EC2CWD=   '/home/ubuntu/notebook/'
-
-
 #import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
 
-DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-__path__= DIRCWD +'/aapackage/'
-
-
-
-
-###################################################################################################
-if sys.platform.find('win') > -1 :
-   pass
-
-import util
 from time import sleep
 import boto
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
@@ -33,6 +19,23 @@ from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 ##### Attribut dict
 from attrdict import AttrDict as dict2
 from pprint import pprint
+
+
+DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+__path__= DIRCWD +'/aapackage/'
+
+
+import util
+
+
+
+###################################################################################################
+if sys.platform.find('win') > -1 :
+   pass
+
+
+
 ###################################################################################################
 """
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
