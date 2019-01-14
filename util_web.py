@@ -22,8 +22,10 @@ import os, sys; from attrdict import AttrDict as dict2
 #os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 #f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()
 
-import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+
+DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+
 
 
 

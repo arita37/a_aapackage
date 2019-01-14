@@ -5,9 +5,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
 from timeit import default_timer as timer
 
-from . import global01 as global01 #as global varaibles   global01.varname
+import globalvar #as global varaibles   global01.varname
 
-import derivatives as dx
+# import derivatives as dx
 
 
 

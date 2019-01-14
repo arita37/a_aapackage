@@ -11,18 +11,19 @@ from past.builtins import basestring
 from past.utils import old_div
 from builtins import object
 ##############################################################################################
-
 import os, sys
-import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+import datetime, time, arrow,  shutil
+import matplotlib.pyplot as plt
+import numexpr as ne, numpy as np, pandas as pd, scipy as sci
+
+
+
+DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 
 # if sys.platform.find('win') > -1 :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
-
-import datetime, time, arrow,  shutil
-import matplotlib.pyplot as plt
-import numexpr as ne, numpy as np, pandas as pd, scipy as sci
 
 import util as util
 #############################################################################################

@@ -39,9 +39,9 @@ from sklearn.decomposition import pca
 # os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
-import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+#import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+DIRCWD = "./"
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-
 
 
 import util, datanalysis as da

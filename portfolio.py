@@ -37,8 +37,9 @@ __path__= DIRCWD +'/aapackage/'
 ############## Data List #######################################################################
 #runfile('D:/_devs/Python01/aapackage/alldata.py', wdir='D:/_devs/Python01/project27')
 #  Get the list of Tickers
-exec(compile(open(DIRCWD+'/aapackage/alldata.py').read(), DIRCWD+'/aapackage/alldata.py', 'exec'))
+# exec(compile(open(DIRCWD+'/aapackage/fin/alldata.py').read(), DIRCWD+'/aapackage/fin/alldata.py', 'exec'))
 
+from fin.alldata import *
 
 def data_jpsector():
  #jpsector= pd.read_csv('E:/_data/stock/histo/jp_sector.csv')

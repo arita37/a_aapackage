@@ -12,7 +12,9 @@ import os, sys
 # EC2CWD=   '/home/ubuntu/notebook/'
 
 
-import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+#import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+
+DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 __path__= DIRCWD +'/aapackage/'
 
@@ -32,14 +34,15 @@ from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from attrdict import AttrDict as dict2
 from pprint import pprint
 ###################################################################################################
-'''
+"""
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
 
 #Amazon keys
 In C / .aws/.credentials
-os.ENVIRON["BOTO_CONFIG"] =  C:\Users\asus1\.aws1.credentials
+os.ENVIRON["BOTO_CONFIG"] =  C:/Users/asus1\.aws1.credentials
 
-'''
+"""
+
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
 #AWS_SECRET,AWS_KEY= boto.config
 

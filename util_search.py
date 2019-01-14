@@ -13,9 +13,11 @@ if sys.platform.find('win') > -1 :
    # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
 #####################################################################################################
-import os, sys
-CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }
+#CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
+#DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }
+DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+
 try :
   # DIRCWD= os.environ["DIRCWD"];
   from attrdict import AttrDict as dict2
@@ -85,7 +87,7 @@ html = driver.page_source
 
 
 from config import Config; cfg = Config(file('D:/_devs/keypair/config.py'))
-print cfg.github_login
+print(cfg.github_login)
 
 cfg.app1.name
 
