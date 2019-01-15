@@ -65,12 +65,12 @@ matrix:
        env: DISTRIB="scipy-dev" CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[scipy-dev\]/
 
-install: source build_tools/travis/install.sh
+install: source zbuild/travis/install.sh
 script: 
-  - bash build_tools/travis/test_script.sh
-  - bash build_tools/travis/test_docs.sh
-  - bash build_tools/travis/test_pytest_soft_dependency.sh
-after_success: source build_tools/travis/after_success.sh
+  - bash zbuild/travis/test_script.sh
+  - bash zbuild/travis/test_docs.sh
+  - bash zbuild/travis/test_pytest_soft_dependency.sh
+after_success: source zbuild/travis/after_success.sh
 notifications:
   webhooks:
     urls:
