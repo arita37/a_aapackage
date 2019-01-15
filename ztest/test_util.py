@@ -6,7 +6,8 @@
 
 #####################################################################################################
 import os, sys
-import numpy as np
+import numpy as np, pandas as pd, scipy as sci
+import arrow
 
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,8 +36,8 @@ if __name__ == '__main__' and arg.do == "test":
   import util
   UNIQUE_ID= util.py_log_write( DIRCWD + '/aapackage/zlog/ztest_log_all.txt', "util")
 
+
   ###########################################################################################
-  import numpy as np, pandas as pd, scipy as sci
   import util; print(util); print("")
   #util.a_info_system()
   util.a_isanaconda()
