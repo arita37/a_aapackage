@@ -48,61 +48,39 @@ make_conda() {
     export PATH=$MINICONDA_PATH/bin:$PATH
     conda update --yes conda
 
-    conda create -n testenv --yes $TO_INSTALL
+    conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
     source activate testenv
+    pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
+    export BOTO_CONFIG=/dev/null
 }
 
-if [[ "$DISTRIB" == "conda" ]]; then
-    TO_INSTALL="python=$PYTHON_VERSION pip pytest pytest-cov \
-                numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION \
-                cython=$CYTHON_VERSION"
+TO_INSTALL="python=$PYTHON_VERSION pip pytest pytest-cov \
+            numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION \
+            cython=$CYTHON_VERSION"
 
-    if [[ "$INSTALL_MKL" == "true" ]]; then
-        TO_INSTALL="$TO_INSTALL mkl"
-    else
-        TO_INSTALL="$TO_INSTALL nomkl"
-    fi
-
-    if [[ -n "$PANDAS_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pandas=$PANDAS_VERSION"
-    fi
-
-    if [[ -n "$PYAMG_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pyamg=$PYAMG_VERSION"
-    fi
-
-    if [[ -n "$PILLOW_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pillow=$PILLOW_VERSION"
-    fi
-
-    if [[ -n "$JOBLIB_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL joblib=$JOBLIB_VERSION"
-    fi
-	  make_conda $TO_INSTALL
-
-elif [[ "$DISTRIB" == "ubuntu" ]]; then
-    # At the time of writing numpy 1.9.1 is included in the travis
-    # virtualenv but we want to use the numpy installed through apt-get
-    # install.
-    deactivate
-    # Create a new virtualenv using system site packages for python, numpy
-    # and scipy
-    virtualenv --system-site-packages --python=python3 testvenv
-    source testvenv/bin/activate
-    pip install pytest pytest-cov cython joblib==$JOBLIB_VERSION
-
-elif [[ "$DISTRIB" == "scipy-dev" ]]; then
-    make_conda python=3.7
-    pip install --upgrade pip setuptools
-
-    echo "Installing numpy and scipy master wheels"
-    dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
-    pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
-    echo "Installing joblib master"
-    pip install https://github.com/joblib/joblib/archive/master.zip
-    export SKLEARN_SITE_JOBLIB=1
-    pip install pytest pytest-cov
+if [[ "$INSTALL_MKL" == "true" ]]; then
+    TO_INSTALL="$TO_INSTALL mkl"
+else
+    TO_INSTALL="$TO_INSTALL nomkl"
 fi
+
+if [[ -n "$PANDAS_VERSION" ]]; then
+    TO_INSTALL="$TO_INSTALL pandas=$PANDAS_VERSION"
+fi
+
+if [[ -n "$PYAMG_VERSION" ]]; then
+    TO_INSTALL="$TO_INSTALL pyamg=$PYAMG_VERSION"
+fi
+
+if [[ -n "$PILLOW_VERSION" ]]; then
+    TO_INSTALL="$TO_INSTALL pillow=$PILLOW_VERSION"
+fi
+
+if [[ -n "$JOBLIB_VERSION" ]]; then
+    TO_INSTALL="$TO_INSTALL joblib=$JOBLIB_VERSION"
+fi
+    make_conda $TO_INSTALL
+
 
 if [[ "$COVERAGE" == "true" ]]; then
     pip install coverage codecov
@@ -124,10 +102,3 @@ try:
 except ImportError:
     pass
 "
-python setup.py develop
-if [ $TRAVIS_OS_NAME = "linux" ]
-then
-	ccache --show-stats
-fi
-# Useful for debugging how ccache is used
-# cat $CCACHE_LOGFILE
