@@ -1,6 +1,17 @@
 
+#############################################################################
+ENV install
+    conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
+    source activate testenv
+    pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
 
 
+    conda install -c conda-forge  pygmo  pagmo
+    pip install dcgpy    
+
+
+
+#############################################################################
 Test :
 
 MainFolder
@@ -14,7 +25,32 @@ myscript.py
 
 
 
+
+#############################################################################
 Task 1 :
+  Create/Update large scale Genetic OPtimizer
+
+
+### Existing code is here:
+  https://github.com/arita37/a_aapackage/tree/master/batch/batch_aws/task/elvis_prod_20161231/
+
+
+
+Launch the batcher for each set of hyper-parameters.
+  pygmo_batch_generic.py
+
+Launch 1 single Optimization : where the code needs to be changed.
+  elvis_pygmo_optim.py
+
+
+  using pygmo package
+
+
+
+
+
+
+
 
 
 
