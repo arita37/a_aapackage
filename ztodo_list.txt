@@ -28,7 +28,7 @@ myscript.py
 
 #############################################################################
 Task 1 :
-  Create/Update large scale Genetic OPtimizer
+  Create/Update large scale Genetic OPtimizer batch
 
 
 ### Existing code is here:
@@ -39,13 +39,27 @@ Task 1 :
 Launch the batcher for each set of hyper-parameters.
   pygmo_batch_generic.py
 
-Launch 1 single Optimization : where the code needs to be changed.
+Launch 1 single Optimization for 1 hyper parameters
   elvis_pygmo_optim.py
 
 
-  using pygmo package
+A)
+  this fileis using old pygmo
+  code should be updated to use new pygmo 2.0 
 
 
+B) 
+  Current batch code is quite ad hoc...
+  would like to make it generic as follow :
+     function to be optimized in one file.
+     list of hyper parameters into a csv file
+     
+     those ones are called by pygmo
+     into a subprocess python
+
+     result are saved somewhere.
+ 
+     in a standardize way
 
 
 
