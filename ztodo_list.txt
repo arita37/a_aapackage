@@ -1,0 +1,29 @@
+
+
+
+Test :
+
+MainFolder
+  aapackage Folder
+  myscript.py
+
+myscript.py
+  from aapackage import util
+  util.a_get_pythonversion()
+
+
+
+
+Task 1 :
+
+
+
+
+
+
+
+
+
+
+
+
