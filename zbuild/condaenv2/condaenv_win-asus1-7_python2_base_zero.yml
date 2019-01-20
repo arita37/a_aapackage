@@ -1,8 +1,0 @@
-name: root
-channels:
-- conda-forge
-- anaconda
-- defaults
-dependencies:
-- pip=9.0.1=py27_0
-prefix: D:\_devs\Python01\Anaconda27

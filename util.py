@@ -39,7 +39,7 @@ os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 __path__=     DIRCWD +'/aapackage/'
 __version__=  "1.0.0"
-__file__=     "util.py"
+#__file__=     "util.py"
 
 
 

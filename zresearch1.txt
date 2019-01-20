@@ -1,0 +1,52 @@
+
+
+
+
+Generate time series 
+
+
+raw data : time series as main factors, PCA.
+
+
+Feature data : combinaison of time series
+   ratio1, substract,
+   1mth MA, 2mth MA.
+   1 mth regression slope,
+   3 mth slope.
+
+
+PCA on all time series.
+
+
+Supervised Learning :
+   regime detection :  Linear regression
+   0 : bear
+   1 : bull.
+
+6 months, 1 months, 3 months, slope return : bottom  -2%
+    remove noise :
+
+
+Vector of prediction regime :
+    3 states :
+    increase, medium, decrease
+
+Regime users patterns are stable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
