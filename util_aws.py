@@ -5,20 +5,19 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 
-
 ###################################################################################################
 import os, sys
-# DIRCWD=   'G:/_devs/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/project27/' if os.environ['HOME'].find('ubuntu')>-1 else '/home/ubuntu/project27'
 # EC2CWD=   '/home/ubuntu/notebook/'
 #import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
 
-from time import sleep
 import boto
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
+import boto.ec2
 
-##### Attribut dict
+from time import sleep
 from attrdict import AttrDict as dict2
 from pprint import pprint
+import csv
 
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,31 +26,130 @@ __path__= DIRCWD +'/aapackage/'
 
 
 import util
-
-
-
-###################################################################################################
-if sys.platform.find('win') > -1 :
-   pass
-
-
-
 ###################################################################################################
 """
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
-
 #Amazon keys
 In C / .aws/.credentials
 os.ENVIRON["BOTO_CONFIG"] =  C:/Users/asus1\.aws1.credentials
 
 """
-
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
-#AWS_SECRET,AWS_KEY= boto.config
+# AWS_SECRET,AWS_KEY= boto.config
+
+
+
+###################################################################################################
+if sys.platform.find('win') > -1 :
+    # AWS_ACCESS_KEY_ID = "ACCES_KEY_ID"
+    # AWS_SECRET_ACCESS_KEY = "SECRET_KEY"
+    exec(open("D:/_devs/keypair/aws_access.py").read(), globals())
+    AWS_REGION = "us-west-2"
+
+    EC2_CONN = boto.ec2.connect_to_region( AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                           aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+    print(EC2_CONN)
+
+
+###################################################################################################
+def aws_ec2_to_csv(connection=EC2_CONN, filename="ec2.csv",
+               attributes=('id', 'ip_address',)):
+    """Fetch all EC2 instances and write selected attributes into a csv file.
+    Parameters:
+      connection: EC2Connection object
+      filename: CSV file to save to
+      attributes: Tuple of attributes to retrieve. Default: id, ip_address
+      Returns: None (void function)
+    """
+    instances = connection.get_only_instances()
+
+    # Write to CSV
+    """
+    with open(filename, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=",")
+
+        # Write column names on top of the file
+        csvwriter.writerow(list(attributes))
+
+        # Write row with chosen attributes for each instance
+        for instance in instances:
+            fetched_row = []
+            for attribute in attributes:
+                fetched_row.append(getattr(instance, attribute))
+            csvwriter.writerow(fetched_row)
+    """
+
+
+def aws_assign_eip(instance_id,
+               connection=EC2_CONN,               eip_allocation_id=None,
+               eip_public_ip=None,
+               allow_reassociation=False):
+    """Assign an Elastic IP to an instance. Works with either by specifying the
+    public address of the Elastic IP (eip_public_ip) or it's eip_allocation_id.
+    If both parameters are passed, eip_public_ip is preferred.
+
+    Parameters:
+
+    connection: EC2Connection object
+    instance_id: Desired EC2 instance's ID
+    eip_allocation_id: ID of Elastic IP to assign (Required if no public_ip)
+    eip_public_ip: Elastic IP to assign (Required if no allocation_id)
+    allow_reassociation: Option to turn off reassociation (check caveats below)
+
+    Returns: None (void function)
+    Caveat: Caution! The parameter 'allow_reassociation=False' was not honored
+    by AWS, so an IP address got reassociated even if it was set to False.s
+    """
+    if eip_public_ip:
+        connection.associate_address(
+            instance_id=instance_id,
+            public_ip=eip_public_ip,
+            allow_reassociation=allow_reassociation
+        )
+        return
+
+    if eip_allocation_id:
+        connection.associate_address(
+            instance_id=instance_id,
+            allocation_id=eip_allocation_id,
+            allow_reassociation=allow_reassociation
+        )
+        return
+
+    raise ValueError("eip_public_ip and eip_allocation_id cannot be both None!")
+
+
+"""
+# Examples usage:
+# 1 EC2 to CSV with default attributes (id, public ip)
+ec2_to_csv(connection=EC2_CONN, filename="example.csv")
+
+# 2. EC2 to CSV with custom attributes
+ec2_to_csv(
+    connection=EC2_CONN,
+    filename="example-custom-attributes.csv",
+    attributes=(
+        "id", "instance_type", "ip_address", "private_ip_address"
+    )
+)
+
+# Assign Elastic IP by it's public ip to instance:
+assign_eip(
+    connection=EC2_CONN,
+    instance_id="i-example12345",
+    eip_public_ip="0.0.0.0"
+)
+
+# Assign Elastic IP by it's allocation id to instance:
+assign_eip( connection=EC2_CONN,    instance_id="i-example12345",    eip_allocation_id="eipalloc-example12345")
+
+"""
 
 
 
 
+
+###################################################################################################
 ###################### Amazon #####################################################################
 def aws_credentials(account=None):
     """
@@ -59,8 +157,9 @@ def aws_credentials(account=None):
     the given account.
     """
     try:
-        cfg = INIConfig(open(boto_config_path(account)))
-        return ( cfg.Credentials.aws_access_key_id, cfg.Credentials.aws_secret_access_key )
+        #cfg = INIConfig(open(boto_config_path(account)))
+        #return ( cfg.Credentials.aws_access_key_id, cfg.Credentials.aws_secret_access_key )
+        return 0
     except Exception:
         raise
 
@@ -555,10 +654,12 @@ def aws_s3_file_getfroms3(s3file='bucket/folder/perl_poetry.pdf', tofilename='/h
   key.get_contents_to_filename(tofilename)
 '''
 
+
 def aws_s3_url_split(url):
   '''Split into Bucket, url '''
   url1= url.split("/")
   return url1[0], "/".join(url1[1:])
+
 
 def aws_s3_getbucketconn(s3dir) :
     import boto.s3
@@ -568,7 +669,8 @@ def aws_s3_getbucketconn(s3dir) :
     bucket = conn.get_bucket(bucket_name)  #, location=boto.s3.connection.Location.DEFAULT)
     return bucket
 
-def aws_s3_puto_s3(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2') :
+
+def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2') :
  ''' Copy File or Folder to S3 '''
  import boto.s3
  bucket= aws_s3_getbucketconn(todir)
@@ -612,7 +714,7 @@ def aws_s3_puto_s3(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2') 
         k.key = destpath
         k.set_contents_from_filename(sourcepath, cb=percent_cb, num_cb=10)
 
-def aws_s3_getfrom_s3(froms3dir='task01/', todir='', bucket_name='zdisk') :
+def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk') :
  ''' Get from S3 file/folder  '''
  bucket_name, dirs3= aws_s3_url_split(froms3dir)
  bucket= aws_s3_getbucketconn(froms3dir)
@@ -694,10 +796,12 @@ def aws_ec2_cmd_ssh(cmdlist=  ["ls " ],  host='ip', doreturn=0, ssh=None, userna
     ssh.close()
     if doreturn: return readall
 
+
 def aws_ec2_python_script(script_path, args1, host):
    ipython_script='/home/ubuntu/anaconda2/bin/ipython'  #!!! No space after ipython
    cmd1= ipython_script +' ' + script_path + ' ' + '"'+args1 +'"'
    aws_ec2_cmd_ssh(cmdlist=  [cmd1], ssh=None, host=host, username='ubuntu')
+
 
 def aws_ec2_create_con(contype='sftp/ssh', host='ip', port=22, username='ubuntu',  keyfilepath='', password='',keyfiletype='RSA', isprint=1):
     """ Transfert File  host = '52.79.79.1'
@@ -749,8 +853,8 @@ http://docs.paramiko.org/en/2.1/api/sftp.html
 
 
 
-
-
+######################################################################################
+######################################################################################
 '''
 
 https://peteris.rocks/blog/script-to-launch-amazon-ec2-spot-instances/
