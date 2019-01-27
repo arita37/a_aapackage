@@ -821,25 +821,22 @@ def aws_ec2_getfrom_ec2( fromfolder, tofolder, host) :
      pass
 
 
-def aws_ec2_putfolder(fromfolder='D:/_devs/Python01/project27//linux/batch/task/elvis_prod_20161220/', tofolder='/linux/batch', host='') :
-  # fromfolder= DIRCWD +'/linux/batch/task/elvis_prod_20161220/'
-  # tofolder=   '/linux/batch/'
 
+def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host='') :
+  # fromfolder= DIRCWD +'/linux/batch/task/elvis_prod_20161220/'
+  # tofolder=   '/linux/batch/'  
   # If you don't care whether the file already exists and you always want to overwrite the files as they are extracted without prompting use the -o switch as follows:
   # https://www.lifewire.com/examples-linux-unzip-command-2201157
   # unzip -o filename.zip
 
-  # sftp.mkdir(remotedirectory)
-  # sftp.chdir(remotedirectory)
-  # sftp.put(localfile, remotefile)
-  folder1, file1= util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else  fromfolder)
-
-  tofolderfull=  EC2CWD + '/' + tofolder  if tofolder.find(EC2CWD) == -1 else tofolder
+  folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else  fromfolder)
+  tofolderfull   =  EC2CWD + '/' + tofolder  if tofolder.find(EC2CWD) == -1 else tofolder
 
   #Zip folder before sending it
-  file2= folder1+ '/' + file1+'.zip'
+  file2 = folder1+ '/' + file1+'.zip'
   util.os_zipfolder(fromfolder, file2)
-  print( aws_ec2_put(file2, tofolder= tofolderfull, host=host, typecopy='all') )
+  res = aws_ec2_putfile(file2, tofolder= tofolderfull, host=host) 
+  print(res)
 
   ###### Need install sudo apt-get install zip unzip
   cmd1 = '/usr/bin/unzip '+ tofolderfull+'/'+file1+'.zip ' + ' -d ' +  tofolderfull +'/'
@@ -848,6 +845,49 @@ def aws_ec2_putfolder(fromfolder='D:/_devs/Python01/project27//linux/batch/task/
 
 
 def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/', host='', typecopy='code') :
+  """
+   Copy python code, copy specific file, copy all folder content
+  :param fromfolder: 1 file or 1 folder
+  :param tofolder:
+  :param host:
+  """
+  if fromfolder.find('.') > -1  :    # Copy 1 file
+     aws_ec2_putfile( fromfolder=fromfolder, tofolder= tofolder, 
+                      host=host) 
+
+  else :  #Copy Folder to      
+    sftp = aws_ec2_ssh_create_con('sftp', host, isprint=1)
+    if typecopy == 'code' and fromfolder.find('.') == -1  :    #Local folder and code folder
+      # foldername = fromfolder
+      # fromfolder = DIRCWD+ '/' + foldername
+      tempfolder = DIRCWD+'/ztemp/'+foldername
+      
+      util.os_folder_delete(tempfolder)
+      util.os_folder_copy(fromfolder,  tempfolder,  pattern1="*.py")
+      sftp.put(tempfolder, tofolder)
+      return 1
+
+
+    if typecopy== 'all' :
+      if fromfolder.find(':') == -1 : print('Please put absolute path'); return 0
+      if fromfolder.find('.') > -1 :  #1 file
+       fromfolder, file1= util.os_split_dir_file(fromfolder)
+       tofull= tofolder + '/'+ file1  if tofolder.find('.') == -1 else tofolder
+       tofolder, file2= util.os_split_dir_file(tofull)
+
+
+       
+       sftp.put(fromfolder+'/'+file1, tofull)
+
+       try :
+          sftp.stat(tofull);   isexist= True
+       except: isexist= False
+       print(isexist, tofull)
+       
+
+
+def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/', 
+                host='') :
   """
    Copy python code, copy specific file, copy all folder content
   :param fromfolder: 1 file or 1 folder
@@ -873,32 +913,7 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
      sftp.close();  
      return (isexist, fromfolder, tofull, ss)
 
-  else :  #Copy Folder to
-
-    if typecopy == 'code' and fromfolder.find('.') == -1  :    #Local folder and code folder
-      foldername = fromfolder
-      fromfolder = DIRCWD+ '/' + foldername
-      tempfolder = DIRCWD+'/zdisks3/toec2/'+foldername
-      util.os_folder_delete(tempfolder)
-      util.os_folder_copy(fromfolder,  tempfolder,  pattern1="*.py")
-      sftp.put(tempfolder, tofolder)
-      return 1
-
-
-    if typecopy== 'all' :
-      if fromfolder.find(':') == -1 : print('Please put absolute path'); return 0
-      if fromfolder.find('.') > -1 :  #1 file
-       fromfolder, file1= util.os_split_dir_file(fromfolder)
-       tofull= tofolder + '/'+ file1  if tofolder.find('.') == -1 else tofolder
-       tofolder, file2= util.os_split_dir_file(tofull)
-
-       sftp.put(fromfolder+'/'+file1, tofull)
-
-       try :
-          sftp.stat(tofull);   isexist= True
-       except: isexist= False
-       print(isexist, tofull)
-       
+          
       
 ##############################################################################################
 def sleep2(wsec) :
@@ -907,7 +922,47 @@ def sleep2(wsec) :
   for i in tqdm(range(wsec)):  
     sleep(1)
      
-    
+
+
+
+
+
+def sftp_isdir(path):
+  from stat import S_ISDIR  
+  try:
+    return S_ISDIR(sftp.stat(path).st_mode)
+  except IOError:
+    #Path does not exist, so by definition not a directory
+    return False
+
+
+
+def aws_ec2_getfolder() :
+ import paramiko, os
+ paramiko.util.log_to_file('/tmp/paramiko.log')
+ from stat import S_ISDIR
+ def sftp_walk(remotepath):
+    path=remotepath
+    files=[]
+    folders=[]
+    for f in sftp.listdir_attr(remotepath):
+        if S_ISDIR(f.st_mode):
+            folders.append(f.filename)
+        else:
+            files.append(f.filename)
+    if files:
+        yield path, files
+    for folder in folders:
+        new_path=os.path.join(remotepath,folder)
+        for x in sftp_walk(new_path):
+            yield x
+
+
+ for path,files  in sftp_walk("." or '/remotepath/'):
+    for file1 in files:
+        #sftp.get(remote, local) line for dowloading.
+        sftp.get(os.path.join(os.path.join(path,file1)), '/local/path/')
+
 
 
 
@@ -922,7 +977,7 @@ if __name__ == '__main__' :
   ppa.add_argument('--price', type=float, default= 0.5,  help='spot price')
   ppa.add_argument('--spec_file', type=str, default= "",  help='spec file')
 
-  ppa.add_argument('--spec_file', type=str, default= "",  help='spec file')
+  ppa.add_argument('--spec_file2', type=str, default= "",  help='spec file')
   
   arg0 = ppa.parse_args()
 
@@ -955,8 +1010,8 @@ if __name__ == '__main__' and arg0.do == "start_spot"  :
 
 
 if __name__ == '__main__' and arg0.do == "put_file"  :
-   aws_ec2_put( fromfolder = arg0.fromfolder,
-                      tofolder   = arg0.tofolder, host = arg0.host )
+   aws_ec2_putfile( fromfolder = arg0.fromfolder,
+                    tofolder   = arg0.tofolder, host = arg0.host )
 
 
 
