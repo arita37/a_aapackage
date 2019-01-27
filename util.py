@@ -35,8 +35,6 @@ os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 
 
-
-
 __path__=     DIRCWD +'/aapackage/'
 __version__=  "1.0.0"
 #__file__=     "util.py"
@@ -46,8 +44,8 @@ __version__=  "1.0.0"
 
 
 
-
-
+###############################################################################
+###############################################################################
 '''
 Run Unit test   python aapackage/util.py --do  test01
 
@@ -80,7 +78,7 @@ tls.set_credentials_file(username=PLOTLY_USERNAME, api_key=PLOTLY_APIKEY)
 '''
 
 
-####################################################################################################
+###############################################################################
 
 '''
 https://console.developers.google.com/iam-admin/projects
