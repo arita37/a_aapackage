@@ -3,12 +3,13 @@
 # %load_ext autoreload
 # %autoreload 2
 import os, sys
+
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
-print 'Directory Folder', DIRCWD
+print('Directory Folder' % DIRCWD)
 
 import util,  numpy as np
-execfile( DIRCWD + '/aapackage/allmodule.py')
+execfile(DIRCWD + '/aapackage/allmodule.py')
 ##############################################################################################
 
 
