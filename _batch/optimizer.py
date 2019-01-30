@@ -1,5 +1,18 @@
 #!/bin/python
+"""
 
+This is a dummy optimizer, designed to be executed in a independend python process.
+
+Notable interactions:
+
+loads the file "parameters.toml", located at its same folder.
+
+outputs "results.txt" file, containing an array that can be sourced inside python.
+
+Those interactions are defined in batch_sequencer.py and should be conserved among all optimizers.
+
+
+"""
 from scipy import optimize
 import toml
 import os

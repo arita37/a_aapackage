@@ -2,7 +2,11 @@
 
 """
 
+This generic optimization batcher can run locally or at Amazon AWS.
 
+To run at AWS the credentials must be set up first:
+
+$aws configure
 
 """
 
