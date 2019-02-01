@@ -50,9 +50,6 @@ from tabulate import tabulate
 
 
 
-
-
-
 ############################################################################################
 import globalvar
 import allmodule
@@ -83,6 +80,8 @@ import util_web
 import util
 
 
+
+
 ############################################################################################
 try :
   import matplotlib.pyplot as plt
@@ -90,7 +89,6 @@ try :
 
 except Exception as e:
   print(e)
-
 
 
 

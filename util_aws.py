@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#---------AWS utilities----------------------------------------------------
+#---------AWS utilities--------------------------------------------------------
 """
 os.ENVIRON["BOTO_CONFIG"] =  C:/Users/asus1\.aws1.credentials
 # AWS_KEY_PEM= 'ec2_instance_test01.pem'
@@ -11,7 +11,7 @@ from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()
 
-##########################################################################################
+###############################################################################
 import os, sys
 
 import boto
@@ -39,21 +39,25 @@ EC2CWD=   '/home/ubuntu/notebook/'
 
 
 import util
-#########################################################################################
+###############################################################################
 
 
 #### Global ############################################################################
 global EC2_CONN
 EC2_CONN = None
-EC2_ATTRIBUTES2 = (  'id', 'ip_address',  'instanceState',  'instance_type', 
- 'region',  '_in_monitoring_element', 'ami_launch_index', 'architecture', 'block_device_mapping', 'connection', 'dns_name', 'image_id', 'instance_class', 'item', 'kernel', 'key_name', 'launch_time', 'monitored', 'monitoring', 'persistent', 'placement', 'previous_state', 'private_dns_name', 'private_ip_address', 'product_codes', 'public_dns_name', 'ramdisk', 'reason', 'requester_id', 'rootDeviceType', 'root_device_name', 'shutdown_state', 'spot_instance_request_id', 'state', 'state_code', 'subnet_id', 'vpc_id')
 
-EC2_ATTRIBUTES = (  'id', 'ip_address',  'state',  'state_code', 'instance_type',  'region', )
-EC2_FILTERS = (  'id', 'ip_address')
+EC2_FILTERS    = (  'id', 'ip_address')
+EC2_ATTRIBUTES = ( "id", "instance_type",  "state",
+                      "public_dns_name", "private_dns_name", "state_code", "previous_state", "previous_state_code",
+                      "key_name",  "launch_time", "image_id", "placement", "placement_group", "placement_tenancy", "kernel",
+                      "ramdisk", "architecture", "hypervisor", "virtualization_type", "product_codes", "ami_launch_index", "monitored",
+                      "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id", "private_ip_address", "ip_address", "platform",
+                      "root_device_name", "root_device_type", "state_reason", "interfaces", "ebs_optimized", "instance_profile" )
 
 
 if sys.platform.find('win') > -1 :
   pass
+
 
 #######################################################################################
 
@@ -494,11 +498,14 @@ class aws_ec2_ssh(object):
         #key = self.t.get_remote_server_key()
         # supposed to check for key in keys, but I don't much care right now to find the right notation
 
-        '''
-        # key_file= AWS_KEY_PEM
-        # pkey = paramiko.RSAKey.from_private_key_file(key_file)
-        '''
+        
+        key_file= AWS_KEY_PEM
+        pkey = paramiko.RSAKey.from_private_key_file(key_file)
+        
 
+        """
+        key_file = AWS_KEY_PEM  if key_file is None else key_file
+        
         if key_file is not None:
             if isinstance(key_file,str):
                 key_file=open(key_file, mode='r')
@@ -516,6 +523,7 @@ class aws_ec2_ssh(object):
             if password is not None:
                 self.t.auth_password(username,password,fallback=False)
             else: raise Exception('Must supply either key_file or password')
+        """
 
         self.t.auth_publickey(username, pkey)
         self.sftp=paramiko.SFTPClient.from_transport(self.t)
@@ -545,13 +553,15 @@ class aws_ec2_ssh(object):
         #  Copy localfile to remotefile, overwriting or creating as needed.
         self.sftp.put(localfile,remotefile)
 
+
     def put_all(self,localpath,remotepath):
         #  recursively upload a full directory
-        localpath= localpath[:-1] if localpath[-1]=='/' else localpath
-        remotepath= remotepath[:-1] if remotepath[-1]=='/' else remotepath
+        #localpath= localpath[:-1] if localpath[-1]=='/' else localpath
+        #remotepath= remotepath[:-1] if remotepath[-1]=='/' else remotepath
 
         os.chdir(os.path.split(localpath)[0])
-        parent=os.path.split(localpath)[1]
+        parent=os.path.split(localpath)[1] 
+        print(parent)
         for walker in os.walk(parent):
             try:
                 self.sftp.mkdir(os.path.join(remotepath,walker[0]).replace('\\',"/"))
@@ -560,6 +570,7 @@ class aws_ec2_ssh(object):
             for file in walker[2]:
                 print(os.path.join(walker[0],file).replace('\\','/').replace('\\','/'),  os.path.join(remotepath,walker[0],file).replace('\\','/'))
                 self.put(os.path.join(walker[0],file).replace('\\','/'),      os.path.join(remotepath,walker[0],file).replace('\\','/'))
+
 
     def get(self,remotefile,localfile):
         #  Copy remotefile to localfile, overwriting or creating as needed.
@@ -616,9 +627,9 @@ class aws_ec2_ssh(object):
         self.sftp.open(remotefile,'w').write(text)
         self.sftp.chmod(remotefile,755)
 
-    def python_script(self, script_path, args1):
-      ipython_script='/home/ubuntu/anaconda2/bin/ipython '
-      cmd1= ipython_script +' ' + script_path + ' ' + '"'+args1 +'"'
+    def python_script(self, ipython_path='/home/ubuntu/anaconda3/bin/ipython ', script_path="", args1=""):
+      
+      cmd1= ipython_path +' ' + script_path + ' ' + '"'+args1 +'"'
       self.cmd2(cmd1)
       # self.command(cmd1)
 
@@ -807,8 +818,6 @@ def aws_ec2_get_instances( con=None,  attributes=None, filters=None, csv_filenam
 
 
 
-
-
 def aws_ec2_getfrom_ec2( fromfolder, tofolder, host) :
    sftp= aws_ec2_ssh_create_con(contype='sftp', host=host)
 
@@ -914,7 +923,7 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
      return (isexist, fromfolder, tofull, ss)
 
           
-      
+
 ##############################################################################################
 def sleep2(wsec) :
   from time import sleep
@@ -922,8 +931,6 @@ def sleep2(wsec) :
   for i in tqdm(range(wsec)):  
     sleep(1)
      
-
-
 
 
 
