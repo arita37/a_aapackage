@@ -107,11 +107,19 @@ else:
 
 """
 
+def logs() :
+        with open(batch_log_file, 'a') as batch_log:
+            batch_log.write("Executing index %i at %s." % (ii, TaskDirectory))
+            batch_log.write("\n\n")
+
+
+
+
 ############### Loop on each parameters sets #############################################
 
 
 def execute_batch(HyperParametersFile, WorkingDirectory,
-                  OptimizerName, AdditionalFilesArg, krepeat=1):
+                  ScriptPath, AdditionalFilesArg, krepeat=1):
 
     HyperParameters = pd.read_csv(os.path.join(WorkingDirectory, HyperParametersFile))
 
@@ -125,6 +133,9 @@ def execute_batch(HyperParametersFile, WorkingDirectory,
         # Extract parameters for single run from batch_parameters data.
         params_dict = HyperParameters.iloc[ii].to_dict()
 
+
+        """
+        No Need t 
         # build path & create task directory;
         TaskDirectoryName = "task_%s_%i" % (batch_label, ii)
         TaskDirectory = os.path.join(WorkingDirectory, TaskDirectoryName)
@@ -139,23 +150,28 @@ def execute_batch(HyperParametersFile, WorkingDirectory,
         with open(os.path.join(TaskDirectory, "parameters.toml"), "w") as task_parameters:
             toml.dump(params_dict, task_parameters)
 
+        
         # Copy additional files to Task Directory;
         if AdditionalFilesArg:
             AdditionalFiles = checkAdditionalFiles(WorkingDirectory, AdditionalFilesArg)
             for File in AdditionalFiles:
                 shutil.copy(os.path.join(WorkingDirectory, File),
                             os.path.join(TaskDirectory, File))
+        """
 
-        with open(batch_log_file, 'a') as batch_log:
-            batch_log.write("Executing index %i at %s." % (ii, TaskDirectory))
-            batch_log.write("\n\n")
+
+        python_path = os.python_path
 
         # Random Start loop  krepeat to have many random start....
         for rr in range(krepeat):
-            optimizerScriptPath = os.path.join(TaskDirectory, OptimizerName)
-            proc = subprocess.Popen(["python", optimizerScriptPath],
+            # optimizerScriptPath = os.path.join(TaskDirectory, OptimizerName)
+              
+
+            proc = subprocess.Popen([python_path, ScriptPath],
                                     stdout=subprocess.PIPE)
             ChildProcesses.append(proc)
+            wait( waitseconds)
+
 
 
 
