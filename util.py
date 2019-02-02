@@ -606,6 +606,7 @@ def print_object_tofile(vv, txt, file1='d:/regression_output.py')  :
        #print (aux )
        file1.write(aux + 	"\n")
 
+
 def print_ProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, barLength = 100):
     """# Print iterations progress
      Call in a loop to create terminal progress bar
@@ -646,6 +647,7 @@ def os_zip_checkintegrity(filezip1):
     else: return True
   except Exception as e: return False
 
+
 def os_zipfile(folderin, folderzipname, iscompress=True):
   import os, zipfile
   compress = zipfile.ZIP_DEFLATED if iscompress else  zipfile.ZIP_STORED
@@ -662,54 +664,48 @@ def os_zipfile(folderin, folderzipname, iscompress=True):
      print('Corrupt File')
      return  folderin, False
 
-def os_zipfolder(dir_tozip='/zdisks3/output', zipname='/zdisk3/output.zip', dir_prefix=None, iscompress=True):
+
+
+def os_zipfolder(dir_tozip='/zdisks3/output', zipname='/zdisk3/output.zip', dir_prefix=True, iscompress=True):
  '''
  shutil.make_archive('/zdisks3/results/output', 'zip',
                      root_dir=/zdisks3/results/',
                      base_dir='output')
-
  os_zipfolder('zdisk/test/aapackage', 'zdisk/test/aapackage.zip', 'zdisk/test')'''
-
+ import shutil
+ 
  dir_tozip= dir_tozip if dir_tozip[-1] != '/' else dir_tozip[:-1]
  # dir_prefix= dir_prefix if dir_prefix[-1] != '/' else dir_prefix[:-1]
 
- if dir_prefix is None :
-   dir_tozip, dir_prefix= '/'.join(dir_tozip.split('/')[:-1]), dir_tozip.split('/')[-1]
-
- import shutil
+ if dir_prefix  :
+     dir_tozip, dir_prefix= '/'.join(dir_tozip.split('/')[:-1]), dir_tozip.split('/')[-1]
+ else :
+     dir_tozip, dir_prefix=  dir_tozip , "/"   
+     
  shutil.make_archive(zipname.replace('.zip',''), 'zip', dir_tozip, base_dir=dir_prefix)
-
-
  '''
- shutil.make_archive(base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
-Create an archive file (eg. zip or tar) and returns its name.
+   shutil.make_archive(base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
 
-base_name is the name of the file to create, including the path, minus any format-specific extension. format is the archive format: one of “zip” (if the zlib module or external zip executable is available), “tar”, “gztar” (if the zlib module is available), or “bztar” (if the bz2 module is available).
-
-root_dir is a directory that will be the root directory of the archive; ie. we typically chdir into root_dir before creating the archive.
-
-base_dir is the directory where we start archiving from; ie. base_dir will be the common prefix of all files and directories in the archive.
-
-root_dir and base_dir both default to the current directory.
-
-owner and group are used when creating a tar archive. By default, uses the current owner and group.
-
-logger must be an object compatible with PEP 282, usually an instance of logging.Logger.
-  '''
-
- '''
- import zipfile
- compress = zipfile.ZIP_DEFLATED if iscompress else  zipfile.ZIP_STORED
- zf= zipfile.ZipFile(zipname, "w", compress, allowZip64=True)
- for dirname, subdirs, files in os.walk(dir_tozip):
-    zf.write(dirname)
-    for filename in files:  zf.write(os.path.join(dirname, filename))
- zf.close()
+   base_name is the name of the file to create, including the path, minus any format-specific extension. format is the archive format: one of “zip” (if the zlib module or external zip executable is available), “tar”, “gztar” (if the zlib module is available), or “bztar” (if the bz2 module is available).
+   root_dir is a directory that will be the root directory of the archive; ie. we typically chdir into root_dir before creating the archive.
+   base_dir is the directory where we start archiving from; ie. base_dir will be the common prefix of all files and directories in the archive.
+   root_dir and base_dir both default to the current directory.
+   owner and group are used when creating a tar archive.
+   
+   import zipfile
+   compress = zipfile.ZIP_DEFLATED if iscompress else  zipfile.ZIP_STORED
+   zf= zipfile.ZipFile(zipname, "w", compress, allowZip64=True)
+   for dirname, subdirs, files in os.walk(dir_tozip):
+      zf.write(dirname)
+      for filename in files:  zf.write(os.path.join(dirname, filename))
+   zf.close()
  '''
  r= os_zip_checkintegrity(zipname)
  if r : return  zipname
  else :
     print('Corrupt File'); return False
+
+
 
 def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract='zdisk/test', isprint=1):
    '''os_zipextractall( 'aapackage.zip','zdisk/test/'      )  '''
@@ -3533,8 +3529,8 @@ def py_log_write(LOGFILE, prefix):
 
 
 
-##############################################################################################
-############################ UNIT TEST #######################################################
+###############################################################################
+############################ UNIT TEST ########################################
 if __name__ == '__main__' :
  import argparse;  ppa = argparse.ArgumentParser()       # Command Line input
  ppa.add_argument('--do', type=str, default= 'action',  help='test / test02')
@@ -3546,7 +3542,7 @@ if __name__ == '__main__' and arg.do == "test":
  try:
   import util;  UNIQUE_ID= util.py_log_write( DIRCWD + '/aapackage/ztest_log_all.txt', "util")
 
-  ###########################################################################################
+  #############################################################################
   import numpy as np, pandas as pd, scipy as sci
   import util; print(util); print("")
   #util.a_info_system()
@@ -3574,7 +3570,7 @@ if __name__ == '__main__' and arg.do == "test":
 
 
 
-  ###########################################################################################
+  #############################################################################
   print("\n\n"+ UNIQUE_ID +" ###################### End:" + arrow.utcnow().to('Japan').format() + "###########################") ; sys.stdout.flush()
  except Exception as e : 
   print(e)

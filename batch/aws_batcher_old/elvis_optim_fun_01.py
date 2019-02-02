@@ -119,7 +119,7 @@ def optim_fun(p):
 
 
 
- ############# Meta Paameters   ######################################################
+ ############# Meta Paameters   ###############################################
  aafolio_storage= []     #np.empty((1, 19), dtype= np.object)
 
  ##   aafolio_storage= np.empty((1, 19), dtype= np.object)
@@ -131,7 +131,7 @@ def optim_fun(p):
  # iibatch=1
 
 
- ############# Archipel   ###########################################################
+ ############# Archipel   #####################################################
  typepb= "optim_"+ batchname + str(iibatch)
  archi = pyg.archipelago(topology=pyg.topology.ring())
 
@@ -178,7 +178,9 @@ def optim_fun(p):
 
    #---- Algo Specific --------------------------------------------------------
    aux2, aux2_col= pf.folio_metric(pf4, xbest, 1, masset)
-   aux3= np.array([ int(util.date_now()),  tt0, tt1, str(sym), str(xbest), str(fbest), typepb,  wwbasket['concenfactor'],  wwbasket['opticriteria']   ] + aux2, dtype= np.object)
+   aux3= np.array([ int(util.date_now()),  tt0, tt1, str(sym), str(xbest), 
+         str(fbest), typepb,  wwbasket['concenfactor'],  wwbasket['opticriteria']   ] + aux2, 
+         dtype= np.object)
    aafolio_storage= np.concatenate((aafolio_storage,  aux3))
    # print aux2
    # util.os_print_tofile( '\n' + str(aux2), outfolder+'/output_result.txt')
@@ -189,9 +191,11 @@ def optim_fun(p):
   util.py_save_obj( (aux3_cols, aafolio_storage), 'aafolio_storage_' + util.date_now())
 
  
-  aux= '\n\n END Bacth----------------------------------------------------------------'
+  aux= '\n\n END Bacth--------------------------------------------------------'
   util.os_print_tofile( '\n\n' + str(aux),  outfolder+'/output_result.txt')
-####################################################################################
+###############################################################################
+
+
 
 
 
