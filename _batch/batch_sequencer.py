@@ -1,12 +1,35 @@
 # -*- coding: utf-8 -*-
-
 """
+Confusion comes there 3 levels of Batchs in my initial code
 
-This generic optimization batcher can run locally or at Amazon AWS.
+meta_batch_task.py :
+   ...task_folder/task1/mybatch_optim.py  + hyperparamoptim.csv +  myscript.py ...
+   ...task_folder/task2/mybatch_optim.py  + hyperparamoptim.csv + .myscript.py ...
 
-To run at AWS the credentials must be set up first:
 
-$aws configure
+meta_batch_task.py :
+   for all "task*" folders in task_working_dir  :
+       run subprocess taskXXX/mybatch_optim.py
+
+
+
+mybatch_optim.py :
+  for all rows ii of hyperparams.csv
+     run subprocess  myscript.py  ii
+     check CPU suage with psutil.   CPU usage < 90 %   mem usage < 90%
+
+
+### not needed from you
+aws_batch_script.py :
+   for all tasks folder in LOCAL PC :
+       transfer by SFTP to REMOTE Task folder (by zip)
+
+   subprocess  meta=batch_task.py on REMOTE PC.    
+
+
+batch_sequencer.py :
+  Launch 1 subprcoess per hyperparam row.
+
 
 """
 
@@ -17,16 +40,12 @@ import sys
 import random
 
 import toml
-
 import subprocess
-
 import optparse
-
 import pandas as pd
 
 
 ################### Argument catching ########################################################
-
 print('Start Args')
 '''
 print sys.argv, "\n\n", sys.argv[0], "\n\n", sys.argv[1], "\n\n"
@@ -56,7 +75,7 @@ def load_arguments():
     return options
 
 
-################### Batch Params #############################################################
+################### Batch Params ############################################################
 """
 date0 = util.date_now()
 isverbose = 0
@@ -79,7 +98,6 @@ batch_out_data = batch_out + '/aafolio_storage_' + date0 + '.pkl'
 util.os_print_tofile('\n\n'+title1, batch_out_log)
 """
 
-
 def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     if not AdditionalFiles:
         return []
@@ -96,6 +114,7 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     return AdditionalFiles
 
 
+
 ################  Output Data table ######################################################
 """
 if util.os_file_exist(batch_out_data):
@@ -105,8 +124,8 @@ else:
     aux3_cols, aafolio_storage = util.py_load_obj(
         batch_in_data1, isabsolutpath=1)
 
-"""
 
+"""
 def logs() :
         with open(batch_log_file, 'a') as batch_log:
             batch_log.write("Executing index %i at %s." % (ii, TaskDirectory))
@@ -116,8 +135,6 @@ def logs() :
 
 
 ############### Loop on each parameters sets #############################################
-
-
 def execute_batch(HyperParametersFile, WorkingDirectory,
                   ScriptPath, AdditionalFilesArg, krepeat=1):
 
@@ -167,7 +184,7 @@ def execute_batch(HyperParametersFile, WorkingDirectory,
             # optimizerScriptPath = os.path.join(TaskDirectory, OptimizerName)
               
 
-            proc = subprocess.Popen([python_path, ScriptPath],
+            proc = subprocess.Popen([python_path, ScriptPath, ii],
                                     stdout=subprocess.PIPE)
             ChildProcesses.append(proc)
             wait( waitseconds)
