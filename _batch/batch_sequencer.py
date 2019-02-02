@@ -27,6 +27,11 @@ aws_batch_script.py :
    subprocess  meta=batch_task.py on REMOTE PC.    
 
 
+##### Warning :
+  Please check my initial code to make sure most of functionnalities are here in your code
+
+
+####################################################################
 batch_sequencer.py :
   Launch 1 subprcoess per hyperparam row.
 

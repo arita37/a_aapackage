@@ -549,6 +549,12 @@ class aws_ec2_ssh(object):
             ret+=chan.recv(1024)
         return ret
 
+    def cmd(self,cmdss ):
+        ss = self.command(   cmdss )
+        print(  ss )
+        
+        
+
     def put(self,localfile,remotefile):
         #  Copy localfile to remotefile, overwriting or creating as needed.
         self.sftp.put(localfile,remotefile)
@@ -662,34 +668,34 @@ class aws_ec2_ssh(object):
        '''
        print(s)
 
-    def put_all_zip(self, suffixfolder, fromfolder, tofolder, use_relativepath=True, usezip=True, filefilter="*.*", directorylevel=1 ) :
+    def put_all_zip(self, suffixfolder="", fromfolder="", tofolder="", use_relativepath=True, usezip=True, filefilter="*.*", directorylevel=1, verbose=0 ) :
       '''
-   
     fromfolder:  c:/folder0/folder1/folder2/ *
     suffixfolder:         /folders1/folder2/
     tofolder:    /home/ubuntu/myproject1/
     
-
-    1) Zip folder fromfolder
-    
-    2) Transfer zip to /home/ubuntu by SSH  (instance is identified by ip adress)
-    
-    3) unzip folder into
-         New folder created:   /home/ubuntu/myproject1//folders1/folder2/  *
-                               tofolder + suffixfolder
-        
-    Use  class aws_ec2_ssh(object)  to process it
-    
-   :param fromfolder1: 
-   :param tofolder1: 
-   :param usezip:   zip the folder before the transfer and unzip after
-   :return: 
-   
       '''
+      fromfolder = fromfolder if fromfolder[-1] != '/' else  fromfolder[:-1]
+      tmpfolder  = '/'.join( fromfolder.split('/')[:-1] ) + "/"  
+      zipname    = fromfolder.split('/')[-1] + ".zip"
+      print( tmpfolder, zipname)
+      zipath     =  tmpfolder + zipname
+      
+      
+      print("zipping")
+      filezip    = util.os_zipfolder( dir_tozip = fromfolder , 
+                                      zipname   =  zipath , 
+                                      dir_prefix=True, iscompress=True) 
+      print("ssh on remote")
+      remote_zipath = os.path.join(tofolder, zipname).replace('\\','/')
+      self.put( filezip , remote_zipath)
 
-      pass
-      # Put Folder from remote to  EC2 folder
-      # please use class aws_ec2_ssh(object):
+      
+      if usezip :
+          print("Unzip on remote " + self.host)
+          cmd= '/usr/bin/unzip '+ remote_zipath + ' -d ' + tofolder
+          ss = self.command( cmd  )
+          if verbose : print(ss ) 
 
 
 
