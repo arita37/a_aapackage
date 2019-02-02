@@ -3529,8 +3529,8 @@ def py_log_write(LOGFILE, prefix):
 
 
 
-##############################################################################################
-############################ UNIT TEST #######################################################
+###############################################################################
+############################ UNIT TEST ########################################
 if __name__ == '__main__' :
  import argparse;  ppa = argparse.ArgumentParser()       # Command Line input
  ppa.add_argument('--do', type=str, default= 'action',  help='test / test02')
@@ -3542,7 +3542,7 @@ if __name__ == '__main__' and arg.do == "test":
  try:
   import util;  UNIQUE_ID= util.py_log_write( DIRCWD + '/aapackage/ztest_log_all.txt', "util")
 
-  ###########################################################################################
+  #############################################################################
   import numpy as np, pandas as pd, scipy as sci
   import util; print(util); print("")
   #util.a_info_system()
@@ -3570,7 +3570,7 @@ if __name__ == '__main__' and arg.do == "test":
 
 
 
-  ###########################################################################################
+  #############################################################################
   print("\n\n"+ UNIQUE_ID +" ###################### End:" + arrow.utcnow().to('Japan').format() + "###########################") ; sys.stdout.flush()
  except Exception as e : 
   print(e)
