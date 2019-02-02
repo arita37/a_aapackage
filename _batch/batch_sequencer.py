@@ -148,6 +148,10 @@ def get_computer_resources_usage():
     return cpu_used_percent, mem_used_percent
 
 
+def createFolder(WorkingDirectory, folderName):
+    folderPath = os.path.join(WorkingDirectory, folderName)
+    if not os.path.isdir(folderPath):
+        os.mkdir(folderPath)
 ############### Loop on each parameters sets #############################################
 def build_execute_batch(HyperParametersFile, WorkingDirectory,
                         ScriptPath, AdditionalFilesArg="", krepeat=1):
@@ -160,7 +164,11 @@ def build_execute_batch(HyperParametersFile, WorkingDirectory,
 
     batch_label = "%s_%.3i" % (OptimizerName, random.randint(0, 10e5))
 
-    batch_log_file = os.path.join(WorkingDirectory, "log_batch_%s.txt" % batch_label)
+    # init folders
+    createFolder(WorkingDirectory, "batch_logs")
+    createFolder(WorkingDirectory, "batch_results")
+
+    batch_log_file = os.path.join(WorkingDirectory, "batch_logs/batch_%s.txt" % batch_label)
 
     ChildProcesses = []
 

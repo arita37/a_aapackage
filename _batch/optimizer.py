@@ -44,7 +44,7 @@ def execute():
 
     print("Result: %s" % res.x)
 
-    with open("result%i.txt" % ii, 'a') as ResultOutput:
+    with open("batch_results/result%i.txt" % ii, 'a') as ResultOutput:
         result = str(list(res.x))
         ResultOutput.write(result + "\n")
 
