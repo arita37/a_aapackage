@@ -153,7 +153,7 @@ def createFolder(WorkingDirectory, folderName):
     if not os.path.isdir(folderPath):
         os.mkdir(folderPath)
 
-        
+
 ############### Loop on each parameters sets #############################################
 def build_execute_batch(HyperParametersFile, WorkingDirectory,
                         ScriptPath, AdditionalFilesArg="", krepeat=1):
