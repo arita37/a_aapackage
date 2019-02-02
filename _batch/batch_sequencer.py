@@ -43,12 +43,13 @@ import os
 import shutil
 import sys
 import random
+import psutil
 
 import toml
 import subprocess
-import optparse
+import argparse
 import pandas as pd
-
+import time
 
 ################### Argument catching ########################################################
 print('Start Args')
@@ -58,25 +59,24 @@ print sys.argv, "\n\n", sys.argv[0], "\n\n", sys.argv[1], "\n\n"
 
 
 def load_arguments():
-    parser = optparse.OptionParser()
-    parser.add_option("--hyperparam", dest="HyperParametersFile",
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hyperparam", dest="HyperParametersFile",
                       help="Select the path for a .csv containing batch optimization parameters.\n One row per optimization.")
 
-    parser.add_option("--directory", dest="WorkingDirectory", default=".",
+    parser.add_argument("--directory", dest="WorkingDirectory", default=".",
                       help="Absolute or relative path to the working directory.")
 
-    parser.add_option("--optimizer", dest="OptimizerName",
+    parser.add_argument("--optimizer", dest="OptimizerName",
                       default="optimizer.py",
                       help="Name of the optimizer script. Should be located at WorkingDirectory")
 
-    parser.add_option("--file", dest="AdditionalFiles",
+    parser.add_argument("--file", dest="AdditionalFiles",
                       help="A file or comma-separated list of files to be provided for the optimizer function.")
 
-    parser.add_option("--aws", dest="ExecuteAws", action="store_true",
+    parser.add_argument("--aws", dest="ExecuteAws", action="store_true",
                       help="Wether optimization will run locally or on a dedicated AWS instance.")
 
-
-    options, args = parser.parse_args()
+    options = parser.parse_args()
     return options
 
 
@@ -102,6 +102,7 @@ batch_out_log = batch_out + '/output_result.txt'
 batch_out_data = batch_out + '/aafolio_storage_' + date0 + '.pkl'
 util.os_print_tofile('\n\n'+title1, batch_out_log)
 """
+
 
 def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     if not AdditionalFiles:
@@ -131,30 +132,45 @@ else:
 
 
 """
-def logs() :
-        with open(batch_log_file, 'a') as batch_log:
-            batch_log.write("Executing index %i at %s." % (ii, TaskDirectory))
-            batch_log.write("\n\n")
 
 
+def log(f, m):
+    with open(f, 'a') as _log:
+        _log.write(m)
+
+
+def get_computer_resources_usage():
+    cpu_used_percent = psutil.cpu_percent()
+
+    mem_info = dict(psutil.virtual_memory()._asdict())
+    mem_used_percent = 100 - mem_info['available'] / mem_info['total']
+
+    return cpu_used_percent, mem_used_percent
 
 
 ############### Loop on each parameters sets #############################################
-def execute_batch(HyperParametersFile, WorkingDirectory,
-                  ScriptPath, AdditionalFilesArg, krepeat=1):
+def build_execute_batch(HyperParametersFile, WorkingDirectory,
+                        ScriptPath, AdditionalFilesArg="", krepeat=1):
+
+    waitseconds = 2
 
     HyperParameters = pd.read_csv(os.path.join(WorkingDirectory, HyperParametersFile))
+
+    OptimizerName = os.path.basename(ScriptPath)
 
     batch_label = "%s_%.3i" % (OptimizerName, random.randint(0, 10e5))
 
     batch_log_file = os.path.join(WorkingDirectory, "log_batch_%s.txt" % batch_label)
 
     ChildProcesses = []
+
     for ii in range(HyperParameters.shape[0]):
 
         # Extract parameters for single run from batch_parameters data.
         params_dict = HyperParameters.iloc[ii].to_dict()
 
+        log(batch_log_file, "Executing index %i at %s." % (ii, WorkingDirectory))
+        log(batch_log_file, "\n\n")
 
         """
         No Need t 
@@ -172,7 +188,6 @@ def execute_batch(HyperParametersFile, WorkingDirectory,
         with open(os.path.join(TaskDirectory, "parameters.toml"), "w") as task_parameters:
             toml.dump(params_dict, task_parameters)
 
-        
         # Copy additional files to Task Directory;
         if AdditionalFilesArg:
             AdditionalFiles = checkAdditionalFiles(WorkingDirectory, AdditionalFilesArg)
@@ -181,65 +196,22 @@ def execute_batch(HyperParametersFile, WorkingDirectory,
                             os.path.join(TaskDirectory, File))
         """
 
-
-        python_path = os.python_path
+        python_path = sys.executable
 
         # Random Start loop  krepeat to have many random start....
         for rr in range(krepeat):
             # optimizerScriptPath = os.path.join(TaskDirectory, OptimizerName)
-              
 
-            proc = subprocess.Popen([python_path, ScriptPath, ii],
+            proc = subprocess.Popen([python_path, ScriptPath, str(ii)],
                                     stdout=subprocess.PIPE)
+
             ChildProcesses.append(proc)
-            wait( waitseconds)
+
+            # wait if computer resources are scarce.
+            cpu, mem = 100, 100
+            while cpu > 90 and mem > 90:
+                cpu, mem = get_computer_resources_usage()
+                time.sleep(waitseconds)
 
 
 
-
-'''  Manual test
-  ii= 2; kkk=1
-  params_dict= dict(input_params_list[ii,1])
-  globals().update(params_dict)
-
-  util.os_print_tofile('\n task_' + str(ii) +'\n' , batch_out_log)
-  for kkk in xrange(0, krepeat) : # Random Start loop
-      execfile(batch_script)
-
-'''
-
-
-#####################################################################################
-
-''' Create Storage file :
-np.concatenate((    ))
-
-aafolioref= aafolio_storage[0,:].reshape(1,20)
-util.py_save_obj( (aux3_cols, aafolioref) ,  'aafolio_storage_ref' ) 
-
-aux3_cols, aafolio_storage=  util.py_load_obj( dir_batch_main+  '/batch_20161228_96627894/aafolio_storage_20161227',
-                                                   isabsolutpath=1 )
-
-'''
-
-#####################################################################################
-
-'''
-for arg in sys.argv:
-    print arg
-Each command-line argument passed to the program will be in sys.argv, which is just a list. Here you are printing each argument on a separate line.
-Example 10.21. The contents of sys.argv
-[you@localhost py]$ python argecho.py             1
-argecho.py
-'''
-
-'''
-import argparse
-parser.add_argument('-i','--input', help='Script File Name', required=False)
-parser.add_argument('-o','--output',help='Script ID', required=False)
-args = parser.parse_args()
-
-## show values ##
-print ("Input file: %s" % args.input )
-print ("Output file: %s" % args.output )
-'''

@@ -15,5 +15,5 @@ mandatoryArguments = (
 
 
 execute_batch = partial(
-    batch_sequencer.execute_batch,
+    batch_sequencer.build_execute_batch,
     *mandatoryArguments)

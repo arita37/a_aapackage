@@ -17,7 +17,7 @@ from scipy import optimize
 import toml
 import os
 import sys
-
+import pandas as pd
 def optimizerFunction(x):
     x1, x2, x3, x4 = x
     delta = x1 ** 2 * x4
@@ -27,8 +27,13 @@ def optimizerFunction(x):
 
 
 def execute():
+    ii = int(sys.argv[1])
+    
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    params_dict = toml.load("./parameters.toml")
+
+
+    HyperParameterSet = pd.read_csv("hyperparams.csv")
+    params_dict = HyperParameterSet.iloc[ii].to_dict()
 
     res = optimize.minimize(optimizerFunction, [
         params_dict["x1"],
@@ -39,9 +44,9 @@ def execute():
 
     print("Result: %s" % res.x)
 
-    with open("result.txt", 'w') as ResultOutput:
+    with open("result%i.txt" % ii, 'a') as ResultOutput:
         result = str(list(res.x))
-        ResultOutput.write(result)
+        ResultOutput.write(result + "\n")
 
     print("Finished.", file=sys.stderr)
 
