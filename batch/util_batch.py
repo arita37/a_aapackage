@@ -114,6 +114,26 @@ def batch_execute_parallel(HyperParametersFile,
 
 
 
+##########################################################################################
+##########################################################################################
+def batch_generate_hyperparameters(hyper_dict,file_hyper) :
+  """
+     {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
+        "layer" : {"min": 10  , "max": 200 , "type": float,  "nmax": 10  }, "method": "linear"
+     }
+
+    size : key1 x ke2 x key2
+
+  """
+  for key  in hyper_dict
+       vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
+       df = df.extend(  len(vv) )
+
+   
+  df.to_csv( file_hyper )
+   
+
+
 
 
 
