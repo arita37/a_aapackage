@@ -3512,7 +3512,7 @@ def py_exception_print():
 
 def py_log_write(LOGFILE, prefix):
  import arrow, os
-    ##########################################################################################################
+    ###########################################################################
  #LOGFILE =     DIRCWD + '/aapackage/'+ 'ztest_all.txt';
  print(LOGFILE)
  DATENOW =     arrow.utcnow().to('Japan').format("YYYYMMDDHHmm")
@@ -3520,7 +3520,7 @@ def py_log_write(LOGFILE, prefix):
  sys.stdout =  open( LOGFILE, 'a')
  print("\n\n"+UNIQUE_ID+" ###################### Start:" + arrow.utcnow().to('Japan').format()  + "###########################") ; sys.stdout.flush() ; print(os)
  return UNIQUE_ID
- ##########################################################################################################
+ ##############################################################################
 
 
 
