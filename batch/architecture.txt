@@ -10,19 +10,6 @@ ENV install
 
 
 
-#############################################################################
-Test :
-python ztest_import.py
-
-
-MainFolder
-  aapackage Folder
-  myscript.py
-
-myscript.py
-  from aapackage import util
-  util.a_get_pythonversion()
-
 
 
 
@@ -56,6 +43,16 @@ batch_launch_aws_cli.py
   Launch AWS Batch
   and send task to aws folders
   
+
+
+
+
+
+
+
+
+
+
 
 
 
