@@ -12,17 +12,15 @@ import ujson
 import arrow
 
 ###############################################################################
-import util
+import util_log
 
-from util_batch import *
-from util_log import *
-
-
+import subprocess
 
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
-APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-
+# APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+STDOUT_FORMAT = "Finished Program: %s"
 
 
 #########Logging ##############################################################
@@ -30,59 +28,54 @@ def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--hyperparam",
-                      help="Select the path for a .csv containing batch optimization parameters.\n One row per optimization.")
+                        help="Select the path for a .csv containing batch optimization parameters.\n One row per "
+                             "optimization.")
 
     parser.add_argument("--directory", default=".",
-                      help="Absolute or relative path to the working directory.")
+                        help="Absolute or relative path to the working directory.")
 
-    parser.add_argument("--subprocess_script",  default="optimizer.py",
-                      help="Name of the optimizer script. Should be located at WorkingDirectory")
+    parser.add_argument("--subprocess_script", default="optimizer.py",
+                        help="Name of the optimizer script. Should be located at WorkingDirectory")
 
     parser.add_argument("--file", dest="AdditionalFiles",
-                      help="A file or comma-separated list of files to be provided for the optimizer function.")
+                        help="A file or comma-separated list of files to be provided for the optimizer function.")
 
     parser.add_argument("--file_log", default="logfile_batchdaemon.txt",
-                      help="Wether optimization will run locally or on a dedicated AWS instance.")
+                        help="Wether optimization will run locally or on a dedicated AWS instance.")
 
     options = parser.parse_args()
     return options
 
 
+def log_message(message):
+    m = util_log.printlog(s1=message)
+    util_log.log(m=m)
 
 
-if __name__ != '__main__' :
-  args     = load_arguments()   
-  LOG_FILE = args.file_log
-  
-  while 1 :
-   py_proc = server_pyprocess()   
-   wait(60)
-   for foldername in working_dir_folder :
-     wait(15)
-     
-     while server_monitor_load(file_log) < 1 :
-        wait(20)
-        print("Overload ")
+if __name__ == '__main__':
+    args = load_arguments()
+    LOG_FILE = args.file_log
+    log_message("Current Process Id: %s" % (str(os.getpid())))
+    sub_process_list = []
+    valid_directoties = []
+    for root, dirs, files in os.walk(DIR_PATH):
+        for filename in files:
+            root_splits = root.split("/")
+            if root_splits[-2] == "tasks" and not root_splits[-1].endswith("_qstart") and \
+                    not root_splits[-1].endswith("_qdone") and filename == "main.py":
+                valid_directoties.append(root)
+    if len(valid_directoties) > 0:
+        log_message("valid direcoties: %s" % str(valid_directoties))
 
-     ### Launch tasks in the folder
-     if "_qdone" not in foldername and "_qstart" not in foldername  :     
-        os.rename( working_dir + foldername, working_dir + foldername +  "_qstart" )
-        foldername = foldername + "_qstart" 
-
-        startime = now()
-        subprocess( working_dir + foldername + / + "main.py" , starttime)
-  
-
-
-
-
-
-
-
-
-
-
-
+    for each_dir in valid_directoties:
+        os.rename(each_dir, each_dir + "_qstart")
+        foldername = each_dir + "_qstart"
+        main_file = os.path.join(foldername, "main.py")
+        log_message("running file: %s" % main_file)
+        ps = subprocess.Popen(["python %s" % main_file], shell=True, stdout=subprocess.PIPE)
+        sub_process_list.append(ps)
+        log_message("running process: %s" % str(ps.pid))
+        sleep(5)
 """
 ################### Argument catching ########################################################
 print('Start Args')
@@ -152,9 +145,6 @@ for ii in xrange(itask0-itask0, itask1-itask0):
 
 """
 
-
-
-
 '''  Manual test
   ii= 2; kkk=1
   params_dict= dict(input_params_list[ii,1])
@@ -165,9 +155,6 @@ for ii in xrange(itask0-itask0, itask1-itask0):
       execfile(batch_script)
 
 '''
-
-
-
 
 #####################################################################################
 
@@ -203,11 +190,3 @@ args = parser.parse_args()
 print ("Input file: %s" % args.input )
 print ("Output file: %s" % args.output )
 '''
-
-
-
-
-
-
-
-

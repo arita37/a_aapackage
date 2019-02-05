@@ -19,6 +19,7 @@ import os
 import sys
 import pandas as pd
 
+BATCH_RESULT = "batch_results"
 
 def optimizerFunction(x):
     x1, x2, x3, x4 = x
@@ -29,7 +30,6 @@ def optimizerFunction(x):
 
 
 def execute(ii, params_dict):
-
     res = optimize.minimize(optimizerFunction, [
         params_dict["x1"],
         params_dict["x2"],
@@ -39,21 +39,20 @@ def execute(ii, params_dict):
 
     print("Result: %s" % res.x)
 
-    with open("batch_results/result%i.txt" % ii, 'a') as ResultOutput:
+    with open(BATCH_RESULT+"/result%i.txt" % ii, 'a') as ResultOutput:
         result = str(list(res.x))
         ResultOutput.write(result + "\n")
 
-    print("Finished.", file=sys.stderr)
-
-
+    print("Finished Program: %s" % str(os.getpid()))
 
 
 if __name__ == "__main__":
     ii = int(sys.argv[1])
 
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-
-    HyperParameterSet = pd.read_csv("hyperparams.csv")
-    params_dict = HyperParameterSet.iloc[ii].to_dict()
+    if not os.path.isdir(BATCH_RESULT):
+        os.mkdir(BATCH_RESULT)
+    hyper_parameter_set = pd.read_csv("hyperparams.csv")
+    params_dict = hyper_parameter_set.iloc[ii].to_dict()
 
     execute(ii, params_dict)
