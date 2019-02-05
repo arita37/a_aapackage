@@ -27,9 +27,10 @@ DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_DIRECTORY, arrow.utcnow().to('Japan
                                 + "_batch_monitor.log")
 DEFAULT_INTERVAL = 10  # seconds
 DEFAULT_DURATION = 3600  # seconds
-
+PYTHON_COMMAND = "python"
 
 #########Logging ##############################################################
+
 
 def load_arguments():
     import argparse
@@ -84,8 +85,7 @@ def all_children(pr):
 
 
 def log_message(message):
-    m = util_log.printlog(s1=message)
-    util_log.log(m=m)
+    util_log.printlog(s1=message)
 
 
 def monitor(pid, logfile=None, duration=None, interval=None):
@@ -152,8 +152,9 @@ def monitor(pid, logfile=None, duration=None, interval=None):
                 current_mem_virtual += current_mem.vms / 1024. ** 2
 
             if logfile:
-                f.write("{0:12.3f} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f}\n".format(
-                    arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,"),
+                timestamp = str(arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,"))
+                f.write("{0:12} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f}\n".format(
+                    timestamp,
                     current_time - start_time,
                     current_cpu,
                     current_mem_real,
@@ -170,26 +171,30 @@ def monitor(pid, logfile=None, duration=None, interval=None):
 
 
 if __name__ == '__main__':
+
     args = load_arguments()
     if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
         os.mkdir(MONITOR_LOGS_DIRECTORY)
     log_file = args.log
     duration = args.duration
     interval = args.interval
-
-    pid_of = "python batch_daemon_launch_cli.py"
+    error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
+    pid_of = "%s batch_daemon_launch_cli.py" % PYTHON_COMMAND
     proc = subprocess.Popen(['pidof %s' % pid_of], stdout=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if err:
         log_message("batch_daemon_launch_cli.py;get_pid_by_command;command=pidof ;error: %s" % err)
     else:
         parent_process_id = out.split(" ")
+        required_pid = None
         for each_pid in parent_process_id:
-            pid = int(re.sub('[^0-9]', '', each_pid))
             try:
+                pid = int(re.sub('[^0-9]', '', each_pid))
                 pr = psutil.Process(pid)
                 if "batch_daemon_launch_cli.py" in pr.cmdline():
-                    monitor(pid, logfile=log_file, duration=duration, interval=interval)
+                    required_pid = pid
                     break
-            except Exception:
+            except Exception as ex:
                 pass
+        if required_pid:
+            monitor(required_pid, logfile=log_file, duration=duration, interval=interval)

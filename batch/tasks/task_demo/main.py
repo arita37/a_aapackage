@@ -27,7 +27,7 @@ working_directory = os.path.dirname(os.path.abspath(__file__))
 
 DEFAULT_HYPERPARAMS = os.path.join(working_directory, "hyperparams.csv")
 DEFAULT_SUBPROCESS_SCRIPT = os.path.join(working_directory, "subprocess_optim.py")
-
+PYTHON_COMMAND = "python"
 
 ###############################################################################
 ################### Argument catching #########################################
@@ -53,24 +53,20 @@ def load_arguments():
 
 
 def execute_script(hyperparam, subprocess_script, file_log, row_number):
-    ps = subprocess.Popen(["python %s %s" % (subprocess_script, str(row_number))], shell=True, stdout=subprocess.PIPE)
+    ps = subprocess.Popen([PYTHON_COMMAND, subprocess_script, str(row_number)], stdout=subprocess.PIPE, shell=False)
     print("Subprocess started by execute_script: %s" % str(ps.pid))
     return ps
 
 
-# def kill_process_after_completion(subprocess_list):
-#     while len(subprocess_list) > 0:
-#         for sp in subprocess_list:
-#             while True:
-#                 line = sp.stdout.readline()
-#                 if line != '' and line.rstrip() == STDOUT_FORMAT % str(sp.pid):
-#                     print("Subprocess Killed with pid: %s" % str(sp.pid))
-#                     sp.kill()
-#                     subprocess_list.remove(sp)
-#                     break
-#                 else:
-#                     break
-#         time.sleep(1)
+def kill_process_after_completion(subprocess_list):
+    for sp in subprocess_list:
+        while True:
+            try:
+                sp.communicate()
+            except ValueError:
+                break
+            except Exception:
+                break
 
 
 def rename_directory(working_directory):
@@ -94,7 +90,7 @@ if __name__ == '__main__':
     for each_row in range(0, rows_length):
         subprocess_list.append(execute_script(hyperparam, subprocess_script, file_log, each_row))
         time.sleep(5)
-
+    kill_process_after_completion(subprocess_list)
     rename_directory(working_directory=working_directory)
     print("Finished Program: %s" % str(os.getpid()))
 

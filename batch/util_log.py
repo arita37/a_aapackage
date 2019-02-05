@@ -25,7 +25,7 @@ def printlog(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9=''
 
         # logging.info(s)
         print(s)
-        return s
+        log(s)
     except Exception as e:
         # logging.info(e)
         print(e)
@@ -34,7 +34,7 @@ def printlog(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9=''
 def log(m="", f=None):
     f = LOG_FILE if f is None else f
     with open(f, 'a') as _log:
-        _log.write(m)
+        _log.write(m+"\n")
 
 
 """"

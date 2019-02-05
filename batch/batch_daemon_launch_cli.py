@@ -21,9 +21,12 @@ logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 STDOUT_FORMAT = "Finished Program: %s"
-
+WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+PYTHON_COMMAND = "python"
 
 #########Logging ##############################################################
+
+
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -48,11 +51,21 @@ def load_arguments():
 
 
 def log_message(message):
-    m = util_log.printlog(s1=message)
-    util_log.log(m=m)
+    util_log.printlog(s1=message)
 
+
+def kill_process_after_completion(subprocess_list):
+    for sp in subprocess_list:
+        while True:
+            try:
+                sp.communicate()
+            except ValueError:
+                break
+            except Exception:
+                break
 
 if __name__ == '__main__':
+    error_log = open(WORKING_DIRECTORY+"/errors_daemon_launcher.log", "a")
     args = load_arguments()
     LOG_FILE = args.file_log
     log_message("Current Process Id: %s" % (str(os.getpid())))
@@ -72,10 +85,13 @@ if __name__ == '__main__':
         foldername = each_dir + "_qstart"
         main_file = os.path.join(foldername, "main.py")
         log_message("running file: %s" % main_file)
-        ps = subprocess.Popen(["python %s" % main_file], shell=True, stdout=subprocess.PIPE)
+        ps = subprocess.Popen([PYTHON_COMMAND, main_file], stderr=error_log, stdout=subprocess.PIPE,
+                              shell=False)
         sub_process_list.append(ps)
         log_message("running process: %s" % str(ps.pid))
         sleep(5)
+    error_log.close()
+    kill_process_after_completion(sub_process_list)
 """
 ################### Argument catching ########################################################
 print('Start Args')
