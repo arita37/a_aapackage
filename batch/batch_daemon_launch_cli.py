@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 STDOUT_FORMAT = "Finished Program: %s"
 WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-PYTHON_COMMAND = "python"
+PYTHON_COMMAND = str(sys.executable)
 APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 
 #########Logging ##############################################################

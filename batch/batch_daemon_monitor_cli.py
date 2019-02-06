@@ -27,8 +27,8 @@ DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_DIRECTORY, arrow.utcnow().to('Japan
                                 + "_batch_monitor.log")
 DEFAULT_INTERVAL = 10  # seconds
 DEFAULT_DURATION = 3600  # seconds
-PYTHON_COMMAND = "python"
-
+PYTHON_COMMAND = str(sys.executable)
+PROCESS_TO_LOOK = "python"
 #########Logging ##############################################################
 
 
@@ -179,8 +179,7 @@ if __name__ == '__main__':
     duration = args.duration
     interval = args.interval
     error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
-    pid_of = "%s batch_daemon_launch_cli.py" % PYTHON_COMMAND
-    proc = subprocess.Popen(['pidof %s' % pid_of], stdout=subprocess.PIPE, shell=True)
+    proc = subprocess.Popen(['pidof %s' % PROCESS_TO_LOOK], stdout=subprocess.PIPE, shell=True)
     out, err = proc.communicate()
     if err:
         log_message("batch_daemon_launch_cli.py;get_pid_by_command;command=pidof ;error: %s" % err)
@@ -198,3 +197,4 @@ if __name__ == '__main__':
                 pass
         if required_pid:
             monitor(required_pid, logfile=log_file, duration=duration, interval=interval)
+    error_log.close()

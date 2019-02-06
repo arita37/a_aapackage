@@ -23,11 +23,11 @@ import psutil
 
 logging.basicConfig(level=logging.INFO)
 STDOUT_FORMAT = "Finished Program: %s"
-working_directory = os.path.dirname(os.path.abspath(__file__))
+WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
-DEFAULT_HYPERPARAMS = os.path.join(working_directory, "hyperparams.csv")
-DEFAULT_SUBPROCESS_SCRIPT = os.path.join(working_directory, "subprocess_optim.py")
-PYTHON_COMMAND = "python"
+DEFAULT_HYPERPARAMS = os.path.join(WORKING_DIRECTORY, "hyperparams.csv")
+DEFAULT_SUBPROCESS_SCRIPT = os.path.join(WORKING_DIRECTORY, "subprocess_optim.py")
+PYTHON_COMMAND = sys.executable
 
 ###############################################################################
 ################### Argument catching #########################################
@@ -85,7 +85,7 @@ def rename_directory(working_directory):
 
 if __name__ == '__main__':
     args = load_arguments()
-
+    error_log = open(WORKING_DIRECTORY+"/errors.log", "a")
     subprocess_script = args.subprocess_script
     file_log = args.file_log
     hyperparam = args.hyperparam
@@ -99,7 +99,8 @@ if __name__ == '__main__':
         subprocess_list.append(execute_script(hyperparam, subprocess_script, file_log, each_row))
         time.sleep(5)
     wait_for_completion(subprocess_list)
-    rename_directory(working_directory=working_directory)
+    rename_directory(working_directory=WORKING_DIRECTORY)
+    error_log.close()
     print("Finished Program: %s" % str(os.getpid()))
 
 """
