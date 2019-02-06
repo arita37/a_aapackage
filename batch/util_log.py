@@ -17,9 +17,12 @@ LOG_FILE = "logfile.log"
 logging.basicConfig(level=logging.INFO)
 
 
-def printlog(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
+def printlog(app_id='', s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
     try:
-        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+        if app_id:
+            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+        else:
+            prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
                       str(s6), str(s7), str(s8), str(s9), str(s10)])
 

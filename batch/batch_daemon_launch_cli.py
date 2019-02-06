@@ -15,7 +15,7 @@ import arrow
 import util_log
 
 import subprocess
-
+import psutil
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
@@ -23,6 +23,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 STDOUT_FORMAT = "Finished Program: %s"
 WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 PYTHON_COMMAND = "python"
+APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 
 #########Logging ##############################################################
 
@@ -51,18 +52,27 @@ def load_arguments():
 
 
 def log_message(message):
-    util_log.printlog(s1=message)
+    util_log.printlog(app_id=APP_ID, s1=message)
 
 
-def kill_process_after_completion(subprocess_list):
-    for sp in subprocess_list:
+def wait_for_completion(subprocess_list):
+    for pid in subprocess_list:
         while True:
             try:
-                sp.communicate()
-            except ValueError:
+                pr = psutil.Process(pid)
+                try:
+                    pr_status = pr.status()
+                except TypeError:  # psutil < 2.0
+                    pr_status = pr.status
+                except psutil.NoSuchProcess:  # pragma: no cover
+                    break
+                # Check if process status indicates we should exit
+                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                    break
+            except:
                 break
-            except Exception:
-                break
+            sleep(0.5)
+
 
 if __name__ == '__main__':
     error_log = open(WORKING_DIRECTORY+"/errors_daemon_launcher.log", "a")
@@ -87,11 +97,12 @@ if __name__ == '__main__':
         log_message("running file: %s" % main_file)
         ps = subprocess.Popen([PYTHON_COMMAND, main_file], stderr=error_log, stdout=subprocess.PIPE,
                               shell=False)
-        sub_process_list.append(ps)
+        sub_process_list.append(ps.pid)
         log_message("running process: %s" % str(ps.pid))
         sleep(5)
     error_log.close()
-    kill_process_after_completion(sub_process_list)
+    wait_for_completion(sub_process_list)
+    log_message("Process Completed")
 """
 ################### Argument catching ########################################################
 print('Start Args')

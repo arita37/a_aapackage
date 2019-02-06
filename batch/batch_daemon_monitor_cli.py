@@ -85,7 +85,7 @@ def all_children(pr):
 
 
 def log_message(message):
-    util_log.printlog(s1=message)
+    util_log.printlog(app_id=APP_ID, s1=message)
 
 
 def monitor(pid, logfile=None, duration=None, interval=None):

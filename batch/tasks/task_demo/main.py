@@ -55,18 +55,26 @@ def load_arguments():
 def execute_script(hyperparam, subprocess_script, file_log, row_number):
     ps = subprocess.Popen([PYTHON_COMMAND, subprocess_script, str(row_number)], stdout=subprocess.PIPE, shell=False)
     print("Subprocess started by execute_script: %s" % str(ps.pid))
-    return ps
+    return ps.pid
 
 
-def kill_process_after_completion(subprocess_list):
-    for sp in subprocess_list:
+def wait_for_completion(subprocess_list):
+    for pid in subprocess_list:
         while True:
             try:
-                sp.communicate()
-            except ValueError:
+                pr = psutil.Process(pid)
+                try:
+                    pr_status = pr.status()
+                except TypeError:  # psutil < 2.0
+                    pr_status = pr.status
+                except psutil.NoSuchProcess:  # pragma: no cover
+                    break
+                # Check if process status indicates we should exit
+                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                    break
+            except:
                 break
-            except Exception:
-                break
+            time.sleep(0.5)
 
 
 def rename_directory(working_directory):
@@ -90,7 +98,7 @@ if __name__ == '__main__':
     for each_row in range(0, rows_length):
         subprocess_list.append(execute_script(hyperparam, subprocess_script, file_log, each_row))
         time.sleep(5)
-    kill_process_after_completion(subprocess_list)
+    wait_for_completion(subprocess_list)
     rename_directory(working_directory=working_directory)
     print("Finished Program: %s" % str(os.getpid()))
 
