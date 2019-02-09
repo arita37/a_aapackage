@@ -15,8 +15,27 @@
 			"settings":
 			{
 				"buffer_size": 127650,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "# -*- coding: utf-8 -*-\n\"\"\"\nConfusion comes there 3 levels of Batchs in my initial code\n\n\"\"\"\n\nimport numpy as np\nimport os\nimport shutil\nimport sys\nimport random\nimport psutil\n\nimport toml\nimport subprocess\nimport argparse\nimport pandas as pd, numpy as pd\nimport time\n\n################### Argument catching #########################################\nglobal APP_ID, APP_ID2\n\nAPP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())\nAPP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())\n\nlogging.basicConfig(level=logging.INFO)\n\ndef log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',\n        s9='', s10=''):\n    try:\n        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format(\n            \"YYYYMMDD_HHmmss,\") + ',' \n        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),\n             str(s6), str(s7), str(s8), str(s9), str(s10)])\n\n        # logging.info(s)\n        print(s)\n\n    except Exception as e:\n        # logging.info(e)\n        print(e)\n\n\n\ndef checkAdditionalFiles(WorkingDirectory, AdditionalFiles):\n    if not AdditionalFiles:\n        return []\n\n    AdditionalFiles = [f.strip(\" \")\n                       for f in AdditionalFiles.split(\",\")]\n\n    for File in AdditionalFiles:\n        ExpectedFilePath = os.path.isfile(os.path.join(WorkingDirectory, File))\n        if not ExpectedFilePath:\n            print(\"Additional file <%s> %s not found. Aborting!\" % File)\n            exit(1)\n\n    return AdditionalFiles\n\n\ndef get_computer_resources_usage():\n    cpu_used_percent = psutil.cpu_percent()\n\n    mem_info = dict(psutil.virtual_memory()._asdict())\n    mem_used_percent = 100 - mem_info['available'] / mem_info['total']\n\n    return cpu_used_percent, mem_used_percent\n\n\ndef createFolder(WorkingDirectory, folderName):\n    folderPath = os.path.join(WorkingDirectory, folderName)\n    if not os.path.isdir(folderPath):\n        os.mkdir(folderPath)\n\n\n############### Loop on each parameters sets ##################################\ndef batch_execute_parallel(HyperParametersFile, \n                           subprocess_script, batch_log_file =\"batch_logfile.txt\",\n                           waitseconds = 2):\n    \"\"\"\n    task/\n          main.py\n          subprocess.py\n          hyperparams.csv\n          ...\n    \n    \n    \"\"\"\n    python_path = sys.executable\n        \n    HyperParameters  = pd.read_csv( HyperParametersFile)\n    OptimizerName    = os.path.basename(subprocess_script)\n    WorkingDirectory = subprocess_script\n\n    # logging.basicConfig(level=logging.INFO)\n    #batch_log_file = os.path.join(WorkingDirectory, \"batch_logs/batch_%s.txt\" % batch_label) \n    ChildProcesses = []\n\n    for ii in range(HyperParameters.shape[0]):\n       # Extract parameters for single run from batch_parameters data.\n       # params_dict = HyperParameters.iloc[ii].to_dict()\n       log(batch_label, \"Executing index\", ii, WorkingDirectory, \"\\n\\n\")\n\n       proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],\n                                 stdout=subprocess.PIPE)\n       # ChildProcesses.append(proc)\n\n       # wait if computer resources are scarce.\n       cpu, mem = 100, 100\n       while cpu > 90 and mem > 90:\n          cpu, mem = get_computer_resources_usage()\n          time.sleep(waitseconds)\n\n\n\n\n##########################################################################################\n##########################################################################################\ndef batch_generate_hyperparameters(hyper_dict,file_hyper) :\n  \"\"\"\n     {  \"layer\" : {\"min\": 10  , \"max\": 200 , \"type\": int,    \"nmax\": 10, \"method\": \"random\"  },\n        \"layer\" : {\"min\": 10  , \"max\": 200 , \"type\": float,  \"nmax\": 10  }, \"method\": \"linear\"\n     }\n\n    size : key1 x ke2 x key2\n\n  \"\"\"\n  for key  in hyper_dict\n       vv = np.arange( hyper_dict[\"key\"][\"min\"]  ,   hyper_dict[\"key\"][\"max\"] )\n       df = df.extend(  len(vv) )\n\n   \n  df.to_csv( file_hyper )\n   \n\n\n\n\n\n\nbatch_daemon_launch_cli.py                  : Folder scanner + main.py run\n/batch/tasks/task_demo/main.py              : parallel subprocess start\n/batch/tasks/task_demo/subprocess_pygmo.py  : 1 subprocess \n\nbatch/batch_daemon_monitor_cli.py   : monitor all python processes on server\n\n\n\n\n\n\n\n\n\"\"\"\ndate0 = util.date_now()\nisverbose = 0\nbatchname = task_folder\nDIRBATCH = DIRCWD + '/linux/batch/task/' + task_folder + '/'\n\nbatch_script = DIRBATCH + '/elvis_pygmo_optim.py'\nbatch_in_data1 = DIRBATCH + '/aafolio_storage_ref.pkl'\nfiledata = DIRBATCH + '/close_15assets_2012_dec216.spydata'\n\n\ndir_batch_main = DIRCWD + '/linux/batch/'\n# str(np.random.randint(1000, 99999999))\nbatch_out_name = 'batch_' + util.date_nowtime('stamp')\nbatch_out = dir_batch_main + '/output/'+date0 + '/' + batch_out_name\nos.makedirs(batch_out)\n\nbatch_out_log = batch_out + '/output_result.txt'\nbatch_out_data = batch_out + '/aafolio_storage_' + date0 + '.pkl'\nutil.os_print_tofile('\\n\\n'+title1, batch_out_log)\n\"\"\"\n\n\n\n\"\"\"\nif util.os_file_exist(batch_out_data):\n    aux3_cols, aafolio_storage = util.py_load_obj(\n        batch_out_data, isabsolutpath=1)\nelse:\n    aux3_cols, aafolio_storage = util.py_load_obj(\n        batch_in_data1, isabsolutpath=1)\n\n\n\"\"\"\n\n\n\n\"\"\"\n        No Need t \n        # build path & create task directory;\n        TaskDirectoryName = \"task_%s_%i\" % (batch_label, ii)\n        TaskDirectory = os.path.join(WorkingDirectory, TaskDirectoryName)\n\n        os.mkdir(TaskDirectory)\n\n        # Copy optimization script to Task Directory;\n        shutil.copy(os.path.join(WorkingDirectory, OptimizerName),\n                    os.path.join(TaskDirectory, OptimizerName))\n\n        # Save Parameters inside Task Directory;\n        with open(os.path.join(TaskDirectory, \"parameters.toml\"), \"w\") as task_parameters:\n            toml.dump(params_dict, task_parameters)\n\n        # Copy additional files to Task Directory;\n        if AdditionalFilesArg:\n            AdditionalFiles = checkAdditionalFiles(WorkingDirectory, AdditionalFilesArg)\n            for File in AdditionalFiles:\n                shutil.copy(os.path.join(WorkingDirectory, File),\n                            os.path.join(TaskDirectory, File))\n\"\"\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+			"file": "batch/util_batch.py",
+			"file_size": 6095,
+			"file_write_time": 131936858540182112,
+			"settings":
+			{
+				"buffer_size": 6166,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/D/_devs/Python01/aws/_latest.py",
+			"settings":
+			{
+				"buffer_size": 3114,
+				"line_ending": "Unix"
 			}
 		},
 		{
@@ -106,6 +125,9 @@
 	],
 	"file_history":
 	[
+		"/D/_devs/Python01/aws/aapackage/batch/tasks/task_demo/subprocess_pygmo.py",
+		"/D/_devs/Python01/aws/aapackage/batch/tasks/task_demo/subprocess_optim.py",
+		"/D/_devs/Python01/aws/aapackage/batch/tasks/task_demo/main.py",
 		"/D/_devs/Python01/aws/aapackage/_batch/__init__.py",
 		"/D/_devs/Python01/aws/aapackage/ztest/ztest_log_all.txt",
 		"/D/_devs/Python01/aws/aapackage/_batch/batch_sequencer.py",
@@ -225,7 +247,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -250,14 +272,74 @@
 							"syntax": "Packages/Text/Plain text.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 270.0,
+						"translation.y": 720.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "batch/util_batch.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6166,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4244,
+								3956
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2070.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/D/_devs/Python01/aws/_latest.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3114,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2752,
+								2752
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1440.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
 					"type": "text"
 				},
 				{
-					"buffer": 1,
+					"buffer": 3,
 					"file": "/D/Dropbox/_text/coding.txt",
 					"semi_transient": false,
 					"settings":
@@ -283,11 +365,11 @@
 						"translation.y": 16077.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 5,
 					"type": "text"
 				},
 				{
-					"buffer": 2,
+					"buffer": 4,
 					"file": "ztodo_list.txt",
 					"semi_transient": false,
 					"settings":
@@ -311,11 +393,11 @@
 						"translation.y": 738.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 5,
 					"file": "/D/Dropbox/_text/interview3.txt",
 					"semi_transient": false,
 					"settings":
@@ -341,11 +423,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 4,
+					"buffer": 6,
 					"file": "/D/Dropbox/inter_prep.txt",
 					"semi_transient": false,
 					"settings":
@@ -369,11 +451,11 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
+					"buffer": 7,
 					"file": "/D/Dropbox/_text/msg.txt",
 					"semi_transient": false,
 					"settings":
@@ -399,7 +481,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]

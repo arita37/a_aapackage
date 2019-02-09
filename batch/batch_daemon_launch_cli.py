@@ -8,14 +8,16 @@ import gc
 import logging
 import socket
 from time import sleep, time
-import ujson
+#import ujson
 import arrow
+import subprocess
+import psutil
+
 
 ###############################################################################
 import util_log
 
-import subprocess
-import psutil
+
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
@@ -23,7 +25,10 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 STDOUT_FORMAT = "Finished Program: %s"
 WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 PYTHON_COMMAND = str(sys.executable)
-APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+
+util_log.APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+util_log.LOG_FILE = "logfile.log"
+
 
 #########Logging ##############################################################
 
@@ -41,18 +46,19 @@ def load_arguments():
     parser.add_argument("--subprocess_script", default="optimizer.py",
                         help="Name of the optimizer script. Should be located at WorkingDirectory")
 
-    parser.add_argument("--file", dest="AdditionalFiles",
-                        help="A file or comma-separated list of files to be provided for the optimizer function.")
+    parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log",
+                        help=".")
 
-    parser.add_argument("--file_log", default="logfile_batchdaemon.txt",
-                        help="Wether optimization will run locally or on a dedicated AWS instance.")
+    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log",
+                        help=".")
+
 
     options = parser.parse_args()
     return options
 
 
 def log_message(message):
-    util_log.printlog(app_id=APP_ID, s1=message)
+    util_log.printlog(s1=message)
 
 
 def wait_for_completion(subprocess_list):
@@ -71,13 +77,16 @@ def wait_for_completion(subprocess_list):
                     break
             except:
                 break
-            sleep(0.5)
+            sleep( 1 )
 
 
 if __name__ == '__main__':
-    error_log = open(WORKING_DIRECTORY+"/errors_daemon_launcher.log", "a")
-    args = load_arguments()
-    LOG_FILE = args.file_log
+    args      = load_arguments()
+    error_log = open( args.file_error_log, "a")
+    
+    util_log.LOG_FILE  = args.file_log
+
+
     log_message("Current Process Id: %s" % (str(os.getpid())))
     sub_process_list = []
     valid_directoties = []
@@ -87,6 +96,7 @@ if __name__ == '__main__':
             if root_splits[-2] == "tasks" and not root_splits[-1].endswith("_qstart") and \
                     not root_splits[-1].endswith("_qdone") and filename == "main.py":
                 valid_directoties.append(root)
+
     if len(valid_directoties) > 0:
         log_message("valid direcoties: %s" % str(valid_directoties))
 
@@ -103,6 +113,12 @@ if __name__ == '__main__':
     error_log.close()
     wait_for_completion(sub_process_list)
     log_message("Process Completed")
+
+
+
+
+
+
 """
 ################### Argument catching ########################################################
 print('Start Args')

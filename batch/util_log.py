@@ -9,17 +9,18 @@ import logging
 ################### Logs ######################################################
 global APP_ID, APP_ID2
 
-APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
+APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+APP_ID2  = str(os.getpid()) + '_' + str(socket.gethostname())
 
 LOG_FILE = "logfile.log"
 
 logging.basicConfig(level=logging.INFO)
 
 
-def printlog(app_id='', s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
+def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
+              app_id='' ):
     try:
-        if app_id:
+        if app_id != "" :
             prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         else:
             prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")

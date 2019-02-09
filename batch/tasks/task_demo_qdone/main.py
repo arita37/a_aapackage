@@ -52,10 +52,13 @@ def load_arguments():
     return options
 
 
+
 def execute_script(hyperparam, subprocess_script, file_log, row_number):
-    ps = subprocess.Popen([PYTHON_COMMAND, subprocess_script, str(row_number)], stdout=subprocess.PIPE, shell=False)
+    cmd_list = [PYTHON_COMMAND, subprocess_script, str(row_number)]
+    ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     print("Subprocess started by execute_script: %s" % str(ps.pid))
     return ps.pid
+
 
 
 def wait_for_completion(subprocess_list):
@@ -77,31 +80,35 @@ def wait_for_completion(subprocess_list):
             time.sleep(0.5)
 
 
+
 def rename_directory(working_directory):
     k = working_directory.rfind("qstart")
     new_name = working_directory[:k] + "qdone"
     os.rename(working_directory, new_name)
 
 
+
 if __name__ == '__main__':
     args = load_arguments()
-    error_log = open(WORKING_DIRECTORY+"/errors.log", "a")
-    subprocess_script = args.subprocess_script
-    file_log = args.file_log
-    hyperparam = args.hyperparam
+    # error_log = open(WORKING_DIRECTORY+"/errors.log", "a")
+    
+    print("start task main", __file__)
 
-    print ("start task main", __file__)
-
-    hyper_parameter_set = pd.read_csv(hyperparam)
+    hyper_parameter_set = pd.read_csv(args.hyperparam)
     rows_length = len(hyper_parameter_set.index)
     subprocess_list = []
-    for each_row in range(0, rows_length):
-        subprocess_list.append(execute_script(hyperparam, subprocess_script, file_log, each_row))
+    for ii in range(0, rows_length):
+        pid = execute_script( args.hyperparam, 
+                              args.subprocess_script, args.file_log, ii)
+        
+        subprocess_list.append(pid)
         time.sleep(5)
+
     wait_for_completion(subprocess_list)
     rename_directory(working_directory=WORKING_DIRECTORY)
-    error_log.close()
+    # error_log.close()
     print("Finished Program: %s" % str(os.getpid()))
+
 
 """
 date0 = util.date_now()

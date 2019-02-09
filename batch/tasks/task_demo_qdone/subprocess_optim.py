@@ -19,7 +19,7 @@ import os
 import sys
 import pandas as pd
 
-BATCH_RESULT = "batch_results"
+BATCH_RESULT = "../../ztest/batch_results"
 
 def optimizerFunction(x):
     x1, x2, x3, x4 = x
