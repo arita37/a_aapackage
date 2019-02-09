@@ -30,7 +30,7 @@ util_log.APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethost
 util_log.LOG_FILE = "logfile.log"
 
 
-#########Logging ##############################################################
+######### Logging ##############################################################
 
 
 def load_arguments():
