@@ -52,10 +52,9 @@ def load_arguments():
     parser.add_argument('--log_directory', type=str, default="",
                         help='')
 
-
-
     args = parser.parse_args()
     return args
+
 
 
 def get_percent(process):
@@ -65,11 +64,13 @@ def get_percent(process):
         return process.get_cpu_percent()
 
 
+
 def get_memory(process):
     try:
         return process.memory_info()
     except AttributeError:
         return process.get_memory_info()
+
 
 
 def all_children(pr):

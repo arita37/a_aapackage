@@ -73,6 +73,7 @@ def createFolder(WorkingDirectory, folderName):
         os.mkdir(folderPath)
 
 
+
 ############### Loop on each parameters sets ##################################
 def batch_execute_parallel(HyperParametersFile, 
                            subprocess_script, batch_log_file ="batch_logfile.txt",

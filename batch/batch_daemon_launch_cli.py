@@ -18,6 +18,7 @@ import psutil
 import util_log
 
 
+
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
@@ -30,9 +31,9 @@ util_log.APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethost
 util_log.LOG_FILE = "logfile.log"
 
 
+
+
 ######### Logging ##############################################################
-
-
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()

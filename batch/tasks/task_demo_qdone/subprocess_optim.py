@@ -19,12 +19,18 @@ import arrow
 import toml
 
 
-from utils import log, batch_result_folder, load_data_session, save_results, APP_ID 
+from utils import logs, batch_result_folder, load_data_session, save_results, APP_ID, logs 
+
+
+
+
+
+
 
 
 ###########################################################################################
-APP_ID   = __file__ + ',' + str(os.getpid()) + ','
-
+###########################################################################################
+APP_ID   =  log_get_APPID()
 
 
 def load_arguments():
@@ -33,9 +39,6 @@ def load_arguments():
     parser.add_argument("-h", "--hyperparam_ii", default="0"  help="")
     options = parser.parse_args()
     return options
-
-
-
 
 
 
@@ -64,11 +67,11 @@ def execute(ii, args):
             args["x3"],
             args["x4"]
           ])
-    log("Result: %s" % res.x)
+    logs("Result: %s" % res.x)
 
 
     save_results( BATCH_RESULT, res.x,)
-    log("Finished Program: %s" % str(os.getpid()))
+    logs("Finished Program: %s" % str(os.getpid()))
 
 
 
