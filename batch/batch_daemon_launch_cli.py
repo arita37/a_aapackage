@@ -36,28 +36,19 @@ util_log.LOG_FILE = "logfile.log"
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hyperparam",
-                        help="Select the path for a .csv containing batch optimization parameters.\n One row per "
-                             "optimization.")
 
-    parser.add_argument("--directory", default=".",
-                        help="Absolute or relative path to the working directory.")
+    parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
+    parser.add_argument("--directory",  default=".",  help="Absolute or relative path to the working directory.")
+    parser.add_argument("--subprocess_script", default="optimizer.py",  help="Name of the optimizer script")
 
-    parser.add_argument("--subprocess_script", default="optimizer.py",
-                        help="Name of the optimizer script. Should be located at WorkingDirectory")
-
-    parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log",
-                        help=".")
-
-    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log",
-                        help=".")
-
+    parser.add_argument("--file_log",       default="ztest/logfile_batchdaemon.log",    help=".")
+    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log",  help=".")
 
     options = parser.parse_args()
     return options
 
 
-def log_message(message):
+def log(message):
     util_log.printlog(s1=message)
 
 
@@ -80,14 +71,16 @@ def wait_for_completion(subprocess_list):
             sleep( 1 )
 
 
+
+
+
 if __name__ == '__main__':
     args      = load_arguments()
-    error_log = open( args.file_error_log, "a")
-    
+    # error_log = open( args.file_error_log, "a")
     util_log.LOG_FILE  = args.file_log
 
 
-    log_message("Current Process Id: %s" % (str(os.getpid())))
+    log("Current Process Id: %s" % (str(os.getpid())))
     sub_process_list = []
     valid_directoties = []
     for root, dirs, files in os.walk(DIR_PATH):
@@ -97,22 +90,27 @@ if __name__ == '__main__':
                     not root_splits[-1].endswith("_qdone") and filename == "main.py":
                 valid_directoties.append(root)
 
+
     if len(valid_directoties) > 0:
-        log_message("valid direcoties: %s" % str(valid_directoties))
+        log("valid direcoties: %s" % str(valid_directoties))
 
     for each_dir in valid_directoties:
-        os.rename(each_dir, each_dir + "_qstart")
         foldername = each_dir + "_qstart"
+        os.rename(each_dir, foldername )
+
         main_file = os.path.join(foldername, "main.py")
-        log_message("running file: %s" % main_file)
-        ps = subprocess.Popen([PYTHON_COMMAND, main_file], stderr=error_log, stdout=subprocess.PIPE,
+        log("running file: %s" % main_file)
+        ps = subprocess.Popen([PYTHON_COMMAND, main_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                               shell=False)
         sub_process_list.append(ps.pid)
-        log_message("running process: %s" % str(ps.pid))
+        log("running process: %s" % str(ps.pid))
         sleep(5)
-    error_log.close()
+    # error_log.close()
     wait_for_completion(sub_process_list)
-    log_message("Process Completed")
+    log("Process Completed")
+
+
+
 
 
 

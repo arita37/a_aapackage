@@ -49,6 +49,10 @@ def load_arguments():
                         help='how long to wait between each sample (in '
                              'seconds). By default the process is sampled '
                              'as often as possible.')
+    parser.add_argument('--log_directory', type=str, default="",
+                        help='')
+
+
 
     args = parser.parse_args()
     return args
@@ -170,16 +174,47 @@ def monitor(pid, logfile=None, duration=None, interval=None):
         f.close()
 
 
+
+def ps_find_procs_by_name(name):
+    "Return a list of processes matching 'name'."
+    assert name, name
+    ls = []
+    for p in psutil.process_iter():
+        name_, exe, cmdline = "", "", []
+        try:
+            name_ = p.name()
+            cmdline = p.cmdline()
+            exe = p.exe()
+        except (psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+        except psutil.NoSuchProcess:
+            continue
+        if name == name_ or cmdline[0] == name or os.path.basename(exe) == name:
+            ls.append(name)
+    return ls
+
+
+
+
+
 if __name__ == '__main__':
 
     args = load_arguments()
-    if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
-        os.mkdir(MONITOR_LOGS_DIRECTORY)
     log_file = args.log
     duration = args.duration
     interval = args.interval
-    error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
-    proc = subprocess.Popen(['pidof %s' % PROCESS_TO_LOOK], stdout=subprocess.PIPE, shell=True)
+    log_directory = args.log_directory'
+
+
+
+    if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
+        os.mkdir(MONITOR_LOGS_DIRECTORY)
+
+
+    # Use psutil find_procs_by_name
+
+    #error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
+    proc = subprocess.Popen(['pidof %s' % PROCESS_TO_LOOK], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     out, err = proc.communicate()
     if err:
         log_message("batch_daemon_launch_cli.py;get_pid_by_command;command=pidof ;error: %s" % err)
@@ -195,6 +230,7 @@ if __name__ == '__main__':
                     break
             except Exception as ex:
                 pass
+
         if required_pid:
             monitor(required_pid, logfile=log_file, duration=duration, interval=interval)
-    error_log.close()
+    # error_log.close()
