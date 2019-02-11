@@ -22,10 +22,12 @@ import arrow
 
 
 
-APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+# APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 
 
-def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' , APP_ID=""):
+
+def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' , 
+          APP_ID="", LOG_FILE="log_file.log"):
     # APP_ID = log_get_APPID() 
     try:
         prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
@@ -34,9 +36,14 @@ def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' , 
 
         # logging.info(s)
         print(s)
+        with open(LOG_FILE, 'a') as _log:
+          _log.write(s+"\n")
+
     except Exception as e:
         # logging.info(e)
         print(e)
+        with open(LOG_FILE, 'a') as _log:
+          _log.write(e+"\n")
 
 
 def log_get_APPID() :

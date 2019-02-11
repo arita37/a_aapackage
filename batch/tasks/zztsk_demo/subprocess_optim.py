@@ -36,7 +36,7 @@ APP_ID   =  log_get_APPID()
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hyperparam_ii", default=0, help="", type=int)
+    parser.add_argument("-h", "--hyperparam_ii", default="0"  help="")
     options = parser.parse_args()
     return options
 

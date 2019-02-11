@@ -26,6 +26,7 @@ import numpy as np, pandas as pd
 
 ###########################################################################################
 ################### Generic ###############################################################
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+"/../..")
 from utils import logs, os_getparent, ps_wait_process_complete
 
 
@@ -57,7 +58,7 @@ def batch_parallel_subprocess(hyperparam_file,  subprocess_script, file_logs ) :
         pid = execute_script( hyperparam_file, subprocess_script, file_logs, ii)
         
         subprocess_list.append(pid)
-        time.sleep(2)
+        time.sleep(5)
 
     ps_wait_process_complete(subprocess_list)
     os_folder_rename(working_directory=WORKING_DIRECTORY)
@@ -84,7 +85,7 @@ def load_arguments():
 
 
 def execute_script(hyperparam, subprocess_script, file_logs, row_number):
-    cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparams_ii=%d" % row_number]
+    cmd_list = [PYTHON_COMMAND, subprocess_script, str(row_number)]
     ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     log("Subprocess started by execute_script: %s" % str(ps.pid))
     return ps.pid

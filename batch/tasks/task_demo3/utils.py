@@ -5,20 +5,30 @@ Run task
 python main.py  --hyperparam      --subprocess_script sub
 
 
+
+
+
 """
-import os, sys
+import os, sys, socket
 import numpy as np, pandas as pd
 import random
 import toml
 import time
 import logging
 import psutil
+import arrow
 
 
 
 
 
-def log( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' ):
+# APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+
+
+
+def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' , 
+          APP_ID="", LOG_FILE="log_file.log"):
+    # APP_ID = log_get_APPID() 
     try:
         prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
@@ -26,10 +36,19 @@ def log( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' ):
 
         # logging.info(s)
         print(s)
-        log(s)
+        with open(LOG_FILE, 'a') as _log:
+          _log.write(s+"\n")
+
     except Exception as e:
         # logging.info(e)
         print(e)
+        with open(LOG_FILE, 'a') as _log:
+          _log.write(e+"\n")
+
+
+def log_get_APPID() :
+  APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+  return APP_ID
 
 
 def os_getparent(dir0):
@@ -65,3 +84,37 @@ def batch_result_folder(prefix) :
   return BATCH_RESULT
 
 
+def load_data_session(file_data , method ="spyder") :
+  if method == "spyder"  :
+    try :
+      from spyderlib.utils.iofuncs import load_dictionary
+      globals().update(load_dictionary(filedata)[0])
+    except :
+      pass
+
+  if method == "shelve"  :
+    import shelve
+    "dict of var in myshelf.db"
+    try :
+      with shelve.open(file_data, flag='r') as db:
+        for key in db:
+         print(key,) 
+         globals()[key] = db[key]
+    except :
+       pass    
+   
+
+
+
+def save_results(  BATCH_RESULT, ddict ):
+    if not os.path.isdir(BATCH_RESULT):
+        os.mkdir(BATCH_RESULT)
+
+    import shelve
+    "dict of var in myshelf.db"
+    with shelve.open(file_data, flag='w') as db:
+        db["res"] = ddict
+
+    with open(BATCH_RESULT+"/result%i.txt" % ii, 'a') as ff :
+        result = str(ddict)
+        ff.write(result + "\n")

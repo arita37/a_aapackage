@@ -14,12 +14,14 @@ Those interactions are defined in batch_sequencer.py and should be conserved amo
 
 """
 import os, sys
+from functools import partial 
 import pandas as pd
 import arrow
 import toml
 
 
-from utils import logs, batch_result_folder, load_data_session, save_results, APP_ID, logs 
+####Local 
+from utils import logs, batch_result_folder, load_data_session, save_results
 
 
 
@@ -30,15 +32,18 @@ from utils import logs, batch_result_folder, load_data_session, save_results, AP
 
 ###########################################################################################
 ###########################################################################################
-APP_ID   =  log_get_APPID()
+log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) )
 
 
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-h", "--hyperparam_ii", default="0"  help="")
+    parser.add_argument("--hyperparam_ii", default=0, help="", type=int)
     options = parser.parse_args()
     return options
+
+
+
 
 
 
@@ -67,11 +72,11 @@ def execute(ii, args):
             args["x3"],
             args["x4"]
           ])
-    logs("Result: %s" % res.x)
+    log("Result: %s" % res.x)
 
 
     save_results( BATCH_RESULT, res.x,)
-    logs("Finished Program: %s" % str(os.getpid()))
+    log("Finished Program: %s" % str(os.getpid()))
 
 
 
@@ -114,7 +119,7 @@ if __name__ == "__main__":
 
     ##### Hyper          ##########################################################  
     hyperparams = pd.read_csv("hyperparams.csv")
-    arg_dict     = hyperparams.iloc[ii].to_dict()
+    arg_dict    = hyperparams.iloc[ii].to_dict()
 
 
 
