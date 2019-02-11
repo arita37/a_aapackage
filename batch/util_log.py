@@ -12,7 +12,7 @@ global APP_ID, APP_ID2
 APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 APP_ID2  = str(os.getpid()) + '_' + str(socket.gethostname())
 
-LOG_FILE = "logfile.log"
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
 
 logging.basicConfig(level=logging.INFO)
 

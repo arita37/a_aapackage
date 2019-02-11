@@ -195,18 +195,13 @@ def ps_find_procs_by_name(name):
     return ls
 
 
-
-
-
 if __name__ == '__main__':
-
+    log_message("batch_daemon_monitor_cli.py;Process started.")
     args = load_arguments()
     log_file = args.log
     duration = args.duration
     interval = args.interval
-    log_directory = args.log_directory'
-
-
+    log_directory = args.log_directory
 
     if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
         os.mkdir(MONITOR_LOGS_DIRECTORY)
@@ -215,7 +210,7 @@ if __name__ == '__main__':
     # Use psutil find_procs_by_name
 
     #error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
-    proc = subprocess.Popen(['pidof %s' % PROCESS_TO_LOOK], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    proc = subprocess.Popen(['pidof', PROCESS_TO_LOOK], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     out, err = proc.communicate()
     if err:
         log_message("batch_daemon_launch_cli.py;get_pid_by_command;command=pidof ;error: %s" % err)
@@ -223,15 +218,16 @@ if __name__ == '__main__':
         parent_process_id = out.split(" ")
         required_pid = None
         for each_pid in parent_process_id:
-            try:
-                pid = int(re.sub('[^0-9]', '', each_pid))
-                pr = psutil.Process(pid)
-                if "batch_daemon_launch_cli.py" in pr.cmdline():
-                    required_pid = pid
-                    break
-            except Exception as ex:
-                pass
-
+            if each_pid.strip():
+                try:
+                    pid = int(re.sub('[^0-9]', '', each_pid))
+                    pr = psutil.Process(pid)
+                    if "batch_daemon_launch_cli.py" in " ".join(pr.cmdline()):
+                        required_pid = pid
+                        break
+                except Exception as ex:
+                    log_message("batch_daemon_monitor_cli.py;exception: {0}".format(ex.message))
         if required_pid:
             monitor(required_pid, logfile=log_file, duration=duration, interval=interval)
     # error_log.close()
+    log_message("batch_daemon_monitor_cli.py;Process Completed.")
