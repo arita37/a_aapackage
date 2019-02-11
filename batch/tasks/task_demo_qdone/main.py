@@ -26,7 +26,6 @@ import numpy as np, pandas as pd
 
 ###########################################################################################
 ################### Generic ###############################################################
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+"/../..")
 from utils import logs, os_getparent, ps_wait_process_complete
 
 
