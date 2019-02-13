@@ -85,7 +85,7 @@ def load_arguments():
 
 
 def execute_script(hyperparam, subprocess_script, file_logs, row_number):
-    cmd_list = [PYTHON_COMMAND, subprocess_script, str(row_number)]
+    cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % row_number]
     ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     log("Subprocess started by execute_script: %s" % str(ps.pid))
     return ps.pid

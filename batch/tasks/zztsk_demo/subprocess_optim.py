@@ -30,13 +30,12 @@ from utils import logs, batch_result_folder, load_data_session, save_results, AP
 
 ###########################################################################################
 ###########################################################################################
-APP_ID   =  log_get_APPID()
 
 
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-h", "--hyperparam_ii", default="0"  help="")
+    parser.add_argument("-hy", "--hyperparam_ii", default="0", help="", type=int)
     options = parser.parse_args()
     return options
 
@@ -70,7 +69,7 @@ def execute(ii, args):
     logs("Result: %s" % res.x)
 
 
-    save_results( BATCH_RESULT, res.x,)
+    save_results( BATCH_RESULT, res.x, ii, arg_dict.get("file_data"))
     logs("Finished Program: %s" % str(os.getpid()))
 
 
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
     args = load_arguments()
     # ii = int(sys.argv[1])
-    ii = args.hyperparams_ii
+    ii = args.hyperparam_ii
 
 
     ##### Hyper          ##########################################################  
@@ -117,9 +116,8 @@ if __name__ == "__main__":
     arg_dict     = hyperparams.iloc[ii].to_dict()
 
 
-
     ##### Session data   ##########################################################
-    load_data_session( arg_dict["file_data"] , method = arg_dict["file_data_method"] ) 
+    load_data_session( arg_dict.get("file_data") , method = arg_dict.get("file_data_method") )
 
 
 
