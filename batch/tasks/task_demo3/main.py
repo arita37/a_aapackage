@@ -41,8 +41,9 @@ PYTHON_COMMAND = sys.executable
 
 ##### Logs     ###########################################################################
 # logging.basicConfig( level=logging.INFO )
+log_file_name = WORKING_DIRECTORY.split("/")[-1].replace("_qstart", "")
 log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) + ',' + str(socket.gethostname()),
-                    LOG_FILE= "../../ztest/log__task_demo.log")
+                    LOG_FILE= os.path.join(WORKING_DIRECTORY, "../../ztest/{0}.log".format(log_file_name)))
 
 
 

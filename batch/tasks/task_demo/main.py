@@ -41,8 +41,9 @@ PYTHON_COMMAND = sys.executable
 
 ##### Logs     ###########################################################################
 # logging.basicConfig( level=logging.INFO )
+log_file_name = WORKING_DIRECTORY.split("/")[-1].replace("_qstart", "")
 log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) + ',' + str(socket.gethostname()),
-                    LOG_FILE= "../../ztest/log__task_demo.log")
+                    LOG_FILE= os.path.join(WORKING_DIRECTORY, "../../ztest/{0}.log".format(log_file_name)))
 
 
 
@@ -61,7 +62,7 @@ def batch_parallel_subprocess(hyperparam_file,  subprocess_script, file_logs ) :
         time.sleep(2)
 
     ps_wait_process_complete(subprocess_list)
-    # os_folder_rename(working_directory=WORKING_DIRECTORY)
+    os_folder_rename(working_directory=WORKING_DIRECTORY)
 
     log("Finished Program:" , __file__, str(os.getpid()))
 
@@ -86,7 +87,6 @@ def load_arguments():
 
 def execute_script(hyperparam, subprocess_script, file_logs, row_number):
     cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % row_number]
-    logs(str(cmd_list))
     ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
     log("Subprocess started by execute_script: %s" % str(ps.pid))
     return ps.pid

@@ -22,7 +22,7 @@ import util_log
 logging.basicConfig(level=logging.INFO)
 APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-MONITOR_LOGS_DIRECTORY = os.path.join(WORKING_DIRECTORY, "monitor_logs")
+MONITOR_LOGS_DIRECTORY = os.path.join(WORKING_DIRECTORY, "ztest", "monitor_logs")
 DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_DIRECTORY, arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
                                 + "_batch_monitor.log")
 DEFAULT_INTERVAL = 10  # seconds
@@ -196,6 +196,7 @@ def ps_find_procs_by_name(name):
 
 
 if __name__ == '__main__':
+    util_log.LOG_FILE = "ztest/logfile_batchdaemon.log"
     log_message("batch_daemon_monitor_cli.py;Process started.")
     args = load_arguments()
     log_file = args.log

@@ -47,6 +47,7 @@ def load_arguments():
 from scipy import optimize
 
 BATCH_RESULT = batch_result_folder( "../../ztest/out/" )
+LOG_FILE = os.path.join(batch_result_folder( "../../ztest/"), "log_file.log")
 
 
 
@@ -66,11 +67,11 @@ def execute(ii, args):
             args["x3"],
             args["x4"]
           ])
-    logs("Result: %s" % res.x)
+    logs("Result: %s" % res.x, LOG_FILE=LOG_FILE)
 
 
     save_results( BATCH_RESULT, res.x, ii, arg_dict.get("file_data"))
-    logs("Finished Program: %s" % str(os.getpid()))
+    logs("Finished Program: %s" % str(os.getpid()), LOG_FILE=LOG_FILE)
 
 
 

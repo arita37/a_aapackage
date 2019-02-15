@@ -10,7 +10,7 @@ python main.py  --hyperparam      --subprocess_script sub
 import os, sys, socket
 import shutil
 import random
-from functools import partial 
+from functools import partial
 
 import subprocess
 import argparse
@@ -42,7 +42,9 @@ PYTHON_COMMAND = sys.executable
 
 ##### Logss     ###########################################################################
 logging.basicConfig( level=logging.INFO )
-log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) + ',' + str(socket.gethostname()))
+log_file_name = WORKING_DIRECTORY.split("/")[-1].replace("_qstart", "")
+log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) + ',' + str(socket.gethostname()),
+                    LOG_FILE= os.path.join(WORKING_DIRECTORY, "../../ztest/{0}.log".format(log_file_name)))
 
 
 
@@ -51,12 +53,12 @@ log = partial(logs, APP_ID= os.path.abspath(__file__) + ',' + str(os.getpid()) +
 
 def batch_parallel_subprocess(hyperparam_file,  subprocess_script, file_logs ) :
     hyper_parameter = pd.read_csv(hyperparam_file)
-    
+
     # Start process launch
     subprocess_list = []
     for ii in range(0, len(hyper_parameter) ):
         pid = execute_script( hyperparam_file, subprocess_script, file_logs, ii)
-        
+
         subprocess_list.append(pid)
         time.sleep(5)
 
@@ -104,9 +106,9 @@ def os_folder_rename(working_directory):
 
 if __name__ == '__main__':
     log("start task main", __file__)
-    args = load_arguments()    
-    
-    batch_parallel_subprocess(args.hyperparam_file,  args.subprocess_script, args.file_logs) 
+    args = load_arguments()
+
+    batch_parallel_subprocess(args.hyperparam_file,  args.subprocess_script, args.file_logs)
 
     """
     hyper_parameter = pd.read_csv(args.hyperparam)
@@ -124,7 +126,7 @@ if __name__ == '__main__':
     os_folder_rename(working_directory=WORKING_DIRECTORY)
 
     log("Finished Program:" , __file__, str(os.getpid()))
-    """ 
+    """
 
 
 
