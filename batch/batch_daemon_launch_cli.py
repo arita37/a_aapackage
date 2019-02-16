@@ -55,14 +55,14 @@ def run_files_in_directory(valid_directoties):
     sub_process_list = []
     for each_dir in valid_directoties:
         foldername = each_dir + "_qstart"
-        util_batch.rename_directory(old_directory=each_dir, new_directory=foldername)
+        util_batch.os_rename_folder(old_directory=each_dir, new_directory=foldername)
         main_file = os.path.join(foldername, "main.py")
         log("running file: %s" % main_file)
-        ps = util_batch.execute_script(script=main_file)
+        ps = util_batch.sp_execute_script(script=main_file)
         sub_process_list.append(ps.pid)
         log("running process: %s" % str(ps.pid))
         sleep(5)
-    util_batch.wait_for_completion(sub_process_list)
+    util_batch.ps_wait_for_completion(sub_process_list)
 
 if __name__ == '__main__':
     args = load_arguments()

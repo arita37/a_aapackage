@@ -11,6 +11,7 @@ import arrow
 import psutil
 import util_log
 import util_cpu
+import util_batch
 ###############################################################################
 
 
@@ -83,7 +84,7 @@ def monitor(pid, logfile=None, duration=None, interval=None):
             current_time = time.time()
 
             try:
-                pr_status = util_cpu.get_process_status(pr)
+                pr_status = util_cpu.ps_get_process_status(pr)
             except psutil.NoSuchProcess:
                 break
             # Check if process status indicates we should exit
@@ -98,18 +99,18 @@ def monitor(pid, logfile=None, duration=None, interval=None):
 
             # Get current CPU and memory
             try:
-                current_cpu = util_cpu.get_percent(pr)
-                current_mem =util_cpu. get_memory(pr)
+                current_cpu = util_cpu.ps_get_cpu_percent(pr)
+                current_mem = util_cpu. ps_get_memory_percent(pr)
             except Exception:
                 break
             current_mem_real = current_mem.rss / 1024. ** 2
             current_mem_virtual = current_mem.vms / 1024. ** 2
 
             # Get information for children
-            for child in util_cpu.all_children(pr):
+            for child in util_cpu.ps_all_children(pr):
                 try:
-                    current_cpu += util_cpu.get_percent(child)
-                    current_mem = util_cpu.get_memory(child)
+                    current_cpu += util_cpu.ps_get_cpu_percent(child)
+                    current_mem = util_cpu.ps_get_memory_percent(child)
                 except Exception:
                     continue
                 current_mem_real += current_mem.rss / 1024. ** 2
@@ -142,10 +143,9 @@ if __name__ == '__main__':
     duration = args.duration
     interval = args.interval
     log_directory = args.log_directory
-    if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
-        os.makedirs(MONITOR_LOGS_DIRECTORY)
+    util_batch.os_folder_create(directory=MONITOR_LOGS_DIRECTORY)
 
-    required_pid = util_cpu.find_procs_by_name(name="python", cmdline="batch_daemon_launch_cli.py")
+    required_pid = util_cpu.ps_find_procs_by_name(name="python", cmdline="batch_daemon_launch_cli.py")
     if len(required_pid) > 0:
         monitor(required_pid[0], logfile=log_file, duration=duration, interval=interval)
     # error_log.close()

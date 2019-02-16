@@ -21,6 +21,7 @@ from time import sleep, time
 
 import arrow
 import psutil
+import util_log
 
 
 ############# Root folder #####################################################
@@ -54,22 +55,22 @@ net_avg = 0.0
 
 ############# Arg parsing #####################################################
 def load_arguments() :
- try:
-    ppa = argparse.ArgumentParser()
-    ppa.add_argument('--DIRCWD',  type=str, default='',     help=' Root Folder')
-    ppa.add_argument('--do',      type=str, default='zdoc', help='action')
-    ppa.add_argument('--verbose', type=int, default=0,      help=' Verbose mode')
-    ppa.add_argument('--test',    type=int, default=0,      help=' ')
-    ppa.add_argument('--configfile', type=str, default='/config/config.txt',
-                     help=' config file')
-    arg = ppa.parse_args()
-    if arg.DIRCWD != '':
-        DIRCWD = arg.DIRCWD
+    try:
+        ppa = argparse.ArgumentParser()
+        ppa.add_argument('--DIRCWD',  type=str, default='',     help=' Root Folder')
+        ppa.add_argument('--do',      type=str, default='zdoc', help='action')
+        ppa.add_argument('--verbose', type=int, default=0,      help=' Verbose mode')
+        ppa.add_argument('--test',    type=int, default=0,      help=' ')
+        ppa.add_argument('--configfile', type=str, default='/config/config.txt',
+                         help=' config file')
+        arg = ppa.parse_args()
+        if arg.DIRCWD != '':
+            DIRCWD = arg.DIRCWD
 
- except Exception as e:
-    print(e)
-    sys.exit(1)
- return arg
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+    return arg
 
 
 ###############################################################################
@@ -77,9 +78,9 @@ def load_arguments() :
 logging.basicConfig(level=logging.INFO)
 
 def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
-             s9='', s10=''):
+        s9='', s10=''):
     try:
-        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format(
+        prefix = util_log.APP_ID + ',' + arrow.utcnow().to('Japan').format(
             "YYYYMMDD_HHmmss,") + ',' + arg.input_topic
         s = ','.join(
             [prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
@@ -92,21 +93,70 @@ def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
 ###############################################################################
 
 
+def ps_get_cpu_percent(process):
+    try:
+        return process.cpu_percent()
+    except AttributeError:
+        return process.get_cpu_percent()
 
 
+def ps_get_memory_percent(process):
+    try:
+        return process.memory_info()
+    except AttributeError:
+        return process.get_memory_info()
 
+
+def ps_all_children(pr):
+    processes = []
+    children = []
+    try:
+        children = pr.children()
+    except AttributeError:
+        children = pr.get_children()
+    except Exception:  # pragma: no cover
+        pass
+
+    for child in children:
+        processes.append(child)
+        processes += ps_all_children(child)
+    return processes
+
+
+def ps_get_process_status(pr):
+    try:
+        pr_status = pr.status()
+    except TypeError:  # psutil < 2.0
+        pr_status = pr.status
+    except psutil.NoSuchProcess:  # pragma: no cover
+        raise psutil.NoSuchProcess
+    return pr_status
+
+
+def ps_get_computer_resources_usage():
+    cpu_used_percent = psutil.cpu_percent()
+
+    mem_info = dict(psutil.virtual_memory()._asdict())
+    mem_used_percent = 100 - mem_info['available'] / mem_info['total']
+
+    return cpu_used_percent, mem_used_percent
 
 
 ###############################################################################
 ########### Utilities #########################################################
-def find_procs_by_name(name, ishow=1, type1='cmdline'):
+def ps_find_procs_by_name(name, ishow=1, cmdline=None):
     "Return a list of processes matching 'name'."
     ls = []
     for p in psutil.process_iter(attrs=['pid', "name", "exe", "cmdline"]):
-        if name in p.info['name'] or name in ' '.join(p.info['cmdline']):
-            ls.append(copy.deepcopy(p))
+        if name.lower() in p.info['name'].lower():
+            if cmdline:
+                if cmdline.lower() in ' '.join(p.info['cmdline']).lower():
+                    ls.append(copy.deepcopy(p))
+            else:
+                ls.append(copy.deepcopy(p))
+
             if ishow == 1:
-                log(p.pid, ' '.join(p.info['cmdline']))
+                util_log.printlog(p.pid, ' '.join(p.info['cmdline']))
     return ls
 
 
@@ -154,7 +204,7 @@ def is_issue(p):
     pidi  = p.pid
 
     log('Worker PID;CPU;RAM:', pidi, pdict['cpu_percent'],
-             pdict['memory_full_info'][0] / Mb)
+        pdict['memory_full_info'][0] / Mb)
 
     try:
         if not psutil.pid_exists(pidi):
@@ -226,7 +276,7 @@ def monitor_maintain():
             ### check global system  ##########################################
             if len(processes) == 0 or is_issue_system():
                 log('Reset all process')
-                lpp = find_procs_by_name(pars['proc_name'], 1)
+                lpp = ps_find_procs_by_name(pars['proc_name'], 1)
                 terminate(lpp)
                 processes = launch(cmds2)
                 sleep(5)
@@ -262,7 +312,7 @@ def monitor_maintain():
 
             ##### Check the number of  processes    ###########################
             sleep(5)
-            lpp = find_procs_by_name(pars['proc_name'], 1)
+            lpp = ps_find_procs_by_name(pars['proc_name'], 1)
 
             log('Active process', len(lpp))
             if len(lpp) < pars['nproc']:
@@ -274,7 +324,7 @@ def monitor_maintain():
                     pidlist = terminate([lpp[i]])
 
             sleep(5)
-            lpp = find_procs_by_name(pars['proc_name'], 0)
+            lpp = ps_find_procs_by_name(pars['proc_name'], 0)
             processes = [x.pid for x in lpp]
 
             log('Waiting....')
@@ -496,19 +546,19 @@ class NodeStatsCollector:
             cpu_percent=psutil.cpu_percent(interval=None, percpu=True),
             num_pids=len(psutil.pids()),
 
-        # Memory
+            # Memory
             mem_total=mem.total,
             mem_avail=mem.available,
             swap_total=swap_total,
             swap_avail=swap_avail,
 
-        # Disk IO
+            # Disk IO
             disk_io=disk_stats,
 
-        # Disk usage
+            # Disk usage
             disk_usage=disk_usage,
 
-        # Net transfer
+            # Net transfer
             net=net_stats,
         )
         del mem
@@ -570,7 +620,7 @@ class NodeStatsCollector:
         logger.info("Disk usage:")
         for name, disk_usage in stats.disk_usage.items():
             logger.info("  - %s: %i/%i (%i%%)", name, disk_usage.used, disk_usage.total, disk_usage.percent)
-            
+
         logger.info("-------------------------------------")
         logger.info("")
 
@@ -616,18 +666,18 @@ def main():
 
 
 def generate_cmdline() :
-        pars = {'max_memory'         : 1500.0 * Mb, 'max_cpu': 85.0,
-                'proc_name'          : 'streaming_couchbase_update_cli.py',
-                'nproc'              : arg.nproc,
-                'proc_cmd'           : 'python kafkastreaming/streaming_couchbase_update_cli.py   --consumergroup {0} --nlogfreq {1}  --logfile {2} --verbose {3}  --input_topic {4}  --test {5}  --mode {6} '.format(
-                    arg.consumergroup + 'couch' + arg.mode, arg.nlogfreq,
-                    logfolder + '/stream_couchbase_' + str(
-                        arg.consumergroup) + '.txt', arg.verbose,
-                    arg.input_topic, arg.test, arg.mode),
-                'mem_available_total': 2000.0 * Mb, 
-                'cpu_usage_total': 98.0}
-        CMDS = [pars['proc_cmd']] * pars['nproc']
-        return CMDS, pars    
+    pars = {'max_memory'         : 1500.0 * Mb, 'max_cpu': 85.0,
+            'proc_name'          : 'streaming_couchbase_update_cli.py',
+            'nproc'              : arg.nproc,
+            'proc_cmd'           : 'python kafkastreaming/streaming_couchbase_update_cli.py   --consumergroup {0} --nlogfreq {1}  --logfile {2} --verbose {3}  --input_topic {4}  --test {5}  --mode {6} '.format(
+                arg.consumergroup + 'couch' + arg.mode, arg.nlogfreq,
+                logfolder + '/stream_couchbase_' + str(
+                    arg.consumergroup) + '.txt', arg.verbose,
+                arg.input_topic, arg.test, arg.mode),
+            'mem_available_total': 2000.0 * Mb,
+            'cpu_usage_total': 98.0}
+    CMDS = [pars['proc_cmd']] * pars['nproc']
+    return CMDS, pars
 
 
 

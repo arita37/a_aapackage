@@ -19,6 +19,7 @@ import time
 import socket
 import logging
 import arrow
+import util_cpu
 ################### Argument catching #########################################
 global APP_ID, APP_ID2
 
@@ -60,16 +61,7 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     return AdditionalFiles
 
 
-def get_computer_resources_usage():
-    cpu_used_percent = psutil.cpu_percent()
-
-    mem_info = dict(psutil.virtual_memory()._asdict())
-    mem_used_percent = 100 - mem_info['available'] / mem_info['total']
-
-    return cpu_used_percent, mem_used_percent
-
-
-def createFolder(WorkingDirectory, folderName):
+def os_create_folder(WorkingDirectory, folderName):
     folderPath = os.path.join(WorkingDirectory, folderName)
     if not os.path.isdir(folderPath):
         os.mkdir(folderPath)
@@ -111,7 +103,7 @@ def batch_execute_parallel(HyperParametersFile,
        # wait if computer resources are scarce.
        cpu, mem = 100, 100
        while cpu > 90 and mem > 90:
-          cpu, mem = get_computer_resources_usage()
+          cpu, mem = util_cpu.ps_get_computer_resources_usage()
           time.sleep(waitseconds)
 
 
@@ -135,7 +127,7 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
   df.to_csv( file_hyper )
    
 
-def wait_for_completion(subprocess_list):
+def ps_wait_for_completion(subprocess_list):
     for pid in subprocess_list:
         while True:
             try:
@@ -158,13 +150,18 @@ def get_python_executable():
     return str(sys.executable)
 
 
-def execute_script(execute=get_python_executable(), script="", stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
+def sp_execute_script(execute=get_python_executable(), script="", stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
     ps = subprocess.Popen([execute, script], stdout=stdout, stderr=stderr, shell=False)
     return ps
 
 
-def rename_directory(old_directory , new_directory):
+def os_rename_folder(old_directory , new_directory):
     os.rename(old_directory, new_directory)
+
+
+def os_folder_create(directory):
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
 
 """
 date0 = util.date_now()
