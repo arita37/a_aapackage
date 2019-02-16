@@ -38,25 +38,28 @@ except:
     except:
         DIRCWD = '/home/run/repo/'
 
+
 ############# Arg parsing #####################################################
-try:
-    ppa = argparse.ArgumentParser()
-    ppa.add_argument('--DIRCWD', type=str, default='', help=' Root Folder')
-    ppa.add_argument('--do', type=str, default='zdoc', help='action')
-    ppa.add_argument('--verbose', type=int, default=0, help=' Verbose mode')
-    ppa.add_argument('--test', type=int, default=0, help=' ')
+def load_arguments():
+    try:
+        ppa = argparse.ArgumentParser()
+        ppa.add_argument('--DIRCWD', type=str, default='', help=' Root Folder')
+        ppa.add_argument('--do', type=str, default='zdoc', help='action')
+        ppa.add_argument('--verbose', type=int, default=0, help=' Verbose mode')
+        ppa.add_argument('--test', type=int, default=0, help=' ')
 
-    ppa.add_argument('--configfile', type=str, default='/config/config.txt',
-                     help=' config file')
-    arg = ppa.parse_args()
-    if arg.DIRCWD != '':
-        DIRCWD = arg.DIRCWD
+        ppa.add_argument('--configfile', type=str, default='/config/config.txt',
+                         help=' config file')
+        arg = ppa.parse_args()
+        if arg.DIRCWD != '':
+            DIRCWD = arg.DIRCWD
+        return arg
+    except Exception as e:
+        print(e)
+        sys.exit(1)
 
-except Exception as e:
-    print(e)
-    sys.exit(1)
 os.chdir(DIRCWD)
-sys.path.append(DIRCWD + '/aapackage')
+sys.path.append(DIRCWD)
 print('Root Folder', DIRCWD)
 import util
 
@@ -68,12 +71,16 @@ import util
 #############Variable #########################################################
 global CMDS, net_avg
 APP_ID = __file__ + ',' + str(os.getpid()) + '_' + str(random.randrange(10000))
-logfolder = '_'.join(
-    [arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,
-     arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
-     str(random.randrange(1000))])
-util.os_folder_create(logfolder)
-LOGFILE = logfolder + '/stream_monitor_cli.txt'
+
+
+def initialize_log_folder(arg):
+    logfolder = '_'.join(
+        [arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,
+         arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
+         str(random.randrange(1000))])
+    util.os_folder_create(logfolder)
+    return logfolder
+# LOGFILE = logfolder + '/stream_monitor_cli.txt'
 Mb = 1024 * 1024
 net_avg = 0.0
 
@@ -99,20 +106,62 @@ def printlog(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
 
 ###############################################################################
 
+def get_percent(process):
+    try:
+        return process.cpu_percent()
+    except AttributeError:
+        return process.get_cpu_percent()
 
+
+def get_memory(process):
+    try:
+        return process.memory_info()
+    except AttributeError:
+        return process.get_memory_info()
+
+
+def all_children(pr):
+    processes = []
+    children = []
+    try:
+        children = pr.children()
+    except AttributeError:
+        children = pr.get_children()
+    except Exception:  # pragma: no cover
+        pass
+
+    for child in children:
+        processes.append(child)
+        processes += all_children(child)
+    return processes
+
+
+def get_process_status(pr):
+    try:
+        pr_status = pr.status()
+    except TypeError:  # psutil < 2.0
+        pr_status = pr.status
+    except psutil.NoSuchProcess:  # pragma: no cover
+        raise psutil.NoSuchProcess
+    return pr_status
 
 ###############################################################################
 ########### Utilities #########################################################
-def find_procs_by_name(name, ishow=1, type1='cmdline'):
+def find_procs_by_name(name, ishow=1, cmdline=None):
     "Return a list of processes matching 'name'."
     ls = []
+    print("No errors....")
     for p in psutil.process_iter(attrs=['pid', "name", "exe", "cmdline"]):
-        if name in p.info['name'] or name in ' '.join(p.info['cmdline']):
-            ls.append(copy.deepcopy(p))
+        if name.lower() in p.info['name'].lower():
+            if cmdline:
+                if cmdline.lower() in ' '.join(p.info['cmdline']).lower():
+                    ls.append(copy.deepcopy(p))
+            else:
+                ls.append(copy.deepcopy(p))
+
             if ishow == 1:
                 printlog(p.pid, ' '.join(p.info['cmdline']))
     return ls
-
 
 
 def launch(commands):
@@ -290,8 +339,9 @@ def monitor():
 
 if __name__ == '__main__':
     ################## Initialization #########################################
+    arg = load_arguments()
     printlog(' Initialize workers', arg.name)
-
+    logfolder = initialize_log_folder(arg)
     if arg.name == 'stream_couchbase':
         pars = {'max_memory'         : 1500.0 * Mb, 'max_cpu': 85.0,
                 'proc_name'          : 'streaming_couchbase_update_cli.py',
@@ -301,7 +351,7 @@ if __name__ == '__main__':
                     logfolder + '/stream_couchbase_' + str(
                         arg.consumergroup) + '.txt', arg.verbose,
                     arg.input_topic, arg.test, arg.mode),
-                'mem_available_total': 2000.0 * Mb, 
+                'mem_available_total': 2000.0 * Mb,
                 'cpu_usage_total': 98.0}
         CMDS = [pars['proc_cmd']] * pars['nproc']
 

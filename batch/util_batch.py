@@ -16,7 +16,9 @@ import subprocess
 import argparse
 import pandas as pd, numpy as pd
 import time
-
+import socket
+import logging
+import arrow
 ################### Argument catching #########################################
 global APP_ID, APP_ID2
 
@@ -126,22 +128,43 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
     size : key1 x ke2 x key2
 
   """
-  for key  in hyper_dict
+  for key  in hyper_dict:
        vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
        df = df.extend(  len(vv) )
 
-   
   df.to_csv( file_hyper )
    
 
+def wait_for_completion(subprocess_list):
+    for pid in subprocess_list:
+        while True:
+            try:
+                pr = psutil.Process(pid)
+                try:
+                    pr_status = pr.status()
+                except TypeError:  # psutil < 2.0
+                    pr_status = pr.status
+                except psutil.NoSuchProcess:  # pragma: no cover
+                    break
+                # Check if process status indicates we should exit
+                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                    break
+            except:
+                break
+            time.sleep(1)
 
 
+def get_python_executable():
+    return str(sys.executable)
 
 
+def execute_script(execute=get_python_executable(), script="", stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
+    ps = subprocess.Popen([execute, script], stdout=stdout, stderr=stderr, shell=False)
+    return ps
 
 
-
-
+def rename_directory(old_directory , new_directory):
+    os.rename(old_directory, new_directory)
 
 """
 date0 = util.date_now()

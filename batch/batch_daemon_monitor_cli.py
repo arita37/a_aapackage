@@ -1,27 +1,23 @@
 # -*- coding: utf-8 -*-
 '''Daemon monitoring batch '''
 import os, sys
-import numpy as np
 
 import argparse
-import gc
 import logging
 import socket
 from time import sleep
 import time
-import ujson
 import arrow
-import re
-import subprocess
 import psutil
 import util_log
+import util_cpu
 ###############################################################################
 
 
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+WORKING_DIRECTORY = os.path.dirname(__file__)
 MONITOR_LOGS_DIRECTORY = os.path.join(WORKING_DIRECTORY, "ztest", "monitor_logs")
 DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_DIRECTORY, arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
                                 + "_batch_monitor.log")
@@ -33,7 +29,6 @@ PROCESS_TO_LOOK = "python"
 
 
 def load_arguments():
-    import argparse
     parser = argparse.ArgumentParser(
         description='Record CPU and memory usage for a process')
 
@@ -54,39 +49,6 @@ def load_arguments():
 
     args = parser.parse_args()
     return args
-
-
-
-def get_percent(process):
-    try:
-        return process.cpu_percent()
-    except AttributeError:
-        return process.get_cpu_percent()
-
-
-
-def get_memory(process):
-    try:
-        return process.memory_info()
-    except AttributeError:
-        return process.get_memory_info()
-
-
-
-def all_children(pr):
-    processes = []
-    children = []
-    try:
-        children = pr.children()
-    except AttributeError:
-        children = pr.get_children()
-    except Exception:  # pragma: no cover
-        pass
-
-    for child in children:
-        processes.append(child)
-        processes += all_children(child)
-    return processes
 
 
 def log_message(message):
@@ -121,12 +83,9 @@ def monitor(pid, logfile=None, duration=None, interval=None):
             current_time = time.time()
 
             try:
-                pr_status = pr.status()
-            except TypeError:  # psutil < 2.0
-                pr_status = pr.status
-            except psutil.NoSuchProcess:  # pragma: no cover
+                pr_status = util_cpu.get_process_status(pr)
+            except psutil.NoSuchProcess:
                 break
-
             # Check if process status indicates we should exit
             if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
                 log_message("Process finished ({0:.2f} seconds)"
@@ -139,18 +98,18 @@ def monitor(pid, logfile=None, duration=None, interval=None):
 
             # Get current CPU and memory
             try:
-                current_cpu = get_percent(pr)
-                current_mem = get_memory(pr)
+                current_cpu = util_cpu.get_percent(pr)
+                current_mem =util_cpu. get_memory(pr)
             except Exception:
                 break
             current_mem_real = current_mem.rss / 1024. ** 2
             current_mem_virtual = current_mem.vms / 1024. ** 2
 
             # Get information for children
-            for child in all_children(pr):
+            for child in util_cpu.all_children(pr):
                 try:
-                    current_cpu += get_percent(child)
-                    current_mem = get_memory(child)
+                    current_cpu += util_cpu.get_percent(child)
+                    current_mem = util_cpu.get_memory(child)
                 except Exception:
                     continue
                 current_mem_real += current_mem.rss / 1024. ** 2
@@ -175,26 +134,6 @@ def monitor(pid, logfile=None, duration=None, interval=None):
         f.close()
 
 
-
-def ps_find_procs_by_name(name):
-    "Return a list of processes matching 'name'."
-    assert name, name
-    ls = []
-    for p in psutil.process_iter():
-        name_, exe, cmdline = "", "", []
-        try:
-            name_ = p.name()
-            cmdline = p.cmdline()
-            exe = p.exe()
-        except (psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-        except psutil.NoSuchProcess:
-            continue
-        if name == name_ or cmdline[0] == name or os.path.basename(exe) == name:
-            ls.append(name)
-    return ls
-
-
 if __name__ == '__main__':
     util_log.LOG_FILE = "ztest/logfile_batchdaemon.log"
     log_message("batch_daemon_monitor_cli.py;Process started.")
@@ -203,32 +142,11 @@ if __name__ == '__main__':
     duration = args.duration
     interval = args.interval
     log_directory = args.log_directory
-
     if not os.path.isdir(MONITOR_LOGS_DIRECTORY):
-        os.mkdir(MONITOR_LOGS_DIRECTORY)
+        os.makedirs(MONITOR_LOGS_DIRECTORY)
 
-
-    # Use psutil find_procs_by_name
-
-    #error_log = open(WORKING_DIRECTORY+"/errors_daemon_monitor.log", "a")
-    proc = subprocess.Popen(['pidof', PROCESS_TO_LOOK], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-    out, err = proc.communicate()
-    if err:
-        log_message("batch_daemon_launch_cli.py;get_pid_by_command;command=pidof ;error: %s" % err)
-    else:
-        parent_process_id = out.split(" ")
-        required_pid = None
-        for each_pid in parent_process_id:
-            if each_pid.strip():
-                try:
-                    pid = int(re.sub('[^0-9]', '', each_pid))
-                    pr = psutil.Process(pid)
-                    if "batch_daemon_launch_cli.py" in " ".join(pr.cmdline()):
-                        required_pid = pid
-                        break
-                except Exception as ex:
-                    log_message("batch_daemon_monitor_cli.py;exception: {0}".format(ex.message))
-        if required_pid:
-            monitor(required_pid, logfile=log_file, duration=duration, interval=interval)
+    required_pid = util_cpu.find_procs_by_name(name="python", cmdline="batch_daemon_launch_cli.py")
+    if len(required_pid) > 0:
+        monitor(required_pid[0], logfile=log_file, duration=duration, interval=interval)
     # error_log.close()
     log_message("batch_daemon_monitor_cli.py;Process Completed.")

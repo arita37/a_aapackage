@@ -1,36 +1,23 @@
 # -*- coding: utf-8 -*-
 '''Daemon monitoring batch '''
 import os, sys
-import numpy as np
 
-import argparse
-import gc
 import logging
 import socket
-from time import sleep, time
-#import ujson
-import arrow
-import subprocess
-import psutil
-
+from time import sleep
 
 ###############################################################################
 import util_log
-
-
+import util_batch
 
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-STDOUT_FORMAT = "Finished Program: %s"
 WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-PYTHON_COMMAND = str(sys.executable)
 
-util_log.APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+util_log.APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 util_log.LOG_FILE = "logfile.log"
-
-
 
 
 ######### Logging ##############################################################
@@ -39,11 +26,11 @@ def load_arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
-    parser.add_argument("--directory",  default=".",  help="Absolute or relative path to the working directory.")
-    parser.add_argument("--subprocess_script", default="optimizer.py",  help="Name of the optimizer script")
+    parser.add_argument("--directory", default=".", help="Absolute or relative path to the working directory.")
+    parser.add_argument("--subprocess_script", default="optimizer.py", help="Name of the optimizer script")
 
-    parser.add_argument("--file_log",       default="ztest/logfile_batchdaemon.log",    help=".")
-    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log",  help=".")
+    parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log", help=".")
+    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log", help=".")
 
     options = parser.parse_args()
     return options
@@ -53,36 +40,7 @@ def log(message):
     util_log.printlog(s1=message)
 
 
-def wait_for_completion(subprocess_list):
-    for pid in subprocess_list:
-        while True:
-            try:
-                pr = psutil.Process(pid)
-                try:
-                    pr_status = pr.status()
-                except TypeError:  # psutil < 2.0
-                    pr_status = pr.status
-                except psutil.NoSuchProcess:  # pragma: no cover
-                    break
-                # Check if process status indicates we should exit
-                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
-                    break
-            except:
-                break
-            sleep( 1 )
-
-
-
-
-
-if __name__ == '__main__':
-    args      = load_arguments()
-    # error_log = open( args.file_error_log, "a")
-    util_log.LOG_FILE  = args.file_log
-
-
-    log("Current Process Id: %s" % (str(os.getpid())))
-    sub_process_list = []
+def get_list_of_valid_directories():
     valid_directoties = []
     for root, dirs, files in os.walk(DIR_PATH):
         for filename in files:
@@ -90,33 +48,33 @@ if __name__ == '__main__':
             if root_splits[-2] == "tasks" and not root_splits[-1].endswith("_qstart") and \
                     not root_splits[-1].endswith("_qdone") and filename == "main.py":
                 valid_directoties.append(root)
+    return valid_directoties
 
 
-    if len(valid_directoties) > 0:
-        log("valid direcoties: %s" % str(valid_directoties))
-
+def run_files_in_directory(valid_directoties):
+    sub_process_list = []
     for each_dir in valid_directoties:
         foldername = each_dir + "_qstart"
-        os.rename(each_dir, foldername )
-
+        util_batch.rename_directory(old_directory=each_dir, new_directory=foldername)
         main_file = os.path.join(foldername, "main.py")
         log("running file: %s" % main_file)
-        ps = subprocess.Popen([PYTHON_COMMAND, main_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                              shell=False)
+        ps = util_batch.execute_script(script=main_file)
         sub_process_list.append(ps.pid)
         log("running process: %s" % str(ps.pid))
         sleep(5)
-    # error_log.close()
-    wait_for_completion(sub_process_list)
+    util_batch.wait_for_completion(sub_process_list)
+
+if __name__ == '__main__':
+    args = load_arguments()
+    util_log.LOG_FILE = args.file_log
+
+    log("Current Process Id: %s" % (str(os.getpid())))
+    valid_directoties = get_list_of_valid_directories()
+    if len(valid_directoties) > 0:
+        log("valid direcoties: %s" % str(valid_directoties))
+        run_files_in_directory(valid_directoties=valid_directoties)
+
     log("Process Completed")
-
-
-
-
-
-
-
-
 
 """
 ################### Argument catching ########################################################

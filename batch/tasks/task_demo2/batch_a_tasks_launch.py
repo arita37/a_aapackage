@@ -12,14 +12,14 @@ import util,  numpy as np
 
 
 
-for foldername in working_dir_folder :
-   if "_qdone" not in foldername and "_qstart" not in foldername  :
-       
-       os.rename( working_dir + foldername, working_dir + foldername +  "_qstart" )
-       foldername = foldername + "_qstart" 
-
-       startime = now()
-       subprocess( working_dir + foldername + / + "main.py" , starttime)
+# for foldername in working_dir_folder :
+#    if "_qdone" not in foldername and "_qstart" not in foldername  :
+#
+#        os.rename( working_dir + foldername, working_dir + foldername +  "_qstart" )
+#        foldername = foldername + "_qstart"
+#
+#        startime = now()
+#        subprocess( working_dir + foldername + / + "main.py" , starttime)
 
 
 
