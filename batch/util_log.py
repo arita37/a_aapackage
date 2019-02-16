@@ -14,11 +14,11 @@ APP_ID2  = str(os.getpid()) + '_' + str(socket.gethostname())
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
 
-logging.basicConfig(level=logging.INFO)
+
 
 
 def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
-              app_id='' ):
+              app_id='', logfile=None ):
     try:
         if app_id != "" :
             prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
@@ -29,16 +29,33 @@ def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='
 
         # logging.info(s)
         print(s)
-        log(s)
+        writelog(s, logfile)
     except Exception as e:
         # logging.info(e)
         print(e)
+        writelog(e, logfile)
 
-
-def log(m="", f=None):
+def writelog(m="", f=None):
     f = LOG_FILE if f is None else f
     with open(f, 'a') as _log:
         _log.write(m+"\n")
+
+
+
+
+def setup_logger():
+    # logger defines
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
+
+
 
 
 """"
