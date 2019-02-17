@@ -1,0 +1,6 @@
+pandas==0.23.4
+scipy==1.2.0
+ansible==2.7.6
+toml==0.10.0
+numpy==1.15.4
+pycrypto==2.6.1
