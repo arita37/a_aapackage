@@ -5,7 +5,6 @@ Launch processors and monitor the CPU, memory usage.
 Maintain same leve of processors over time.
 
 '''
-
 import argparse
 import copy
 import csv
@@ -23,21 +22,30 @@ import arrow
 import psutil
 import util_log
 
+# stdlib imports
+import logging
+from datetime import datetime
+import os
+import time
+import platform
+from collections import namedtuple
+import sys
+
+# non-stdlib imports
+import psutil
+# from applicationinsights import TelemetryClient
+
 
 ############# Root folder #####################################################
+VERSION =1
 def os_getparent(dir0):
     return os.path.abspath(os.path.join(dir0, os.pardir))
 
 DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
-#os.chdir(DIRCWD)
-#sys.path.append(DIRCWD + '/aapackage')
-#print('Root Folder', DIRCWD)
-#import util
 
 
 
-###############################################################################
 #############Variable #########################################################
 """
 global CMDS, net_avg
@@ -51,6 +59,56 @@ LOGFILE = logfolder + '/stream_monitor_cli.txt'
 Mb = 1024 * 1024
 net_avg = 0.0
 """
+_DEFAULT_STATS_UPDATE_INTERVAL = 5
+
+# global defines
+_IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
+
+_OS_DISK = None
+_USER_DISK = None
+
+if _IS_PLATFORM_WINDOWS:
+    _OS_DISK = 'C:/' # This is inverted on Cloud service
+    _USER_DISK = 'D:/'
+else:
+    _OS_DISK = "/"
+    _USER_DISK = '/mnt/resources'
+    if not os.path.exists(_USER_DISK):
+        _USER_DISK = '/mnt'
+
+
+######### Logging #############################################################
+logging.basicConfig( level=logging.INFO )
+def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
+             app_id='', logfile=None):
+    try:
+        if app_id != "":
+            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+        else:
+            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
+                      str(s6), str(s7), str(s8), str(s9), str(s10)])
+
+        logging.info(s)
+    except Exception as e:
+        logging.info(str(e))
+
+def setup_logger():
+    # logger defines
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
+
+logger = setup_logger()
+
+###############################################################################
+
 
 
 ############# Arg parsing #####################################################
@@ -73,24 +131,87 @@ def load_arguments() :
     return arg
 
 
-###############################################################################
-######### Logging #############################################################
-logging.basicConfig(level=logging.INFO)
 
-def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
-        s9='', s10=''):
+###############################################################################
+
+def ps_process_monitor(pid, logfile=None, duration=None, interval=None):
+    # We import psutil here so that the module can be imported even if psutil
+    # is not present (for example if accessing the version)
+    log("Monitoring Started for Process Id: %s" % str(pid))
+    pr = psutil.Process(pid)
+
+    # Record start time
+    start_time = time.time()
+
+    if logfile:
+        f = open(logfile, 'w')
+        f.write("# {0:12s} {1:12s} {2:12s} {3:12s} {4:12s}\n".format(
+            'Timestamp'.center(12),
+            'Elapsed time'.center(12),
+            'CPU (%)'.center(12),
+            'Real (MB)'.center(12),
+            'Virtual (MB)'.center(12))
+        )
+
     try:
-        prefix = util_log.APP_ID + ',' + arrow.utcnow().to('Japan').format(
-            "YYYYMMDD_HHmmss,") + ',' + arg.input_topic
-        s = ','.join(
-            [prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
-             str(s6), str(s7), str(s8), str(s9), str(s10)])
 
-        logging.info(s)
+        # Start main event loop
+        while True:
 
-    except Exception as e:
-        logging.info(str(e))
-###############################################################################
+            # Find current time
+            current_time = time.time()
+
+            try:
+                pr_status = ps_get_process_status(pr)
+            except psutil.NoSuchProcess:
+                break
+            # Check if process status indicates we should exit
+            if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                log("Process finished ({0:.2f} seconds)"
+                      .format(current_time - start_time))
+                break
+
+            # Check if we have reached the maximum time
+            if duration is not None and current_time - start_time > duration:
+                break
+
+            # Get current CPU and memory
+            try:
+                current_cpu = ps_get_cpu_percent(pr)
+                current_mem = ps_get_memory_percent(pr)
+            except Exception:
+                break
+            current_mem_real = current_mem.rss / 1024. ** 2
+            current_mem_virtual = current_mem.vms / 1024. ** 2
+
+            # Get information for children
+            for child in ps_all_children(pr):
+                try:
+                    current_cpu += ps_get_cpu_percent(child)
+                    current_mem = ps_get_memory_percent(child)
+                except Exception:
+                    continue
+                current_mem_real += current_mem.rss / 1024. ** 2
+                current_mem_virtual += current_mem.vms / 1024. ** 2
+
+            if logfile:
+                timestamp = str(arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,"))
+                f.write("{0:12} {1:12.3f} {2:12.3f} {3:12.3f} {4:12.3f}\n".format(
+                    timestamp,
+                    current_time - start_time,
+                    current_cpu,
+                    current_mem_real,
+                    current_mem_virtual))
+                f.flush()
+
+            sleep(interval)
+
+    except KeyboardInterrupt:  # pragma: no cover
+        pass
+
+    if logfile:
+        f.close()
+
 
 
 def ps_get_cpu_percent(process):
@@ -142,8 +263,6 @@ def ps_get_computer_resources_usage():
     return cpu_used_percent, mem_used_percent
 
 
-###############################################################################
-########### Utilities #########################################################
 def ps_find_procs_by_name(name, ishow=1, cmdline=None):
     "Return a list of processes matching 'name'."
     ls = []
@@ -336,54 +455,6 @@ def monitor_maintain():
 
 
 ############ AZURE NODE #################################################################
-"""TVM stats"""
-
-# stdlib imports
-import logging
-from datetime import datetime
-import os
-import time
-import platform
-from collections import namedtuple
-import sys
-
-# non-stdlib imports
-import psutil
-# from applicationinsights import TelemetryClient
-
-VERSION = "0.0.1.1"
-_DEFAULT_STATS_UPDATE_INTERVAL = 5
-
-
-def setup_logger():
-    # logger defines
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
-
-
-#logger = setup_logger()
-
-# global defines
-_IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
-
-_OS_DISK = None
-_USER_DISK = None
-
-if _IS_PLATFORM_WINDOWS:
-    _OS_DISK = 'C:/' # This is inverted on Cloud service
-    _USER_DISK = 'D:/'
-else:
-    _OS_DISK = "/"
-    _USER_DISK = '/mnt/resources'
-    if not os.path.exists(_USER_DISK):
-        _USER_DISK = '/mnt'
-
 
 #########################################################################################
 #########################################################################################

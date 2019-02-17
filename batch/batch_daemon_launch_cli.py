@@ -1,26 +1,25 @@
 # -*- coding: utf-8 -*-
 '''Daemon monitoring batch '''
-import os, sys
-
-import logging
-import socket
+import os, sys, socket
 from time import sleep
 
 ###############################################################################
 import util_log
 import util_batch
 
+
 ############### Variable definition ###########################################
-logging.basicConfig(level=logging.INFO)
-# APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
-util_log.APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-util_log.LOG_FILE = "logfile.log"
 
 
 ######### Logging ##############################################################
+def log(message):
+    util_log.printlog(s1=message)
+
+
+##############################################################################
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -28,19 +27,13 @@ def load_arguments():
     parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
     parser.add_argument("--folder", default=".", help="Absolute or relative path to the working folder.")
     parser.add_argument("--subprocess_script", default="optimizer.py", help="Name of the optimizer script")
-
     parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log", help=".")
-    parser.add_argument("--file_error_log", default="ztest/log_batchdaemon_error.log", help=".")
 
     options = parser.parse_args()
     return options
 
 
-def log(message):
-    util_log.printlog(s1=message)
-
-
-def get_list_of_valid_directories():
+def get_list_valid_task_folder():
     valid_folders = []
     for root, dirs, files in os.walk(DIR_PATH):
         for filename in files:
@@ -51,17 +44,23 @@ def get_list_of_valid_directories():
     return valid_folders
 
 
+##############################################################################
 if __name__ == '__main__':
     args = load_arguments()
+    util_log.APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
     util_log.LOG_FILE = args.file_log
 
     log("Current Process Id: %s" % (str(os.getpid())))
-    valid_folders = get_list_of_valid_directories()
+    valid_folders = get_list_valid_task_folder()
     if len(valid_folders) > 0:
-        log("valid direcoties: %s" % str(valid_folders))
+        log("valid task folder: %s" % str(valid_folders))
         util_batch.batch_run_infolder(valid_folders=valid_folders)
 
-    log("Process Completed")
+    log("All task Completed")
+
+
+
+
 
 """
 ################### Argument catching ########################################################
@@ -99,15 +98,15 @@ os.makedirs(batch_out)
 
 batch_out_log=    batch_out + '/output_result.txt'
 batch_out_data=   batch_out + '/aafolio_storage_' + date0 + '.pkl'
-util.os_print_tofile( '\n\n'+title1, batch_out_log) 
+util.os_print_tofile( '\n\n'+title1, batch_out_log)
 
 
 
 ################  Output Data table ######################################################
-if util.os_file_exist(batch_out_data):          
+if util.os_file_exist(batch_out_data):
   aux3_cols, aafolio_storage=  util.py_load_obj( batch_out_data, isabsolutpath=1 )
 else :
-  aux3_cols, aafolio_storage=  util.py_load_obj( batch_in_data1, isabsolutpath=1 )  
+  aux3_cols, aafolio_storage=  util.py_load_obj( batch_in_data1, isabsolutpath=1 )
 
 
 
@@ -149,7 +148,7 @@ for ii in xrange(itask0-itask0, itask1-itask0):
 np.concatenate((    ))
 
 aafolioref= aafolio_storage[0,:].reshape(1,20)
-util.py_save_obj( (aux3_cols, aafolioref) ,  'aafolio_storage_ref' ) 
+util.py_save_obj( (aux3_cols, aafolioref) ,  'aafolio_storage_ref' )
 
 aux3_cols, aafolio_storage=  util.py_load_obj( dir_batch_main+  '/batch_20161228_96627894/aafolio_storage_20161227',
                                                    isabsolutpath=1 )
