@@ -1,75 +1,116 @@
 # -*- coding: utf-8 -*-
 """
-Confusion comes there 3 levels of Batchs in my initial code
+batch utils
 
 """
 
-import numpy as np
 import os
 import shutil
 import sys
 import random
-import psutil
-
-import toml
 import subprocess
 import argparse
-import pandas as pd, numpy as pd
 import time
 import socket
 import logging
+
+
+import psutil
+import toml
+import pandas as pd, numpy as pd
 import arrow
+
+
+#######################################################################
 import util_cpu
-################### Argument catching #########################################
-global APP_ID, APP_ID2
+import util_log
 
-APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+
+
+################### Variables #########################################
+
+
+
+
+
+######### Logging ####################################################
+APP_ID  = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
-
-logging.basicConfig(level=logging.INFO)
-'''
-def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
-        s9='', s10=''):
-    try:
-        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format(
-            "YYYYMMDD_HHmmss,") + ',' 
-        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
-             str(s6), str(s7), str(s8), str(s9), str(s10)])
-
-        # logging.info(s)
-        print(s)
-
-    except Exception as e:
-        # logging.info(e)
-        print(e)
+def log(m):
+    util_log.printlog(s1=m, app_id=APP_ID)
 
 
 
-def checkAdditionalFiles(WorkingFolder, AdditionalFiles):
-    if not AdditionalFiles:
-        return []
 
-    AdditionalFiles = [f.strip(" ")
-                       for f in AdditionalFiles.split(",")]
-
-    for File in AdditionalFiles:
-        ExpectedFilePath = os.path.isfile(os.path.join(WorkingFolder, File))
-        if not ExpectedFilePath:
-            print("Additional file <%s> %s not found. Aborting!" % File)
-            exit(1)
-
-    return AdditionalFiles
-
-
-def os_create_folder(WorkingFolder, folderName):
-    folderPath = os.path.join(WorkingFolder, folderName)
-    if not os.path.isdir(folderPath):
-        os.mkdir(folderPath)
-
+######################################################################
+def ps_wait_completion(subprocess_list):
+    for pid in subprocess_list:
+        while True:
+            try:
+                pr = psutil.Process(pid)
+                try:
+                    pr_status = pr.status()
+                except TypeError:  # psutil < 2.0
+                    pr_status = pr.status
+                except psutil.NoSuchProcess:  # pragma: no cover
+                    break
+                # Check if process status indicates we should exit
+                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                    break
+            except:
+                break
+            time.sleep(1)
 
 
-############## Loop on each parameters sets ##################################
-def batch_execute_parallel(HyperParametersFile, 
+def os_python_path():
+    return str(sys.executable)
+
+
+def os_folder_rename(old_folder, new_folder):
+    os.rename(old_folder, new_folder)
+
+
+def os_folder_create(folder):
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+
+
+def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5 ):
+    sub_process_list = []
+    for folder_i in valid_folders:
+        foldername = folder_i + suffix
+        os_folder_rename(old_folder=folder_i, new_folder=foldername)
+
+        main_file = os.path.join(foldername,  main_file_run )
+        log("running file: %s" % main_file)
+        cmd = [os_python_path(), main_file]
+        ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+        sub_process_list.append(ps.pid)
+
+        log("running process: %s" % str(ps.pid))
+        time.sleep( waitsleep )
+
+    return sub_process_list
+
+
+def batch_generate_hyperparameters(hyper_dict,file_hyper) :
+  """
+     {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
+        "layer" : {"min": 10  , "max": 200 , "type": float,  "nmax": 10  }, "method": "linear"
+     }
+
+    size : key1 x ke2 x key2
+
+  """
+  for key  in hyper_dict:
+       vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
+       df = df.extend(  len(vv) )
+
+  df.to_csv( file_hyper )
+  pass
+
+
+def batch_execute_parallel(HyperParametersFile,
                            subprocess_script, batch_log_file ="batch_logfile.txt",
                            waitseconds = 2):
     """
@@ -107,74 +148,58 @@ def batch_execute_parallel(HyperParametersFile,
           time.sleep(waitseconds)
 
 
-#########################################################################################
-#########################################################################################
-def batch_generate_hyperparameters(hyper_dict,file_hyper) :
-  """
-     {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
-        "layer" : {"min": 10  , "max": 200 , "type": float,  "nmax": 10  }, "method": "linear"
-     }
 
-    size : key1 x ke2 x key2
 
-  """
-  for key  in hyper_dict:
-       vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
-       df = df.extend(  len(vv) )
+'''
+def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
+        s9='', s10=''):
+    try:
+        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format(
+            "YYYYMMDD_HHmmss,") + ','
+        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
+             str(s6), str(s7), str(s8), str(s9), str(s10)])
 
-  df.to_csv( file_hyper )
+        # logging.info(s)
+        print(s)
+
+    except Exception as e:
+        # logging.info(e)
+        print(e)
+
+
+
+def checkAdditionalFiles(WorkingFolder, AdditionalFiles):
+    if not AdditionalFiles:
+        return []
+
+    AdditionalFiles = [f.strip(" ")
+                       for f in AdditionalFiles.split(",")]
+
+    for File in AdditionalFiles:
+        ExpectedFilePath = os.path.isfile(os.path.join(WorkingFolder, File))
+        if not ExpectedFilePath:
+            print("Additional file <%s> %s not found. Aborting!" % File)
+            exit(1)
+
+    return AdditionalFiles
+
+
+def os_create_folder(WorkingFolder, folderName):
+    folderPath = os.path.join(WorkingFolder, folderName)
+    if not os.path.isdir(folderPath):
+        os.mkdir(folderPath)
+
+
+
+
+
 '''
 
 
-def ps_wait_for_completion(subprocess_list):
-    for pid in subprocess_list:
-        while True:
-            try:
-                pr = psutil.Process(pid)
-                try:
-                    pr_status = pr.status()
-                except TypeError:  # psutil < 2.0
-                    pr_status = pr.status
-                except psutil.NoSuchProcess:  # pragma: no cover
-                    break
-                # Check if process status indicates we should exit
-                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
-                    break
-            except:
-                break
-            time.sleep(1)
 
 
-def get_python_executable():
-    return str(sys.executable)
 
 
-def sp_execute_script(execute=get_python_executable(), script="", stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
-    ps = subprocess.Popen([execute, script], stdout=stdout, stderr=stderr, shell=False)
-    return ps
-
-
-def os_rename_folder(old_folder , new_folder):
-    os.rename(old_folder, new_folder)
-
-
-def os_folder_create(folder):
-    if not os.path.isdir(folder):
-        os.makedirs(folder)
-
-
-def batch_run_infolder(valid_folders):
-    sub_process_list = []
-    for each_dir in valid_folders:
-        foldername = each_dir + "_qstart"
-        os_rename_folder(old_folder=each_dir, new_folder=foldername)
-        main_file = os.path.join(foldername, "main.py")
-        log("running file: %s" % main_file)
-        ps = sp_execute_script(script=main_file)
-        sub_process_list.append(ps.pid)
-        log("running process: %s" % str(ps.pid))
-        time.sleep(5)
-    ps_wait_for_completion(sub_process_list)
 
 """
 date0 = util.date_now()
@@ -214,7 +239,7 @@ else:
 
 
 """
-        No Need t 
+        No Need t
         # build path & create task directory;
         TaskFolderName = "task_%s_%i" % (batch_label, ii)
         TaskFolder = os.path.join(WorkingFolder, TaskFolderName)

@@ -54,7 +54,8 @@ if __name__ == '__main__':
     valid_folders = get_list_valid_task_folder()
     if len(valid_folders) > 0:
         log("valid task folder: %s" % str(valid_folders))
-        util_batch.batch_run_infolder(valid_folders=valid_folders)
+        sub_process_list= util_batch.batch_run_infolder(valid_folders=valid_folders)
+        util_batch.ps_wait_completion(sub_process_list)
 
     log("All task Completed")
 
