@@ -1,5 +1,0 @@
-id,ip_address,state,state_code,instance_type,region
-i-09c4658e85a702d5e,18.237.246.46,running,16,c4.large,RegionInfo:us-west-2
-i-0b197e983c0647053,52.26.181.200,stopped,80,m5.2xlarge,RegionInfo:us-west-2
-i-0a222e281f847ca22,,terminated,48,c4.large,RegionInfo:us-west-2
-i-0780246409c2ee837,34.219.147.191,running,16,c4.large,RegionInfo:us-west-2
