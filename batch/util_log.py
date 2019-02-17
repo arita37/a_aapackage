@@ -9,38 +9,33 @@ import logging
 ################### Logs ######################################################
 global APP_ID, APP_ID2
 
-APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-APP_ID2  = str(os.getpid()) + '_' + str(socket.gethostname())
+APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
+APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
 
 
-
-
-def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
-              app_id='', logfile=None ):
+def printlog(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
+             app_id='', logfile=None):
     try:
-        if app_id != "" :
+        if app_id != "":
             prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         else:
             prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
                       str(s6), str(s7), str(s8), str(s9), str(s10)])
 
-        # logging.info(s)
         print(s)
         writelog(s, logfile)
     except Exception as e:
-        # logging.info(e)
         print(e)
         writelog(e, logfile)
+
 
 def writelog(m="", f=None):
     f = LOG_FILE if f is None else f
     with open(f, 'a') as _log:
-        _log.write(m+"\n")
-
-
+        _log.write(m + "\n")
 
 
 def setup_logger():
@@ -53,9 +48,6 @@ def setup_logger():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
     return logger
-
-
-
 
 
 """"

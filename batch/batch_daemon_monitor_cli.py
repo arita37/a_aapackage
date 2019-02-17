@@ -18,9 +18,9 @@ import util_batch
 ############### Variable definition ###########################################
 logging.basicConfig(level=logging.INFO)
 APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-WORKING_DIRECTORY = os.path.dirname(__file__)
-MONITOR_LOGS_DIRECTORY = os.path.join(WORKING_DIRECTORY, "ztest", "monitor_logs")
-DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_DIRECTORY, arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+WORKING_FOLDER = os.path.dirname(__file__)
+MONITOR_LOGS_FOLDER = os.path.join(WORKING_FOLDER, "ztest", "monitor_logs")
+DEFAULT_LOG_FILE = os.path.join(MONITOR_LOGS_FOLDER, arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
                                 + "_batch_monitor.log")
 DEFAULT_INTERVAL = 10  # seconds
 DEFAULT_DURATION = 3600  # seconds
@@ -45,7 +45,7 @@ def load_arguments():
                         help='how long to wait between each sample (in '
                              'seconds). By default the process is sampled '
                              'as often as possible.')
-    parser.add_argument('--log_directory', type=str, default="",
+    parser.add_argument('--log_folder', type=str, default="",
                         help='')
 
     args = parser.parse_args()
@@ -142,8 +142,8 @@ if __name__ == '__main__':
     log_file = args.log
     duration = args.duration
     interval = args.interval
-    log_directory = args.log_directory
-    util_batch.os_folder_create(directory=MONITOR_LOGS_DIRECTORY)
+    log_folder = args.log_folder
+    util_batch.os_folder_create(folder=MONITOR_LOGS_FOLDER)
 
     required_pid = util_cpu.ps_find_procs_by_name(name="python", cmdline="batch_daemon_launch_cli.py")
     if len(required_pid) > 0:

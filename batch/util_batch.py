@@ -27,7 +27,7 @@ APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
 
 logging.basicConfig(level=logging.INFO)
-
+'''
 def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
         s9='', s10=''):
     try:
@@ -45,7 +45,7 @@ def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
 
 
 
-def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
+def checkAdditionalFiles(WorkingFolder, AdditionalFiles):
     if not AdditionalFiles:
         return []
 
@@ -53,7 +53,7 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
                        for f in AdditionalFiles.split(",")]
 
     for File in AdditionalFiles:
-        ExpectedFilePath = os.path.isfile(os.path.join(WorkingDirectory, File))
+        ExpectedFilePath = os.path.isfile(os.path.join(WorkingFolder, File))
         if not ExpectedFilePath:
             print("Additional file <%s> %s not found. Aborting!" % File)
             exit(1)
@@ -61,14 +61,14 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     return AdditionalFiles
 
 
-def os_create_folder(WorkingDirectory, folderName):
-    folderPath = os.path.join(WorkingDirectory, folderName)
+def os_create_folder(WorkingFolder, folderName):
+    folderPath = os.path.join(WorkingFolder, folderName)
     if not os.path.isdir(folderPath):
         os.mkdir(folderPath)
 
 
 
-############### Loop on each parameters sets ##################################
+############## Loop on each parameters sets ##################################
 def batch_execute_parallel(HyperParametersFile, 
                            subprocess_script, batch_log_file ="batch_logfile.txt",
                            waitseconds = 2):
@@ -78,23 +78,23 @@ def batch_execute_parallel(HyperParametersFile,
           subprocess.py
           hyperparams.csv
           ...
-    
-    
+
+
     """
     python_path = sys.executable
-        
+
     HyperParameters  = pd.read_csv( HyperParametersFile)
     OptimizerName    = os.path.basename(subprocess_script)
-    WorkingDirectory = subprocess_script
+    WorkingFolder = subprocess_script
 
     # logging.basicConfig(level=logging.INFO)
-    #batch_log_file = os.path.join(WorkingDirectory, "batch_logs/batch_%s.txt" % batch_label) 
+    #batch_log_file = os.path.join(WorkingFolder, "batch_logs/batch_%s.txt" % batch_label)
     ChildProcesses = []
 
     for ii in range(HyperParameters.shape[0]):
        # Extract parameters for single run from batch_parameters data.
        # params_dict = HyperParameters.iloc[ii].to_dict()
-       log(batch_label, "Executing index", ii, WorkingDirectory, "\n\n")
+       log(batch_label, "Executing index", ii, WorkingFolder, "\n\n")
 
        proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],
                                  stdout=subprocess.PIPE)
@@ -107,10 +107,8 @@ def batch_execute_parallel(HyperParametersFile,
           time.sleep(waitseconds)
 
 
-
-
-##########################################################################################
-##########################################################################################
+#########################################################################################
+#########################################################################################
 def batch_generate_hyperparameters(hyper_dict,file_hyper) :
   """
      {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
@@ -125,7 +123,8 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
        df = df.extend(  len(vv) )
 
   df.to_csv( file_hyper )
-   
+'''
+
 
 def ps_wait_for_completion(subprocess_list):
     for pid in subprocess_list:
@@ -155,13 +154,27 @@ def sp_execute_script(execute=get_python_executable(), script="", stdout=subproc
     return ps
 
 
-def os_rename_folder(old_directory , new_directory):
-    os.rename(old_directory, new_directory)
+def os_rename_folder(old_folder , new_folder):
+    os.rename(old_folder, new_folder)
 
 
-def os_folder_create(directory):
-    if not os.path.isdir(directory):
-        os.makedirs(directory)
+def os_folder_create(folder):
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+
+
+def batch_run_infolder(valid_folders):
+    sub_process_list = []
+    for each_dir in valid_folders:
+        foldername = each_dir + "_qstart"
+        os_rename_folder(old_folder=each_dir, new_folder=foldername)
+        main_file = os.path.join(foldername, "main.py")
+        log("running file: %s" % main_file)
+        ps = sp_execute_script(script=main_file)
+        sub_process_list.append(ps.pid)
+        log("running process: %s" % str(ps.pid))
+        time.sleep(5)
+    ps_wait_for_completion(sub_process_list)
 
 """
 date0 = util.date_now()
@@ -203,25 +216,25 @@ else:
 """
         No Need t 
         # build path & create task directory;
-        TaskDirectoryName = "task_%s_%i" % (batch_label, ii)
-        TaskDirectory = os.path.join(WorkingDirectory, TaskDirectoryName)
+        TaskFolderName = "task_%s_%i" % (batch_label, ii)
+        TaskFolder = os.path.join(WorkingFolder, TaskFolderName)
 
-        os.mkdir(TaskDirectory)
+        os.mkdir(TaskFolder)
 
-        # Copy optimization script to Task Directory;
-        shutil.copy(os.path.join(WorkingDirectory, OptimizerName),
-                    os.path.join(TaskDirectory, OptimizerName))
+        # Copy optimization script to Task Folder;
+        shutil.copy(os.path.join(WorkingFolder, OptimizerName),
+                    os.path.join(TaskFolder, OptimizerName))
 
-        # Save Parameters inside Task Directory;
-        with open(os.path.join(TaskDirectory, "parameters.toml"), "w") as task_parameters:
+        # Save Parameters inside Task Folder;
+        with open(os.path.join(TaskFolder, "parameters.toml"), "w") as task_parameters:
             toml.dump(params_dict, task_parameters)
 
-        # Copy additional files to Task Directory;
+        # Copy additional files to Task Folder;
         if AdditionalFilesArg:
-            AdditionalFiles = checkAdditionalFiles(WorkingDirectory, AdditionalFilesArg)
+            AdditionalFiles = checkAdditionalFiles(WorkingFolder, AdditionalFilesArg)
             for File in AdditionalFiles:
-                shutil.copy(os.path.join(WorkingDirectory, File),
-                            os.path.join(TaskDirectory, File))
+                shutil.copy(os.path.join(WorkingFolder, File),
+                            os.path.join(TaskFolder, File))
 """
 
 

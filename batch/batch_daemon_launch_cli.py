@@ -14,7 +14,7 @@ import util_batch
 logging.basicConfig(level=logging.INFO)
 # APP_ID   = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 util_log.APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 util_log.LOG_FILE = "logfile.log"
@@ -26,7 +26,7 @@ def load_arguments():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
-    parser.add_argument("--directory", default=".", help="Absolute or relative path to the working directory.")
+    parser.add_argument("--folder", default=".", help="Absolute or relative path to the working folder.")
     parser.add_argument("--subprocess_script", default="optimizer.py", help="Name of the optimizer script")
 
     parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log", help=".")
@@ -41,38 +41,25 @@ def log(message):
 
 
 def get_list_of_valid_directories():
-    valid_directoties = []
+    valid_folders = []
     for root, dirs, files in os.walk(DIR_PATH):
         for filename in files:
             root_splits = root.split("/")
             if root_splits[-2] == "tasks" and not root_splits[-1].endswith("_qstart") and \
                     not root_splits[-1].endswith("_qdone") and filename == "main.py":
-                valid_directoties.append(root)
-    return valid_directoties
+                valid_folders.append(root)
+    return valid_folders
 
-
-def run_files_in_directory(valid_directoties):
-    sub_process_list = []
-    for each_dir in valid_directoties:
-        foldername = each_dir + "_qstart"
-        util_batch.os_rename_folder(old_directory=each_dir, new_directory=foldername)
-        main_file = os.path.join(foldername, "main.py")
-        log("running file: %s" % main_file)
-        ps = util_batch.sp_execute_script(script=main_file)
-        sub_process_list.append(ps.pid)
-        log("running process: %s" % str(ps.pid))
-        sleep(5)
-    util_batch.ps_wait_for_completion(sub_process_list)
 
 if __name__ == '__main__':
     args = load_arguments()
     util_log.LOG_FILE = args.file_log
 
     log("Current Process Id: %s" % (str(os.getpid())))
-    valid_directoties = get_list_of_valid_directories()
-    if len(valid_directoties) > 0:
-        log("valid direcoties: %s" % str(valid_directoties))
-        run_files_in_directory(valid_directoties=valid_directoties)
+    valid_folders = get_list_of_valid_directories()
+    if len(valid_folders) > 0:
+        log("valid direcoties: %s" % str(valid_folders))
+        util_batch.batch_run_infolder(valid_folders=valid_folders)
 
     log("Process Completed")
 
