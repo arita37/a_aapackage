@@ -1,0 +1,30 @@
+matrix:
+ include:
+  - os: linux
+    language: python
+    python: 3.5
+  - os: linux
+    language: python
+    python: 3.6
+  - os: osx
+    language: generic
+    before_install:
+    - mkdir -p /Users/travis/.matplotlib
+    - "echo 'backend: TkAgg' > /Users/travis/.matplotlib/matplotlibrc"
+    - travis_retry wget "http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -O miniconda.sh
+    - "bash miniconda.sh -b -p $HOME/miniconda"
+    - "export PATH=$HOME/miniconda/bin:$PATH"
+    - "conda create -y -n elfi python=3.6 scipy"
+    - "source activate elfi"
+
+cache: pip
+
+install:
+  - pip install numpy
+  - pip install -r requirements-dev.txt
+  - pip install -e .
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ipcluster start -n 2 --daemon ; fi
+  #- travis_wait 20 make test
+  - make test
