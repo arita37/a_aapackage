@@ -3,8 +3,12 @@
 
 
 
-git clone https://github.com/shakedzy/dython.git
-cd dython
-pip install .
+git clone https://github.com/
+
+cd a_aapackage
+
+pip install -e  .
+
+(install as editable mode)
 
 
