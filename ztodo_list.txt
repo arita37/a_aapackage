@@ -7,7 +7,7 @@ ENV install
 
 
     conda install -c conda-forge  pygmo  pagmo
-    pip install dcgpy    
+    pip install dcgpy
 
 
 
@@ -23,6 +23,24 @@ MainFolder
 myscript.py
   from aapackage import util
   util.a_get_pythonversion()
+
+
+
+
+
+
+
+
+
+git clone https://github.com/arita37/a_aapackage.git  aapackage
+cd dython
+pip install . -e
+
+
+
+
+
+
 
 
 
@@ -47,19 +65,19 @@ Launch 1 single Optimization for 1 hyper parameters
 
 A)
   this fileis using old pygmo
-  code should be updated to use new pygmo 2.0 
+  code should be updated to use new pygmo 2.0
 
 
-B) 
+B)
   Current batch code is quite ad hoc...
   would like to make it generic as follow :
      function to be optimized in one file.
      list of hyper parameters into a csv file
-     
+
      for EACH set of hyper-parameters (1 line of pandas csv file) :
         1 subprocess is launched and optimization done by  pygmo
         result are saved somewhere.
- 
+
 
 
 
@@ -73,9 +91,9 @@ B)
       hyperparam_file  = "hyperparam_list.csv",
       out_folder       = "/myresult/batch1/",
       schedule         = "11/02/2019 12:30"
-  )  :  
+  )  :
 
-      for ii, row of df_hyperparam_list.iterrows() , 
+      for ii, row of df_hyperparam_list.iterrows() ,
           pid = subprocess  row["file_script"]  ii  "hyperparam_list.csv"  out_folder   ###All subprocess are independdant !!!!
           server_info = "_".join( util.os_server_info())
           logs(arrow.timestamp, pid, server_info,  row["file_script"]  ii  hyperparam_file )
@@ -89,18 +107,18 @@ B)
 3) myscript_optim.py  ii  hyperparam_file
    from aapackage import optim  ### Layer above pygmo to abstract under functional form.
 
-   df = pd.csv_read( args.hyperparam_file ) 
+   df = pd.csv_read( args.hyperparam_file )
    df = df.iloc[ii, :]  # only 1 line
 
    import_load(  df["myfun_file"].values )  as myfun_file # "folder/myfun.py"   string load of module.
 
    optim1 = optim.optim(
-              fun_eval=     myfun_file.mypersoname_eval,        
-              fun_bound=    myfun_file.mypersoname_bound,        
+              fun_eval=     myfun_file.mypersoname_eval,
+              fun_bound=    myfun_file.mypersoname_bound,
               fun_gradient= None,
               algo= "de_1227",
               algo_origin="scipy/pygmo/...",
-              dict_params = df.to_dict()  
+              dict_params = df.to_dict()
             )
 
    res = optim1.optimize()
@@ -110,7 +128,7 @@ B)
 
 
 3) User define function is defined into a python file : myfun.py
-  myfun_file.py 
+  myfun_file.py
 
      def mypersoname_eval_()
         return np.float    or vector of float
@@ -120,7 +138,7 @@ B)
 
      def fun_gradient_()
 
-  
+
 
 ####################################################################################
 #### Version with auto-launch of AWS  ##############################################
@@ -144,7 +162,7 @@ B)
 
 
 
-    
+
 
 
 
