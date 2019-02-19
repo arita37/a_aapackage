@@ -76,7 +76,7 @@ def writelog(m="", f=None):
 
 
 
-def logger_setup(name, level=None):
+def logger_setup(name=__name__, level=None):
     # logger defines
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
