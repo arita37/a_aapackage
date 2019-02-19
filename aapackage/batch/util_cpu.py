@@ -78,7 +78,9 @@ else:
 
 
 ######### Logging #############################################################
-logging.basicConfig( level=logging.INFO )
+# logging.basicConfig( level=logging.INFO )
+import logging
+
 def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
              app_id='', logfile=None):
     try:
@@ -93,6 +95,7 @@ def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10
     except Exception as e:
         logging.info(str(e))
 
+        
 def setup_logger():
     # logger defines
     logger = logging.getLogger(__name__)
@@ -106,8 +109,12 @@ def setup_logger():
 
 
 logger = setup_logger()
+def log2(x):
+    logger.info(x)
 
 ###############################################################################
+
+
 
 
 
