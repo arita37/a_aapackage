@@ -1,4 +1,37 @@
 # -*- coding: utf-8 -*-
+"""
+Implement Interface functions for logging
+   writign on disk
+   display time
+
+https://docs.python-guide.org/writing/logging/
+https://docs.python.org/3/howto/logging-cookbook.html
+
+
++ WRITE small test_util_log.py
+
+>>> import logging
+>>> root = logging.getLogger()
+>>> root.setLevel(logging.DEBUG)
+>>> handler = logging.StreamHandler()
+>>> bf = logging.Formatter('{asctime} {name} {levelname:8s} {message}',
+...                        style='{')
+>>> handler.setFormatter(bf)
+>>> root.addHandler(handler)
+>>> logger = logging.getLogger('foo.bar')
+>>> logger.debug('This is a DEBUG message')
+2010-10-28 15:11:55,341 foo.bar DEBUG    This is a DEBUG message
+>>> logger.critical('This is a CRITICAL message')
+2010-10-28 15:12:11,526 foo.bar CRITICAL This is a CRITICAL message
+>>> df = logging.Formatter('$asctime $name ${levelname} $message',
+...                        style='$')
+>>> handler.setFormatter(df)
+>>> logger.debug('This is a DEBUG message')
+2010-10-28 15:13:06,924 foo.bar DEBUG This is a DEBUG message
+>>> logger.critical('This is a CRITICAL message')
+2010-10-28 15:13:11,494 foo.bar CRITICAL This is a CRITICAL message
+
+"""
 import os
 import sys
 import socket
