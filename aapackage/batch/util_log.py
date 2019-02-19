@@ -9,6 +9,10 @@ https://docs.python.org/3/howto/logging-cookbook.html
 
 
 + WRITE small test_util_log.py
+check here
+https://github.com/arita37/a_aapackage/blob/master/aapackage/batch/batch_daemon_launch_cli.py
+
+
 
 >>> import logging
 >>> root = logging.getLogger()
