@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
 #---------Various Utilities function for Python--------------------------------------
+
+
+
+"""
 from __future__ import division
 from __future__ import print_function
 from future import standard_library
@@ -20,169 +25,22 @@ import numexpr as ne, numpy as np, pandas as pd, scipy as sci
 import urllib3
 from bs4 import BeautifulSoup
 from numba import jit, float32
-
-#####################################################################################################
-import os, sys
-#CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-#DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
-#print(os.environ)
-#DIRCWD= os.environ["DIRCWD"];
-
-# import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
-
-DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+import subproces
 
 
+####################################################################################
+DIRCWD = os.path.dirname(os.path.abspath(__file__))
+# os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
-__path__=     DIRCWD +'/aapackage/'
-__version__=  "1.0.0"
+
+__path__ =     DIRCWD + '/aapackage/'
+__version__ =  "1.0.0"
 #__file__=     "util.py"
 
 
 
 
-
-
-###############################################################################
-###############################################################################
-'''
-Run Unit test   python aapackage/util.py --do  test01
-
-
-#### System Variables == os.environ, Admin right
-setx DIRCWD "D:/_devs/Python01/project27/"   /M
-
-
-This is actually already done for you in config._sections. Example:
-
-$ cat test.ini
-[DIRCWD]
-win-asus1 = D:/_devs/Python01/project27/
-key = item
-
-[Second Section]
-othervar = othervalue
-otherkey = otheritem
-And then:
-
-from ConfigParser import ConfigParser;config = ConfigParser(); config.read('config.ini'); config_dict= {s:dict(config.items(s)) for s in config.sections()}
-config_dict= []
-
-
-PLOTLY_APIKEY=    'aBq2k5nrzLK0chV5T32x'
-PLOTLY_USERNAME=  'kevinno'
-
-import plotly.tools as tls
-tls.set_credentials_file(username=PLOTLY_USERNAME, api_key=PLOTLY_APIKEY)
-'''
-
-
-###############################################################################
-
-'''
-https://console.developers.google.com/iam-admin/projects
-Google Drive API
-https://googledrive.github.io/PyDrive/docs/_build/html/quickstart.html#authentication
-
-https://console.developers.google.com/iam-admin/quotas?project=refreshing-code-142020
-
-Create an empty file called __init__.py in all you folders. Then you can import using . as a folder separator. Documentation here.
-
-
-#--------------------Utilities-------------------------------------------------------------------
-# http://win32com.goermezer.de/content/blogsection/7/284/
-
-WhenPackage is destroyed resintall and copy paste the data.
-from saved package
-
-ps://pythonconquerstheuniverse.wordpress.com/2009/10/15/python-packages/
-
-import spyderlib
-74	os.environ["SPYDER_PARENT_DIR"] = os.path.abspath(os.path.join(spyderlib.__file__, "../.."))
-…	
-199	from spyderlib.utils.programs import (run_python_script, is_module_installed,
-200	                                      start_file, run_python_script_in_terminal)
-201	from spyderlib.utils.iofuncs import load_session, save_session, reset_session
-
-
-https://service.wi2.ne.jp/wi2net/SbjLogin/2/
-
-klepto is built on top of dill, and can cache function inputs and outputs to memory (so that calculations don't need to be run twice), and it can seamlessly persist objects in the cache to disk or to a database.
-The versions on github are the ones you want. https://github.com/uqfoundation/klepto or https://github.com/joblib/joblib. Klepto is newer, but has a much broader set of caching and archiving solutions than joblib. Joblib has been in production use longer, so it's better tested -- especially for parallel computing.
-Here's an example of typical klepto workflow: https://github.com/uqfoundation/klepto/blob/master/tests/test_workflow.py
-Here's another that has some numpy in it: https://github.com/uqfoundation/klepto/blob/master/tests/test_cache.py
-
-'''
-
-'''
-Unpacking dictionaries
-
-** unpacks dictionaries.
-
-func(a=1, b=2, c=3)
-is the same as
-
-args = {'a': 1, 'b': 2, 'c':3}
-func(**args)
-It's useful if you have to construct parameters:
-
-args = {'name': person.name}
-if hasattr(person, "address"):
-    args["address"] = person.address
-func(**args)  # either expanded to func(name=person.name) or
-              #                    func(name=person.name, address=person.address)
-Packing parameters of a function
-
-def setstyle(**styles):
-    for key, value in styles.iteritems():      # styles is a regular dictionary
-        setattr(someobject, key, value)
-This lets you use the function like this:
-
-setstyle(color="red", bold=False)
-
-'''
-
-
-
-############## #Serialize Python Session #######################################################
-# https://github.com/uqfoundation/dill
-
-class testclass(object):
-   def __init__(self,x) :
-       pass
-
-   def z_autotest(self) :
-     import sys, io
-     # create file-like string to capture output
-     codeOut = io.StringIO()
-     codeErr = io.StringIO()
-
-     code = """
-         def f(x):
-         x = x + 1
-         return x
-         print 'This is my output.'
-     """
-
-     # capture output and errors
-     sys.stdout = codeOut
-     sys.stderr = codeErr
-
-     exec(code)
-
-     # restore stdout and stderr
-     sys.stdout = sys.__stdout__
-     sys.stderr = sys.__stderr__
-
-     print(f(4))
-     s = codeErr.getvalue(); print("error:\n%s\n" % s)
-     s = codeOut.getvalue(); print("output:\n%s" % s)
-     codeOut.close()
-     codeErr.close()
-
-
-
+############## #Serialize Python Session ##########################################
 def session_load_function(name='test_20160815'):
  import dill
  n1= DIRCWD+ '/aaserialize/session/'+ name + '.pkl'
@@ -226,9 +84,11 @@ def session_spyder_showall():
   for s in lsname:
     print(s)
 
+
 def session_guispyder_save(filename):
  from spyderlib.utils.iofuncs import save_session
  save_session(filename+'.session.tar')
+
 
 def session_guispyder_load(filename):
  from spyderlib.spyder import load_session
@@ -303,7 +163,7 @@ def session_save(filename="/folder1/name1", globals1=None):
       return None
       #from inspect import getmembers, stack
       #globals1 = dict(getmembers(stack()[1][0]))["f_globals"]
-    
+
     settings = spyvar.VariableExplorer.get_settings()
     data = spyutil.globalsfilter(globals1, check_all=True, filters=tuple(spybas.get_supported_types()['picklable']),
                          exclude_private=settings['exclude_private'],
@@ -340,10 +200,10 @@ def spyder_load_gui_session(name1) :
  path= DIRCWD
  path2= DIRCWD+'/'+name1
  #shutil.unpack_archive(path+'/'+name1+'.zip')
- 
+
  with zipfile.ZipFile(path+'/'+name1+'.zip', 'r') as myzip:
   myzip.extractall(  path2)
- 
+
  spyder_loadsession(path2 + '/'+name1+'.session.tar')
  session_load(path2 + '/' + name1 + '.spydata')
  shutil.rmtree(path2)
@@ -352,7 +212,6 @@ def spyder_load_gui_session(name1) :
 
 
 #####################################################################################
- #-------- Python General---------------------------------------------------------
 #  Import File
 # runfile('D:/_devs/Python01/project27/stockMarket/google_intraday.py', wdir='D:/_devs/Python01/project27/stockMarket')
 
@@ -382,28 +241,30 @@ http://farmdev.com/talks/unicode/
 
 def isexist(a) :
  try:
-   a; return True
- except NameError: 
+   a
+   return True
+ except NameError:
   return False
 
+
 def isfloat(x):
-  try:    
-   v=   False if x == np.inf else True
+  try:
+   if x == np.inf :   return False
    float(x)
-   return v
+   return True
   except :    return False
-      
+
+
 def isint(x): return isinstance(x, ( int, np.int, np.int64, np.int32 ) )
 
-def a_isanaconda():
- import sys; 
+
+def isanaconda():
+ import sys
  txt= sys.version
  if txt.find('Continuum') > 0 : return True
  else: return False
 
-if a_isanaconda() :  #Import the Packages
-   pass
-  
+
 
 def a_run_ipython(cmd1):
  ''' Execute Ipython Command in python code
@@ -411,14 +272,21 @@ def a_run_ipython(cmd1):
  '''
  IPython.get_ipython().magic(cmd1)
 
-def a_autoreload() :
+
+def py_autoreload() :
  a_run_ipython("load_ext autoreload"); a_run_ipython("autoreload 2")
 
+
+def os_platform() :
+   pass
+
 def a_start_log(id1='', folder='aaserialize/log/')  :
- a_run_ipython('logstart -o -r -t ' + folder + 'log' + str(id1) + '_' + a_get_platform() + '_' + date_now() + ' rotate')
+ a_run_ipython('logstart -o -r -t ' + folder + 'log' + str(id1) + '_' + os_platform() + '_' + date_now() + ' rotate')
+
 
 def a_cleanmemory():
-  import gc;  gc.collect() 
+  import gc;  gc.collect()
+
 
 def a_module_codesample(module_str='pandas') :
   dir1= 'D:/_devs/Python01/project27/docs/'
@@ -426,11 +294,13 @@ def a_module_codesample(module_str='pandas') :
   txt= os_file_read(file1)
   os_gui_popup_show(txt)
 
+
 def a_module_doc(module_str='pandas') :
   dir1= 'D:/_devs/Python01/project27/docs/'
   file1= dir1+'/' + module_str + '/doc.py'
   txt= os_file_read(file1)
   os_gui_popup_show(txt)
+
 
 def a_module_generatedoc(module_str="pandas", fileout=''):
   ''' #  getmodule_doc("jedi", r"D:\_devs\Python01\aapackage\doc.txt")'''
@@ -439,6 +309,7 @@ def a_module_generatedoc(module_str="pandas", fileout=''):
   pathout= DIRCWD+'/docs/'+ module_str
   if not os.path.exists(pathout) : os.makedirs(pathout)
   ca.getmodule_doc(module_str, file2=pathout+'/signature.py')
+
 
 def a_info_conda_jupyter():
  s= '''
@@ -467,8 +338,10 @@ def a_info_conda_jupyter():
  '''
  print(s)
 
+
 def a_run_cmd(cmd1):os_process_run(cmd1, shell=True)
 # cmd("ipconfig")
+
 
 def a_help():
  str= """
@@ -488,21 +361,21 @@ def a_help():
     %autoreload 2
 
  2) Install PIP:
-     If Permission access,Exit Spyder,  Use CMD  
+     If Permission access,Exit Spyder,  Use CMD
        D:\WinPython-64-2710\scripts>pip install scikit-learn --upgrade -
- 
-     !pip install NAME --upgrade --no-deps  #NO dependencies installed.     
-     
+
+     !pip install NAME --upgrade --no-deps  #NO dependencies installed.
+
      !pip install git+git://github.com/fchollet/keras.git --upgrade --no-deps
-     !pip install https://github.com//pymc3/archive/master.zip  
-     !pip install  https://github.com/jpype-py3 /zipball/master  or  /tarball/master   
+     !pip install https://github.com//pymc3/archive/master.zip
+     !pip install  https://github.com/jpype-py3 /zipball/master  or  /tarball/master
 
      !pip install c:\this_is_here\numpy-1.10.4+mkl-cp27-cp27m-win_amd64.whl
      !pip freeze   to get the list of package isntall
 
-     !pip install -h    Help on pip  
+     !pip install -h    Help on pip
 
- 3) Windows CMD: 
+ 3) Windows CMD:
     a_run_cmd("ipconfig")
 
     A: [enter] Changes the default drive from C to A.
@@ -511,23 +384,23 @@ def a_help():
    cd \  Takes you back to the root directory (c: in this case).
 
 
- 4) import sys  
-    reload(sys)  
+ 4) import sys
+    reload(sys)
     sys.setdefaultencoding('utf8')
     sys.getdefaultencoding()
 
- 5) 
+ 5)
     !pip install packagename
     The ! prefix is a short-hand for the %sc command to run a shell command.
 
-    You can also use the !! prefix which is a short-hand for the %sx command to execute a shell command 
+    You can also use the !! prefix which is a short-hand for the %sx command to execute a shell command
     and capture its output (saved into the _ variable by default).
 
   6) Compile a modified package
     1) Put into a folder
     2) Add the folder to the Python Path (Spyder Python path)
- 
- 
+
+
     3) Compile in Spyder using, (full directory)
        !!python D:\\_devs\\Python01\\project27\\scikit_learn\\sklearn\\setup.py install
 
@@ -550,8 +423,6 @@ D:\_devs\Python01\project\zjavajar
 # os.getenv('PATH')    #Get environ variable
 
 # sitepackage= r'D:\_devs\Python01\WinPython-64-2710\python-2.7.10.amd64\Lib\site-packages/'
-
-
 
 
   """
@@ -585,24 +456,24 @@ def print_object(vv, txt='')  :
    aux= ""
    for i in range(0,iimax) :
      if vv[k,0] != None :
-      aux+=  str(vv[k,i])    + "," 
-      
-   if vv[k,0] != None :   
+      aux+=  str(vv[k,i])    + ","
+
+   if vv[k,0] != None :
        print (aux )
 
 def print_object_tofile(vv, txt, file1='d:/regression_output.py')  :
  ''' #Print to file Object   Table   '''
  with open(file1, mode='a')  as file1 :
-  file1.write("\n\n" + txt +"\n" )  
+  file1.write("\n\n" + txt +"\n" )
   sh= np.shape(vv)
   kkmax, iimax= sh[0], sh[1]
   for k in range(0, kkmax):
     aux= ""
     for i in range(0,iimax) :
      if vv[k,0] != None :
-      aux+=  str(vv[k,i])    + "," 
-      
-    if vv[k,0] != None :   
+      aux+=  str(vv[k,i])    + ","
+
+    if vv[k,0] != None :
        #print (aux )
        file1.write(aux + 	"\n")
 
@@ -673,15 +544,15 @@ def os_zipfolder(dir_tozip='/zdisks3/output', zipname='/zdisk3/output.zip', dir_
                      base_dir='output')
  os_zipfolder('zdisk/test/aapackage', 'zdisk/test/aapackage.zip', 'zdisk/test')'''
  import shutil
- 
+
  dir_tozip= dir_tozip if dir_tozip[-1] != '/' else dir_tozip[:-1]
  # dir_prefix= dir_prefix if dir_prefix[-1] != '/' else dir_prefix[:-1]
 
  if dir_prefix  :
      dir_tozip, dir_prefix= '/'.join(dir_tozip.split('/')[:-1]), dir_tozip.split('/')[-1]
  else :
-     dir_tozip, dir_prefix=  dir_tozip , "/"   
-     
+     dir_tozip, dir_prefix=  dir_tozip , "/"
+
  shutil.make_archive(zipname.replace('.zip',''), 'zip', dir_tozip, base_dir=dir_prefix)
  '''
    shutil.make_archive(base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
@@ -691,7 +562,7 @@ def os_zipfolder(dir_tozip='/zdisks3/output', zipname='/zdisk3/output.zip', dir_
    base_dir is the directory where we start archiving from; ie. base_dir will be the common prefix of all files and directories in the archive.
    root_dir and base_dir both default to the current directory.
    owner and group are used when creating a tar archive.
-   
+
    import zipfile
    compress = zipfile.ZIP_DEFLATED if iscompress else  zipfile.ZIP_STORED
    zf= zipfile.ZipFile(zipname, "w", compress, allowZip64=True)
@@ -796,7 +667,7 @@ def os_file_replace(source_file_path, pattern, substring):
 
 def os_file_replacestring1(findStr, repStr, filePath):
     "replaces all findStr by repStr in file filePath"
-    import fileinput  
+    import fileinput
     file1= fileinput.FileInput(filePath, inplace=True, backup='.bak')
     for line in file1:
        line= line.replace(findStr,  repStr)
@@ -824,7 +695,7 @@ def os_file_getpath(path):
     return head
 
 def os_file_gettext(file1):
- with open(file1, 'r',encoding='UTF-8',) as f:      
+ with open(file1, 'r',encoding='UTF-8',) as f:
   return f.read()
  #def os_file_listall(some_dir, pattern="*.*", dirlevel=1):
  #  return listallfile(some_dir, pattern=pattern, dirlevel=dirlevel)
@@ -855,9 +726,9 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
     if num_sep + dirlevel <= num_sep_this: del dirs[:]
     matches.append([]); matches.append([]); matches.append([]);   # Filename, DirName
     for files in fnmatch.filter(files, pattern):
-      matches[0].append(os.path.splitext(files)[0])   
-      matches[1].append(os.path.splitext(files)[1])  
-      matches[2].append(os.path.join(root, files))   
+      matches[0].append(os.path.splitext(files)[0])
+      matches[1].append(os.path.splitext(files)[1])
+      matches[2].append(os.path.join(root, files))
   return np.array(matches)
 
 
@@ -966,15 +837,15 @@ def os_file_rename(some_dir, pattern="*.*", pattern2="", dirlevel=1):
     if num_sep + dirlevel <= num_sep_this: del dirs[:]
     matches.append([]); matches.append([]); matches.append([]);   # Filename, DirName
     for files in fnmatch.filter(files, pattern):
-        
-     #replace pattern by pattern2        
-      nfile= re.sub(pattern, pattern2, files) 
+
+     #replace pattern by pattern2
+      nfile= re.sub(pattern, pattern2, files)
       os.path.abspath(root)
       os.rename(files, nfile)
- 
-      matches[0].append(os.path.splitext(nfile)[0])   
-      matches[1].append(os.path.splitext(nfile)[1])  
-      matches[2].append(os.path.join(root, nfile))   
+
+      matches[0].append(os.path.splitext(nfile)[0])
+      matches[1].append(os.path.splitext(nfile)[1])
+      matches[2].append(os.path.join(root, nfile))
   return np.array(matches).T
 
 def os_gui_popup_show(txt):
@@ -1064,15 +935,15 @@ def os_path_norm(pth): #Normalize path for Python directory
      ind = pth.find(":")
      if ind > -1 :
        a, b = pth[:ind], pth[ind + 1:].encode("string-escape").replace("\\x", "/")
-       return "{}://{}".format(a, b.lstrip("\\//").replace("\\\\", "/"))        
+       return "{}://{}".format(a, b.lstrip("\\//").replace("\\\\", "/"))
      else: return pth
-    else: 
+    else:
       pth = pth.encode("unicode-escape").replace(b"\\x", b"/")
       return pth.replace(b"\\\\", b"/").decode("utf-8")
 
-def os_path_change(path1): path1= normpath(path1); os.chdir(path1)    #Change Working directory path
+def os_path_change(path1): path1= os_path_norm(path1); os.chdir(path1)    #Change Working directory path
 
-def os_path_current(): return DIRCWD
+def os_path_current(): return os.getcwd()
 
 def os_file_exist(file1): return os.path.exists(file1)
 
@@ -1234,7 +1105,7 @@ def os_file_mergeall(nfile, dir1, pattern1, deepness=2):
   txt=''; ii=0
   for l in ll[2]:
    txt= '\n\n\n\n' + os_file_gettext(l)
-   nfile1.write(txt) 
+   nfile1.write(txt)
  nfile1.close()
 
 
@@ -1250,7 +1121,7 @@ def os_file_extracttext(output_file, dir1, pattern1="*.html", htmltag='p', deepn
       page= os_file_gettext(l)
       soup = BeautifulSoup(page, "lxml")
       txt2 = ' \n\n'.join([p.text for p in soup.find_all(htmltag)])
-   
+
     txt= '\n\n\n\n' + txt2.strip()
     output_file1.write(txt)
 
@@ -1396,7 +1267,7 @@ def py_save_obj(obj, folder='/folder1/keyname', isabsolutpath=0):
     with open( dir1, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
     return dir1
-    
+
 def py_load_obj(folder='/folder1/keyname', isabsolutpath=0, encoding1='utf-8'):
     '''def load_obj(name, encoding1='utf-8' ):
          with open('D:/_devs/Python01/aaserialize/' + name + '.pkl', 'rb') as f:
@@ -1448,7 +1319,7 @@ def np_runsolver(name1, niter):
 
 pfi= copy.deepcopy( get_class_that_defined_method(solver1.func) )
 
-obj_getclass_property(pfi) 
+obj_getclass_property(pfi)
 
 solver1.x
 
@@ -1472,13 +1343,13 @@ details
 
 storage_optim= np.empty((1000, 15), dtype= np.object)
 
- 
+
   id= ['id','date', 'time','name','solver','xbest', 'fbest', 'population','pop_energies',
-  'params1', 'params2', 'params3', 'params4', 'params5', 'details']      )                                 
-                                  
-def tostore('store/'+dbname, dbid, vv) :                                  
+  'params1', 'params2', 'params3', 'params4', 'params5', 'details']      )
+
+def tostore('store/'+dbname, dbid, vv) :
  storage_optim=  load_obj(dbname)
- 
+
  storage_optim[0,0]= 0
  storage_optim[0,1]= date_now()
  storage_optim[0,2]= copy.deepcopy(solver1)
@@ -1498,7 +1369,7 @@ save_obj(aux, 'batch/elvis_usd_9assets_3_regime_perf_best_population_01')
 def obj_getclass_of_method(meth):
     import inspect
     for cls in inspect.getmro(meth.__self__.__class__):
-        if meth.__name__ in cls.__dict__: 
+        if meth.__name__ in cls.__dict__:
             return cls
     return None
 
@@ -1590,11 +1461,11 @@ def os_config_getfile(file1) :
 def os_csv_process(file1):
  print(  '''
 import csv
-with open(file2, 'r',encoding='UTF-8',) as f:      
+with open(file2, 'r',encoding='UTF-8',) as f:
   reader = csv.reader(f,  delimiter='/' )
-  kanjidict=  dict(reader) 
-  
- return kanjidict  
+  kanjidict=  dict(reader)
+
+ return kanjidict
 
 import csv
 with csv.reader(open(file2, 'r',encoding='UTF-8'),  delimiter=',' ) as reader :
@@ -1795,8 +1666,8 @@ def str_parse_stringcalendar(cal):
     return cal5
 
 def str_make_unicode(input, errors='replace'):
-    ttype= type(input) 
-    if ttype != str  : 
+    ttype= type(input)
+    if ttype != str  :
         input =  input.decode('utf-8', errors=errors);  return input
     else:  return input
 
@@ -1815,11 +1686,11 @@ def str_isfloat(value):
 
 def str_is_azchar(x):
   try:    float(x);    return True
-  except :    return False  
-    
+  except :    return False
+
 def str_is_az09char(x):
   try:    float(x);    return True
-  except :    return False  
+  except :    return False
 
 def str_reindent(s, numSpaces): #change indentation of multine string
     '''
@@ -1830,9 +1701,9 @@ def str_reindent(s, numSpaces): #change indentation of multine string
        aux= aux + ' \n'
        wi( aux)
     '''
-    s = string.split(s, '\n')
-    s = [(numSpaces * ' ') + string.lstrip(line) for line in s]
-    s = string.join(s, '\n')
+    s = s.split('\n')
+    s = [(numSpaces * ' ') + line.lstrip() for line in s]
+    s = s.join('\n')
     return s
 
 def str_split2(delimiters, string, maxsplit=0):  #Split into Sub-Sentence
@@ -1842,7 +1713,7 @@ def str_split2(delimiters, string, maxsplit=0):  #Split into Sub-Sentence
 
 def str_split_pattern(sep2, ll, maxsplit=0):  #Find Sentence Pattern
  import re
- regexPat = '|'.join(sep2) 
+ regexPat = '|'.join(sep2)
  regex3 = re.compile( '(' + regexPat + r')|(?:(?!'+ regexPat +').)*', re.S)
  #re.compile(r'(word1|word2|word3)|(?:(?!word1|word2|word3).)*', re.S)
  ll= regex3.sub(lambda m: m.group(1) if m.group(1) else "P", ll)
@@ -1895,7 +1766,7 @@ title()  Returns "titlecased" version of string, that is, all words begin with u
 upper()   Converts lowercase letters in string to uppercase.
 
 join(seq)  Merges (concatenates) the string representations of elements in sequence seq into a string, with separator string.
-	
+
 split(str="", num=string.count(str))   Splits string according to delimiter str  and returns list of substrings;
 splitlines( num=string.count('\n'))  Splits string at all (or num) NEWLINEs and returns a list of each line with NEWLINEs removed.
 
@@ -1915,7 +1786,7 @@ Determines if string or a substring of string (if starting index beg and ending 
 
 decode(encoding='UTF-8',errors='strict')
 Decodes the string using the codec registered for encoding. encoding defaults to the default string encoding.
-	
+
 encode(encoding='UTF-8',errors='strict')
 Returns encoded string version of string; on error, default is to raise a ValueError
 
@@ -1924,7 +1795,7 @@ Determines if string or a substring of string  ends with suffix; returns true if
 
 expandtabs(tabsize=8)
 Expands tabs in string to multiple spaces; defaults to 8 spaces per tab if tabsize not provided.
-	
+
 zfill (width)
 Returns original string leftpadded with zeros to a total of width characters; intended for numbers, zfill() retains any sign given (less one zero).
 
@@ -1934,9 +1805,9 @@ Returns original string leftpadded with zeros to a total of width characters; in
 ################### LIST UTIL / Array  ############################################################
 def np_minimize(fun_obj, x0=[0.0], argext=(0,0), bounds1=[(0.03, 0.20), (10, 150)], method='Powell' ) :
    def penalty(vv):      #Constraints Penalty
-     penalty=0.0  
+     penalty=0.0
      for i,x in enumerate(vv) :
-       penalty+= 5000000*( -min(x-bounds1[i][0], 0.0) + max(x-bounds1[i][1],0.0))   
+       penalty+= 5000000*( -min(x-bounds1[i][0], 0.0) + max(x-bounds1[i][1],0.0))
      return   penalty
 
    def loss(vv, argext):
@@ -1946,21 +1817,21 @@ def np_minimize(fun_obj, x0=[0.0], argext=(0,0), bounds1=[(0.03, 0.20), (10, 150
    return res
 
 def np_minimizeDE(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
-  solver= sci.optimize._differentialevolution.DifferentialEvolutionSolver(fun_obj, bounds=bounds, popsize=popsize) 
-  imin=0      
-      
-  name1= '/batch/solver_'+ name1 
+  solver= sci.optimize._differentialevolution.DifferentialEvolutionSolver(fun_obj, bounds=bounds, popsize=popsize)
+  imin=0
+
+  name1= '/batch/solver_'+ name1
   fbest0=1500000.0
   for i in range(imin, imin+maxiter):
-    xbest, fbest = next(solver)              
+    xbest, fbest = next(solver)
     print(0,i, fbest, xbest)
-    res= (copy.deepcopy(solver), i, xbest, fbest)  
+    res= (copy.deepcopy(solver), i, xbest, fbest)
     try :
          save(res, name1+date_now()+'_'+np_int_tostr(i))
-    except :  pass      
+    except :  pass
     if np.mod(i+1, 11)==0 :
             if np.abs(fbest - fbest0) < 0.001 : break;
-            fbest0= fbest  
+            fbest0= fbest
 
 def np_remove_NA_INF_2d(X):
  im, jm= np.shape(X)
@@ -1968,16 +1839,16 @@ def np_remove_NA_INF_2d(X):
    for j in range(0,jm) :
     if np.isnan(X[i,j]) or np.isinf(X[i,j]): X[i,j]= X[i-1,j]
  return X
-  
+
 def np_addcolumn(arr, nbcol):
-  sh= np.shape(arr);  
+  sh= np.shape(arr);
   vv= np.zeros((sh[0], nbcol))
   arr2= np.column_stack((arr, vv))
   return arr2
 
 def np_addrow(arr, nbrow):
   sh= np.shape(arr);
-  if len(sh)  > 1 :  
+  if len(sh)  > 1 :
    vv= np.zeros((nbrow, sh[1]))
    arr2= np.row_stack((arr, vv))
    return arr2
@@ -1994,7 +1865,7 @@ def np_dictordered_create():
    from collections import OrderedDict
    return OrderedDict()
 
-def np_list_unique(seq) :   
+def np_list_unique(seq) :
  from sets import Set
  set = Set(seq)
  return list(set)
@@ -2068,14 +1939,14 @@ def np_mergelist(x0, x1) :
 
 def np_enumerate2(vec_1d):
  v2= np.empty((len(vec_1d), 2))
- for k,x in enumerate(vec_1d): v2[k,0]= k; v2[k,1]= x 
+ for k,x in enumerate(vec_1d): v2[k,0]= k; v2[k,1]= x
  return v2
 
-#Pivot Table from List data    
+#Pivot Table from List data
 def np_pivottable_count(mylist):
     mydict={}.fromkeys(mylist,0)
     for e in mylist:
-        mydict[e]= mydict[e] + 1   # Map Reduce function 
+        mydict[e]= mydict[e] + 1   # Map Reduce function
     ll2= np_dict_tolist(mydict)
     ll2= sorted(ll2, key = lambda x: int(x[1]), reverse=True)
     return ll2
@@ -2103,13 +1974,13 @@ def np_and1(x,y, x3=None, x4=None, x5=None, x6=None, x7=None, x8=None):
 def np_sortcol(arr, colid, asc=1):
  """ df.sort(['A', 'B'], ascending=[1, 0])  """
  df = pd.DataFrame(arr)
- arr= df.sort_values(colid, ascending=asc)   
+ arr= df.sort_values(colid, ascending=asc)
  return arr.values
 
 def np_sort(arr, colid, asc=1):
  """ df.sort(['A', 'B'], ascending=[1, 0])  """
  df = pd.DataFrame(arr)
- arr= df.sort_values(colid, ascending=asc)   
+ arr= df.sort_values(colid, ascending=asc)
  return arr.values
 
 def np_ma(vv, n):
@@ -2129,19 +2000,19 @@ def np_cleanmatrix(m):
 def np_torecarray(arr, colname) :
   return  np.core.records.fromarrays(arr.T, names=','.join(colname), formats = ','.join(['f8'] * np.shape(arr)[1]))
 
-def np_sortbycolumn(arr, colid, asc=True): 
+def np_sortbycolumn(arr, colid, asc=True):
  df = pd.DataFrame(arr)
- arr= df.sort_values(colid, ascending=asc)   
+ arr= df.sort_values(colid, ascending=asc)
  return arr.values
 
-def np_sortbycol(arr, colid, asc=True): 
+def np_sortbycol(arr, colid, asc=True):
  if len(np.shape(arr)) > 1 :
   df = pd.DataFrame(arr)
-  arr= df.sort_values(colid, ascending=asc)   
+  arr= df.sort_values(colid, ascending=asc)
   return arr.values
  else :
-  return np.reshape(arr, (1,len(arr)))  
-    
+  return np.reshape(arr, (1,len(arr)))
+
 # if colid==0 : return arr[np.argsort(arr[:])]
 # else : return arr[np.argsort(arr[:, colid])]
 
@@ -2161,8 +2032,8 @@ def np_findfirst(item, vec):
     for i in range(len(vec)):
         if item == vec[i]: return i
     return -1
-    
-@jit(nopython=True, nogil=True) 
+
+@jit(nopython=True, nogil=True)
 def np_find(item, vec):
     """return the index of the first occurence of item in vec"""
     for i in range(len(vec)):
@@ -2184,24 +2055,24 @@ def findnone(vec):
 
 def findx(item, vec):
     """return the index of the first occurence of item in vec"""
-    try :    
+    try :
       if type(vec)== list : i2= vec.index(item)
-      else :   
+      else :
         i=np.where(vec==item)[0]
         i2= i[0] if len(i) > 0 else -1
-    except: 
+    except:
        i2= -1
     return i2
 
 def finds(itemlist, vec):
   """return the index of the first occurence of item in vec"""
-  idlist= []  
+  idlist= []
   for x in itemlist :
-    ix=-1    
+    ix=-1
     for i in range(len(vec)):
         if x == vec[i]:  idlist.append(i); ix=i
-    if ix==-1: idlist.append(-1)       
-  if idlist== [] : return -1 
+    if ix==-1: idlist.append(-1)
+  if idlist== [] : return -1
   else : return idlist
 
 def findhigher(x, vec):
@@ -2216,12 +2087,12 @@ def findlower(x, vec):
         if vec[i] < x: return i
     return -1
 
-  
+
 import operator
 def np_find_minpos(values):
  min_index, min_value = min(enumerate(values), key=operator.itemgetter(1))
  return min_index, min_value
- 
+
 def np_find_maxpos(values):
  max_index, max_value = max(enumerate(values), key=operator.itemgetter(1))
  return max_index, max_value
@@ -2233,26 +2104,26 @@ def np_find_maxpos_2nd(numbers):
         count += 1
         if x > m2:
             if x >= m1:
-                m1, m2 = x, m1            
+                m1, m2 = x, m1
             else:
                 m2 = x; i2= i
     return i2, m2 if count >= 2 else None
 
 def np_findlocalmax2(v, trig):
- n=len(v)  
+ n=len(v)
  v2= np.zeros((n,8))
  tmax,_= np_find_maxpos(v)
  if n < 3:
    max_index, max_value= np_find_maxpos(v)
-   v2=  [[max_index, max_value]] 
+   v2=  [[max_index, max_value]]
    return v2
  else:
   for i,x in enumerate(v):
     if i < n-1 and i > 0 :
-     if x > v[i-1] and x > v[i+1] : 
+     if x > v[i-1] and x > v[i+1] :
            v2[i,0]= i;  v2[i,1]=x
   v2 =np_sortbycolumn(v2,1,asc=False)
- 
+
   #Specify the max :
  for k in range(0, len(v2)) :
   kmax= v2[k,0]
@@ -2261,8 +2132,8 @@ def np_findlocalmax2(v, trig):
 
   kmaxl= 0 if kmaxl==-1 else kmax-kmaxl
   kmaxr= n if kmaxr==-1 else kmaxr+kmax
-  
-  v2[k,2]= np.abs(kmaxr-kmaxl)   #Range 
+
+  v2[k,2]= np.abs(kmaxr-kmaxl)   #Range
   v2[k,3]= np.abs(kmax-tmax)   #Range of the Max After
   v2[k,4]= 0  #Range of the Max Before
   v2[k,5]= kmax-kmaxl
@@ -2273,7 +2144,7 @@ def np_findlocalmax2(v, trig):
  return v2
 
 def np_findlocalmin2(v, trig):
- n=len(v)  
+ n=len(v)
  v2= np.zeros((n,8))
  tmin,_= np_find_minpos(v)
  if n < 3:
@@ -2283,10 +2154,10 @@ def np_findlocalmin2(v, trig):
  else:
   for i,x in enumerate(v):
     if i < n-1 and i > 0 :
-     if x < v[i-1] and x < v[i+1] :      
+     if x < v[i-1] and x < v[i+1] :
            v2[i,0]= i;  v2[i,1]=x
   v2 =np_sortbycolumn(v2,1,asc=False)
- 
+
  #Classification of the Local min
   for k in range(0, len(v2)) :
    if v2[k,1] != 0.0 :
@@ -2297,7 +2168,7 @@ def np_findlocalmin2(v, trig):
     kminl= 0 if kminl==-1 else kmin-kminl
     kminr= n if kminr==-1 else kminr+kmin
 
-    v2[k,2]= np.abs(kminr-kminl)   #Range 
+    v2[k,2]= np.abs(kminr-kminl)   #Range
     v2[k,3]= np.abs(kmin-tmin)   #Range of the min After
     v2[k,4]= 0  #Range of the min After
     v2[k,5]= kmin-kminl
@@ -2307,38 +2178,38 @@ def np_findlocalmin2(v, trig):
  return v2
 
 def np_findlocalmax(v):
- n=len(v)   
+ n=len(v)
  v2= np.zeros((n,2))
  if n > 2:
   for i,x in enumerate(v):
     if i < n-1 and i > 0 :
-     if x > v[i-1] and x > v[i+1] : 
+     if x > v[i-1] and x > v[i+1] :
            v2[i,0]= i;  v2[i,1]=x
   v2 =np_sortbycolumn(v2,1,asc=False)
   return v2
- else : 
+ else :
    max_index, max_value= np_find_maxpos(v)
    return  [[max_index, max_value]]
 
 def np_findlocalmin(v):
- n=len(v)   
+ n=len(v)
  v2= np.zeros((n,2))
  if n > 2:
   for i,x in enumerate(v):
     if i < n-1 and i > 0 :
-     if x < v[i-1] and x < v[i+1] :      
+     if x < v[i-1] and x < v[i+1] :
            v2[i,0]= i;  v2[i,1]=x
- 
+
   v2 =np_sortbycolumn(v2[:i2],0,asc=True)
   return v2
- else : 
-   
+ else :
+
    max_index, max_value= np_find_minpos(v)
    return  [[max_index, max_value]]
 
 def np_stack(v1, v2=None, v3=None, v4=None, v5=None):
    sh= np.shape(v1)
-   if sh[0] < sh[1] :    
+   if sh[0] < sh[1] :
      v1= np.row_stack((v1,v2))
      if v3 != None : v1= np.row_stack((v1,v3))
      if v4 != None : v1= np.row_stack((v1,v4))
@@ -2347,8 +2218,8 @@ def np_stack(v1, v2=None, v3=None, v4=None, v5=None):
      v1= np.column_stack((v1,v2))
      if v3 != None : v1= np.column_stack((v1,v3))
      if v4 != None : v1= np.column_stack((v1,v4))
-     if v5 != None : v1= np.column_stack((v1,v5))       
-       
+     if v5 != None : v1= np.column_stack((v1,v5))
+
    return v1
 
 def np_uniquerows(a):
@@ -2359,14 +2230,14 @@ def np_uniquerows(a):
 def np_remove_zeros(vv, axis1=1):
    return vv[~np.all(vv == 0, axis=axis1)]
 
-def np_sort(vv): 
+def np_sort(vv):
  return vv[np.lexsort(np.transpose(vv)[::-1])]      #Sort the array by different column
 
 def np_memory_array_adress(x):
     # This function returns the memory block address of an array.# b = a.copy(); id(b) == aid
     return x.__array_interface__['data'][0]
 
-    
+
 
 
 def np_pivotable_create(table, left, top, value):
@@ -2578,7 +2449,7 @@ def pd_splitdf_inlist(df, colid, type1="dict"):
     UniqueNames = df.sym.unique()
     if type1=='dict' :
       dfDict = {elem: pd.DataFrame for elem in UniqueNames}
-      for key in list(DataFrameDict.keys()):
+      for key in list(dfDict.keys()):
         dfDict[key] = df[df[colid] == key]
       return dfDict
 
@@ -2654,8 +2525,8 @@ def pd_dtypes(df, returnasdict=0) :
     	float16, float32, int8, int16, int32,uint8, uint16, uint32 ''')
 
 
-def pd_df_todict2(df1, colkey='table', excludekey=[''], onlyfirstelt= True) :
-      df= df.drop_duplicates(colkey).reset_index(level=0, drop=True)
+def pd_df_todict2(df, colkey='table', excludekey=[''], onlyfirstelt= True) :
+      df = df.drop_duplicates(colkey).reset_index(level=0, drop=True)
       dict0 = {}
       for i in range(0, len(df)):
          id0 = df.iloc[i,0]
@@ -2666,7 +2537,7 @@ def pd_df_todict2(df1, colkey='table', excludekey=[''], onlyfirstelt= True) :
             else:              dict0[id0].append(val0)
       return dict0
 
-      
+
 def pd_df_todict(df, colkey='machine_code', colval='adress') :
    dict0 = {}
    for ii, row in df.iterrows() :
@@ -2674,10 +2545,8 @@ def pd_df_todict(df, colkey='machine_code', colval='adress') :
         dict0[ row[colkey] ]=  row[colval]
      except :
         pass
-         
-   return dict0   
-      
-  
+
+   return dict0
 
 
 def pd_col_addfrom_dfmap(df, dfmap, colkey, colval, df_colused, df_colnew, exceptval=-1, inplace= True) :
@@ -2686,24 +2555,24 @@ def pd_col_addfrom_dfmap(df, dfmap, colkey, colval, df_colused, df_colnew, excep
     dfmap:  FSMaster Dataframe
       colkey: colum used for dict key.  machine_code
       colval: colum used for dict val.  adress
-      
+
     df_colused  :     "machine_code"
     exception val:  -1 or ''
   '''
-  map_dict= pd_df_todict(dfmap, colkey= colkey , colval=colval )  
-  
+  map_dict= pd_df_todict(dfmap, colkey= colkey , colval=colval )
+
   def map_dict_fun( rowi ) :
     try :     return map_dict[  rowi[ df_colused ]  ]
     except :  return exceptval
-    
-  df[df_colnew]=  df.apply( lambda x : map_dict_fun(x) , axis= 1) 
-    
+
+  df[df_colnew]=  df.apply( lambda x : map_dict_fun(x) , axis= 1)
+
   if inplace : return None
   else  :      return df
-  
 
-   
-   
+
+
+
 '''
 def pd_dtypes_getdict(df=None, csvfile=None) :
    if df is not None :   return df.dtypes.to_dict()
@@ -2750,8 +2619,8 @@ def pd_cleanquote(q):
  for kid in col:
    if kid not in ['date', 'day','month','year'] :
       q[kid]= pd.to_numeric(q[kid], errors='coerce').values  #Put NA on string
- 
- q= q.fillna(method='pad')  
+
+ q= q.fillna(method='pad')
  return q
 '''
 
@@ -2813,11 +2682,11 @@ def pd_resetindex(df):
   df.index = list(np.arange(0,len(df.index)))
   return df
 
-def pd_insertdatecol(df_insider,  format1="%Y-%m-%d %H:%M:%S:%f") :
- df_insider= pd_addcol(df_insider, 'dateinsert')
- df_insider['dateinsert']=  df_insider['dateinsert'].astype(str)
- df_insider.dateinsert.values[:]  =  date_nowtime('str', format1= format1)
- return df_insider
+
+def pd_insertdatecol(df, col, format1="%Y-%m-%d %H:%M:%S:%f") :
+ df[col]  =  df[col].apply( lambda x : date_nowtime(x, format1= format1))
+ return df
+
 
 def pd_replacevalues(df,  matrix):
  ''' Matrix replaces df.values  '''
@@ -2888,7 +2757,7 @@ def pd_h5_dumpinfo(dbfile='E:\_data\stock\intraday_google.h5'):
 
 def pd_h5_save(df, filenameh5='E:/_data/_data_outlier.h5', key='data'):
  ''' File is release after saving it'''
- store = pd.HDFStore(filenameh5)  
+ store = pd.HDFStore(filenameh5)
  store.append(key, df); store.close()
 
 def pd_h5_load(filenameh5='E:/_data/_data_outlier.h5', table_id='data', exportype="pandas", rowstart=-1, rowend=-1, cols=[]):
@@ -2978,15 +2847,15 @@ def date_convert(t1, fromtype, totype) :
 def datetime_tostring(datelist1):
  if isinstance(datelist1, datetime.date) :      return datelist1.strftime("%Y%m%d")
  if isinstance(datelist1, np.datetime64 ) :
-   t= pd.to_datetime(str(datelist1)) ;  return t.strftime("%Y%m%d") 
-  
+   t= pd.to_datetime(str(datelist1)) ;  return t.strftime("%Y%m%d")
+
  date2 = []
  for t in datelist1:
      date2.append(t.strftime("%Y%m%d"))
  return date2
 
 def date_remove_bdays(from_date, add_days):
-    isint1= isint(from_date)  
+    isint1= isint(from_date)
     if isint1 :  from_date= dateint_todatetime(from_date)
     business_days_to_add = add_days
     current_date = from_date
@@ -2996,7 +2865,7 @@ def date_remove_bdays(from_date, add_days):
         if weekday >= 5: # sunday = 6
             continue
         business_days_to_add += 1
-    if isint1 : return datetime_toint(current_date) 
+    if isint1 : return datetime_toint(current_date)
     else :      return   current_date
 
 def date_add_bdays(from_date, add_days):
@@ -3010,7 +2879,7 @@ def date_add_bdays(from_date, add_days):
         if weekday >= 5: # sunday = 6
             continue
         business_days_to_add -= 1
-    if isint1 : return datetime_toint(current_date) 
+    if isint1 : return datetime_toint(current_date)
     else :      return   current_date
 
 def datenumpy_todatetime(tt, islocaltime=True):
@@ -3039,7 +2908,7 @@ def datestring_todatetime(datelist1, format1= "%Y%m%d") :
  for s in datelist1:
      date2.append(parser.parse(s))
      #date2.append(datetime.datetime.strptime(s, format1))
- return date2    
+ return date2
 
 def datetime_toint(datelist1):
  if isinstance(datelist1, datetime.date) :      return int(datelist1.strftime("%Y%m%d"))
@@ -3087,7 +2956,7 @@ def dateint_todatetime(datelist1) :
  for s in datelist1:
      date2.append(parser.parse(str(s)))
      #date2.append(datetime.datetime.strptime(s, format1))
- return date2    
+ return date2
 
 def date_diffinday(intdate1, intdate2):
   dt= dateint_todatetime(intdate2) - dateint_todatetime(intdate1)
@@ -3112,23 +2981,23 @@ def date_gencalendar(start='2010-01-01', end='2010-01-15', country='us') :
 
 def date_finddateid(date1, dateref) :
   i= np_findfirst(date1, dateref)
-  if i==-1 : i= np_findfirst(date1+1, dateref) 
-  if i==-1 : i= np_findfirst(date1-1, dateref)     
-  if i==-1 : i= np_findfirst(date1+2, dateref)    
-  if i==-1 : i= np_findfirst(date1-2, dateref) 
-  if i==-1 : i= np_findfirst(date1+3, dateref)    
-  if i==-1 : i= np_findfirst(date1-3, dateref) 
-  if i==-1 : i= np_findfirst(date1+5, dateref)    
-  if i==-1 : i= np_findfirst(date1-5, dateref)  
-  if i==-1 : i= np_findfirst(date1+7, dateref)    
-  if i==-1 : i= np_findfirst(date1-7, dateref)  
-  return i 
-   
+  if i==-1 : i= np_findfirst(date1+1, dateref)
+  if i==-1 : i= np_findfirst(date1-1, dateref)
+  if i==-1 : i= np_findfirst(date1+2, dateref)
+  if i==-1 : i= np_findfirst(date1-2, dateref)
+  if i==-1 : i= np_findfirst(date1+3, dateref)
+  if i==-1 : i= np_findfirst(date1-3, dateref)
+  if i==-1 : i= np_findfirst(date1+5, dateref)
+  if i==-1 : i= np_findfirst(date1-5, dateref)
+  if i==-1 : i= np_findfirst(date1+7, dateref)
+  if i==-1 : i= np_findfirst(date1-7, dateref)
+  return i
+
 def datestring_toint(datelist1) :
- if isinstance(datelist1, str) :      return int(datelist1)    
+ if isinstance(datelist1, str) :      return int(datelist1)
  date2 = []
  for s in datelist1:   date2.append(int(s))
- return date2   
+ return date2
 
 def date_now(i=0):
  from datetime import datetime
@@ -3157,9 +3026,9 @@ def date_tofloat(dt):
 def date_generatedatetime(start="20100101", nbday=10, end=""):
   from dateutil.rrule import DAILY, rrule, MO, TU, WE, TH, FR
   start= datestring_todatetime(start)
-  if end=="" :  end = date_add_bdays(start,nbday-1) #  + datetime.timedelta(days=nbday) 
+  if end=="" :  end = date_add_bdays(start,nbday-1) #  + datetime.timedelta(days=nbday)
   date_list= list(rrule(DAILY, dtstart=start, until=end, byweekday=(MO,TU,WE,TH,FR)))
-  
+
   return np.array(date_list)
 
 
@@ -3173,19 +3042,19 @@ def np_numexpr_vec_calc(filename, expr, i0=0, imax=1000, fileout='E:\_data\_QUAS
 '''
  pdframe=  pd.read_hdf(filename,'data', start=i0, stop=imax)    #from file
  xx= pdframe.values;  del pdframe    #to numpy vector
- xx= ne.evaluate(expr)  
- pdf =pd.DataFrame(xx); del xx  
-# filexx3=   'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'   
- store = pd.HDFStore(fileout) 
+ xx= ne.evaluate(expr)
+ pdf =pd.DataFrame(xx); del xx
+# filexx3=   'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'
+ store = pd.HDFStore(fileout)
  store.append('data', pdf); del pdf
 
 
 
 def np_numexpr_tohdfs(filename, expr,  i0=0, imax=1000, fileout='E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'  ):
  pdframe=  pd.read_hdf(filename,'data', start=i0, stop=imax)    #from file
- xx= pdframe.values;  del pdframe   
- xx= ne.evaluate(expr)  
- pdf =pd.DataFrame(xx); del xx    # filexx3=   'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5' 
+ xx= pdframe.values;  del pdframe
+ xx= ne.evaluate(expr)
+ pdf =pd.DataFrame(xx); del xx    # filexx3=   'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'
  store = pd.HDFStore(fileout);  store.append('data', pdf); del pdf
 
 #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'  ):
@@ -3201,7 +3070,7 @@ def np_comoment(xx,yy,nsample, kx,ky) :
 #   cx= ne.evaluate("sum(xx)") /  (nsample);   cy= ne.evaluate("sum( yy)")  /  (nsample)
 #   cxy= ne.evaluate("sum((xx-cx)**kx * (yy-cy)**ky)") / (nsample)
    cxy= ne.evaluate("sum((xx)**kx * (yy)**ky)") / (nsample)
-   return cxy 
+   return cxy
 
 def np_acf(data):
     #Autocorrelation
@@ -3215,7 +3084,7 @@ def np_acf(data):
     x = np.arange(n) # Avoiding lag 0 calculation
     acf_coeffs = np.asarray(list(map(r, x)))
     return acf_coeffs
- 
+
 
 
 ##################### Plot Utilities ################################################################
@@ -3546,7 +3415,7 @@ if __name__ == '__main__' and arg.do == "test":
   import numpy as np, pandas as pd, scipy as sci
   import util; print(util); print("")
   #util.a_info_system()
-  util.a_isanaconda()
+  util.isanaconda()
   util.date_allinfo()
 
   vv  =   np.random.rand(1,10)
@@ -3572,7 +3441,7 @@ if __name__ == '__main__' and arg.do == "test":
 
   #############################################################################
   print("\n\n"+ UNIQUE_ID +" ###################### End:" + arrow.utcnow().to('Japan').format() + "###########################") ; sys.stdout.flush()
- except Exception as e : 
+ except Exception as e :
   print(e)
 
 
@@ -3594,8 +3463,8 @@ UNIQUE_ID=    str(np.random.randint(10**14, 10**15,  dtype='int64'))
 
 
 print("\n\n###################### Start util # :" + arrow.utcnow().to('Japan').format() + "###########################") ; sys.stdout.flush()
- 
- 
+
+
 '''
 
 

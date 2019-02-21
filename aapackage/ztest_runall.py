@@ -12,7 +12,7 @@ import numpy as np, pandas as pd, scipy as sci
 try :
  import util; print(util)
  util.a_info_system()
- util.a_isanaconda()
+ util.isanaconda()
  util.date_allinfo()
 
  vv  =   np.random.rand(1,10)
