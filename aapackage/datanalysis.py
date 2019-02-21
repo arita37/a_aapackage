@@ -32,19 +32,15 @@ from sklearn.cluster import k_means, dbscan
 from sklearn.decomposition import pca
 
 
-###########################################################################################################################
-# import os, sys
-# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
-# os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+#########################################################################################################
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-
-#import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
+# import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
 DIRCWD = "./"
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 
-import util, datanalysis as da
+import util,
+import datanalysis as da
 
 
 
@@ -53,7 +49,7 @@ __version__= "1.0.0"
 __file__=    "datanalysis.py"
 
 
-############# CONSTANT   ##################################################################################################
+############# CONSTANT   ###############################################################################
 #type of data
 """
 df : dataframe
@@ -87,6 +83,7 @@ def pd_filter_column(df_client_product, filter_val=[], iscol=1):
    df2=df_client_product.drop(col_delete1, axis=axis, inplace=False)
    return df2
 
+
 def pd_missing_show():
    pass
 
@@ -118,8 +115,8 @@ https://github.com/ResidentMario/missingno
 
 def pd_describe( df ):
    ''' Describe the tables
-        
-       
+
+
    '''
    coldes= [ "col", "coltype", "dtype", "count", "min", "max", "nb_na", "pct_na", "median",  "mean", "std",  "25%",  "75%",  "outlier"   ]
 
@@ -131,7 +128,7 @@ def pd_describe( df ):
          s.describe()
          count    3.0  mean     2.0 std      1.0
          min      1.0   25%      1.5  50%      2.0
-         75%      2.5  max      3.0   
+         75%      2.5  max      3.0
       '''
       ss=     list(df[col].describe().values)
       ss=     [ str(df[col].dtype) ] + ss
@@ -853,7 +850,7 @@ list(le.inverse_transform([2, 2, 1]))
    ncol=Xmat.shape[1]
    Xnew=np.zeros_like(Xmat)
    mapping_cat_int= {}
-   
+
    for k in range(0, ncol):
       Xnew[:, k]=le.fit_transform(Xmat[:, k])
       mapping_cat_int[k] = le.get_params()
@@ -1214,7 +1211,7 @@ cat_features_ids = np.where(train_df.apply(pd.Series.nunique) < 30000)[0].tolist
 
 
 
-########  Regularizer  
+########  Regularizer
 selected_features = [
     'v10', 'v12', 'v14', 'v21', 'v22', 'v24', 'v30', 'v31', 'v34', 'v38', 'v40', 'v47', 'v50',
     'v52', 'v56', 'v62', 'v66', 'v72', 'v75', 'v79', 'v91', 'v112', 'v113', 'v114', 'v129'
@@ -1262,11 +1259,11 @@ preds_class = model.predict(test_pool)
 # Get predicted probabilities for each class
 preds_proba = model.predict_proba(test_pool)
 # Get predicted RawFormulaVal
-  preds_raw = model.predict(test_pool, prediction_type='RawFormulaVal')  
-  
-  
+  preds_raw = model.predict(test_pool, prediction_type='RawFormulaVal')
+
+
   https://tech.yandex.com/catboost/doc/dg/concepts/python-usages-examples-docpage/
-  
+
   '''
   import catboost
   pa= dict2(pars)
@@ -1313,7 +1310,7 @@ def sk_model_auto_tpot(Xmat, y,  outfolder='aaserialize/', model_type='regressor
   :param outfolder:
   :param model_type:
   :param train_size:
-  :param generation: 
+  :param generation:
   :param population_size:
   :param verbosity:
   :return:
@@ -1412,14 +1409,14 @@ def sk_distribution_kernel_bestbandwidth(kde):
 
 
 def sk_distribution_kernel_sample(kde=None, n=1):
- ''' 
+ '''
   kde = sm.nonparametric.KDEUnivariate(np.array(Y[Y_cluster==0],dtype=np.float64))
   kde = sm.nonparametric.KDEMultivariate()  # ... you already did this
  '''
 
  from scipy.optimize import brentq
  samples= np.zeros(n)
- 
+
  # 1-d root-finding  F-1(U) --> Sample
  def func(x):
     return kde.cdf([x]) - u
@@ -1693,17 +1690,17 @@ class sk_model_template1(sk.base.BaseEstimator) :
       y_is_above_cut = (Y >  self.high_y_cut)
       y_is_below_cut = (Y < self.low_y_cut)
       y_is_within_cut = (~y_is_above_cut & ~y_is_below_cut)
-      if len(y_is_within_cut.shape) > 1 : y_is_within_cut= y_is_within_cut[:,0] 
-  
+      if len(y_is_within_cut.shape) > 1 : y_is_within_cut= y_is_within_cut[:,0]
+
       self.model.fit(X[y_is_within_cut,:], Y[y_is_within_cut])
 
       r2= self.model.score(X[y_is_within_cut,:], Y[y_is_within_cut])
-      print(('R2:',  r2  ))      
+      print(('R2:',  r2  ))
       print(('Inter', self.model.intercept_ ))
       print(('Coef', self.model.coef_ ))
 
       self.ymedian = np.median(Y)
-      return self, r2,  self.model.coef_ 
+      return self, r2,  self.model.coef_
 
    def predict(self, X, y=None, ymedian=None) :
      X= X * 100.0
@@ -1726,7 +1723,7 @@ class sk_model_template1(sk.base.BaseEstimator) :
      Y=  (self.ww0 * Y  + (1-self.ww0 )* ymedian )
      Y= Y / 1000.0
      return r2_score(Ytrue, Y)
-     
+
 
 
 ############################################################################

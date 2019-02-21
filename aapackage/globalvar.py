@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Global variables   
+""" Global variables
 global01.varname                   import global01 as global01
 """
 
@@ -25,8 +25,6 @@ VS_MSBUILD= r"D:\_app\visualstudio13\VC\bin"
 NVIDIA_DRIVER= r"D:\_app\nvidiacuda\gpu\gdk_win7_amd64_release\nvml"
 
 
-# os.environ['MyVar'] = 'Hello World!' #Variable    
-# os.getenv('MyVar',-1)   # get your variable 
 
 
 
@@ -37,6 +35,10 @@ global allv
 
 
 '''
+# os.environ['MyVar'] = 'Hello World!' #Variable
+# os.getenv('MyVar',-1)   # get your variable
+
+
  Winpython   D:\_devs\Python01\WinPython-64\settings
 
 Package        D:\_devs\Python01\WinPython-64\python-3.4.3.amd64\libs
