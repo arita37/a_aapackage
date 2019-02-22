@@ -80,18 +80,6 @@ def log2(x):
 
 
 
-############# Arg parsing #####################################################
-def load_arguments() :
-        ppa = argparse.ArgumentParser()
-        ppa.add_argument('--DIRCWD',  type=str, default='',     help=' Root Folder')
-        ppa.add_argument('--do',      type=str, default='zdoc', help='action')
-        ppa.add_argument('--verbose', type=int, default=0,      help=' Verbose mode')
-        ppa.add_argument('--test',    type=int, default=0,      help=' ')
-        ppa.add_argument('--configfile', type=str, default='/config/config.txt',  help=' config file')
-        arg = ppa.parse_args()
-        return arg
-
-
 
 ###############################################################################
 def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
@@ -106,8 +94,7 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
     if logfile:
         f = open(logfile, 'w')
         f.write("# {0:12s} {1:12s} {2:12s} {3:12s} {4:12s}\n".format(
-            'Timestamp'.center(12),
-            'Elapsed time'.center(12),
+            'Timestamp'.center(12), 'Elapsed time'.center(12),
             'CPU (%)'.center(12),
             'Real (MB)'.center(12),
             'Virtual (MB)'.center(12))
@@ -173,7 +160,6 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
         f.close()
 
 
-
 def ps_get_cpu_percent(process):
     try:
         return process.cpu_percent()
@@ -210,7 +196,8 @@ def ps_get_process_status(pr):
     except TypeError:  # psutil < 2.0
         pr_status = pr.status
     except psutil.NoSuchProcess:  # pragma: no cover
-        raise psutil.NoSuchProcess
+        return psutil.STATUS_DEAD
+        # raise psutil.NoSuchProcess
     return pr_status
 
 

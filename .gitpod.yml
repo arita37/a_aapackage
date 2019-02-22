@@ -1,0 +1,7 @@
+
+
+tasks:
+- command: pip install -e .
+- command: pip install numpy pandas scipy toml arrow psutil tabulate
+- command: cd aapackage
+

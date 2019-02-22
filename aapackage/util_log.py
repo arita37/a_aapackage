@@ -39,9 +39,10 @@ FORMATTER_2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(messa
 #LOG_FILE = "my_app.log"
 
 
-###############################################################################
+#########################################################################################
 def create_appid(filename ) :
-   appid  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
+   # appid  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
+   appid  = filename + ',' + str(os.getpid())
    return appid
 
 

@@ -20,15 +20,37 @@ import arrow
 import errno
 
 
+def os_getparent(dir0):
+    return os.path.abspath(os.path.join(dir0, os.pardir))
+
+
+OUTFOLDER = "batch/ztest/out/" + os.path.abspath(__file__).split("/")[-2].replace("_qstart", "")
+
+
+
+def os_python_path():
+    return str(sys.executable)
+
+
+def os_folder_rename(old_folder, new_folder):
+    try :
+       os.rename(old_folder, new_folder)
+    except Exception as e :
+       os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
+
+def os_folder_create(folder):
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+
 
 
 APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 
 
 
-def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' , 
+def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' ,
           APP_ID="", LOG_FILE="log_file.log"):
-    # APP_ID = log_get_APPID() 
+    # APP_ID = log_get_APPID()
     try:
         prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
         s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
@@ -50,8 +72,7 @@ def log_get_APPID() :
   return APP_ID
 
 
-def os_getparent(dir0):
-    return os.path.abspath(os.path.join(dir0, os.pardir))
+
 
 
 def ps_wait_process_complete(subprocess_list):
@@ -97,11 +118,11 @@ def load_data_session(file_data , method ="spyder") :
     try :
       with shelve.open(file_data, flag='r') as db:
         for key in db:
-         print(key,) 
+         print(key,)
          globals()[key] = db[key]
     except :
-       pass    
-   
+       pass
+
 
 
 

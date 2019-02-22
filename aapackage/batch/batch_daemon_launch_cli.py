@@ -14,6 +14,7 @@ from aapackage.batch import util_batch
 ############### Variable definition ###########################################
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
+TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__))
 
 
 
@@ -21,7 +22,7 @@ WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
 def load_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
-    parser.add_argument("--task_folder", default=DIR_PATH, help="Absolute or relative path to the working folder.")
+    parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
     parser.add_argument("--subprocess_script", default="main.py", help="Name of the main script")
     parser.add_argument("--file_log", default="batch/ztest/logfile_batchdaemon.log", help=".")
 
@@ -30,6 +31,9 @@ def load_arguments():
 
 
 def get_list_valid_task_folder(folder, script_name="main.py"):
+
+    if not os.path.isdir(folder):
+        return []
     valid_folders = []
     for root, dirs, files in os.walk(folder):
         for filename in files:
@@ -51,11 +55,11 @@ if __name__ == '__main__':
        util_log.printlog(s=s, s1=s1, app_id= APP_ID, logfile= args.file_log )
 
     log( "Current Process Id:", os.getpid()  )
-    valid_folders = get_list_valid_task_folder(args.task_folder)
-    if len(valid_folders) > 0:
-        log("valid task folder:",  valid_folders )
-        sub_process_list = util_batch.batch_run_infolder( valid_folders= valid_folders )
-        util_batch.ps_wait_completion(sub_process_list)
+    valid_task_folders = get_list_valid_task_folder(args.task_folder)
+    if len(valid_task_folders) > 0:
+        log("valid task folder:",  valid_task_folders )
+        process_pid_list = util_batch.batch_run_infolder( valid_folders= valid_task_folders )
+        util_batch.ps_wait_completion(process_pid_list)
 
     log("All task Completed")
 
