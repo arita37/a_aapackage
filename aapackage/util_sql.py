@@ -10,7 +10,7 @@ from builtins import range
 from past.builtins import basestring
 from past.utils import old_div
 from builtins import object
-##############################################################################################
+###############################################################################
 import os, sys
 import datetime, time, arrow,  shutil
 import matplotlib.pyplot as plt
@@ -26,18 +26,18 @@ os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
 
 import util as util
-#############################################################################################
+###############################################################################
 
 
 
 
 
 
-################Py Spark  ##################################################################
+################Py Spark  #####################################################
 '''
 
 df = sqlContext.read.format('com.databricks.spark.csv').options(header='true', inferschema='true').load('mpg.csv')
-df.withColumnRenamed("manufacturer", "manuf").show(5) 
+df.withColumnRenamed("manufacturer", "manuf").show(5)
 
 df.groupBy('class', 'year').avg('hwy').show()
 
@@ -270,7 +270,7 @@ def sql_insert_df(df, dbtable, dbengine, col_drop=['id'], verbose=1) :
  #list1= list1[0]
  list2=[]
  for i in xrange(0, len(list1)) :
-    listx= list1[i]     
+    listx= list1[i]
     for col in col_drop :
        del listx[col] #remove the ID, so SQL can create it, as well timeStamp
     list2.append(listx)

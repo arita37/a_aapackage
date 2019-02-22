@@ -78,40 +78,16 @@ else:
 
 
 ######### Logging #############################################################
-# logging.basicConfig( level=logging.INFO )
-import logging
-
-def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
-             app_id='', logfile=None):
-    try:
-        if app_id != "":
-            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
-        else:
-            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
-        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
-                      str(s6), str(s7), str(s8), str(s9), str(s10)])
-
-        logging.info(s)
-    except Exception as e:
-        logging.info(str(e))
-
-        
-def setup_logger():
-    # logger defines
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
+from appackage import util_log
 
 
-logger = setup_logger()
+def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
+   util_log.printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='' )
+
+
+logger = util_log.logger_setup(__name__)
 def log2(x):
-    logger.info(x)
-
+    log(x)
 ###############################################################################
 
 
@@ -126,8 +102,7 @@ def load_arguments() :
         ppa.add_argument('--do',      type=str, default='zdoc', help='action')
         ppa.add_argument('--verbose', type=int, default=0,      help=' Verbose mode')
         ppa.add_argument('--test',    type=int, default=0,      help=' ')
-        ppa.add_argument('--configfile', type=str, default='/config/config.txt',
-                         help=' config file')
+        ppa.add_argument('--configfile', type=str, default='/config/config.txt',  help=' config file')
         arg = ppa.parse_args()
         if arg.DIRCWD != '':
             DIRCWD = arg.DIRCWD
@@ -140,7 +115,6 @@ def load_arguments() :
 
 
 ###############################################################################
-
 def ps_process_monitor(pid, logfile=None, duration=None, interval=None):
     # We import psutil here so that the module can be imported even if psutil
     # is not present (for example if accessing the version)
@@ -462,8 +436,6 @@ def monitor_maintain():
 
 
 ############ AZURE NODE #################################################################
-
-#########################################################################################
 #########################################################################################
 def python_environment():    # pragma: no cover
     return ' '.join([platform.python_implementation(), platform.python_version()])
@@ -574,7 +546,7 @@ class NodeStatsCollector:
             key = (app_insights_key or os.environ.get('APP_INSIGHTS_INSTRUMENTATION_KEY')
                    or os.environ.get('APP_INSIGHTS_KEY'))
 
-            logger.info("Detected instrumentation key. Will upload stats to app insights")
+            log("Detected instrumentation key. Will upload stats to app insights")
             self.telemetry_client = TelemetryClient(key)
             context = self.telemetry_client.context
             context.application.id = 'AzureBatchInsights'
@@ -583,7 +555,7 @@ class NodeStatsCollector:
             context.device.role_name = self.pool_id
             context.device.role_instance = self.node_id
         else:
-            logger.info("No instrumentation key detected. Cannot upload to app insights." +
+            log("No instrumentation key detected. Cannot upload to app insights." +
                         "Make sure you have the APP_INSIGHTS_INSTRUMENTATION_KEY environment variable setup")
 
     def init(self):
@@ -687,20 +659,20 @@ class NodeStatsCollector:
         self.telemetry_client.flush()
 
     def _log_stats(self, stats):
-        logger.info("========================= Stats =========================")
-        logger.info("Cpu percent:            %d%% %s", avg(stats.cpu_percent), stats.cpu_percent)
-        logger.info("Memory used:       %sB / %sB", pretty_nb(stats.mem_used), pretty_nb(stats.mem_total))
-        logger.info("Swap used:         %sB / %sB", pretty_nb(stats.swap_avail), pretty_nb(stats.swap_total))
-        logger.info("Net read:               %sBs", pretty_nb(stats.net.read_bps))
-        logger.info("Net write:              %sBs", pretty_nb(stats.net.write_bps))
-        logger.info("Disk read:               %sBs", pretty_nb(stats.disk_io.read_bps))
-        logger.info("Disk write:              %sBs", pretty_nb(stats.disk_io.write_bps))
-        logger.info("Disk usage:")
+        log("========================= Stats =========================")
+        log("Cpu percent:            %d%% %s", avg(stats.cpu_percent), stats.cpu_percent)
+        log("Memory used:       %sB / %sB", pretty_nb(stats.mem_used), pretty_nb(stats.mem_total))
+        log("Swap used:         %sB / %sB", pretty_nb(stats.swap_avail), pretty_nb(stats.swap_total))
+        log("Net read:               %sBs", pretty_nb(stats.net.read_bps))
+        log("Net write:              %sBs", pretty_nb(stats.net.write_bps))
+        log("Disk read:               %sBs", pretty_nb(stats.disk_io.read_bps))
+        log("Disk write:              %sBs", pretty_nb(stats.disk_io.write_bps))
+        log("Disk usage:")
         for name, disk_usage in stats.disk_usage.items():
-            logger.info("  - %s: %i/%i (%i%%)", name, disk_usage.used, disk_usage.total, disk_usage.percent)
+            log("  - %s: %i/%i (%i%%)", name, disk_usage.used, disk_usage.total, disk_usage.percent)
 
-        logger.info("-------------------------------------")
-        logger.info("")
+        log("-------------------------------------")
+        log("")
 
     def run(self):
         """
@@ -717,16 +689,16 @@ def main():
     Main entry point for prism
     """
     # log basic info
-    logger.info("Python args: %s", sys.argv)
-    logger.info("Python interpreter: %s", python_environment())
-    logger.info("Operating system: %s", os_environment())
-    logger.info("Cpu count: %s", psutil.cpu_count())
+    log("Python args: %s", sys.argv)
+    log("Python interpreter: %s", python_environment())
+    log("Operating system: %s", os_environment())
+    log("Cpu count: %s", psutil.cpu_count())
 
     pool_id = os.environ.get('AZ_BATCH_POOL_ID', '_test-pool-1')
     node_id = os.environ.get('AZ_BATCH_NODE_ID', '_test-node-1')
 
     # get and set event loop mode
-    logger.info('enabling event loop debug mode')
+    log('enabling event loop debug mode')
 
     app_insights_key = None
     if len(sys.argv) > 2:

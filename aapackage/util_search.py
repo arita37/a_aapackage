@@ -13,8 +13,6 @@ if sys.platform.find('win') > -1 :
    # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
 #####################################################################################################
-#CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-#DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
@@ -47,10 +45,10 @@ config - { "login" : 78  ,  "password" : 78}
 ####################################################################################################
 from selenium import webdriver
 import time
-# Issue with recent selenium on firefox... 
+# Issue with recent selenium on firefox...
 # conda install -c conda-forge selenium ==2.53.6
- 
- 
+
+
 
 #######Headless PhantomJS ##############################################################################
 from selenium.webdriver import PhantomJS
@@ -152,7 +150,7 @@ PASSWORD= ""
 
 import sys
 
-reload(sys) 
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 
@@ -173,13 +171,13 @@ def run():
     pass_field.send_keys(PASSWORD)
     pass_field.send_keys(Keys.ENTER)
     list_of_dicts = []
-    
+
     # INSERT KEYWORDS BELOW
     keywords = ["from config import",  "login"]
     kw_query = ''
-        
+
     for kw in keywords:   kw_query = kw_query + '%22' + kw + '%22+'
-        
+
     # PAGE NUMBERS HERE
     page_num = 1
     box_id = 0
@@ -189,14 +187,14 @@ def run():
         driver.get(base_url)
         html = driver.page_source
         soup = BeautifulSoup(html, 'lxml')
-        
+
         #print("ok")
         for desc, blob in zip(soup.findAll('div', class_='d-inline-block col-10'),
                               soup.findAll('div', class_='file-box blob-wrapper')):
             box_id = box_id + 1
-                                
-                                
-                                
+
+
+
             dict1 = {"url_scrape": '', "keywords": keywords, "language": 'Python', "page": '', 'box_id': '',
                     'box_date': '', 'box_text': '', 'box_reponame': '', 'box_repourl': '', 'box_filename': '',
                     'box_fileurl': '', 'url_scrape': base_url, 'page': str(page+1)}
@@ -206,12 +204,12 @@ def run():
             dict1['box_fileurl'] = 'https://github.com' + urls[1]['href']
             driver.get(dict1['box_fileurl'])
             driver.find_element_by_xpath('//*[@id="raw-url"]').click()
-            
+
             # print("DOWNLOADING...")
             # print(driver.current_url)
             wget.download(driver.current_url)
-            
-            
+
+
             dict1['box_id'] = box_id
             dict1['box_reponame'] = desc.text.strip().split(' ')[0].split('/')[-1].strip('\n')
             dict1['box_filename'] = desc.text.strip().split('\n      –\n      ')[1].split('\n')[0]
@@ -425,8 +423,8 @@ This has solved my issue
 # Wait for the dynamically loaded elements to show up
 WebDriverWait(wd, 10).until(
     EC.visibility_of_element_located((By.CLASS_NAME, "pricerow")))
-    
-    
+
+
 html = driver.page_source
 html
 
@@ -644,7 +642,7 @@ extension Matches files with a certain extension.
 user or repo Limits searches to a specific user or repository.
 For more information about these qualifiers, see: http://git.io/-DvAuA
 
-Parameters:	
+Parameters:
 query (str) – (required), a valid query as described above, e.g., addClass in:file language:js repo:jquery/jquery
 sort (str) – (optional), how the results should be sorted; option(s): indexed; default: best match
 order (str) – (optional), the direction of the sorted results, options: asc, desc; default: desc
@@ -652,7 +650,7 @@ per_page (int) – (optional)
 text_match (bool) – (optional), if True, return matching search terms. See http://git.io/4ct1eQ for more information
 number (int) – (optional), number of repositories to return. Default: -1, returns all available repositories
 etag (str) – (optional), previous ETag header value
-Returns:	
+Returns:
 generator of CodeSearchResult
 
 
@@ -723,9 +721,9 @@ class TestAPI(IntegrationHelper):
                 )
             assert isinstance(next(repos),
                               github3.search.CodeSearchResult)
-                              
-                              
-                              
+
+
+
 
 import github3
 
@@ -742,9 +740,9 @@ class Search(object):
 
         for repos in usr_repos:
             print(repos)
-            
-            
-            
+
+
+
 import github3
 
 g = github3.github.GitHubEnterprise(url='https://github.ubc.ca',
@@ -753,8 +751,8 @@ g = github3.github.GitHubEnterprise(url='https://github.ubc.ca',
                                     token='***')
 
 for item in g.search.RepositorySearchResult():
-    print(item)            
-            
+    print(item)
+
 
 
 
@@ -788,7 +786,7 @@ for item in g.search.RepositorySearchResult():
         },
         "comment_count": 8
       },
-      
+
 
 
 
