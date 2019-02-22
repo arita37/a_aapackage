@@ -29,30 +29,28 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 
-################### Logs ################################################################
-global APP_ID, APP_ID2
-
+################### Logs #################################################################
 APP_ID  = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
-FORMATTER_DEFAULT  = logging.Formatter( "%(asctime)s — %(name)s — %(levelname)s — %(message)s" )
-FORMATTER2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s'   )
+FORMATTER_1  = logging.Formatter( "%(asctime)s — %(name)s — %(levelname)s — %(message)s" )
+FORMATTER_2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s'   )
 #LOG_FILE = "my_app.log"
 
 
-##########################################################################################
-def create_appid(filename, os_getpid, socket_gethostname ) :
-   APP_ID2  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
-   return APP_ID2
+###############################################################################
+def create_appid(filename ) :
+   appid  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
+   return appid
 
 
 def create_uniqueid() :
-   arrow.utcnow().to('Japan').format("YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
+   arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
 
 
 ##########################################################################################
-################### Logger ###############################################################
+################### Print ################################################################
 def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
               app_id='', logfile=None, iswritelog=True):
     try:
@@ -76,8 +74,8 @@ def writelog(m="", f=None):
         _log.write(m + "\n")
 
 
-#################################################################################
-################### Logger ######################################################
+########################################################################################
+################### Logger #############################################################
 def logger_setup(logger_name, log_file=None, formatter=None, isrotate=False):
    """
     my_logger = util_log.logger_setup("my module name", log_file="")
@@ -108,14 +106,14 @@ def logger_setup2(name=__name__, level=None):
 
 
 def logger_handler_console(formatter=None ):
-   formatter = FORMATTER_DEFAULT if formatter is None else formatter
+   formatter = FORMATTER_1 if formatter is None else formatter
    console_handler = logging.StreamHandler(sys.stdout)
    console_handler.setFormatter( formatter )
    return console_handler
 
 
 def logger_handler_file(isrotate=False, rotate_time='midnight', formatter=None, log_file_used=None):
-   formatter = FORMATTER_DEFAULT if formatter is None else formatter
+   formatter = FORMATTER_1 if formatter is None else formatter
    log_file_used = LOG_FILE if log_file_used is None else log_file_used
    if isrotate :
      fh = TimedRotatingFileHandler( log_file_used, when=rotate_time)
