@@ -1,4 +1,3 @@
-#!/bin/python
 """
 from . import batch_sequencer
 from functools import partial
@@ -21,4 +20,9 @@ execute_batch = partial(
 
 """
 
+
+import logging
+from logging import NullHandler
+
+logging.getLogger(__name__).addHandler(NullHandler())
 
