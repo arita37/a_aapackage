@@ -6,13 +6,16 @@ import logging
 import socket
 from time import sleep
 import time
+
+
 import arrow
 import psutil
 
 ###############################################################################
-import util_log
-import util_cpu
-import util_batch
+from aapackage import util_log
+from aapackage.batch import util_batch
+from aapackage.batch import util_cpu
+
 
 
 
@@ -28,9 +31,7 @@ PROCESS_TO_LOOK = "python"
 
 
 ######### Logging ##############################################################
-APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-
-
+APP_ID = util_log.create_appid(__file__)
 def log(message):
     util_log.printlog(s1=message, app_id=APP_ID)
 
@@ -41,24 +42,11 @@ def load_arguments():
     parser = argparse.ArgumentParser(
         description='Record CPU and memory usage for a process')
 
-    parser.add_argument('--log', type=str, default=DEFAULT_LOG_FILE,
-                        help='output the statistics to a file')
-
-    parser.add_argument('--duration', type=float,
-                        help='how long to record for (in seconds). If not '
-                             'specified, the recording is continuous until '
-                             'the job exits.')
-
-    parser.add_argument('--interval', type=float, default=DEFAULT_INTERVAL,
-                        help='how long to wait between each sample (in '
-                             'seconds). By default the process is sampled '
-                             'as often as possible.')
-    parser.add_argument('--log_folder', type=str, default="",
-                        help='')
-
-    parser.add_argument('--log_file', type=str, default="ztest/logfile_batchdaemon.log",
-                        help='daemon log')
-
+    parser.add_argument('--log', type=str, default=DEFAULT_LOG_FILE,  help='output the statistics ')
+    parser.add_argument('--duration', type=float,  help='how long to record in secs.')
+    parser.add_argument('--interval', type=float, default=DEFAULT_INTERVAL,  help='wait tine in secs.')
+    parser.add_argument('--log_folder', type=str, default="",  help='')
+    parser.add_argument('--log_file', type=str, default="batch/ztest/logfile_batchdaemon.log",help='daemon log')
     args = parser.parse_args()
     return args
 

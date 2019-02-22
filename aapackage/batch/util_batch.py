@@ -2,8 +2,8 @@
 """
 batch utils
 
-"""
 
+"""
 import os
 import shutil
 import sys
@@ -11,7 +11,6 @@ import random
 import subprocess
 import argparse
 import time
-import socket
 import logging
 
 
@@ -22,8 +21,8 @@ import arrow
 
 
 #######################################################################
-import util_cpu
-import util_log
+from aapackage.batch import util_cpu
+from aapackage import util_log
 
 
 
@@ -34,8 +33,7 @@ import util_log
 
 
 ######### Logging ####################################################
-APP_ID  = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
+APP_ID  = util_log.create_appid( __file__ )
 def log(m):
     util_log.printlog(s1=m, app_id=APP_ID)
 
@@ -67,8 +65,10 @@ def os_python_path():
 
 
 def os_folder_rename(old_folder, new_folder):
-    os.rename(old_folder, new_folder)
-
+    try :
+       os.rename(old_folder, new_folder)
+    except Exception as e :
+       os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
 
 def os_folder_create(folder):
     if not os.path.isdir(folder):
@@ -98,9 +98,7 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
      {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
         "layer" : {"min": 10  , "max": 200 , "type": float,  "nmax": 10  }, "method": "linear"
      }
-
     size : key1 x ke2 x key2
-
   """
   for key  in hyper_dict:
        vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
@@ -151,23 +149,6 @@ def batch_execute_parallel(HyperParametersFile,
 
 
 '''
-def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='',
-        s9='', s10=''):
-    try:
-        prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format(
-            "YYYYMMDD_HHmmss,") + ','
-        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
-             str(s6), str(s7), str(s8), str(s9), str(s10)])
-
-        # logging.info(s)
-        print(s)
-
-    except Exception as e:
-        # logging.info(e)
-        print(e)
-
-
-
 def checkAdditionalFiles(WorkingFolder, AdditionalFiles):
     if not AdditionalFiles:
         return []

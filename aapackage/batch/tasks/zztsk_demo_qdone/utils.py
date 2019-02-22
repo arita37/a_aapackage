@@ -36,12 +36,6 @@ def logs( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='' ,
 
         # logging.info(s)
         print(s)
-        if not os.path.exists(os.path.dirname(LOG_FILE)):
-            try:
-                os.makedirs(os.path.dirname(LOG_FILE))
-            except OSError as exc:  # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
         with open(LOG_FILE, 'a') as _log:
           _log.write(s+"\n")
 

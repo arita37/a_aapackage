@@ -18,23 +18,18 @@ from time import sleep, time
 
 
 
-import arrow
-import psutil
-import util_log
-
 # stdlib imports
-import logging
 from datetime import datetime
-import os
 import time
 import platform
 from collections import namedtuple
-import sys
 
 # non-stdlib imports
 import psutil
-# from applicationinsights import TelemetryClient
+import arrow
 
+
+from aapackage import util_log
 
 ############# Root folder #####################################################
 VERSION =1
@@ -78,9 +73,6 @@ else:
 
 
 ######### Logging #############################################################
-from appackage import util_log
-
-
 def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
    util_log.printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='' )
 
@@ -256,7 +248,7 @@ def ps_find_procs_by_name(name, ishow=1, cmdline=None):
                 ls.append(copy.deepcopy(p))
 
             if ishow == 1:
-                util_log.printlog(p.pid, ' '.join(p.info['cmdline']))
+                log(p.pid, ' '.join(p.info['cmdline']))
     return ls
 
 

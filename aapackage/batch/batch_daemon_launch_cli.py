@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 '''Daemon monitoring batch '''
-import os, sys, socket
+import os
+import sys
 from time import sleep
+import argparse
+
 
 ###############################################################################
-import util_log
-import util_batch
+from aapackage import util_log
+from aapackage.batch import util_batch
 
 
 ############### Variable definition ###########################################
@@ -14,50 +17,48 @@ WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 
 
-######### Logging ##############################################################
-def log(message):
-    util_log.printlog(s1=message)
-
-
-##############################################################################
+################################################################################
 def load_arguments():
-    import argparse
     parser = argparse.ArgumentParser()
-
     parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
-    parser.add_argument("--folder", default=".", help="Absolute or relative path to the working folder.")
-    parser.add_argument("--subprocess_script", default="optimizer.py", help="Name of the optimizer script")
-    parser.add_argument("--file_log", default="ztest/logfile_batchdaemon.log", help=".")
+    parser.add_argument("--task_folder", default=DIR_PATH, help="Absolute or relative path to the working folder.")
+    parser.add_argument("--subprocess_script", default="main.py", help="Name of the main script")
+    parser.add_argument("--file_log", default="batch/ztest/logfile_batchdaemon.log", help=".")
 
     options = parser.parse_args()
     return options
 
 
-def get_list_valid_task_folder():
+def get_list_valid_task_folder(folder, script_name="main.py"):
     valid_folders = []
-    for root, dirs, files in os.walk(DIR_PATH):
+    for root, dirs, files in os.walk(folder):
         for filename in files:
             root_splits = root.split("/")
-            if root_splits[-2] == "tasks" and not root_splits[-1].endswith("_qstart") and \
-                    not root_splits[-1].endswith("_qdone") and filename == "main.py":
+            # if root_splits[-2] == "tasks" and not "_qstart" in root_splits[-1] and  \
+            #        not "_qdone" in root_splits[-1] and filename == script_name :
+            if  "_qstart" not in root_splits[-1] and  not  "_qdone" in root_splits[-1] \
+                and filename == script_name :
                 valid_folders.append(root)
+
     return valid_folders
 
 
 ##############################################################################
 if __name__ == '__main__':
-    args = load_arguments()
-    util_log.APP_ID = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-    util_log.LOG_FILE = args.file_log
+    args   = load_arguments()
+    APP_ID = util_log.create_appid(__file__)
+    def log(s="", s1=""):
+       util_log.printlog(s=s, s1=s1, app_id= APP_ID, logfile= args.file_log )
 
-    log("Current Process Id: %s" % (str(os.getpid())))
-    valid_folders = get_list_valid_task_folder()
+    log( "Current Process Id:", os.getpid()  )
+    valid_folders = get_list_valid_task_folder(args.task_folder)
     if len(valid_folders) > 0:
-        log("valid task folder: %s" % str(valid_folders))
-        sub_process_list= util_batch.batch_run_infolder(valid_folders=valid_folders)
+        log("valid task folder:",  valid_folders )
+        sub_process_list = util_batch.batch_run_infolder( valid_folders= valid_folders )
         util_batch.ps_wait_completion(sub_process_list)
 
     log("All task Completed")
+
 
 
 
@@ -89,7 +90,6 @@ DIRBATCH=         DIRCWD + '/linux/batch/task/'+ task_folder + '/'
 batch_script=     DIRBATCH + '/elvis_pygmo_optim.py'
 batch_in_data1=   DIRBATCH + '/aafolio_storage_ref.pkl'
 filedata=         DIRBATCH + '/close_15assets_2012_dec216.spydata'
-
 
 
 dir_batch_main=   DIRCWD + '/linux/batch/'
