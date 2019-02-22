@@ -15,10 +15,6 @@ import shlex
 import subprocess
 import sys
 from time import sleep, time
-
-
-
-# stdlib imports
 from datetime import datetime
 import time
 import platform
@@ -35,8 +31,7 @@ from aapackage import util_log
 VERSION =1
 def os_getparent(dir0):
     return os.path.abspath(os.path.join(dir0, os.pardir))
-
-DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
+# DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
 
 
@@ -85,10 +80,8 @@ def log2(x):
 
 
 
-
 ############# Arg parsing #####################################################
 def load_arguments() :
-    try:
         ppa = argparse.ArgumentParser()
         ppa.add_argument('--DIRCWD',  type=str, default='',     help=' Root Folder')
         ppa.add_argument('--do',      type=str, default='zdoc', help='action')
@@ -96,18 +89,12 @@ def load_arguments() :
         ppa.add_argument('--test',    type=int, default=0,      help=' ')
         ppa.add_argument('--configfile', type=str, default='/config/config.txt',  help=' config file')
         arg = ppa.parse_args()
-        if arg.DIRCWD != '':
-            DIRCWD = arg.DIRCWD
-
-    except Exception as e:
-        print(e)
-        sys.exit(1)
-    return arg
+        return arg
 
 
 
 ###############################################################################
-def ps_process_monitor(pid, logfile=None, duration=None, interval=None):
+def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
     # We import psutil here so that the module can be imported even if psutil
     # is not present (for example if accessing the version)
     log("Monitoring Started for Process Id: %s" % str(pid))
@@ -243,12 +230,12 @@ def ps_find_procs_by_name(name, ishow=1, cmdline=None):
         if name.lower() in p.info['name'].lower():
             if cmdline:
                 if cmdline.lower() in ' '.join(p.info['cmdline']).lower():
-                    ls.append(copy.deepcopy(p))
+                    ls.append( p.info["pid"] )
             else:
-                ls.append(copy.deepcopy(p))
+                pass
 
             if ishow == 1:
-                log(p.pid, ' '.join(p.info['cmdline']))
+                log("Monitor", p.pid, ' '.join(p.info['cmdline']))
     return ls
 
 
@@ -732,7 +719,6 @@ def generate_cmdline() :
 if __name__ == '__main__':
     ################## Initialization #########################################
     log(' Initialize workers', arg.name)
-
     log(arg.name, 'parameters', pars)
 
 
