@@ -10,6 +10,11 @@ which_python="$(which python)"
 rm -rf `find  -type d -name "*task_demoxx1*"`
 yes | cp -rf ${dirn}/ztest/tasks/task_ignore  ${dirn}/ztest/tasks/task_demoxx1
 
+rm -rf `find  -type d -name "*task_demoxx2*"`
+yes | cp -rf ${dirn}/ztest/tasks/task_ignore_pygmo  ${dirn}/ztest/tasks/task_demoxx2
+
+
+
 ###### Run Batch
 ${which_python} ${dirn}/batch_daemon_launch_cli.py --task_folder ${dirn}/ztest/tasks/ &
 sleep 3
