@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
-
-# python  batch/ztest/tasks/zztsk_fast/main.py
-
 dirn="$(dirname "$0")"
 which_python="$(which python)"
+
+#  find /full/path/to/dir -name "*c*" -type dir
+# python  batch/ztest/tasks/zztsk_fast/main.py
+# rm -rf ${dirn}/ztest/tasks/task_demo1
+
+
+rm -rf `find  -type d -name "*task_demoxx1*"`
+yes | cp -rf ${dirn}/ztest/tasks/task_ignore  ${dirn}/ztest/tasks/task_demoxx1
+
+###### Run Batch
 ${which_python} ${dirn}/batch_daemon_launch_cli.py --task_folder ${dirn}/ztest/tasks/ &
 sleep 3
 ${which_python} ${dirn}/batch_daemon_monitor_cli.py --monitor_log_folder ${dirn}/ztest/monitor_logs

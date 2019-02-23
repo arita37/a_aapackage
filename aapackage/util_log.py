@@ -64,10 +64,12 @@ def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='
                       str(s6), str(s7), str(s8), str(s9), str(s10)])
 
         print(s)
-        writelog(s, logfile)
+        if writelog :
+          writelog(s, logfile)
     except Exception as e:
         print(e)
-        writelog(e, logfile)
+        if iswritelog :
+          writelog(e, logfile)
 
 
 def writelog(m="", f=None):

@@ -5,8 +5,6 @@ This is a dummy optimizer, designed to be executed in a independend python proce
 Notable interactions:
 
 loads the file "parameters.toml", located at its same folder.
-outputs "results.txt" file, containing an array that can be sourced inside python.
-Those interactions are defined in batch_sequencer.py and should be conserved among all optimizers.
 
 
 """
@@ -16,13 +14,10 @@ import arrow
 import toml
 
 from aapackage import util_log
-from utils import batch_result_folder, load_data_session, save_results, OUTFOLDER, os_folder_create, os_chdir
+from utils import OUTFOLDER, load_data_session, save_results, os_folder_create, os_chdir
 
 
-
-
-
-##### Logs     #############################################################################
+##### Logs     ##########################################################################
 print( os.getcwd())
 print( "outfolder", OUTFOLDER)
 os_folder_create( OUTFOLDER )
@@ -36,7 +31,7 @@ log("start")
 
 
 
-###########################################################################################
+#########################################################################################
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -47,8 +42,8 @@ def load_arguments():
 
 
 
-#############################################################################################
-######## Custom Code ########################################################################
+#########################################################################################
+######## Custom Code ####################################################################
 from scipy import optimize
 
 def optimizerFunction(x):
@@ -57,7 +52,6 @@ def optimizerFunction(x):
     omega = -500 + delta * x1 + x2
 
     return omega
-
 
 
 def execute(ii, args):
@@ -76,6 +70,8 @@ def execute(ii, args):
 
 
 
+
+################################################################################
 ##### Arguments          #######################################################
 os_chdir(__file__)   #Local folder
 args = load_arguments()
@@ -94,6 +90,9 @@ load_data_session( arg_dict.get("file_data") , method = arg_dict.get("file_data_
 log("script", "start", ii)
 execute(ii, arg_dict)
 log("script ", "terminated", ii)
+
+
+
 
 
 

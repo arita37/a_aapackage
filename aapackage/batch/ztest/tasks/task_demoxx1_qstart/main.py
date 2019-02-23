@@ -14,9 +14,9 @@ from functools import partial
 import subprocess
 import argparse
 import time
-
-# from aapackage._batch.util_batch import *
 import logging
+
+
 import toml
 import psutil
 import arrow
@@ -24,10 +24,10 @@ import numpy as np, pandas as pd
 
 
 ################### Generic ###############################################################
-from utils import os_getparent,  OUTFOLDER, os_folder_create
 from aapackage import util_log
-
 from aapackage.batch import util_batch
+
+from utils import OUTFOLDER, os_getparent,   os_folder_create
 
 
 ###########################################################################################
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     args = load_arguments()
 
     util_batch.batch_parallel_subprocess( args.task_folder, args.hyperparam_file,
-                               args.subprocess_script, args.log_file)
+                                          args.subprocess_script, args.log_file)
 
     os_folder_rename(args.task_folder)
     log("main.py", "finish")

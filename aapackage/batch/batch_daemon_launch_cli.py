@@ -9,11 +9,11 @@ import argparse
 ###############################################################################
 from aapackage import util_log
 from aapackage.batch import util_batch
+from aapackage.batch import util_cpu
 
 
 ############### Variable definition ###########################################
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-WORKING_FOLDER = os.path.dirname(os.path.abspath(__file__))
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -31,17 +31,14 @@ def load_arguments():
 
 
 def get_list_valid_task_folder(folder, script_name="main.py"):
-
     if not os.path.isdir(folder):
         return []
     valid_folders = []
     for root, dirs, files in os.walk(folder):
+        root_splits = root.split("/")
         for filename in files:
-            root_splits = root.split("/")
-            # if root_splits[-2] == "tasks" and not "_qstart" in root_splits[-1] and  \
-            #        not "_qdone" in root_splits[-1] and filename == script_name :
-            if  "_qstart" not in root_splits[-1] and  not  "_qdone" in root_splits[-1] \
-                and filename == script_name :
+            if  "_qstart" not in root_splits[-1] and  "_qdone" not in root_splits[-1] \
+                and filename == script_name and "_ignore" not in root_splits[-1]  :
                 valid_folders.append(root)
 
     return valid_folders
@@ -59,7 +56,7 @@ if __name__ == '__main__':
     if len(valid_task_folders) > 0:
         log("valid task folder:",  valid_task_folders )
         process_pid_list = util_batch.batch_run_infolder( valid_folders= valid_task_folders )
-        util_batch.ps_wait_completion(process_pid_list)
+        util_cpu.ps_wait_process_completion(process_pid_list)
 
     log("All task Completed")
 

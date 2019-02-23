@@ -68,8 +68,11 @@ else:
 
 
 ######### Logging #############################################################
+APP_ID = util_log.create_appid(__file__)
+LOG_FILE = "log_cpu.log"
 def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
-   util_log.printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='' )
+   util_log.printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
+      app_id=APP_ID, logfile= LOG_FILE )
 
 
 logger = util_log.logger_setup(__name__)
@@ -161,7 +164,7 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
 
 
 
-def ps_wait_process_complete(subprocess_list, waitsec=10):
+def ps_wait_process_completion(subprocess_list, waitsec=10):
     for pid in subprocess_list:
         while True:
             try:
