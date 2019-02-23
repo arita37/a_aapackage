@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# python  batch/ztest/tasks/zztsk_fast/main.py
+
 dirn="$(dirname "$0")"
 which_python="$(which python)"
 ${which_python} ${dirn}/batch_daemon_launch_cli.py --task_folder ${dirn}/ztest/tasks/ &

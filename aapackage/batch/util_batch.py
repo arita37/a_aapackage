@@ -16,7 +16,7 @@ import logging
 
 import psutil
 import toml
-import pandas as pd, numpy as pd
+import pandas as pd, numpy as np
 import arrow
 
 
@@ -51,28 +51,10 @@ def os_folder_rename(old_folder, new_folder):
     except Exception as e :
        os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
 
+
 def os_folder_create(folder):
     if not os.path.isdir(folder):
         os.makedirs(folder)
-
-def ps_wait_process_complete(subprocess_list, waitsec=10):
-    for pid in subprocess_list:
-        while True:
-            try:
-                pr = psutil.Process(pid)
-                try:
-                    pr_status = pr.status()
-                except TypeError:  # psutil < 2.0
-                    pr_status = pr.status
-                except psutil.NoSuchProcess:  # pragma: no cover
-                    break
-                # Check if process status indicates we should exit
-                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
-                    break
-            except:
-                break
-            time.sleep(waitsec)
-
 
 
 def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5 ):
@@ -93,10 +75,6 @@ def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py",
     return sub_process_list
 
 
-
-
-
-
 def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, file_logs, waitime=5 ) :
     hyper_parameter = pd.read_csv(hyperparam_file)
     PYTHON_COMMAND = sys.executable
@@ -109,11 +87,9 @@ def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, 
         log("Subprocess started by execute_script: %s" % str(ps.pid))
         subprocess_list.append(ps.pid)
         time.sleep(waitime)
+        # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
 
-    ps_wait_process_complete(subprocess_list)
-
-
-
+    util_cpu.ps_wait_process_complete(subprocess_list)
 
 
 def batch_generate_hyperparameters(hyper_dict,file_hyper) :
@@ -161,14 +137,6 @@ def batch_execute_parallel(HyperParametersFile,
        proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],
                                  stdout=subprocess.PIPE)
        # ChildProcesses.append(proc)
-
-       # wait if computer resources are scarce.
-       cpu, mem = 100, 100
-       while cpu > 90 and mem > 90:
-          cpu, mem = util_cpu.ps_get_computer_resources_usage()
-          time.sleep(waitseconds)
-
-
 
 
 '''

@@ -160,11 +160,40 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
         f.close()
 
 
+
+def ps_wait_process_complete(subprocess_list, waitsec=10):
+    for pid in subprocess_list:
+        while True:
+            try:
+                pr = psutil.Process(pid)
+                try:
+                    pr_status = pr.status()
+                except TypeError:  # psutil < 2.0
+                    pr_status = pr.status
+                except psutil.NoSuchProcess:  # pragma: no cover
+                    break
+                # Check if process status indicates we should exit
+                if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                    break
+            except:
+                break
+            time.sleep(waitsec)
+
+
+def ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15) :
+       # wait if computer resources are scarce.
+       cpu, mem = 100, 100
+       while cpu > cpu_max or mem > mem_max:
+          cpu, mem = ps_get_computer_resources_usage()
+          time.sleep(waitsec)
+
+
 def ps_get_cpu_percent(process):
     try:
         return process.cpu_percent()
     except AttributeError:
         return process.get_cpu_percent()
+
 
 
 def ps_get_memory_percent(process):
