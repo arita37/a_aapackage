@@ -23,19 +23,18 @@ import arrow
 import numpy as np, pandas as pd
 
 
-###########################################################################################
 ################### Generic ###############################################################
-#sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+"/../..")
-from utils import os_getparent, ps_wait_process_complete, OUTFOLDER, os_folder_create
+from utils import os_getparent,  OUTFOLDER, os_folder_create
 from aapackage import util_log
 
+from aapackage.batch import util_batch
 
 
 ###########################################################################################
-WORKING_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_HYPERPARAMS       = os.path.join(WORKING_DIRECTORY, "hyperparams.csv")
-DEFAULT_SUBPROCESS_SCRIPT = os.path.join(WORKING_DIRECTORY, "subprocess_optim.py")
-PYTHON_COMMAND = sys.executable
+CUR_FOLDER = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_HYPERPARAMS       = os.path.join(CUR_FOLDER, "hyperparams.csv")
+DEFAULT_SUBPROCESS_SCRIPT = os.path.join(CUR_FOLDER, "subprocess_optim.py")
+
 
 
 
@@ -48,8 +47,7 @@ def log(s="", s1=""):
        util_log.printlog(s=s, s1=s1, app_id= APP_ID, logfile= LOG_FILE )
 
 
-
-
+##### Args     ############################################################################
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -59,22 +57,15 @@ def load_arguments():
     parser.add_argument("-s", "--subprocess_script", default=DEFAULT_SUBPROCESS_SCRIPT, type=str,
                         help="Name of the optimizer script.")
 
-    parser.add_argument("-f", "--task_folder", default=WORKING_DIRECTORY, type=str,   help="W")
+    parser.add_argument("-f", "--task_folder", default=CUR_FOLDER, type=str,   help="W")
     parser.add_argument("-l", "--log_file", default=LOG_FILE, type=str,   help="W")
     parser.add_argument("-o", "--out_folder", default=OUTFOLDER , type=str,   help="W")
-
 
     options = parser.parse_args()
     return options
 
 
-def execute_script(hyperparam, subprocess_script, file_logs, row_number):
-    cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % row_number]
-    ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-    log("Subprocess started by execute_script: %s" % str(ps.pid))
-    return ps.pid
-
-
+############################################################################################
 def os_folder_rename( task_folder ):
     # After termination of script
     k = task_folder.rfind("qstart")
@@ -82,52 +73,17 @@ def os_folder_rename( task_folder ):
     os.rename(task_folder, new_name)
 
 
-def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, file_logs, waitime=5 ) :
-    hyper_parameter = pd.read_csv(hyperparam_file)
 
-    # Start process launch
-    subprocess_list = []
-    for ii in range(0, len(hyper_parameter) ):
-        pid = execute_script( hyperparam_file, subprocess_script, file_logs, ii)
-
-        subprocess_list.append(pid)
-        time.sleep(waitime)
-
-    ps_wait_process_complete(subprocess_list)
-    os_folder_rename(task_folder)
-
-    log("Finished Program:" , __file__)
-
-
-
+############################################################################################
 if __name__ == '__main__':
-    log("start task main", __file__)
+    log("main.py", "start")
     args = load_arguments()
 
-    batch_parallel_subprocess( args.task_folder, args.hyperparam_file,
+    util_batch.batch_parallel_subprocess( args.task_folder, args.hyperparam_file,
                                args.subprocess_script, args.log_file)
 
-
-    """
-    hyper_parameter = pd.read_csv(args.hyperparam)
-
-
-    # Start process launch
-    subprocess_list = []
-    for ii in range(0, len(hyper_parameter) ):
-        pid = execute_script( args.hyperparam, args.subprocess_script, args.file_logs, ii)
-
-        subprocess_list.append(pid)
-        time.sleep(5)
-
-    ps_wait_process_complete(subprocess_list)
-    os_folder_rename(working_directory=WORKING_DIRECTORY)
-
-    log("Finished Program:" , __file__, str(os.getpid()))
-    """
-
-
-
+    os_folder_rename(args.task_folder)
+    log("main.py", "finish")
 
 
 
@@ -141,6 +97,15 @@ if __name__ == '__main__':
 
 
 """
+
+def execute_script(hyperparam, subprocess_script, file_logs, row_number):
+    cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % row_number]
+    ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+    log("Subprocess started by execute_script: %s" % str(ps.pid))
+    return ps.pid
+
+
+
 date0 = util.date_now()
 isverbose = 0
 batchname = task_folder

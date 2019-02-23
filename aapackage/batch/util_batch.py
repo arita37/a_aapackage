@@ -41,7 +41,21 @@ def log(m):
 
 
 ######################################################################
-def ps_wait_completion(subprocess_list):
+def os_python_path():
+    return str(sys.executable)
+
+
+def os_folder_rename(old_folder, new_folder):
+    try :
+       os.rename(old_folder, new_folder)
+    except Exception as e :
+       os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
+
+def os_folder_create(folder):
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+
+def ps_wait_process_complete(subprocess_list, waitsec=10):
     for pid in subprocess_list:
         while True:
             try:
@@ -57,22 +71,8 @@ def ps_wait_completion(subprocess_list):
                     break
             except:
                 break
-            time.sleep(1)
+            time.sleep(waitsec)
 
-
-def os_python_path():
-    return str(sys.executable)
-
-
-def os_folder_rename(old_folder, new_folder):
-    try :
-       os.rename(old_folder, new_folder)
-    except Exception as e :
-       os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
-
-def os_folder_create(folder):
-    if not os.path.isdir(folder):
-        os.makedirs(folder)
 
 
 def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5 ):
@@ -91,6 +91,29 @@ def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py",
         time.sleep( waitsleep )
 
     return sub_process_list
+
+
+
+
+
+
+def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, file_logs, waitime=5 ) :
+    hyper_parameter = pd.read_csv(hyperparam_file)
+    PYTHON_COMMAND = sys.executable
+
+    # Start process launch
+    subprocess_list = []
+    for ii in range(0, len(hyper_parameter) ):
+        cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % ii]
+        ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+        log("Subprocess started by execute_script: %s" % str(ps.pid))
+        subprocess_list.append(ps.pid)
+        time.sleep(waitime)
+
+    ps_wait_process_complete(subprocess_list)
+
+
+
 
 
 def batch_generate_hyperparameters(hyper_dict,file_hyper) :

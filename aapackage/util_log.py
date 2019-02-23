@@ -13,10 +13,11 @@ check here
 https://github.com/arita37/a_aapackage/blob/master/aapackage/batch/batch_daemon_launch_cli.py
 
 
-logging.basicConfig(level=logging.INFO)
-# create file handler which logs even debug messages
-fh = logging.FileHandler('spam.log')
-fh.setLevel(logging.DEBUG)
+    my_logger = util_log.logger_setup("my module name", log_file="")
+    APP_ID    = util_log.create_appid(__file__ )
+    def log(s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='') :
+       my_logger.debug( ",".join( [APP_ID, str(s1), str(s2), str(s3), str(s4), str(s5) ,
+                        str(s6), str(s7), str(s8), str(s9), str(s10)] ) )
 
 
 """
