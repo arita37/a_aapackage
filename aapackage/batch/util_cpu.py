@@ -4,6 +4,9 @@
 Launch processors and monitor the CPU, memory usage.
 Maintain same leve of processors over time.
 
+
+
+
 '''
 import argparse
 import copy
@@ -14,6 +17,8 @@ import random
 import shlex
 import subprocess
 import sys
+
+
 from time import sleep, time
 from datetime import datetime
 import time
@@ -28,7 +33,7 @@ import arrow
 from aapackage import util_log
 
 ############# Root folder #####################################################
-VERSION =1
+VERSION = 1
 def os_getparent(dir0):
     return os.path.abspath(os.path.join(dir0, os.pardir))
 # DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
@@ -68,18 +73,18 @@ else:
 
 
 ######### Logging #############################################################
+LOG_FILE = "zlog/log_cpu.log"
 APP_ID = util_log.create_appid(__file__)
-LOG_FILE = "log_cpu.log"
-def log(s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10=''):
-   util_log.printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
-      app_id=APP_ID, logfile= LOG_FILE )
 
+logger = util_log.logger_setup(__name__, log_file=LOG_FILE, formatter= util_log.FORMATTER_4)
+def log(*argv):
+    s=  ""  # APP_ID
+    for arg in argv:
+        s = s + "," + str(arg)
+    logger.info(s)
 
-logger = util_log.logger_setup(__name__)
-def log2(x):
-    log(x)
-###############################################################################
-
+# log("Ok, test_log")
+##############################################################################
 
 
 
@@ -737,11 +742,9 @@ def generate_cmdline() :
 
 if __name__ == '__main__':
     ################## Initialization #########################################
-    log(' Initialize workers', arg.name)
-    log(arg.name, 'parameters', pars)
+    log(' Log check')
 
 
     ############## RUN Monitor ################################################
     # monitor()
-
 

@@ -15,3 +15,12 @@ def task_transfer_to_ec2(fromfolder, tofolder, host):
     pass
 
 
+def batch_launch_remote() :
+  pass
+
+
+def batch_result_retrieve():
+
+
+
+
