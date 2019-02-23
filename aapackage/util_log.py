@@ -66,6 +66,11 @@ def create_appid(filename ) :
    return appid
 
 
+def create_logfilename(filename ) :
+  return  filename.split("/")[-1].split(".")[0] + ".log"
+
+
+
 def create_uniqueid() :
    arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
 

@@ -72,19 +72,18 @@ else:
         _USER_DISK = '/mnt'
 
 
-######### Logging #############################################################
-LOG_FILE = "zlog/log_cpu.log"
+
+######### Logging ####################################################
+LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
-logger = util_log.logger_setup(__name__, log_file=LOG_FILE, formatter= util_log.FORMATTER_4)
+logger = util_log.logger_setup(__name__, log_file= LOG_FILE, formatter= util_log.FORMATTER_4)
 def log(*argv):
-    s=  ""  # APP_ID
-    for arg in argv:
-        s = s + "," + str(arg)
-    logger.info(s)
+    logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
 # log("Ok, test_log")
-##############################################################################
+#####################################################################
+
 
 
 

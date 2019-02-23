@@ -32,11 +32,17 @@ from aapackage import util_log
 
 
 
-######### Logging ####################################################
-APP_ID  = util_log.create_appid( __file__ )
-def log(m):
-    util_log.printlog(s1=m, app_id=APP_ID)
 
+######### Logging ####################################################
+LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
+APP_ID = util_log.create_appid(__file__)
+
+logger = util_log.logger_setup(__name__, log_file= LOG_FILE, formatter= util_log.FORMATTER_4)
+def log(*argv):
+    logger.info( ",".join( [  str(x) for x in argv  ]  ))
+
+# log("Ok, test_log")
+#####################################################################
 
 
 
@@ -137,6 +143,22 @@ def batch_execute_parallel(HyperParametersFile,
        proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],
                                  stdout=subprocess.PIPE)
        # ChildProcesses.append(proc)
+
+
+
+
+
+if __name__ == '__main__':
+    ################## Initialization #########################################
+    log(' Log check')
+
+
+    ############## RUN Monitor ################################################
+    # monitor()
+
+
+
+
 
 
 '''
