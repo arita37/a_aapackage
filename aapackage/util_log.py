@@ -41,17 +41,18 @@ import os
 import sys
 import socket
 import time
-import arrow
+import random
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
+import arrow
 
 ################### Logs #################################################################
 APP_ID  = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
 APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
-FORMATTER_1  = logging.Formatter( "%(asctime)s,  %(name)s, %(levelname)s, %(message)s" )
+FORMATTER_1 = logging.Formatter( "%(asctime)s,  %(name)s, %(levelname)s, %(message)s" )
 FORMATTER_2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s'   )
 FORMATTER_2 = logging.Formatter( '%(asctime)s  %(levelname)s %(message)s'   )
 FORMATTER_4 = logging.Formatter( '%(asctime)s, %(process)d, %(filename)s,    %(message)s'   )
@@ -68,7 +69,6 @@ def create_appid(filename ) :
 
 def create_logfilename(filename ) :
   return  filename.split("/")[-1].split(".")[0] + ".log"
-
 
 
 def create_uniqueid() :
@@ -118,6 +118,7 @@ def logger_setup(logger_name, log_file=None, formatter=FORMATTER_1, isrotate=Fal
 
    if log_file is not None :
      logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file) )
+
    # with this pattern, it's rarely necessary to propagate the error up to parent
    logger.propagate = False
    return logger

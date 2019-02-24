@@ -33,32 +33,23 @@ import arrow
 from aapackage import util_log
 
 ############# Root folder #####################################################
-VERSION = 1
-def os_getparent(dir0):
-    return os.path.abspath(os.path.join(dir0, os.pardir))
-# DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
 
 
 
 #############Variable #########################################################
 """
-global CMDS, net_avg
-APP_ID = __file__ + ',' + str(os.getpid()) + '_' + str(random.randrange(10000))
-logfolder = '_'.join(
-    [arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,
-     arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
+[  arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,  
+   arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
      str(random.randrange(1000))])
-util.os_folder_create(logfolder)
-LOGFILE = logfolder + '/stream_monitor_cli.txt'
-Mb = 1024 * 1024
-net_avg = 0.0
 """
+VERSION = 1
+
+# DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
+
 _DEFAULT_STATS_UPDATE_INTERVAL = 5
 
-# global defines
 _IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
-
 _OS_DISK = None
 _USER_DISK = None
 
@@ -73,22 +64,27 @@ else:
 
 
 
-######### Logging ####################################################
+######### Logging ##############################################################
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
-logger = util_log.logger_setup(__name__, log_file= LOG_FILE, formatter= util_log.FORMATTER_4)
+logger = util_log.logger_setup( __name__,
+                                log_file= None, formatter= util_log.FORMATTER_4)
 def log(*argv):
     logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
 # log("Ok, test_log")
-#####################################################################
+################################################################################
 
 
 
 
 
 ###############################################################################
+def os_getparent(dir0):
+    return os.path.abspath(os.path.join(dir0, os.pardir))
+
+
 def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
     # We import psutil here so that the module can be imported even if psutil
     # is not present (for example if accessing the version)
@@ -262,7 +258,7 @@ def ps_find_procs_by_name(name, ishow=1, cmdline=None):
     return ls
 
 
-def launch(commands):
+def os_launch(commands):
     processes = []
     for cmd in commands:
         try:
@@ -276,7 +272,7 @@ def launch(commands):
     return processes
 
 
-def terminate(processes):
+def ps_terminate(processes):
     for p in processes:
         pidi = p.pid
         try:
@@ -291,7 +287,7 @@ def terminate(processes):
                 pass
 
 
-def extract_commands(csv_file, has_header=False):
+def os_extract_commands(csv_file, has_header=False):
     with open(csv_file, 'r', newline='') as file:
         reader = csv.reader(file, skipinitialspace=True)
         if has_header:
@@ -301,7 +297,7 @@ def extract_commands(csv_file, has_header=False):
     return commands
 
 
-def is_issue(p):
+def ps_is_issue(p):
     pdict = p.as_dict()
     pidi  = p.pid
 
@@ -341,7 +337,7 @@ def ps_net_send(tperiod=5):
     return (x1 - x0) / (t1 - t0)
 
 
-def is_issue_system():
+def ps_is_issue_system():
     global net_avg
     try:
         if psutil.cpu_percent(interval=5) > pars['cpu_usage_total']:
@@ -389,7 +385,7 @@ def monitor_maintain():
                     p = psutil.Process(pidi)
                     log('Checking', p.pid)
 
-                    if is_issue(p):
+                    if ps_is_issue(p):
                         has_issue.append(p)
 
                     else:
@@ -439,7 +435,7 @@ def monitor_maintain():
 
 ############ AZURE NODE #################################################################
 #########################################################################################
-def python_environment():    # pragma: no cover
+def os_python_environment():    # pragma: no cover
     return ' '.join([platform.python_implementation(), platform.python_version()])
 
 
@@ -447,15 +443,15 @@ def os_environment():
     return platform.platform()
 
 
-def is_windows():
+def os_is_wndows():
     return _IS_PLATFORM_WINDOWS
 
 
-def avg(list):
+def np_avg(list):
     return sum(list) / float(len(list))
 
 
-def pretty_nb(num, suffix=''):
+def np_pretty_nb(num, suffix=''):
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
         if abs(num) < 1000.0:
             return "%3.1f%s%s" % (num, unit, suffix)
@@ -662,13 +658,13 @@ class NodeStatsCollector:
 
     def _log_stats(self, stats):
         log("========================= Stats =========================")
-        log("Cpu percent:            %d%% %s", avg(stats.cpu_percent), stats.cpu_percent)
-        log("Memory used:       %sB / %sB", pretty_nb(stats.mem_used), pretty_nb(stats.mem_total))
-        log("Swap used:         %sB / %sB", pretty_nb(stats.swap_avail), pretty_nb(stats.swap_total))
-        log("Net read:               %sBs", pretty_nb(stats.net.read_bps))
-        log("Net write:              %sBs", pretty_nb(stats.net.write_bps))
-        log("Disk read:               %sBs", pretty_nb(stats.disk_io.read_bps))
-        log("Disk write:              %sBs", pretty_nb(stats.disk_io.write_bps))
+        log("Cpu percent:            %d%% %s", np_avg(stats.cpu_percent), stats.cpu_percent)
+        log("Memory used:       %sB / %sB", np_pretty_nb(stats.mem_used), np_pretty_nb(stats.mem_total))
+        log("Swap used:         %sB / %sB", np_pretty_nb(stats.swap_avail), np_pretty_nb(stats.swap_total))
+        log("Net read:               %sBs", np_pretty_nb(stats.net.read_bps))
+        log("Net write:              %sBs", np_pretty_nb(stats.net.write_bps))
+        log("Disk read:               %sBs", np_pretty_nb(stats.disk_io.read_bps))
+        log("Disk write:              %sBs", np_pretty_nb(stats.disk_io.write_bps))
         log("Disk usage:")
         for name, disk_usage in stats.disk_usage.items():
             log("  - %s: %i/%i (%i%%)", name, disk_usage.used, disk_usage.total, disk_usage.percent)
@@ -686,7 +682,7 @@ class NodeStatsCollector:
             time.sleep(self.refresh_interval)
 
 
-def main():
+def monitor_nodes():
     """
     Main entry point for prism
     """
@@ -717,7 +713,7 @@ def main():
 
 
 
-def generate_cmdline() :
+def os_generate_cmdline() :
     pars = {'max_memory'         : 1500.0 * Mb, 'max_cpu': 85.0,
             'proc_name'          : 'streaming_couchbase_update_cli.py',
             'nproc'              : arg.nproc,

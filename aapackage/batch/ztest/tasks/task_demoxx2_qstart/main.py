@@ -79,8 +79,8 @@ if __name__ == '__main__':
     log("main.py", "start")
     args = load_arguments()
 
-    util_batch.batch_parallel_subprocess( args.task_folder, args.hyperparam_file,
-                                          args.subprocess_script, args.log_file)
+    util_batch.batch_parallel_subprocess(args.hyperparam_file,
+                                         args.subprocess_script, args.log_file)
 
     os_folder_rename(args.task_folder)
     log("main.py", "finish")

@@ -37,7 +37,9 @@ from aapackage import util_log
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
-logger = util_log.logger_setup(__name__, log_file= LOG_FILE, formatter= util_log.FORMATTER_4)
+logger = util_log.logger_setup(__name__,
+                               log_file= None,
+                               formatter= util_log.FORMATTER_4)
 def log(*argv):
     logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
@@ -65,23 +67,34 @@ def os_folder_create(folder):
 
 def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5 ):
     sub_process_list = []
+    os_python_path = sys.executable
+
     for folder_i in valid_folders:
         foldername = folder_i + suffix
         os_folder_rename(old_folder=folder_i, new_folder=foldername)
 
         main_file = os.path.join(foldername,  main_file_run )
-        log("running file: %s" % main_file)
-        cmd = [os_python_path(), main_file]
+        cmd = [os_python_path, main_file]
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
-        log("running process: %s" % str(ps.pid))
+        log("running process: " , ps.pid, main_file)
         time.sleep( waitsleep )
 
     return sub_process_list
 
 
-def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, file_logs, waitime=5 ) :
+def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
+    """
+    task/
+          main.py
+          subprocess.py
+          hyperparams.csv
+          ...
+          :type hyperparam_file: str
+
+
+    """
     hyper_parameter = pd.read_csv(hyperparam_file)
     PYTHON_COMMAND = sys.executable
 
@@ -90,7 +103,7 @@ def batch_parallel_subprocess(task_folder, hyperparam_file,  subprocess_script, 
     for ii in range(0, len(hyper_parameter) ):
         cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % ii]
         ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-        log("Subprocess started by execute_script: %s" % str(ps.pid))
+        log("Subprocess started ", ps.pid)
         subprocess_list.append(ps.pid)
         time.sleep(waitime)
         # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
@@ -113,18 +126,15 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
   pass
 
 
+
+
+
+
+"""
 def batch_execute_parallel(HyperParametersFile,
                            subprocess_script, batch_log_file ="batch_logfile.txt",
                            waitseconds = 2):
-    """
-    task/
-          main.py
-          subprocess.py
-          hyperparams.csv
-          ...
 
-
-    """
     python_path = sys.executable
 
     HyperParameters  = pd.read_csv( HyperParametersFile)
@@ -138,12 +148,12 @@ def batch_execute_parallel(HyperParametersFile,
     for ii in range(HyperParameters.shape[0]):
        # Extract parameters for single run from batch_parameters data.
        # params_dict = HyperParameters.iloc[ii].to_dict()
-       log(batch_label, "Executing index", ii, WorkingFolder, "\n\n")
+       log("Executing index", ii, WorkingFolder, "\n\n")
 
        proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],
                                  stdout=subprocess.PIPE)
        # ChildProcesses.append(proc)
-
+"""
 
 
 

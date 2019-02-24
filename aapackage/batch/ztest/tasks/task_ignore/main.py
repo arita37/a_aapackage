@@ -38,16 +38,24 @@ DEFAULT_SUBPROCESS_SCRIPT = os.path.join(CUR_FOLDER, "subprocess_optim.py")
 
 
 
-##### Logs     ############################################################################
+##### Logs     #################################################################
 os_folder_create( OUTFOLDER )
 APP_ID = util_log.create_appid(__file__)
-LOG_FILE = os.path.join(OUTFOLDER ,"log_main.log" )
+LOG_FILE = os.path.join(OUTFOLDER , util_log.create_logfilename(__file__))
+logger = util_log.logger_setup( __name__,
+                                log_file= LOG_FILE, formatter= util_log.FORMATTER_4)
+def log(*argv):
+    logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
-def log(s="", s1=""):
-       util_log.printlog(s=s, s1=s1, app_id= APP_ID, logfile= LOG_FILE )
 
 
-##### Args     ############################################################################
+
+
+
+
+
+
+##### Args     #################################################################
 def load_arguments():
     import argparse
     parser = argparse.ArgumentParser()
@@ -65,7 +73,7 @@ def load_arguments():
     return options
 
 
-############################################################################################
+##########################################################################################
 def os_folder_rename( task_folder ):
     # After termination of script
     k = task_folder.rfind("qstart")
@@ -74,13 +82,13 @@ def os_folder_rename( task_folder ):
 
 
 
-############################################################################################
+#########################################################################################
 if __name__ == '__main__':
     log("main.py", "start")
     args = load_arguments()
 
-    util_batch.batch_parallel_subprocess( args.task_folder, args.hyperparam_file,
-                                          args.subprocess_script, args.log_file)
+    util_batch.batch_parallel_subprocess(args.hyperparam_file,
+                                         args.subprocess_script, waitime=5)
 
     os_folder_rename(args.task_folder)
     log("main.py", "finish")
