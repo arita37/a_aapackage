@@ -1,13 +1,11 @@
 import pytest
 import os
-from batch import util_batch
+from aapackage.batch import util_batch
 
-def getAssetsPath():
-    return "./batch/ztest/pytest/functional/"
 
 def appendToAssetsPath(f):
     assert isinstance(f,str)
-    return getAssetsPath()+f
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),f)
 
 def test_os_python_path():
     assert util_batch.os_python_path() , "Should return a string"
@@ -27,7 +25,8 @@ def test_os_folder_rename():
     old = appendToAssetsPath("mockfolder4_rename")
     new = appendToAssetsPath("mockfolder3_rename")
     util_batch.os_folder_rename(old,new)
-    folders = [f for f in os.listdir(getAssetsPath()) if os.path.isdir(appendToAssetsPath(f))]
+    dir = os.path.dirname(os.path.abspath(__file__))
+    folders = [f for f in os.listdir(dir) if os.path.isdir(appendToAssetsPath(f))]
     folders = [f for f in folders if f.startswith("mockfolder3_rename") and f != "mockfolder3_rename"]
     assert len(folders) == 1
     assert len(folders[0]) > len("mockfolder3_rename")
