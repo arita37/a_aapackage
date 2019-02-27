@@ -54,11 +54,12 @@ def os_python_path():
 
 
 def os_folder_rename(old_folder, new_folder):
-    try :
-       os.rename(old_folder, new_folder)
-    except Exception as e :
-       os.rename(old_folder, new_folder + str(random.randint(100, 999)) )
+    name = new_folder
+    if os.path.isdir(new_folder):
+        return os_folder_rename(old_folder,new_folder + str(random.randint(100, 999)))
 
+    os.rename(old_folder, new_folder)
+    return name
 
 def os_folder_create(folder):
     if not os.path.isdir(folder):
@@ -71,7 +72,7 @@ def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py",
 
     for folder_i in valid_folders:
         foldername = folder_i + suffix
-        os_folder_rename(old_folder=folder_i, new_folder=foldername)
+        foldername = os_folder_rename(old_folder=folder_i, new_folder=foldername)
 
         main_file = os.path.join(foldername,  main_file_run )
         cmd = [os_python_path, main_file]
@@ -108,7 +109,7 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
         time.sleep(waitime)
         # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
 
-    util_cpu.ps_wait_process_complete(subprocess_list)
+    util_cpu.ps_wait_process_completion(subprocess_list)
 
 
 def batch_generate_hyperparameters(hyper_dict,file_hyper) :
@@ -118,11 +119,13 @@ def batch_generate_hyperparameters(hyper_dict,file_hyper) :
      }
     size : key1 x ke2 x key2
   """
+  # df not defined , DataFrame has no "extend" method
+
   for key  in hyper_dict:
        vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
-       df = df.extend(  len(vv) )
+       #df = df.extend(  len(vv) )
 
-  df.to_csv( file_hyper )
+  #df.to_csv( file_hyper )
   pass
 
 
