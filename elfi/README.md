@@ -1,17 +1,6 @@
-**Version 0.7.3 released!** See the CHANGELOG and [notebooks](https://github.com/elfi-dev/notebooks).
-
-**NOTE:** For the time being NetworkX 2 is incompatible with ELFI.
 
 ELFI - Engine for Likelihood-Free Inference
 ===========================================
-
-[![Build Status](https://travis-ci.org/elfi-dev/elfi.svg?branch=master)](https://travis-ci.org/elfi-dev/elfi)
-[![Code Health](https://landscape.io/github/elfi-dev/elfi/dev/landscape.svg?style=flat)](https://landscape.io/github/elfi-dev/elfi/dev)
-[![Documentation Status](https://readthedocs.org/projects/elfi/badge/?version=latest)](http://elfi.readthedocs.io/en/latest/?badge=latest)
-[![Gitter](https://badges.gitter.im/elfi-dev/elfi.svg)](https://gitter.im/elfi-dev/elfi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![DOI](https://zenodo.org/badge/69855441.svg)](https://zenodo.org/badge/latestdoi/69855441)
-
-<img src="https://cloud.githubusercontent.com/assets/1233418/20178983/6e22ee44-a75c-11e6-8345-5934b55b9dc6.png" width="15%" align="right"></img>
 
 ELFI is a statistical software package written in Python for likelihood-free inference (LFI) such as Approximate
 Bayesian Computation ([ABC](https://en.wikipedia.org/wiki/Approximate_Bayesian_computation)).
@@ -102,22 +91,3 @@ Resolving these may sometimes go wrong:
 `pythonw` instead of `python`.
 - Note that ELFI requires Python 3.5 or greater so try `pip3 install elfi`.
 - Make sure your Python installation meets the versions listed in `requirements.txt`.
-
-
-Citation
---------
-
-If you wish to cite ELFI, please use the paper in [JMLR](http://www.jmlr.org/papers/v19/17-374.html):
-
-```
-@article{JMLR:v19:17-374,
-  author  = {Jarno Lintusaari and Henri Vuollekoski and Antti Kangasr{\"a}{\"a}si{\"o} and Kusti Skyt{\'e}n and Marko J{\"a}rvenp{\"a}{\"a} and Pekka Marttinen and Michael U. Gutmann and Aki Vehtari and Jukka Corander and Samuel Kaski},
-  title   = {ELFI: Engine for Likelihood-Free Inference},
-  journal = {Journal of Machine Learning Research},
-  year    = {2018},
-  volume  = {19},
-  number  = {16},
-  pages   = {1-7},
-  url     = {http://jmlr.org/papers/v19/17-374.html}
-}
-```
