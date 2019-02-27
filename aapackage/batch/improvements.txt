@@ -16,6 +16,17 @@
                 subprocess_script is called with --hyperparam_ii={line_number}, why ?
                 A for loop can do the job
 
+    - util_log.py :
+
+        - create_appid :
+            - check if filename is empty
+
+        - create_logfilename :
+            - raise exception if filename is empty (in order to avoir .log  file)
+
+        - printlog :
+            - if writelog:  what is this ?
+
 
 
 What's been done :
@@ -26,5 +37,10 @@ What's been done :
             - If new_folder exists , finds new name (recursively)
             - returns new name
 
-    - batch_generate_hyperparameters :
-        - commented lines involving df
+        - batch_generate_hyperparameters :
+            - commented lines involving df
+
+    - util_log.py
+
+        - create_uniqueid :
+            - added a return
