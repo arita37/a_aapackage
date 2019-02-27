@@ -72,7 +72,7 @@ def create_logfilename(filename ) :
 
 
 def create_uniqueid() :
-   arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
+   return arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
 
 
 ##########################################################################################
