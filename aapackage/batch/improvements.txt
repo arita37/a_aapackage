@@ -1,0 +1,30 @@
+- Need to review functions :
+
+    - util_batch.py :
+
+        - batch_run_infolder :
+            - check if main_file_run exists
+            - return new foldername
+
+        - batch_generate_hyperparameters :
+            - need to define what is df
+            - need to check if hyper_dict has "key" key, and "min"/"max" keys for "key" key
+
+        - batch_parallel_subprocess :
+            - check if subprocess_script exists
+            - is csv really needed ? because, for each line in the csv file,
+                subprocess_script is called with --hyperparam_ii={line_number}, why ?
+                A for loop can do the job
+
+
+
+What's been done :
+
+    - util_batch.py :
+
+        - os_folder_rename :
+            - If new_folder exists , finds new name (recursively)
+            - returns new name
+
+    - batch_generate_hyperparameters :
+        - commented lines involving df
