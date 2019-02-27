@@ -64,30 +64,3 @@ source activate elfi
 pip install elfi
 ```
 
-### Docker container
-
-A simple Dockerfile with Jupyter support is also provided. This is especially suitable for running tests. Please see [Docker documentation](https://docs.docker.com/) for details.
-
-```
-git clone --depth 1 https://github.com/elfi-dev/elfi.git
-cd elfi
-make docker-build  # builds the image with requirements for dev
-make docker  # runs a container with live elfi directory
-```
-
-To open a Jupyter notebook, run
-```
-jupyter notebook --ip 0.0.0.0 --no-browser --allow-root
-```
-within the container and then on host open the page http://localhost:8888. 
-
-### Potential problems with installation
-
-ELFI depends on several other Python packages, which have their own dependencies.
-Resolving these may sometimes go wrong:
-- If you receive an error about missing `numpy`, please install it first.
-- If you receive an error about `yaml.load`, install `pyyaml`.
-- On OS X with Anaconda virtual environment say `conda install python.app` and then use
-`pythonw` instead of `python`.
-- Note that ELFI requires Python 3.5 or greater so try `pip3 install elfi`.
-- Make sure your Python installation meets the versions listed in `requirements.txt`.
