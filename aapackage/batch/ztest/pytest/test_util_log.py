@@ -4,7 +4,7 @@ import os
 import logging
 from aapackage import util_log
 
-def appendToAssetsPath(f):
+def os_path_append(f):
     assert isinstance(f,str)
     return os.path.join(os.path.dirname(os.path.abspath(__file__)),f)
 
@@ -22,7 +22,7 @@ def test_printlog():
 def test_writelog():
     assert len(util_log.LOG_FILE) != 0
 
-    fileout = appendToAssetsPath("mockup_test_util.log2")
+    fileout = os_path_append("mockup_test_util.log2")
     util_log.writelog("testing",fileout)
     with open(fileout,'r') as f:
         assert f.readline() == "testing\n"
@@ -34,7 +34,7 @@ def test_logger_setup(capsys):
     # Test : console output / file output
 
     formatter = logging.Formatter("%(levelname)s %(message)s")
-    fileout = appendToAssetsPath("mockup_test_util.log")
+    fileout = os_path_append("mockup_test_util.log")
     logger = util_log.logger_setup("test_util_log",fileout,formatter)
     logger.info("mockup_test_util_log")
 
