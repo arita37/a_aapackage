@@ -5,10 +5,12 @@ sudo: false
 language: python
 
 cache:
+  bundler: true
   apt: true
   directories:
   - $HOME/.cache/pip
   - $HOME/.ccache
+  - $HOME/miniconda
 
 dist: xenial
 
