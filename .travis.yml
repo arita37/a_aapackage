@@ -44,4 +44,3 @@ script:
   - python aapackage/ztest_import.py
   - bash aapackage/batch/ztest/pytest/test_functionnal.sh
   - bash aapackage/batch/ztest/pytest/test_unit.sh
-    
