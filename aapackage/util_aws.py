@@ -23,25 +23,26 @@ from attrdict import AttrDict as dict2
 from pprint import pprint
 import csv
 
+from aapackage import util
 
-### Local
+
+### Local  #####################################################################
 #  DIRCWD  =  r"D:/_devs/Python01/aws/aapackage/"
-DIRCWD  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-__path__= DIRCWD +'/aapackage/'
+# DIRCWD  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+# __path__= DIRCWD +'/aapackage/'
 
 AWS_ACCESS_LOCAL = "D:/_devs/keypair/aws_access.py"
 AWS_KEY_PEM      = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
 
 
-### Remote
+### Remote   ###################################################################
 EC2CWD=   '/home/ubuntu/notebook/'
 
 
-import util
-###############################################################################
 
 
+################################################################################
 #### Global ####################################################################
 global EC2_CONN
 EC2_CONN = None
@@ -246,7 +247,7 @@ def aws_ec2_spot_stop(con, ipadress="", instance_id="") :
 
 
 
-###############################################################################
+################################################################################
 def aws_ec2_res_start(con, region, key_name, ami_id, inst_type="cx2.2", min_count =1 , max_count =1,
                              pars= {"security_group": [""], "disk_size": 25, "disk_type": "ssd", "volume_type": "gp2"}):
     '''  
@@ -329,7 +330,7 @@ def  aws_ec2_get_folder( ipadress,  fromfolder1, tofolder1   ) :
    # please use class aws_ec2_ssh(object):
 
 
-#### S3 ###########################################################################
+#### S3 ########################################################################
 '''
 def aws_s3_file_putons3(fromfile, tobucket_path='bucket/folder1/folder2', AWS_KEY='', AWS_SECRET='' ) :
   from boto.s3.connection import S3Connection
@@ -466,8 +467,7 @@ def aws_s3_file_read(bucket1, filepath, isbinary=1) :
 
 
 
-
-####### SSH ########################################################################
+####### SSH ####################################################################
 class aws_ec2_ssh(object):
     '''
     ssh= aws_ec2_ssh(host)
