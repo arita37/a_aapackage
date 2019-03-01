@@ -126,6 +126,11 @@ def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam) :
 
    Dict preserving the order !!!
 
+    Equivalent of grid search
+https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
+
+
+
   """
   # df not defined , DataFrame has no "extend" method
   ##init columns
