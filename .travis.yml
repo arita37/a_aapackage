@@ -40,4 +40,7 @@ script:
   # - bash zbuild/travis/test_script.sh
   # - bash zbuild/travis/test_docs.sh
   # - bash zbuild/travis/test_pytest_soft_dependency.sh
-  - python ztest_import.py
+  - pip install -e .
+  - python aapackage/ztest_import.py
+  - bash aapackage/batch/ztest/pytest/test_functionnal.sh
+  - bash aapackage/batch/ztest/pytest/test_unit.sh
