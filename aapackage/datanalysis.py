@@ -39,7 +39,7 @@ DIRCWD = "./"
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 
-import util,
+import util
 import datanalysis as da
 
 
