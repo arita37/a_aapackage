@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-batch utils
+Batch utils
 
 
 """
@@ -9,7 +9,6 @@ import shutil
 import sys
 import random
 import subprocess
-import argparse
 import time
 import logging
 
@@ -66,16 +65,21 @@ def os_folder_create(folder):
         os.makedirs(folder)
 
 
-def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5 ):
+
+def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5):
     sub_process_list = []
+
+    if ".py" in main_file_run :
+        ispython = 1
+
     os_python_path = sys.executable
 
-    for folder_i in valid_folders:
+    for folder_i in task_folders:
         foldername = folder_i + suffix
         foldername = os_folder_rename(old_folder=folder_i, new_folder=foldername)
 
         main_file = os.path.join(foldername,  main_file_run )
-        cmd = [os_python_path, main_file]
+        cmd = [os_python_path, main_file]  if ispython else [ main_file]
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
@@ -83,6 +87,7 @@ def batch_run_infolder(valid_folders, suffix="_qstart", main_file_run="main.py",
         time.sleep( waitsleep )
 
     return sub_process_list
+
 
 
 def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
@@ -99,17 +104,25 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
     hyper_parameter = pd.read_csv(hyperparam_file)
     PYTHON_COMMAND = sys.executable
 
+    if ".py" in main_file_run :
+        ispython = 1
+
     # Start process launch
     subprocess_list = []
     for ii in range(0, len(hyper_parameter) ):
-        cmd_list = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % ii]
-        ps = subprocess.Popen( cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+        if ispython :
+          cmd = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % ii]
+        else :
+          cmd = [subprocess_script,  ii]
+
+        ps = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         log("Subprocess started ", ps.pid)
         subprocess_list.append(ps.pid)
         time.sleep(waitime)
         # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
 
     util_cpu.ps_wait_process_completion(subprocess_list)
+
 
 
 def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam) :
@@ -128,7 +141,6 @@ def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam) :
 
     Equivalent of grid search
 https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html
-
 
 
   """
