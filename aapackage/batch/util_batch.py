@@ -112,17 +112,32 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
     util_cpu.ps_wait_process_completion(subprocess_list)
 
 
-def batch_generate_hyperparameters(hyper_dict,file_hyper) :
+def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam) :
   """
-     {  "layer" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
-        "layer" : {"min": 10  , "max": 200 , "type": float,  "nmax": 10  }, "method": "linear"
+     {  "param1" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
+        "param2" : {"min": 10  , "max": 50 , "type": float,  "nmax": 10  }, "method": "linear"
      }
-    size : key1 x ke2 x key2
+
+    df
+      nbcols    :  range for param1  X  range for param2  X range for param3
+      nbcolumns :  len(hyper_dict)
+
+   https://stackoverflow.com/questions/42795832/faster-way-to-extend-values-of-a-pandas-dataframe
+
+   Dict preserving the order !!!
+
   """
   # df not defined , DataFrame has no "extend" method
+  ##init columns
 
-  for key  in hyper_dict:
-       vv = np.arange( hyper_dict["key"]["min"]  ,   hyper_dict["key"]["max"] )
+  df = pd.DataFrame( { k for k in hyperparam_dict.keys()  }   )
+
+  for  key, d in hyperparam_dict.items():
+       df[key] = 0
+
+       vv = np.arange( d["min"], d["max"], d["nmax"])
+
+
        #df = df.extend(  len(vv) )
 
   #df.to_csv( file_hyper )
