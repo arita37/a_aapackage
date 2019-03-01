@@ -25,7 +25,7 @@ import numexpr as ne, numpy as np, pandas as pd, scipy as sci
 import urllib3
 from bs4 import BeautifulSoup
 from numba import jit, float32
-import subproces
+import subprocess
 
 
 ####################################################################################
