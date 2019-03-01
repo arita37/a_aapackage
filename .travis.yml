@@ -10,7 +10,7 @@ cache:
   directories:
   - $HOME/.cache/pip
   - $HOME/.ccache
-  - $HOME/miniconda
+  # - $HOME/miniconda
 
 dist: xenial
 
