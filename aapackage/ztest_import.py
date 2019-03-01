@@ -51,33 +51,28 @@ from tabulate import tabulate
 
 
 ############################################################################################
-import globalvar
-import allmodule
-import datanalysis
+from aapackage import globalvar
+from aapackage import allmodule
+from aapackage import datanalysis
 # import fast
-import function_custom
+from aapackage import function_custom
 
 
-import multiprocessfunc
-import portfolio
-import portfolio_withdate
+from aapackage import portfolio
 # import rstatpy
 
 
-import util
-import util_ml 
-import util_aws
-import util_release
+from aapackage import util
+from aapackage import util_ml
+from aapackage import util_aws
+from aapackage import util_release
 # import util_search
-import util_spark
-import util_sql
-import util_web
+from aapackage import util_spark
+from aapackage import util_sql
+from aapackage import util_web
 
 
-
-
-
-import util
+from aapackage import util
 
 
 
