@@ -21,6 +21,7 @@ echo 'List files from cached directories'
 echo 'pip:'
 ls $HOME/.cache/pip
 
+
 if [ $TRAVIS_OS_NAME = "linux" ]
 then
 	export CC=/usr/lib/ccache/gcc
@@ -28,8 +29,9 @@ then
 	# Useful for debugging how ccache is used
 	# export CCACHE_LOGFILE=/tmp/ccache.log
 	# ~60M is used by .ccache when compiling from scratch at the time of writing
-	ccache --max-size 400M --show-stats
+	ccache --max-size 100M --show-stats
 fi
+
 
 make_conda() {
 	TO_INSTALL="$@"
@@ -46,7 +48,8 @@ make_conda() {
     MINICONDA_PATH=$HOME/miniconda
     chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
     export PATH=$MINICONDA_PATH/bin:$PATH
-    conda update --yes condas
+    conda update --yes conda
+    source activate base
 
     pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
     pip install pytest toml
