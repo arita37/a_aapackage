@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-"""  All module here for include  """
-import sys, os
+"""  All module here for include  
 
+
+"""
+import sys, os
 #if  sys.platform.find('win') > -1  :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
 
@@ -15,19 +17,18 @@ from datetime import datetime; from datetime import timedelta; from calendar imp
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
-#Pandas
+
+##### Pandas
 # from pandas.types.dtypes import CategoricalDtype
 # import  ggplot as gg
 
-import util
+
+
+from aapackage import util
 # import datanalysis as da, fast
 
 #############################################################################################
 
-
-#if sys.version.find('Continuum') > 0 and  sys.platform.find('linux') > -1 :  #Import the Packages for Ananconda
-#  import PyGMO as py  
-  
 
 
 

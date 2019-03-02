@@ -24,7 +24,7 @@ then
 	# Useful for debugging how ccache is used
 	# export CCACHE_LOGFILE=/tmp/ccache.log
 	# ~60M is used by .ccache when compiling from scratch at the time of writing
-	ccache --max-size 100M --show-stats
+	ccache --max-size 400M --show-stats
 fi
 
 make_conda() {
