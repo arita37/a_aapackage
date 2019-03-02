@@ -25,6 +25,25 @@ https://github.com/scikit-learn/scikit-learn/commit/8aa9c199d96b8c1de9d9f1ae97bb
 
 
 
+##### Tar gzip conda pack
+https://conda.github.io/conda-pack/cli.html
+
+
+
+################################################################################
+################################################################################
+Anaconda 5.2.0 (May 30, 2018)
+python 3.6.4 -> 3.6.5
+
+
+https://repo.continuum.io/archive/Anaconda3-5.2.0-Linux-x86_64.sh
+
+
+
+
+
+
+
 
 
 
