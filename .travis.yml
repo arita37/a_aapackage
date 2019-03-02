@@ -43,6 +43,6 @@ script:
   # - bash zbuild/travis/test_docs.sh
   # - bash zbuild/travis/test_pytest_soft_dependency.sh
   - pip install -e .
-  - python aapackage/ztest/ztest_import.py
+  - python ztest/ztest_import.py
   - bash aapackage/batch/ztest/pytest/test_functionnal.sh
   - bash aapackage/batch/ztest/pytest/test_unit.sh

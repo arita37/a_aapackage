@@ -40,16 +40,17 @@ make_conda() {
 
 
     # Install conda
-    # fname=Miniconda3-latest-Linux-x86_64.sh
     wget https://repo.continuum.io/archive/Anaconda3-5.2.0-Linux-x86_64.sh \
         -O miniconda.sh
+
     MINICONDA_PATH=$HOME/miniconda
     chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
     export PATH=$MINICONDA_PATH/bin:$PATH
-    conda update --yes conda
+    conda update --yes condas
 
     pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
     pip install pytest toml
+
 
     # Install miniconda
     # if [ $TRAVIS_OS_NAME = "osx" ]
