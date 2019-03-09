@@ -93,10 +93,11 @@ def test_batch_parallel_subprocess():
         util_batch.batch_parallel_subprocess(csv,script,waitime=0)
     """
 
+
 def test_generate_hyperparameters():
     csv = os_path_append('file_doesnt_exist.csv')
     # Test : correct parameters , creates file
-
+    """
     # Test : hyper_dict doesn't have key item
     with pytest.raises(KeyError):
         util_batch.batch_generate_hyperparameters({"test":58},csv)
@@ -104,3 +105,9 @@ def test_generate_hyperparameters():
     # Test : if hyper_dict['key']['min'] is a string
     with pytest.raises(TypeError):
         util_batch.batch_generate_hyperparameters({'key':{'min':'mock_string','max':4}},csv)
+    """
+
+
+
+
+
