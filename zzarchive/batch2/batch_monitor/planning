@@ -1,7 +1,0 @@
-1/ read the arrow docs
-2/ port to arrows
-3/ read the psutil docs
-4/ port to psutils
-------------------------------
-
-a = arrow.now()
