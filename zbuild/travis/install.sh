@@ -29,7 +29,7 @@ then
 	# Useful for debugging how ccache is used
 	# export CCACHE_LOGFILE=/tmp/ccache.log
 	# ~60M is used by .ccache when compiling from scratch at the time of writing
-	ccache --max-size 100M --show-stats
+	ccache --max-size 500M --show-stats
 fi
 
 
@@ -77,6 +77,10 @@ make_conda() {
     pip install pytest==4.3.0
     pip install toml
 
+    python --version
+    python -c "import numpy; print('numpy %s' % numpy.__version__)"
+    conda list
+    pwd
 
     export BOTO_CONFIG=/dev/null
 }
