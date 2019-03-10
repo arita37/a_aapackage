@@ -29,7 +29,7 @@ then
 	# Useful for debugging how ccache is used
 	# export CCACHE_LOGFILE=/tmp/ccache.log
 	# ~60M is used by .ccache when compiling from scratch at the time of writing
-	ccache --max-size 500M --show-stats
+	ccache --max-size 2000M --show-stats
 fi
 
 
@@ -75,10 +75,10 @@ make_conda() {
 
     #### Test env install
     # conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
-    # source activate testenv
-    # pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
-    # pip install pytest==4.3.0
-    # pip install toml
+    source activate testenv
+    pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
+    pip install pytest==4.3.0
+    pip install toml
 
     python --version
     python -c "import numpy; print('numpy %s' % numpy.__version__)"
