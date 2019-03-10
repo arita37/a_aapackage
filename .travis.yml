@@ -46,9 +46,7 @@ before_cache:
 - pip uninstall -y aapackage # Cardboardlint always installs even if no changes are made.
 
 
-branches:
-  only:
-    - dev
+
 
 before_install:
 # Get miniconda. Take the right version, so re-installing python is hopefully not needed.
