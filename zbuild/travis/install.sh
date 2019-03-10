@@ -56,26 +56,27 @@ make_conda() {
 
 
     # Install miniconda
-    if [ $TRAVIS_OS_NAME = "osx" ]
-	 then
-		fname=Miniconda3-latest-MacOSX-x86_64.sh
-	 else
-	 	fname=Miniconda3-latest-Linux-x86_64.sh
-	fi
-    wget https://repo.continuum.io/miniconda/$fname \
-        -O miniconda.sh
-    MINICONDA_PATH=$HOME/miniconda
-    chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
-    export PATH=$MINICONDA_PATH/bin:$PATH
-    conda update --yes conda
+    #if [ $TRAVIS_OS_NAME = "osx" ]
+	# then
+	#	fname=Miniconda3-latest-MacOSX-x86_64.sh
+	# else
+	# 	fname=Miniconda3-latest-Linux-x86_64.sh
+	#fi
+    #wget https://repo.continuum.io/miniconda/$fname \
+    #    -O miniconda.sh
+    #MINICONDA_PATH=$HOME/miniconda
+
+    # chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
+    # export PATH=$MINICONDA_PATH/bin:$PATH
+    # conda update --yes conda
 
 
     #### Test env install
-    conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
-    source activate testenv
-    pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
-    pip install pytest==4.3.0
-    pip install toml
+    # conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
+    # source activate testenv
+    # pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
+    # pip install pytest==4.3.0
+    # pip install toml
 
     python --version
     python -c "import numpy; print('numpy %s' % numpy.__version__)"
