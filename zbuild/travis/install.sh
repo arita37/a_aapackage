@@ -75,9 +75,9 @@ make_conda() {
 
 
     #### Test env install
-    if test -e $HOME/miniconda; then
+    if test -e $HOME/miniconda/bin; then
       echo "Conda already isntalled"
-      ls  $HOME/miniconda
+      ls  $HOME/miniconda/bin
       export PATH=$HOME/miniconda/bin:$PATH
       conda update --yes conda
       source activate testenv
