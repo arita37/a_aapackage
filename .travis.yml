@@ -44,6 +44,7 @@ addons:
 
 before_install:
 # Get miniconda. Take the right version, so re-installing python is hopefully not needed.
+- ls $HOME/miniconda/bin
 - if test -e $HOME/miniconda/bin; then
     echo "miniconda already installed.";
   else
@@ -52,8 +53,6 @@ before_install:
     rm -rf $HOME/miniconda;
     mkdir -p $HOME/download;
     if [[ -d $HOME/download/miniconda.sh ]]; then rm -rf $HOME/download/miniconda.sh; fi;
-
-
 
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/download/miniconda.sh;
 
