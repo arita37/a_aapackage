@@ -1,5 +1,7 @@
 # make it explicit that we favor the new container-based travis workers
 # https://travis-ci.com/arita37/a_aapackage
+# '/home/travis/build/arita37/a_aapackage/batch/ztest/logfile_batchdaemon_monitor.log'
+
 sudo: false
 
 language: python
@@ -33,10 +35,10 @@ addons:
   apt:
     packages:
       # these only required by the DISTRIB="ubuntu" builds:
-      - python3-scipy
-      - libatlas3-base
-      - libatlas-base-dev
-      - libatlas-dev
+      # - python3-scipy
+      # - libatlas3-base
+      # - libatlas-base-dev
+      # - libatlas-dev
 
 
 
