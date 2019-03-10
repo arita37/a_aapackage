@@ -20,6 +20,7 @@ set -e
 echo 'List files from cached directories'
 echo 'pip:'
 ls $HOME/.cache/pip
+ls $HOME
 
 
 if [ $TRAVIS_OS_NAME = "linux" ]
@@ -74,7 +75,8 @@ make_conda() {
 
 
     #### Test env install
-    if test -e $HOME/miniconda/bin; then
+    if test -e $HOME/miniconda; then
+      ls  $HOME/miniconda
       export PATH=$HOME/miniconda/bin:$PATH
       conda update --yes conda
       source activate testenv
