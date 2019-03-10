@@ -1,4 +1,51 @@
-﻿env:
+﻿before_cache:
+- if ! [[ $TRAVIS_TAG ]]; then rm -rf $HOME/miniconda/conda-bld; fi
+- rm -rf $HOME/miniconda/locks $HOME/miniconda/pkgs $HOME/miniconda/var $HOME/miniconda/conda-meta/history
+- pip uninstall -y aapackage # Cardboardlint always installs even if no changes are made.
+
+
+
+
+before_install:
+# Get miniconda. Take the right version, so re-installing python is hopefully not needed.
+- if test -e $HOME/miniconda/bin; then
+    echo "miniconda already installed.";
+  else
+    echo "Installing miniconda.";
+
+    rm -rf $HOME/miniconda;
+    mkdir -p $HOME/download;
+    if [[ -d $HOME/download/miniconda.sh ]]; then rm -rf $HOME/download/miniconda.sh; fi;
+
+
+
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O $HOME/download/miniconda.sh;
+
+
+    bash chmod +x $HOME/download/miniconda.sh
+    bash $HOME/download/miniconda.sh -b -p $HOME/miniconda;
+    bash export PATH=$HOME/miniconda/bin:$PATH
+    conda update --yes conda
+
+    conda create -n testenv --yes $TO_INSTALL --file zbuild/py36.txt
+    source activate testenv
+    pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0
+    pip install pytest==4.3.0
+    pip install toml
+
+    bash pwd
+    #MINICONDA_PATH=$HOME/miniconda
+    # chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
+    # export PATH=$MINICONDA_PATH/bin:$PATH
+    # conda update --yes conda
+
+  fi;
+
+
+
+
+
+env:
   matrix:
   - MYCONDAPY=2.7
   #- MYCONDAPY=3.5
