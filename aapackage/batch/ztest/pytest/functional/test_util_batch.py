@@ -106,8 +106,9 @@ def test_generate_hyperparameters():
     with pytest.raises(TypeError):
         util_batch.batch_generate_hyperparameters({'key':{'min':'mock_string','max':4}},csv)
     """
-    pass
-s
+    return 1
+
+
 
 
 
