@@ -37,10 +37,10 @@ def log(*argv):
 
 def load_arguments():
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
     parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
     parser.add_argument("--log_file", default="logfile_batchdaemon.log", help=".")
     parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
+    parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
 
     options = parser.parse_args()
     return options
@@ -64,6 +64,7 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
 
 
 ################################################################################
+################################################################################
 if __name__ == '__main__':
     args   = load_arguments()
     logger = util_log.logger_setup(__name__,
@@ -71,18 +72,23 @@ if __name__ == '__main__':
                                    formatter = util_log.FORMATTER_4)
 
     log( "Start daemon :", os.getpid()  )
-    waitsec = 30
     while True :
         log("Daemon new loop" , args.task_folder)
-        task_folders = get_list_valid_task_folder(args.task_folder)
-        if len(task_folders) > 0:
-          log("valid task folder:", task_folders)
-          process_pid_list = util_batch.batch_run_infolder(task_folders= task_folders)
-          log("valid task folder started:",  process_pid_list )
+        folders = get_list_valid_task_folder( args.task_folder )
+        
+        if len(folders) > 0:
+          log("valid task folder:", folders)
+          pid_list = util_batch.batch_run_infolder(task_folders= folders)
+          log("valid task folder started:",  pid_list )
+        
         if  args.mode != "daemon" : 
           log("Daemon terminated")
           break
-        sleep(waitsec)
+
+        sleep(args.waitsec)
+
+
+
 
 
 
