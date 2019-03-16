@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 """
+Many tasks :
+
 Launch AWS server
- and send task
-
-Retrieve results from AWS folder
-to local.
-with logs to filter out already retrieve results.
-
+Send task folder from LOCAL to remote AWS
+Retrieve results from AWS folder to local.
+Filter out already retrieve results.
+Start on AWS the batch_daemon_launchi_cli.py
 
 
 
 """
-# -*- coding: utf-8 -*-
-'''AWS IN/OUT '''
 import os
 import sys
 from time import sleep
@@ -62,17 +60,26 @@ def launch_ec2_(instance_type):
     pass
 
 
+
+
+
 def task_transfer_to_ec2(fromfolder, tofolder, host):
     ssh = util_aws.aws_ec2_ssh(hostname=host)
     ssh.put_all(fromfolder, tofolder)
 
 
+
 def batch_launch_remote() :
+    ssh = util_aws.aws_ec2_ssh(hostname=host)
+    ssh.cmd("python ")
+
+
+
+
+def batch_result_retrieve(folder_remote, folder_local, host):
   pass
 
 
-def batch_result_retrieve(folder_remote, folder_local):
-  pass
 
 
 
@@ -101,16 +108,14 @@ if __name__ == '__main__':
                                    formatter= util_log.FORMATTER_4)
 
     if args.do == "launch_ec2" :
-       sys.exit(0)
+       pass
 
 
 
     if args.do == "get_fromec2" :
-       sys.exit(0)
-
+       pass
 
     if args.do == "put_toec2" :
-       sys.exit(0)
        log( "Current Process Id:", os.getpid()  )
        valid_task_folders = get_list_valid_task_folder(args.task_folder)
        log("All task Completed")

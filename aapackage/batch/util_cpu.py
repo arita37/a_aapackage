@@ -2,7 +2,7 @@
 # pylint: disable=C0103,W0601,E1123,W0614,F0401,E1120,E1101,E0611,W0702
 '''
 Launch processors and monitor the CPU, memory usage.
-Maintain same leve of processors over time.
+Maintain same level of processors over time.
 
 
 
@@ -372,11 +372,11 @@ def monitor_maintain():
             log('N_process', len(processes))
 
             ### check global system  ##########################################
-            if len(processes) == 0 or is_issue_system():
+            if len(processes) == 0 or ps_is_issue_system():
                 log('Reset all process')
                 lpp = ps_find_procs_by_name(pars['proc_name'], 1)
-                terminate(lpp)
-                processes = launch(cmds2)
+                ps_terminate(lpp)
+                processes = os_launch(cmds2)
                 sleep(5)
 
             ## pid in process   ###############################################

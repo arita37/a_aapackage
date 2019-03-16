@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
-'''Daemon monitoring batch '''
+'''
+  Daemon monitoring batch
+
+  scans sub-folder in /tasks/
+  and execute  /tasks/taskXXXX/main.py in that folder  (if task is not qdone)
+  When task is finished, taskXXX is rename to taskXXX_qdone
+
+
+
+
+'''
 import os
 import sys
 from time import sleep
@@ -44,24 +54,26 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
     for root, dirs, files in os.walk(folder):
         root_splits = root.split("/")
         for filename in files:
-            if  "_qstart" not in root_splits[-1] and  "_qdone" not in root_splits[-1] \
-                and filename == script_name and "_ignore" not in root_splits[-1]  :
+            if  filename == script_name  and \
+                "_qstart" not in root_splits[-1] and \
+                "_qdone"  not in root_splits[-1] and \
+                "_ignore" not in root_splits[-1]  :
                 valid_folders.append(root)
 
     return valid_folders
+
 
 
 ################################################################################
 if __name__ == '__main__':
     args   = load_arguments()
     logger = util_log.logger_setup(__name__,
-                                   log_file=args.log_file,
-                                   formatter=util_log.FORMATTER_4)
+                                   log_file  = args.log_file,
+                                   formatter = util_log.FORMATTER_4)
 
-    if args.mode == "daemon" :
-      log( "Start daemon :", os.getpid()  )
-      waitsec = 30
-      while True :
+    log( "Start daemon :", os.getpid()  )
+    waitsec = 30
+    while True :
         log("Daemon new loop")
         task_folders = get_list_valid_task_folder(args.task_folder)
         if len(task_folders) > 0:
@@ -69,17 +81,8 @@ if __name__ == '__main__':
           process_pid_list = util_batch.batch_run_infolder(task_folders= task_folders)
           log("valid task folder started:",  process_pid_list )
         sleep(waitsec)
+        if not args.mode != "daemon" : break
 
-
-    elif args.mode != "daemon":
-          log("Start Folder Tasks :", os.getpid())
-          task_folders = get_list_valid_task_folder(args.task_folder)
-          if len(task_folders) > 0:
-                log("valid task folder:", task_folders)
-                process_pid_list = util_batch.batch_run_infolder(task_folders= task_folders)
-                log("valid task folder started:", process_pid_list)
-          util_cpu.ps_wait_process_completion(process_pid_list)
-          log("All tasks Completed")
 
 
 
