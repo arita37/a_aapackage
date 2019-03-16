@@ -24,8 +24,8 @@ from aapackage.batch import util_cpu
 
 ############### Variable definition ############################################
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-#TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__))
-TASK_FOLDER_DEFAULT = os.getcwd()
+TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
+#TASK_FOLDER_DEFAULT = os.getcwd()
 logger = logging.basicConfig()
 
 
@@ -37,10 +37,9 @@ def log(*argv):
 
 def load_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
+    # parser.add_argument("--hyperparam", help="Select path for a .csv  HyperParameters ")
     parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
-    parser.add_argument("--subprocess_script", default="main.py", help="Name main script")
-    parser.add_argument("--log_file", default="batch/ztest/logfile_batchdaemon.log", help=".")
+    parser.add_argument("--log_file", default="logfile_batchdaemon.log", help=".")
     parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
 
     options = parser.parse_args()
@@ -74,14 +73,16 @@ if __name__ == '__main__':
     log( "Start daemon :", os.getpid()  )
     waitsec = 30
     while True :
-        log("Daemon new loop")
+        log("Daemon new loop" , args.task_folder)
         task_folders = get_list_valid_task_folder(args.task_folder)
         if len(task_folders) > 0:
           log("valid task folder:", task_folders)
           process_pid_list = util_batch.batch_run_infolder(task_folders= task_folders)
           log("valid task folder started:",  process_pid_list )
+        if  args.mode != "daemon" : 
+          log("Daemon terminated")
+          break
         sleep(waitsec)
-        if not args.mode != "daemon" : break
 
 
 

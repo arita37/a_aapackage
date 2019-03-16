@@ -32,7 +32,7 @@ MONITOR_LOG_FILE = MONITOR_LOG_FOLDER + "/" + "batch_monitor_" + arrow.utcnow().
 DEFAULT_INTERVAL = 30  # seconds
 DEFAULT_DURATION = 3600  # seconds
 PYTHON_COMMAND   = str(sys.executable)
-PROCESS_TO_LOOK = "python"
+PROCESS_TO_LOOK  = "python"
 logger = logging.basicConfig()
 
 
@@ -49,7 +49,7 @@ def load_arguments():
     parser.add_argument('--duration',         type=float,  help='how long to record in secs.')
     parser.add_argument('--interval', type=float, default=DEFAULT_INTERVAL,  help='wait tine in secs.')
     parser.add_argument('--monitor_log_folder', type=str, default=MONITOR_LOG_FOLDER,  help='')
-    parser.add_argument('--log_file', type=str, default="batch/ztest/logfile_batchdaemon_monitor.log",help='daemon log')
+    parser.add_argument('--log_file', type=str, default="log_batchdaemon_monitor.log",help='daemon log')
     parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
     args = parser.parse_args()
     return args
@@ -62,7 +62,7 @@ if __name__ == '__main__':
                                    log_file  = args.log_file,
                                    formatter = util_log.FORMATTER_4)
 
-    log("batch_daemon_monitor_cli.py;Process started.")
+    log("Batch_daemon_monitor_cli.py;Process started.")
     util_batch.os_folder_create(folder= args.monitor_log_folder)
 
     while True :
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                                             duration = args.duration, interval = args.interval)
 
       log("batch_daemon_monitor_cli.py;Process Completed.")
-      if not args.mode != "daemon" : break
+      if args.mode != "daemon" : break
       sleep(10)
 
 

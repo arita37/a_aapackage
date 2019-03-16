@@ -245,7 +245,7 @@ def ps_get_computer_resources_usage():
 def ps_find_procs_by_name(name, ishow=1, cmdline=None):
     "Return a list of processes matching 'name'."
     ls = []
-    for p in psutil.process_iter(attrs=['pid', "name", "exe", "cmdline"]):
+    for p in psutil.process_iter(['pid', "name", "exe", "cmdline"]):
         if name.lower() in p.info['name'].lower():
             if cmdline:
                 if cmdline.lower() in ' '.join(p.info['cmdline']).lower():

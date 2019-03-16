@@ -89,9 +89,9 @@ def load_arguments():
     parser.add_argument("--do",  default="launch_ec2", help="retrieve_fromec2")
     parser.add_argument("--folder_local", help="Select path for a .csv  HyperParameters ")
     parser.add_argument("--folder_remote", default=FOLDER_DEFAULT, help="Absolute / relative path to working folder.")
-    parser.add_argument("--host", default="main.py", help="Name of the main script")
+    parser.add_argument("--host", default="34.67.74.78", help="Host name")
     parser.add_argument("--cmd_remote", default="main.py", help="Name of the main script")
-    parser.add_argument("--log_file", default="logfile_batchretrieve.log", help=".")
+    parser.add_argument("--log_file", default="log_aws_inout.log", help=".")
 
     options = parser.parse_args()
     return options

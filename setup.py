@@ -8,8 +8,8 @@ with open("README.txt", "r") as fh:
 packages = ['aapackage'] + ['aapackage.' + p for p in find_packages('aapackage')]
 
 
-scripts  = [ "batch/batch_daemon_launch_cli.py", "batch/batch_monitor_launch_cli.py",
-             "batch/batch_local_aws_cli.py" ]
+scripts  = [ "aapackage/batch/batch_daemon_launch_cli.py", "aapackage/batch/batch_daemon_monitor_cli.py",
+             "aapackage/batch/batch_local_aws_cli.py" ]
 
 
 version = '0.1.0'
