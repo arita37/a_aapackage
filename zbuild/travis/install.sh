@@ -3,23 +3,14 @@
 # .travis.yml. See https://docs.travis-ci.com/ for more details.
 # The behavior of the script is controlled by environment variabled defined
 # in the .travis.yml in the top level folder of the project.
-
-# License: 3-clause BSD
-
-# Travis clone scikit-learn/scikit-learn repository in to a local repository.
-# We use a cached directory with three scikit-learn repositories (one for each
-# matrix entry) from which we pull from local Travis repository. This allows
-# us to keep build artefact for gcc + cython, and gain time
-
-
 #  https://conda.github.io/conda-pack/cli.html
-
 
 set -e
 
 echo 'List files from cached directories'
 echo 'pip:'
 ls $HOME/.cache/pip
+ls $HOME
 
 
 if [ $TRAVIS_OS_NAME = "linux" ]
@@ -75,6 +66,8 @@ make_conda() {
 
     #### Test env install
     if test -e $HOME/miniconda/bin; then
+      echo "Conda already isntalled"
+      ls  $HOME/miniconda/bin
       export PATH=$HOME/miniconda/bin:$PATH
       conda update --yes conda
       source activate testenv
