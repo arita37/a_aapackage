@@ -45,6 +45,7 @@ def test_os_folder_create():
     # Cleanup
     os.rmdir(folder)
 
+
 def test_batch_run_infolder():
     # Test : correct path and file, launches main.py
     valid_folders = [os_path_append("mockfolder1_util_batch")]

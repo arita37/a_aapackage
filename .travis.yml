@@ -46,6 +46,7 @@ before_install:
 # Get miniconda. Take the right version, so re-installing python is hopefully not needed.
 - if test -e $HOME/miniconda/bin; then
     echo "miniconda already installed.";
+
   else
     echo "Installing miniconda.";
 
