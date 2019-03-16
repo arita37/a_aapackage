@@ -57,26 +57,56 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
 
 
 def launch_ec2_(instance_type):
-    pass
+    """
+     AWS CLI on windows
+
+     aws ec2 start-instances  --region us-west-2   --instance-ids i-0b197e983c0647053
+aws ec2 describe-instances --region us-west-2   --instance-ids i-0b197e983c0647053
+pause
+ping 127.0.0.1 -n 10 > nul
+
+
+
+
+    """
 
 
 
 
 
 def task_transfer_to_ec2(fromfolder, tofolder, host):
+    """
+     Not transfer already transfered tables
+
+
+    """
     ssh = util_aws.aws_ec2_ssh(hostname=host)
     ssh.put_all(fromfolder, tofolder)
 
 
 
 def batch_launch_remote() :
+    """
+     batcher launch
+     monitor launch
+
+     Will put as starter in batch system...
+
+
+   
+    """
     ssh = util_aws.aws_ec2_ssh(hostname=host)
-    ssh.cmd("python ")
+    ssh.cmd("batch_daemon_launchi_cli.py  --task_folder ")
 
 
 
 
 def batch_result_retrieve(folder_remote, folder_local, host):
+  """"
+      dont retrieve existing folder on disk.
+
+
+  """"
   pass
 
 
@@ -122,6 +152,85 @@ if __name__ == '__main__':
 
 
 
+
+
+
+"""
+
+
+
+# -*- coding: utf-8 -*-
+import os, sys
+DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
+os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
+import util, numpy as np
+execfile( DIRCWD + '/aapackage/allmodule.py')
+print 'Directory Folder', DIRCWD
+###################################################################################################
+EC2CWD=      '/home/ubuntu/notebook/'
+EC2_ipython= '/home/ubuntu/anaconda2/bin/'
+
+
+####  EC2 + Task  #################################################################################
+task1_name= 'elvis_prod_20160102'
+
+
+
+'''  Manual Input
+ec2_id=      'i-000155755737d04aa'
+host=        '52.78.74.143'                  #Elastic IP
+task1_name=  'elvis_prod_20161228'
+#     host=   '52.79.79.1'
+'''
+
+
+
+
+
+##################################################################################################
+DIRBATCH= DIRCWD + '/linux/batch/task/' + task1_name
+execfile(DIRBATCH + '/ec2_config.py')
+print 'ec2_id', ec2_id,  ', host', host, ', task1_name',  task1_name
+
+ssh= util.aws_ec2_ssh(host)
+con=  util.aws_conn_create(region="ap-northeast-2"); con
+
+##################################################################################################
+#### Retrieve Results from EC2 from output folder   ##############################################
+ssh.get_all( EC2CWD + '/linux/batch/output/',  DIRCWD +'/zdisks3/results/'+task1_name)
+
+
+
+#### Loop to retrieve results   ##################################################################
+import time; ii=0;  ipython_idle_count=0
+while True :
+   ii+=1
+   print ' \n\n', ii, util.date_nowtime() + '\n'
+
+   ssh.get_all( EC2CWD + '/linux/batch/output/',  DIRCWD +'/zdisks3/results/'+task1_name)
+
+   util.os_zipfolder(DIRCWD +'/zdisks3/results/'+task1_name+'/output/',         #Zip for Backup
+                     DIRCWD +'/zdisks3/results/'+task1_name+'/output.zip')
+
+   #Check if no CPU is running ipython (== idle)
+   aux= ssh.cmd2('pgrep ipython')
+   if aux[0][0] == '' : ipython_idle_count+= 1
+   else :               ipython_idle_count= 0
+   print 'ipython_idle_count', ipython_idle_count
+
+   if ipython_idle_count > 1 :                   #2*5min, 10 mins Close the Instance
+      con=  util.aws_conn_create(region="ap-northeast-2")
+      con.terminate_instances(instance_ids=[ec2_id])
+      con.release_address(public_ip=host)
+      # con.stop_instances(instance_ids=[ec2_id])
+      sys.exit(0)
+
+   time.sleep( 8 * 60)  # Retrieve every 5mins
+
+
+
+
+"""
 
 
 
