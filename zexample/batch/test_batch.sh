@@ -19,3 +19,6 @@ which_python="$(which python)"
 batch_daemon_launch_cli.py  --task_folder ${dirn}/tasks/ &
 sleep 3
 batch_daemon_monitor_cli.py --monitor_log_folder ${dirn}/log
+
+
+

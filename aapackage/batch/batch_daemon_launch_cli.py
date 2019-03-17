@@ -24,77 +24,77 @@ from aapackage.batch import util_cpu
 
 ############### Variable definition ############################################
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
+TASK_FOLDER_DEFAULT = os.path.dirname(
+    os.path.realpath(__file__)) + "/ztestasks/"
 #TASK_FOLDER_DEFAULT = os.getcwd()
 logger = logging.basicConfig()
 
 
-
 ################################################################################
 def log(*argv):
-    logger.info(",".join([str(x) for x in argv]))
+  logger.info(",".join([str(x) for x in argv]))
 
 
 def load_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
-    parser.add_argument("--log_file", default="logfile_batchdaemon.log", help=".")
-    parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-    parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT,
+                      help="Absolute or relative path to the working folder.")
+  parser.add_argument(
+      "--log_file", default="logfile_batchdaemon.log", help=".")
+  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
+  parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
 
-    options = parser.parse_args()
-    return options
+  options = parser.parse_args()
+  return options
 
 
 def get_list_valid_task_folder(folder, script_name="main.py"):
-    if not os.path.isdir(folder):
-        return []
-    valid_folders = []
-    for root, dirs, files in os.walk(folder):
-        root_splits = root.split("/")
-        for filename in files:
-            if  filename == script_name  and \
-                "_qstart" not in root_splits[-1] and \
-                "_qdone"  not in root_splits[-1] and \
-                "_ignore" not in root_splits[-1]  :
-                valid_folders.append(root)
+  if not os.path.isdir(folder):
+    return []
+  valid_folders = []
+  for root, dirs, files in os.walk(folder):
+    root_splits = root.split("/")
+    for filename in files:
+      if filename == script_name and \
+          "_qstart" not in root_splits[-1] and \
+          "_qdone" not in root_splits[-1] and \
+              "_ignore" not in root_splits[-1]:
+        valid_folders.append(root)
 
-    return valid_folders
+  return valid_folders
+
+
+
+
+
+
+
 
 
 
 ################################################################################
 ################################################################################
 if __name__ == '__main__':
-    args   = load_arguments()
-    logger = util_log.logger_setup(__name__,
-                                   log_file  = args.log_file,
-                                   formatter = util_log.FORMATTER_4)
+  args = load_arguments()
+  logger = util_log.logger_setup(__name__,
+                                 log_file=args.log_file,
+                                 formatter=util_log.FORMATTER_4)
 
-    log( "Start daemon :", os.getpid()  )
-    while True :
-        log("Daemon new loop" , args.task_folder)
-        folders = get_list_valid_task_folder( args.task_folder )
-        
-        if len(folders) > 0:
-          log("valid task folder:", folders)
-          pid_list = util_batch.batch_run_infolder(task_folders= folders)
-          log("valid task folder started:",  pid_list )
-        
-        if  args.mode != "daemon" : 
-          log("Daemon terminated")
-          break
+  log("Start daemon :", os.getpid())
+  while True:
+    log("Daemon new loop", args.task_folder)
+    folders = get_list_valid_task_folder(args.task_folder)
 
-        sleep(args.waitsec)
+    if len(folders) > 0:
+      log("valid task folder:", folders)
+      pid_list = util_batch.batch_run_infolder(task_folders=folders)
+      log("valid task folder started:", pid_list)
 
+    if args.mode != "daemon":
+      log("Daemon terminated")
+      break
 
-
-
-
-
-
-
-
+    sleep(args.waitsec)
 
 
 """
