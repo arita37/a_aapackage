@@ -41,8 +41,8 @@ def test_logger_setup(capsys):
     output = "INFO mockup_test_util_log\n"
 
     # Console output
-    captured = capsys.readouterr()
-    assert captured.out == output
+    out, err = capsys.readouterr()
+    assert out == output
 
     # File output
     with open(fileout,'r') as f:
@@ -57,5 +57,5 @@ def test_logger_setup2(capsys):
     logger = util_log.logger_setup2()
     logger.info("mockup_test_util_log")
 
-    captured = capsys.readouterr()
-    assert captured.err == "mockup_test_util_log\n"
+    out,err = capsys.readouterr()
+    assert err == "mockup_test_util_log\n"
