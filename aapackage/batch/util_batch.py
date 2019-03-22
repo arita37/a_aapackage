@@ -65,6 +65,18 @@ def os_folder_create(folder):
         os.makedirs(folder)
 
 
+def os_cmd_generate(task_folder):
+  """
+   params.toml check
+
+   otherwise default config is/main.py with current interpreter.
+    
+
+
+  """
+  pass
+
+
 
 def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5, os_python_path=None):
     sub_process_list = []
@@ -83,6 +95,8 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
 
         main_file = os.path.join(foldername,  main_file_run )
         cmd = [os_python_path, main_file]  if ispython else [ main_file]
+
+
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
@@ -90,6 +104,7 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
         time.sleep( waitsleep )
 
     return sub_process_list
+
 
 
 
