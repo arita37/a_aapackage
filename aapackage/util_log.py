@@ -36,6 +36,41 @@ threadName	%(threadName)s	Thread name (if available).
 
 
 
+
+The problem here is that you're not initializing the root logger; you're initializing the logger for your main module.
+
+Try this for main.py:
+
+import logging
+from logging.handlers import RotatingFileHandler
+import submodule
+
+logger = logging.getLogger()  # Gets the root logger
+logger.setLevel(logging.DEBUG)
+
+fh = RotatingFileHandler('master.log', maxBytes=2000000, backupCount=10)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+logger.debug('DEBUG LEVEL - MAIN MODULE')
+logger.info('INFO LEVEL - MAIN MODULE')
+
+submodule.loggerCall()
+Then try this for submodule.py:
+
+def loggerCall():
+    logger = logging.getLogger(__name__)
+    logger.debug('SUBMODULE: DEBUG LOGGING MODE : ')
+    logger.info('Submodule: INFO LOG')
+    return
+Since you said you wanted to send log messages from all your submodules to the same place, you should initialize the root logger and then simply use the message logging methods (along with setlevel() calls, as appropriate). Because there's no explicit handler for your submodule, logging.getLogger(__name__) will traverse the tree to the root, where it will find the handler you established in main.py.
+
+shareeditflag
+
+
+
+
 """
 import os
 import sys
@@ -56,6 +91,9 @@ FORMATTER_1 = logging.Formatter( "%(asctime)s,  %(name)s, %(levelname)s, %(messa
 FORMATTER_2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s'   )
 FORMATTER_2 = logging.Formatter( '%(asctime)s  %(levelname)s %(message)s'   )
 FORMATTER_4 = logging.Formatter( '%(asctime)s, %(process)d, %(filename)s,    %(message)s'   )
+
+
+FORMATTER_5 = logging.Formatter( '%(asctime)s, %(process)d, %(pathname)s%(filename)s, %(funcName)s, %(lineno)s,  %(message)s'   )
 
 #LOG_FILE = "my_app.log"
 
@@ -104,7 +142,7 @@ def writelog(m="", f=None):
 
 ########################################################################################
 ################### Logger #############################################################
-def logger_setup(logger_name, log_file=None, formatter=FORMATTER_1, isrotate=False):
+def logger_setup(logger_name=None, log_file=None, formatter=FORMATTER_1, isrotate=False):
    """
     my_logger = util_log.logger_setup("my module name", log_file="")
     APP_ID    = util_log.create_appid(__file__ )
@@ -112,12 +150,16 @@ def logger_setup(logger_name, log_file=None, formatter=FORMATTER_1, isrotate=Fal
        my_logger.debug( ",".join( [APP_ID, str(s1), str(s2), str(s3), str(s4), str(s5) ,
                         str(s6), str(s7), str(s8), str(s9), str(s10)] ) )
    """
+   
+   if logger_name is None :
+       logger = logging.getLogger()  # Gets the root logger
+   
    logger = logging.getLogger(logger_name)
    logger.setLevel(logging.DEBUG)      # better to have too much log than not enough
    logger.addHandler( logger_handler_console( formatter ) )
 
    if log_file is not None :
-     logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file) )
+     logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file, isrotate=isrotate) )
 
    # with this pattern, it's rarely necessary to propagate the error up to parent
    logger.propagate = False
@@ -147,6 +189,7 @@ def logger_handler_file(isrotate=False, rotate_time='midnight', formatter=None, 
    formatter = FORMATTER_1 if formatter is None else formatter
    log_file_used = LOG_FILE if log_file_used is None else log_file_used
    if isrotate :
+     print("Rotate")
      fh = TimedRotatingFileHandler( log_file_used, when=rotate_time)
      fh.setFormatter( formatter )
      return fh

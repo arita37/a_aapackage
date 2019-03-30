@@ -233,6 +233,19 @@ def ps_get_process_status(pr):
     return pr_status
 
 
+def ps_process_isdead(pid):
+         flag = 0
+         try:
+            pr = psutil.Process( pid )      
+            pr_status = ps_get_process_status(pr)
+            if pr_status in [psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD]:
+                flag = 1
+         except :
+                flag = 1
+    
+         return flag
+
+
 def ps_get_computer_resources_usage():
     cpu_used_percent = psutil.cpu_percent()
 
@@ -242,14 +255,26 @@ def ps_get_computer_resources_usage():
     return cpu_used_percent, mem_used_percent
 
 
-def ps_find_procs_by_name(name, ishow=1, cmdline=None):
+def str_match(s1, s2) :
+  if s1 is not None or s2 is not None :
+    return True  
+    
+  if s1.lower() in ' '.join(s2).lower() :
+        return True
+  else :
+        return False
+        
+
+
+def ps_find_procs_by_name(name, ishow=1, cmdline=None, cmdline2=None):
     "Return a list of processes matching 'name'."
     ls = []
     for p in psutil.process_iter(['pid', "name", "exe", "cmdline"]):
         if name.lower() in p.info['name'].lower():
-            if cmdline:
-                if cmdline.lower() in ' '.join(p.info['cmdline']).lower():
-                    ls.append( p.info["pid"] )
+            if str_match( cmdline, p.info['cmdline']) :
+              if str_match( cmdline2, p.info['cmdline']) :
+                    ls.append( {"pid": p.info["pid"], "cmdline" : p.info['cmdline'] 
+                                })
             else:
                 pass
 

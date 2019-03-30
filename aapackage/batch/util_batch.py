@@ -33,6 +33,7 @@ from aapackage import util_log
 
 
 ######### Logging ####################################################
+global logger
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
@@ -42,7 +43,7 @@ logger = util_log.logger_setup(__name__,
 def log(*argv):
     logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
-# log("Ok, test_log")
+log("Ok, test_log")
 #####################################################################
 
 
@@ -78,16 +79,21 @@ def os_cmd_generate(task_folder):
 
 
 
-def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5, os_python_path=None):
+def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5, 
+                       os_python_path=None, log_file=None):
     sub_process_list = []
+    global logger
 
     if ".py" in main_file_run :
         ispython = 1
 
     if os_python_path is None : 
-      os_python_path = sys.executable
+        os_python_path = sys.executable
 
-
+    if log_file is not None :
+        logger = util_log.logger_setup(__name__,
+                                       log_file = log_file,
+                                       formatter= util_log.FORMATTER_4)
 
     for folder_i in task_folders:
         foldername = folder_i + suffix
@@ -100,7 +106,7 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
-        log("running process: " , ps.pid, main_file)
+        log("Sub-process, " , ps.pid, cmd)
         time.sleep( waitsleep )
 
     return sub_process_list
