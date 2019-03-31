@@ -3,6 +3,10 @@
 Batch utils
 
 
+    main.sh
+    main.py
+    
+
 """
 import os
 import shutil
@@ -52,42 +56,53 @@ def os_python_path():
 
 
 def os_folder_rename(old_folder, new_folder):
-    name = new_folder
-    if os.path.isdir(new_folder):
-        return os_folder_rename(old_folder,new_folder + str(random.randint(100, 999)))
+    try :
+       if os.path.isdir(new_folder):
+          new_folder = new_folder + str(random.randint(100, 999))
+       os.rename(old_folder, new_folder)
+       return new_folder
+    except Exception as e :
+       return old_folder    
 
-    os.rename(old_folder, new_folder)
-    return name
 
 def os_folder_create(folder):
     if not os.path.isdir(folder):
         os.makedirs(folder)
 
 
-def os_cmd_generate(task_folder):
+def os_cmd_generate(task_folder, os_python_path=None):
   """
    params.toml check
-
    otherwise default config is/main.py with current interpreter.
-    
-
-
+     main.sh 
+     main.py
+     
   """
-  pass
+  main_file =   os.path.join( task_folder ,  "main.sh" ) 
+  if os.path.isfile( main_file) :
+      cmd = [ main_file] 
+      return cmd
 
+  main_file =   os.path.join( task_folder ,  "main.py" ) 
+  if os.path.isfile( main_file) :
+      os_python_path = sys.executable if os_python_path is None else os_python_path
+      cmd = [os_python_path, main_file]  
+      return cmd
 
+      
 
-def os_wait_policy(waitsleep= 15 ):
+def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
     """
-      CPU usage is too high 
+      Wait when CPU/Mem  usage is too high 
     
     """
     from aapackage.batch import util_cpu
     cpu_pct, mem_pct =  util_cpu.ps_get_computer_resources_usage()
-    while cpu_pct > 95.0 or mem_pct > 90.0 :
+    while cpu_pct > cpu_max or mem_pct > mem_max :
         log("cpu,mem usage", cpu_pct, mem_pct)
         cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
         time.sleep( waitsleep)
+
 
 
 def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=7, 
@@ -110,8 +125,10 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
         foldername = folder_i + suffix
         foldername = os_folder_rename(old_folder= folder_i, new_folder= foldername)
 
-        main_file = os.path.join(foldername,  main_file_run )
-        cmd = [os_python_path, main_file]  if ispython else [ main_file]
+        # main_file = os.path.join(foldername,  main_file_run )
+        # cmd = [os_python_path, main_file]  if ispython else [ main_file]
+        cmd = os_cmd_generate(foldername, os_python_path)
+
 
         os_wait_policy(waitsleep= 15 )
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
@@ -133,7 +150,6 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
           hyperparams.csv
           ...
           :type hyperparam_file: str
-
 
     """
     hyper_parameter = pd.read_csv(hyperparam_file)
