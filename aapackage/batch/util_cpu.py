@@ -250,8 +250,9 @@ def ps_get_computer_resources_usage():
     cpu_used_percent = psutil.cpu_percent()
 
     mem_info = dict(psutil.virtual_memory()._asdict())
-    mem_used_percent = 100 - mem_info['available'] / mem_info['total']
-
+    # mem_used_percent = 100 - mem_info['available'] / mem_info['total']
+    mem_used_percent = mem_info['percent'] 
+    
     return cpu_used_percent, mem_used_percent
 
 

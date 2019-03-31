@@ -66,9 +66,6 @@ def loggerCall():
     return
 Since you said you wanted to send log messages from all your submodules to the same place, you should initialize the root logger and then simply use the message logging methods (along with setlevel() calls, as appropriate). Because there's no explicit handler for your submodule, logging.getLogger(__name__) will traverse the tree to the root, where it will find the handler you established in main.py.
 
-shareeditflag
-
-
 
 
 """

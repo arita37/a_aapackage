@@ -30,8 +30,6 @@ from aapackage import util_log
 
 
 
-
-
 ######### Logging ####################################################
 global logger
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
@@ -43,7 +41,7 @@ logger = util_log.logger_setup(__name__,
 def log(*argv):
     logger.info( ",".join( [  str(x) for x in argv  ]  ))
 
-log("Ok, test_log")
+# log("Ok, test_log")
 #####################################################################
 
 
@@ -79,7 +77,20 @@ def os_cmd_generate(task_folder):
 
 
 
-def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=5, 
+def os_wait_policy(waitsleep= 15 ):
+    """
+      CPU usage is too high 
+    
+    """
+    from aapackage.batch import util_cpu
+    cpu_pct, mem_pct =  util_cpu.ps_get_computer_resources_usage()
+    while cpu_pct > 95.0 or mem_pct > 90.0 :
+        log("cpu,mem usage", cpu_pct, mem_pct)
+        cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
+        time.sleep( waitsleep)
+
+
+def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=7, 
                        os_python_path=None, log_file=None):
     sub_process_list = []
     global logger
@@ -97,12 +108,12 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
 
     for folder_i in task_folders:
         foldername = folder_i + suffix
-        foldername = os_folder_rename(old_folder=folder_i, new_folder=foldername)
+        foldername = os_folder_rename(old_folder= folder_i, new_folder= foldername)
 
         main_file = os.path.join(foldername,  main_file_run )
         cmd = [os_python_path, main_file]  if ispython else [ main_file]
 
-
+        os_wait_policy(waitsleep= 15 )
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
