@@ -95,6 +95,8 @@ FORMATTER_4 = logging.Formatter( '%(asctime)s, %(process)d, %(filename)s,    %(m
 
 FORMATTER_5 = logging.Formatter( '%(asctime)s, %(process)d, %(pathname)s%(filename)s, %(funcName)s, %(lineno)s,  %(message)s'   )
 
+
+
 #LOG_FILE = "my_app.log"
 
 
@@ -111,6 +113,71 @@ def create_logfilename(filename ) :
 
 def create_uniqueid() :
    return arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
+
+
+########################################################################################
+################### Logger #############################################################
+def logger_setup(logger_name=None, log_file=None, formatter=FORMATTER_1, isrotate=False,
+                 isconsole_output=True, logging_level=logging.DEBUG):
+   """
+    my_logger = util_log.logger_setup("my module name", log_file="")
+    APP_ID    = util_log.create_appid(__file__ )
+    def log(*argv):
+      my_logger.info(",".join([str(x) for x in argv]))
+  
+   """
+   
+   if logger_name is None :
+       logger = logging.getLogger()  # Gets the root logger
+   
+   logger = logging.getLogger(logger_name)
+   logger.setLevel(logging_level)      # better to have too much log than not enough
+   
+   if isconsole_output :
+     logger.addHandler( logger_handler_console( formatter ) )
+
+   if log_file is not None :
+     logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file, isrotate=isrotate) )
+
+   # with this pattern, it's rarely necessary to propagate the error up to parent
+   logger.propagate = False
+   return logger
+
+
+def logger_handler_console(formatter=None ):
+   formatter = FORMATTER_1 if formatter is None else formatter
+   console_handler = logging.StreamHandler(sys.stdout)
+   console_handler.setFormatter( formatter )
+   return console_handler
+
+
+def logger_handler_file(isrotate=False, rotate_time='midnight', formatter=None, log_file_used=None):
+   formatter = FORMATTER_1 if formatter is None else formatter
+   log_file_used = LOG_FILE if log_file_used is None else log_file_used
+   if isrotate :
+     print("Rotate log", rotate_time)
+     fh = TimedRotatingFileHandler( log_file_used, when=rotate_time)
+     fh.setFormatter( formatter )
+     return fh
+   else :
+     fh = logging.FileHandler(log_file_used)
+     fh.setFormatter( formatter )
+     return fh
+
+
+
+
+def logger_setup2(name=__name__, level=None):
+    # logger defines
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter()
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    return logger
+
 
 
 ##########################################################################################
@@ -138,67 +205,3 @@ def writelog(m="", f=None):
     f = LOG_FILE if f is None else f
     with open(f, 'a') as _log:
         _log.write(m + "\n")
-
-
-########################################################################################
-################### Logger #############################################################
-def logger_setup(logger_name=None, log_file=None, formatter=FORMATTER_1, isrotate=False):
-   """
-    my_logger = util_log.logger_setup("my module name", log_file="")
-    APP_ID    = util_log.create_appid(__file__ )
-    def log( *argv) :
-       my_logger.debug( ",".join( [APP_ID, str(s1), str(s2), str(s3), str(s4), str(s5) ,
-                        str(s6), str(s7), str(s8), str(s9), str(s10)] ) )
-   """
-   
-   if logger_name is None :
-       logger = logging.getLogger()  # Gets the root logger
-   
-   logger = logging.getLogger(logger_name)
-   logger.setLevel(logging.DEBUG)      # better to have too much log than not enough
-   logger.addHandler( logger_handler_console( formatter ) )
-
-   if log_file is not None :
-     logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file, isrotate=isrotate) )
-
-   # with this pattern, it's rarely necessary to propagate the error up to parent
-   logger.propagate = False
-   return logger
-
-
-def logger_setup2(name=__name__, level=None):
-    # logger defines
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter()
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    return logger
-
-
-def logger_handler_console(formatter=None ):
-   formatter = FORMATTER_1 if formatter is None else formatter
-   console_handler = logging.StreamHandler(sys.stdout)
-   console_handler.setFormatter( formatter )
-   return console_handler
-
-
-def logger_handler_file(isrotate=False, rotate_time='midnight', formatter=None, log_file_used=None):
-   formatter = FORMATTER_1 if formatter is None else formatter
-   log_file_used = LOG_FILE if log_file_used is None else log_file_used
-   if isrotate :
-     print("Rotate")
-     fh = TimedRotatingFileHandler( log_file_used, when=rotate_time)
-     fh.setFormatter( formatter )
-     return fh
-   else :
-     fh = logging.FileHandler(log_file_used)
-     fh.setFormatter( formatter )
-     return fh
-
-
-
-
-
