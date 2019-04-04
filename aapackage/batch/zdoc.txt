@@ -1,4 +1,62 @@
 ###############################################################################
+Improvements
+1)
+util_cpu.ps_find_procs_by_name(
+
+Use RegEx to find this pattern 
+    "*tasks/*main.py"    or    "*tasks/*main.sh"
+
+
+batch_daemon_launch_cli.py can DIE before batch_daemon_monitor_cli.py,
+so we cannot use reference
+Better to have loose couplings before both
+
+
+
+2)  
+Improve ressource monitoring *
+main.py can also launch further subprocesses ....
+
+
+
+
+3) Create AMI or Snapshot on the same instance linux.  (without reboot)
+https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
+(ie in the case instance is launched from Spot Instance )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+source activate py36
+
+cd /home/ubuntu/
+
+batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode daemon  --waitsec 60  &
+
+sleep 3
+
+batch_daemon_monitor_cli.py --monitor_log_file zlog/process_log_file.log   --log_file zlog/batchdaemon_monitor.log    --mode daemon   --waitsec 20
+
+
+
+
+
+
+
+
+###############################################################################
 batch_daemon_launch_cli.py
    scans sub-folder in /tasks/
       and execute  /tasks/taskXXXX/main.py in that folder

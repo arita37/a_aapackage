@@ -45,12 +45,11 @@ def log(*argv):
 
 def load_arguments():
   parser = argparse.ArgumentParser()
-  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
-  parser.add_argument("--log_file", default="logfile_batchdaemon.log", help=".")
-  parser.add_argument("--log_file_task", default="logfile_batchdaemon_task.log", help=".")
-  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
+  parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
+  parser.add_argument("--log_file",          default="logfile_batchdaemon.log", help=".")
+  parser.add_argument("--log_file_task",     default="logfile_batchdaemon_task.log", help=".")
+  parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")
   parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
-
   options = parser.parse_args()
   return options
 
@@ -79,8 +78,8 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
 
 
 
-################################################################################
-################################################################################
+####################################################################################################
+####################################################################################################
 if __name__ == '__main__':
   args = load_arguments()
   logger = util_log.logger_setup(__name__,

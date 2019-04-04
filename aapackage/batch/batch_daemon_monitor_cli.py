@@ -4,18 +4,15 @@
   monitor subprocess launched by batch_daemon_laucnh_cli.py
   when task is finished, rename folder to _qdone
 
- util_cpu.ps_find_procs_by_name( name="python", cmdline="tasks/" )
+  util_cpu.ps_find_procs_by_name( name="python", cmdline="tasks/" )
                                      
                                      
 batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_file monitor_log_file.log   --log_file   zlog/batchdaemon_monitor.log    --mode daemon 
- 
- 
- 
  _qstart
  _qdone
  
  
-                                                       
+
 '''
 import os, sys
 import argparse

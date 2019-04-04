@@ -107,7 +107,8 @@ def batch_result_retrieve(folder_remote, folder_local, host):
 
 
   """"
-  pass
+  ssh = util_aws.aws_ec2_ssh(hostname=host)
+  ssh.get_all(fromfolder, tofolder)
 
 
 
