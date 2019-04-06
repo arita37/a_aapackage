@@ -30,6 +30,42 @@ https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
 
 
 
+###############################################################################
+#######  Cloud9 usage #########################################################
+### DO NOT restart the instance 
+source activate py36
+which python
+which conda
+
+
+
+zbatch.sh   : Launch the processes
+zbatch_kill :  Kill the 2 processes
+
+
+cd  /home/ubuntu/aagit/aapackage/batch     #Root of github repo
+
+
+/home/ubuntu/tasks      :   Folder of the tasks
+/home/ubuntu/zlog       :   Folder of the logs
+/home/ubuntu/tasks_out  :   Folder of the tasks out
+
+
+git add --all 
+git commit -m "your msg"
+
+
+topc    : Show all python processes running
+
+
+
+
+
+
+
+
+
+
 
 
 

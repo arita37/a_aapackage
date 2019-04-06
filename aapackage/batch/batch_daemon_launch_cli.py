@@ -72,15 +72,10 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
 
 
 
-
-
-
-
-
-
 ####################################################################################################
 ####################################################################################################
-if __name__ == '__main__':
+def main():
+  """ Driver utility for the script."""
   args = load_arguments()
   logger = util_log.logger_setup(__name__,
                                  log_file=args.log_file,
@@ -92,7 +87,7 @@ if __name__ == '__main__':
     log("Daemon new loop", args.task_folder)
     folders = get_list_valid_task_folder(args.task_folder)
 
-    if len(folders) > 0:
+    if folders :
       log("task folder:", folders)
       pid_list = util_batch.batch_run_infolder(task_folders=folders,
                                                log_file= args.log_file)
@@ -103,6 +98,14 @@ if __name__ == '__main__':
       break
 
     sleep(args.waitsec)
+
+
+
+
+if __name__ == '__main__':
+   main()
+
+
 
 
 """
