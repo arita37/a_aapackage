@@ -1,5 +1,5 @@
 ###############################################################################
-Improvements
+Improvements toDO list
 1)
 util_cpu.ps_find_procs_by_name(
 
@@ -26,10 +26,22 @@ https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
 
 
 
+4)
 
 
 
 
+5)   
+
+
+
+
+
+
+
+
+
+###############################################################################
 ###############################################################################
 #######  Cloud9 usage #########################################################
 ### DO NOT restart the instance 
@@ -57,6 +69,8 @@ git commit -m "your msg"
 
 topc    : Show all python processes running
 
+gitpush :   send to github
+gitpull :   get from github
 
 
 
@@ -66,15 +80,8 @@ topc    : Show all python processes running
 
 
 
-
-
-
-
-
-
-
-
-
+###############################################################################
+###############################################################################
 source activate py36
 
 cd /home/ubuntu/
