@@ -104,7 +104,7 @@ def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
 
 
 
-def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitsleep=7, 
+def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitime=7, 
                        os_python_path=None, log_file=None):
     sub_process_list = []
     global logger
@@ -134,14 +134,14 @@ def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", 
         sub_process_list.append(ps.pid)
 
         log("Sub-process, " , ps.pid, cmd)
-        time.sleep( waitsleep )
+        time.sleep( waitime )
 
     return sub_process_list
 
 
 
 
-def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
+def batch_parallel_subprocess(hyperparam_file, subprocess_script, os_python_path=None, waitime=5):
     """
     task/
           main.py
@@ -152,26 +152,26 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, waitime=5):
 
     """
     hyper_parameter = pd.read_csv(hyperparam_file)
-    PYTHON_COMMAND = sys.executable
+    PYTHON_PATH     = sys.executable if os_python_path is None else os_python_path
+    ispython        = 1 if ".py" in subprocess_script else 0
 
-    if ".py" in subprocess_script :
-        ispython = 1
-
+        
     # Start process launch
     subprocess_list = []
     for ii in range(0, len(hyper_parameter) ):
         if ispython :
-          cmd = [PYTHON_COMMAND, subprocess_script, "--hyperparam_ii=%d" % ii]
+          cmd = [PYTHON_PATH, subprocess_script, "--hyperparam_ii=%d" % ii]
         else :
           cmd = [subprocess_script,  ii]
 
+
         ps = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         log("Subprocess started ", ps.pid)
-        subprocess_list.append(ps.pid)
+        subprocess_list.append( ps.pid )
         time.sleep(waitime)
         # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
 
-    util_cpu.ps_wait_process_completion(subprocess_list)
+    # util_cpu.ps_wait_process_completion(subprocess_list)
 
 
 
@@ -209,6 +209,13 @@ https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSe
 
   #df.to_csv( file_hyper )
   return 1
+
+
+
+
+
+
+
 
 
 

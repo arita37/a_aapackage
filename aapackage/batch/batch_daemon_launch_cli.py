@@ -45,7 +45,7 @@ def log(*argv):
 
 def load_arguments():
   parser = argparse.ArgumentParser()
-  parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="Absolute or relative path to the working folder.")
+  parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="path to task folder.")
   parser.add_argument("--log_file",          default="logfile_batchdaemon.log", help=".")
   parser.add_argument("--log_file_task",     default="logfile_batchdaemon_task.log", help=".")
   parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")

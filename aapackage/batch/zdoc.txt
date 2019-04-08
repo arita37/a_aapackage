@@ -13,7 +13,12 @@ Better to have loose couplings before both
 
 
 2)  
-Organize better test results.
+Organize better test results for the whole packages.
+
+
+
+3) 
+
 
 
 

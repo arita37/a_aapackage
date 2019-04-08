@@ -37,10 +37,10 @@ MONITOR_LOG_FOLDER = os.path.join(WORKING_FOLDER, "ztest", "monitor_logs")
 MONITOR_LOG_FILE = MONITOR_LOG_FOLDER + "/" + "batch_monitor_" + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss") + ".log"
 
 
-DEFAULT_INTERVAL = 30  # seconds
-DEFAULT_DURATION = 3600  # seconds
-PYTHON_COMMAND   = str(sys.executable)
-PROCESS_TO_LOOK  = "python"
+# DEFAULT_INTERVAL = 30  # seconds
+# DEFAULT_DURATION = 3600  # seconds
+# PYTHON_COMMAND   = str(sys.executable)
+# PROCESS_TO_LOOK  = "python"
 
 
 ####################################################################################################
@@ -140,6 +140,11 @@ if __name__ == '__main__':
          log("Monitor daemon exited")  
          break
       sleep(args.waitsec)
+
+
+
+
+
 
 
 
