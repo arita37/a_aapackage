@@ -12,10 +12,9 @@ so we cannot use reference
 Better to have loose couplings before both
 
 
-
 2)  
-Improve ressource monitoring *
-main.py can also launch further subprocesses ....
+Organize better test results.
+
 
 
 
