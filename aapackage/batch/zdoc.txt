@@ -1,9 +1,59 @@
+################################################################
+###### Architecture
+batch_daemon_launch_cli : Launch main.py from /tasks/xxx/ folder.
+batch_daemon_monitor_cli : monitor the process launched from /tasks/
 
-Share one drive for all the tasks.
-
-Pb of concurrency on one task folder.
+1 task is ONE folder containing main.py or main.sh
 
 
+Distributed version :
+   Instances are spot launched from one standard AMI, share a common drive W,
+   based on instance template.
+   Each instance launch automatically batch_dameon_launch_cli, batch_dameon_monitor_cli
+   
+
+   Common drive W contains 3 folders  :
+         /tasks/      :  folder
+         /tasks_out/  :  output of task
+         /zlog/
+
+
+Auto-Scale :  
+   batch_daemon_autoscale_cli.py (ONLY on master instance)
+   Some basic rules like :
+       nb_task_remaining > 10    AND   nb_CPU_available < 10 
+          start new spot Instance  by AWS CLI.
+
+       nb_task_remaining = 0 for last 5mins : 
+          stop instance  by AWS CLI.
+          
+         
+
+################################################################
+Improvements toDO list
+1) 
+util_cpu.ps_find_procs_by_name(
+
+Use RegEx to find this pattern 
+"*tasks/*main.py" 
+or "*tasks/*main.sh"
+
+batch_daemon_launch_cli.py can DIE before batch_daemon_monitor_cli.py,
+so we cannot use reference
+Better to have loose couplings before both
+
+
+
+
+2) 
+
+
+
+
+
+3) Create AMI or Snapshot on the same instance linux. (without reboot)
+https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
+(ie in the case instance is launched from Spot Instance )
 
 
 
