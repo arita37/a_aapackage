@@ -65,8 +65,9 @@ Better to have loose couplings before both
     When launching new instance how to pick the latest volume snapshot ???
     
     Or maybe use S3 as disk storage ????
-
-
+    https://cloud.netapp.com/blog/amazon-s3-as-a-file-system
+    and create AMI snapshot
+    
 
 
 3) Create
