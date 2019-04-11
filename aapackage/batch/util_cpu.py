@@ -9,6 +9,7 @@ Maintain same level of processors over time.
 
 '''
 import argparse
+import re
 import copy
 import csv
 import logging
@@ -267,17 +268,23 @@ def str_match(s1, s2) :
         
 
 
-def ps_find_procs_by_name(name, ishow=1, cmdline=None, cmdline2=None):
+def ps_find_procs_by_name(name=r'.*tasks.*main\.(py|sh)', ishow=1, cmdline=None, cmdline2=None):
     "Return a list of processes matching 'name'."
     ls = []
     for p in psutil.process_iter(['pid', "name", "exe", "cmdline"]):
-        if name.lower() in p.info['name'].lower():
-            if str_match( cmdline, p.info['cmdline']) :
-              if str_match( cmdline2, p.info['cmdline']) :
-                    ls.append( {"pid": p.info["pid"], "cmdline" : p.info['cmdline'] 
-                                })
-            else:
-                pass
+        if re.match(name, ' '.join(p.info['cmdline']) if p.info['cmdline'] else '', re.I):
+            ls.append({
+                "pid": p.info["pid"],
+                "cmdline" : p.info['cmdline'] 
+            })
+            # if str_match(cmdline, p.info['cmdline']):
+            #   if str_match(cmdline2, p.info['cmdline']):
+            #         ls.append({
+            #             "pid": p.info["pid"],
+            #             "cmdline" : p.info['cmdline'] 
+            #         })
+            # else:
+            #     pass
 
             if ishow == 1:
                 log("Monitor", p.pid, ' '.join(p.info['cmdline']))
