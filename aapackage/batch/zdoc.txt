@@ -52,27 +52,48 @@ Use RegEx to find this pattern
 or "*tasks/*main.sh"
 
 batch_daemon_launch_cli.py can DIE before batch_daemon_monitor_cli.py,
-so we cannot use reference
-Better to have loose couplings before both
+so we cannot use reference. Better to have loose couplings 
+Ajey: Better to use system services like systemctl on ubuntu like systems.
+yaki : Lets go for regex fitlering (logic is in the code, easier) 
+       
+       
 
 
-
-
-2) Dynamically mount common volume w  to current instance :
-   Using latest snapshot of the volume.
-   
-    One issue is the volume is saved by snapshot....
-    When launching new instance how to pick the latest volume snapshot ???
-    
-    Or maybe use S3 as disk storage ????
-    https://cloud.netapp.com/blog/amazon-s3-as-a-file-system
-    and create AMI snapshot
-    
-
-
-3) Create
+2) Create
     batch_daemon_autoscale_cli.py
     Launch Spot Template / kill instance based on simple rules.
+    Ajey: Rules are coded as part of the code, not read from configuration.
+    Current condition launch a spot instance if number of tasks to be launced
+    is more than 10 and number of CPUs less than 10 
+    yaki :  yes, rules are Hard coded in the code.
+            You can create simple Spot template from AMI.
+            
+            S3 was mounted as drive on /home/ubuntu\zs3drive/
+    
+
+
+### No need
+3) Dynamically mount common volume w  to current instance :
+   Using latest snapshot of the volume.
+   
+     ---> S3 was mounted as drive on
+        /home/ubuntu\zs3drive/
+        You can use it.
+        
+       We cannot drive too much intensive write/log.
+       but, for batch write, read ,this is ok.
+   
+
+    
+
+
+
+
+    
+
+4) Clean the code of /batch/
+    Ajey: let's target one file at a time, becoz the scope is very broad.
+    yaki : /zarchive  /ztest can be removed.
     
 
 
@@ -198,6 +219,20 @@ main.py
 
 
 
+    One issue is the volume is saved by snapshot....
+    When launching new instance how to pick the latest volume snapshot ???
+    Ajey: Get the latest list of snapshots and use the latest one
+    Yaki : There is issue of on-going writing.... 
+           Look like very very difficult topic....
+           
+    
+    Or maybe use S3 as disk storage ????
+    https://cloud.netapp.com/blog/amazon-s3-as-a-file-system
+    https://github.com/kahing/goofys
+    https://objectivefs.com/why
+    and create AMI snapshot
+    Ajey: Havent tried this.
+    
 
 
 
