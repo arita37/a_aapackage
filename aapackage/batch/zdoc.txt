@@ -76,6 +76,8 @@ yaki : Lets go for regex fitlering (logic is in the code, easier)
     Image: ami-005c8c01a65e8ada0
 
 
+     Need to test concurrency on S3....
+
 
 4) Clean the code of /batch/
     Ajey: let's target one file at a time, becoz the scope is very broad.
