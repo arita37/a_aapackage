@@ -1,4 +1,4 @@
-################################################################
+################################################################################
 ###### Architecture
 batch_daemon_launch_cli : Launch main.py from /tasks/xxx/ folder.
 batch_daemon_monitor_cli : monitor the process launched from /tasks/
@@ -7,7 +7,7 @@ batch_daemon_monitor_cli : monitor the process launched from /tasks/
 
 
 Distributed version :
-   Instances are spot launched from one standard AMI, share a common drive W,
+   Instances are spot launched from one standard AMI, share a common volume W,
    based on instance template.
    Each instance launch automatically batch_dameon_launch_cli, batch_dameon_monitor_cli
    
@@ -27,9 +27,16 @@ Auto-Scale :
        nb_task_remaining = 0 for last 5mins : 
           stop instance  by AWS CLI.
           
+
+Instance :
+  Instance are launched by AMI or instance template.
+  Instance have 2 volumes :   
+       root volume where conda, python, .... are installed.
+       share volume W where tasks are stored.
+
          
 
-################################################################
+##############################################################################
 Improvements toDO list
 1) 
 util_cpu.ps_find_procs_by_name(
@@ -45,67 +52,21 @@ Better to have loose couplings before both
 
 
 
-2) Create
+2) Dynamically mount common volume w  to current instance :
+   Using latest snapshot of the volume.
+   
+    One issue is the volume is saved by snapshot....
+    When launching new instance how to pick the latest volume snapshot ???
+    
+    Or maybe use S3 as disk storage ????
+
+
+
+
+3) Create
     batch_daemon_autoscale_cli.py
+    Launch Spot Template / kill instance based on simple rules.
     
-    
-    
-    
-    
-
-
-
-
-
-3) Create AMI or Snapshot on the same instance linux. (without reboot)
-https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
-(ie in the case instance is launched from Spot Instance )
-
-
-
-
-###############################################################################
-Improvements toDO list
-1)
-util_cpu.ps_find_procs_by_name(
-
-Use RegEx to find this pattern 
-    "*tasks/*main.py"    or    "*tasks/*main.sh"
-
-
-batch_daemon_launch_cli.py can DIE before batch_daemon_monitor_cli.py,
-so we cannot use reference
-Better to have loose couplings before both
-
-
-2)  
-Organize better test results for the whole packages.
-
-
-
-3) 
-
-
-
-
-
-
-3) Create AMI or Snapshot on the same instance linux.  (without reboot)
-https://docs.aws.amazon.com/cli/latest/userguide/install-linux.html
-(ie in the case instance is launched from Spot Instance )
-
-
-
-4)
-
-
-
-
-5)   
-
-
-
-
 
 
 
@@ -125,7 +86,11 @@ zbatch.sh   : Launch the processes
 zbatch_kill :  Kill the 2 processes
 
 
+
 cd  /home/ubuntu/aagit/aapackage/batch     #Root of github repo
+aapackage was installed in py36 conda env by :
+pip install -e  .   (editable + packaging)
+
 
 
 /home/ubuntu/tasks      :   Folder of the tasks
@@ -141,6 +106,9 @@ topc    : Show all python processes running
 
 gitpush :   send to github
 gitpull :   get from github
+
+
+
 
 
 
@@ -184,14 +152,6 @@ batch_local_aws_cli.py
   and send task to aws folders
   and run on aws batch_monitor
   retrieve from aws to local
-
-
-
-
-
-
-
-
 
 
 
