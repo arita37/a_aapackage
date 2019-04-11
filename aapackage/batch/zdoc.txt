@@ -40,8 +40,7 @@ Stop   daemon :  cd /home/ubuntu/ && /home/ubuntu/zbatch_kill.sh
 
 
          
-         
-
+        
 ##############################################################################
 Improvements toDO list
 1) 
@@ -57,44 +56,50 @@ Ajey: Better to use system services like systemctl on ubuntu like systems.
 yaki : Lets go for regex fitlering (logic is in the code, easier) 
        
        
-
-
 2) Create
     batch_daemon_autoscale_cli.py
     Launch Spot Template / kill instance based on simple rules.
     Ajey: Rules are coded as part of the code, not read from configuration.
-    Current condition launch a spot instance if number of tasks to be launced
-    is more than 10 and number of CPUs less than 10 
+          Some basic rules like :
+       nb_task_remaining > 10    AND   nb_CPU_available < 10 
+          start new spot Instance  by AWS CLI.
+
+       nb_task_remaining = 0 for last 5mins : 
+          stop instance  by AWS CLI from master instance
+          
     yaki :  yes, rules are Hard coded in the code.
             You can create simple Spot template from AMI.
             
             S3 was mounted as drive on /home/ubuntu\zs3drive/
-    
+
+    AMI to use for launching Spot
+    Image: ami-005c8c01a65e8ada0
 
 
-### No need
-3) Dynamically mount common volume w  to current instance :
-   Using latest snapshot of the volume.
-   
-     ---> S3 was mounted as drive on
-        /home/ubuntu\zs3drive/
-        You can use it.
-        
-       We cannot drive too much intensive write/log.
-       but, for batch write, read ,this is ok.
-   
-
-    
-
-
-
-
-    
 
 4) Clean the code of /batch/
     Ajey: let's target one file at a time, becoz the scope is very broad.
     yaki : /zarchive  /ztest can be removed.
-    
+
+
+
+
+####
+https://www.ec2instances.info/?min_vcpus=8&region=us-west-2
+a1.2xlarge  8cpu  0.128500 h
+m5a.2xlarge  8cpu   0.13 USD
+c5.4xlarge    16cpu   0.25 usd 
+c5.9xlarge    36cpu   0.57 usd
+m5a.12xlarge  40cpu   0.80usd
+
+
+
+
+
+
+
+
+
 
 
 
@@ -215,6 +220,20 @@ main.py
 
 
 
+
+### No need
+3) Dynamically mount common volume w  to current instance :
+   Using latest snapshot of the volume.
+   
+     ---> S3 was mounted as drive on
+        /home/ubuntu\zs3drive/
+        You can use it.
+        
+       We cannot drive too much intensive write/log.
+       but, for batch write, read ,this is ok.
+   
+
+    
 
 
 
