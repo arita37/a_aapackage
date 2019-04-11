@@ -1,9 +1,9 @@
-################################################################################
+###############################################################################
 ###### Architecture
 batch_daemon_launch_cli : Launch main.py from /tasks/xxx/ folder.
 batch_daemon_monitor_cli : monitor the process launched from /tasks/
 
-1 task is ONE folder containing main.py or main.sh
+1 task is ONE folder in /tasks/ containing main.py or main.sh
 
 
 Distributed version :
@@ -34,6 +34,12 @@ Instance :
        root volume where conda, python, .... are installed.
        share volume W where tasks are stored.
 
+
+Launch daemon :  cd /home/ubuntu/ && nohup  /home/ubuntu/zbatch.sh  >/dev/null 2>&1 &
+Stop   daemon :  cd /home/ubuntu/ && /home/ubuntu/zbatch_kill.sh 
+
+
+         
          
 
 ##############################################################################
@@ -81,13 +87,12 @@ which python
 which conda
 
 
-
-zbatch.sh   : Launch the processes
+zbatch.sh   : Launch the daemon processes
 zbatch_kill :  Kill the 2 processes
 
 
-
-cd  /home/ubuntu/aagit/aapackage/batch     #Root of github repo
+#Root of github repo
+cd  /home/ubuntu/aagit/aapackage/batch    
 aapackage was installed in py36 conda env by :
 pip install -e  .   (editable + packaging)
 
@@ -129,8 +134,6 @@ batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong
 sleep 3
 
 batch_daemon_monitor_cli.py --monitor_log_file zlog/process_log_file.log   --log_file zlog/batchdaemon_monitor.log    --mode daemon   --waitsec 20
-
-
 
 
 
