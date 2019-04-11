@@ -126,8 +126,9 @@ def logger_setup(logger_name=None, log_file=None, formatter=FORMATTER_1, isrotat
    
    if logger_name is None :
        logger = logging.getLogger()  # Gets the root logger
+   else :
+       logger = logging.getLogger(logger_name)
    
-   logger = logging.getLogger(logger_name)
    logger.setLevel(logging_level)      # better to have too much log than not enough
    
    if isconsole_output :

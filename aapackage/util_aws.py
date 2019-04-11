@@ -994,10 +994,9 @@ if __name__ == '__main__' :
   
   arg0 = ppa.parse_args()
 
-  EC2_CONN = aws_conn_create_windows()
 
 
-if __name__ == '__main__' and arg0.do == "start_spot"  :
+if __name__ == '__main__' and arg0.do == "start_spot_windows"  :
   # :\_devs\Python01\aws\aapackage\
   # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
   print(arg0.do)
@@ -1010,6 +1009,7 @@ if __name__ == '__main__' and arg0.do == "start_spot"  :
   os.system( ss )
   sleep2(65)
 
+  EC2_CONN = aws_conn_create_windows()
   ec2_list = aws_ec2_get_instances(EC2_CONN, csv_filename="zz_ec2_instance.csv")
   print(ec2_list)
 
@@ -1019,6 +1019,7 @@ if __name__ == '__main__' and arg0.do == "start_spot"  :
        ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
        ss += ' "http://' +  x["ip_address"] + ':8888/tree#notebooks"  '
        os.system( ss )
+
 
 
 

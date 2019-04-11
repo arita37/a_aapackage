@@ -16,8 +16,20 @@
          
   
 
+ss  = 'aws ec2 request-spot-instances   --region us-west-2  --spot-price "0.55" --instance-count 1 '
+ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
 
+
+util_aws
+  
 
 
 
 '''
+import os,sys
+
+from aapackage import util_aws
+
+
+
+

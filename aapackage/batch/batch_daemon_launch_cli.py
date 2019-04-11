@@ -35,6 +35,7 @@ from aapackage.batch import util_cpu
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
 #TASK_FOLDER_DEFAULT = os.getcwd()
+global logger
 logger = logging.basicConfig()
 
 
@@ -63,7 +64,7 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
     for filename in files:
       if filename == script_name and \
           "_qstart" not in root_splits[-1] and \
-          "_qdone" not in root_splits[-1] and \
+          "_qdone"  not in root_splits[-1] and \
           "_ignore" not in root_splits[-1]:
         valid_folders.append(root)
 
@@ -76,6 +77,7 @@ def get_list_valid_task_folder(folder, script_name="main.py"):
 ####################################################################################################
 def main():
   """ Driver utility for the script."""
+  global logger
   args = load_arguments()
   logger = util_log.logger_setup(__name__,
                                  log_file=args.log_file,

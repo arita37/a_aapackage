@@ -269,7 +269,10 @@ def str_match(s1, s2) :
 
 
 def ps_find_procs_by_name(name=r'.*tasks.*main\.(py|sh)', ishow=1, cmdline=None, cmdline2=None):
-    "Return a list of processes matching 'name'."
+    """Return a list of processes matching 'name'.
+        /tasks/*main.py 
+    
+    """"
     ls = []
     for p in psutil.process_iter(['pid', "name", "exe", "cmdline"]):
         if re.match(name, ' '.join(p.info['cmdline']) if p.info['cmdline'] else '', re.I):
