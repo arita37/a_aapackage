@@ -45,7 +45,13 @@ Better to have loose couplings before both
 
 
 
-2) 
+2) Create
+    batch_daemon_autoscale_cli.py
+    
+    
+    
+    
+    
 
 
 
