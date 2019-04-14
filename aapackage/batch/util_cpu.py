@@ -38,30 +38,7 @@ VERSION = 1
 
 
 
-
 #############Variable #########################################################
-"""
-[  arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,  
-   arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
-     str(random.randrange(1000))])
-# DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
-
-"""
-_DEFAULT_STATS_UPDATE_INTERVAL = 5
-_IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
-_OS_DISK = None
-_USER_DISK = None
-
-if _IS_PLATFORM_WINDOWS:
-    _OS_DISK = 'C:/' # This is inverted on Cloud service
-    _USER_DISK = 'D:/'
-else:
-    _OS_DISK = "/"
-    _USER_DISK = '/mnt/resources'
-    if not os.path.exists(_USER_DISK):
-        _USER_DISK = '/mnt'
-
-
 
 ######### Logging ##############################################################
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
@@ -197,7 +174,6 @@ def ps_get_cpu_percent(process):
         return process.get_cpu_percent()
 
 
-
 def ps_get_memory_percent(process):
     try:
         return process.memory_info()
@@ -266,28 +242,29 @@ def str_match(s1, s2) :
         
 
 
-
-
-def ps_find_procs_by_name(name=r'.*tasks.*main\.(py|sh)', ishow=1, cmdline=None, isregex=True):
+def ps_find_procs_by_name(name=r'((.*/)?tasks.*/t.*/main\.(py|sh))', ishow=1, cmdline=None, isregex=True):
     """ Return a list of processes matching 'name'.
         Regex (./tasks./t./main.(py|sh)|tasks./t.*/main.(py|sh))
+        Condensed Regex to:
+        ((.*/)?tasks.*/t.*/main\.(py|sh)) - make the characters before 'tasks' optional group.
       
     """
     ls = []
     for p in psutil.process_iter(['pid', "name", "exe", "cmdline"]):
-        if isregex :
-          flag = re.match(name, ' '.join(p.info['cmdline']) if p.info['cmdline'] else '', re.I)
-        else :
-          flag = name in ' '.join(p.info['cmdline'])       
-        
+        cmdline = ' '.join(p.info['cmdline']) if p.info['cmdline'] else ''
+        if isregex:
+            flag = re.match(name, cmdline, re.I)
+        else:
+            flag = name and name.lower() in cmdline.lower()
+
         if flag:
             ls.append({
                 "pid": p.info["pid"],
-                "cmdline" : p.info['cmdline'] 
+                "cmdline" : cmdline
             })
             
             if ishow == 1:
-                log("Monitor", p.pid, ' '.join(p.info['cmdline']))
+                log("Monitor", p.pid, cmdline)
     return ls
 
 
@@ -468,6 +445,30 @@ def monitor_maintain():
 
 ############ AZURE NODE #################################################################
 #########################################################################################
+"""
+[  arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,  
+   arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
+     str(random.randrange(1000))])
+# DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
+
+"""
+_DEFAULT_STATS_UPDATE_INTERVAL = 5
+_OS_DISK = None
+_USER_DISK = None
+"""
+_IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
+if _IS_PLATFORM_WINDOWS:
+    _OS_DISK = 'C:/' # This is inverted on Cloud service
+    _USER_DISK = 'D:/'
+else:
+    _OS_DISK = "/"
+    _USER_DISK = '/mnt/resources'
+    if not os.path.exists(_USER_DISK):
+        _USER_DISK = '/mnt'
+"""
+
+
+
 def os_python_environment():    # pragma: no cover
     return ' '.join([platform.python_implementation(), platform.python_version()])
 
