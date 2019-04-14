@@ -34,6 +34,7 @@ import arrow
 from aapackage import util_log
 
 ############# Root folder #####################################################
+VERSION = 1
 
 
 
@@ -43,13 +44,10 @@ from aapackage import util_log
 [  arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,  
    arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
      str(random.randrange(1000))])
-"""
-VERSION = 1
-
 # DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
+"""
 _DEFAULT_STATS_UPDATE_INTERVAL = 5
-
 _IS_PLATFORM_WINDOWS = platform.system() == 'Windows'
 _OS_DISK = None
 _USER_DISK = None
