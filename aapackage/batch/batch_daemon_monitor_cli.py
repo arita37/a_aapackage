@@ -36,8 +36,6 @@ from aapackage.batch import util_cpu
 
 
 ############### Variable definition ################################################################
-# WORKING_FOLDER = os.path.dirname(__file__)
-#MONITOR_LOG_FOLDER = os.path.join(WORKING_FOLDER, "ztest", "monitor_logs")
 # MONITOR_LOG_FILE = MONITOR_LOG_FOLDER + "/" + "batch_monitor_" + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss") + ".log"
 CWD_FOLDER = os.getcwd()
 
@@ -56,13 +54,12 @@ def logcpu(*argv):
 
 ####################################################################################################
 def load_arguments():
-    parser = argparse.ArgumentParser(  description='Record CPU and memory usage for a process')
+    parser = argparse.ArgumentParser(  description='Monitor python process from tasks')
     parser.add_argument("--verbose", default=0, help="verbose")      
     parser.add_argument('--log_file', type=str, default=CWD_FOLDER + "log_batchdaemon_monitor.log",help='daemon log')
     parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
     
     parser.add_argument('--monitor_log_file', type=str, default=CWD_FOLDER + "log_batchdaemon_cpu.log",  help='output the statistics ')
-    # parser.add_argument('--duration',         type=float,  help='how long to record in secs.')
     parser.add_argument("--process_folder", default="/home/ubuntu/tasks/", help="process name pattern")
     parser.add_argument("--process_isregex", default=1, help="process name pattern regex")    
     parser.add_argument("--waitsec", type=int, default=10, help="sleep")
@@ -87,7 +84,7 @@ if __name__ == '__main__':
 
     batch_pid_dict = {}
     p_pattern = args.process_folder
-    p_pattern = p_pattern[:-1] if p_pattern and p_pattern.endswith('/') else p_pattern
+    p_pattern = p_pattern[:-1] if  p_pattern.endswith('/') else p_pattern
     
     #  /tasks/t53453/main.py   or /tasks/t53453/main.sh  
     regex_pattern = r'((.*/)?%s/t.*/main\.(py|sh))' % p_pattern
