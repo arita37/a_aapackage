@@ -243,7 +243,7 @@ def str_match(s1, s2) :
 
 
 def ps_find_procs_by_name(name=r'((.*/)?tasks.*/t.*/main\.(py|sh))',
-                          ishow=1, isregex=True):
+                          ishow=1, isregex=1):
     """ Return a list of processes matching 'name'.
         Regex (./tasks./t./main.(py|sh)|tasks./t.*/main.(py|sh))
         Condensed Regex to:
@@ -264,7 +264,7 @@ def ps_find_procs_by_name(name=r'((.*/)?tasks.*/t.*/main\.(py|sh))',
                 "cmdline" : cmdline
             })
             
-            if ishow == 1:
+            if ishow > 0:
                 log("Monitor", p.pid, cmdline)
     return ls
 
