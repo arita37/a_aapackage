@@ -91,12 +91,17 @@ if __name__ == '__main__':
 
 
     batch_pid_dict = {}
-    log("Monitor started.")   
+    process_pattern = args.process_pattern
+    process_pattern = process_pattern[:-1] if process_pattern and \
+      process_pattern.endswith('/') else ''
+    regex_pattern = r'((.*/)?%s/t.*/main\.(py|sh))' % process_pattern
+    log("Monitor started, regex: ", regex_pattern)
     logcpu("Process monitor started", "", "" )
     while True :
-      batch_pid = util_cpu.ps_find_procs_by_name( name= "python", ishow=0,
-                                                  cmdline= args.process_pattern )
-
+      # batch_pid = util_cpu.ps_find_procs_by_name(name= "python", ishow=0,
+      #                                            cmdline= args.process_pattern )
+      batch_pid = util_cpu.ps_find_procs_by_name(name=regex_pattern, ishow=1,
+                                                 isregex=True)
       # Add new PID
       for pid in batch_pid :
          if pid["pid"] not in batch_pid_dict and len( pid["cmdline"] ) > 0 :
