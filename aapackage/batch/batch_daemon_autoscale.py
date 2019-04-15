@@ -100,12 +100,11 @@ from aapackage import util_aws
 global logger
 logger = logging.basicConfig()
 
-
-################################################################################
 def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
 
+################################################################################
 def load_arguments():
   parser = argparse.ArgumentParser()
   parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="path to task folder.")
@@ -118,6 +117,7 @@ def load_arguments():
   return options
 
 
+################################################################################
 def start_rule() :
     pass
 
@@ -125,6 +125,17 @@ def start_rule() :
 def stop_rule() :
     pass
 
+
+
+def ec2_instance_usage(instance_id=None, ipadress=None):
+    """
+    https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
+    
+    https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
+    
+    """
+    
+    
 
 def ec2_spot_start(instance_type ):
     """
@@ -136,6 +147,8 @@ def ec2_spot_start(instance_type ):
     ss += ' --type "one-time" --launch-specification "file://ec2_spot_t3small.json" '
     
     msg = os.system(ss )
+
+    ll= ec2_instance_getlist()
 
 
 
@@ -156,6 +169,8 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
 
 
 
+
+
 ################################################################################s
 if __name__ == '__main__':
     args   = load_arguments()
@@ -172,14 +187,18 @@ if __name__ == '__main__':
    while True:
     log("Daemon new loop", args.task_folder)
     folders = get_list_valid_task_folder(args.task_folder)
+    ntask   = len(folders)
 
-    ntask = len(folders)
 
-    instance_type = start_rule()
+    ### Start instance by rules
+    instance_type = start_rule(ntask, instances_dict)
     if instance_type : 
+        ## When instance start, batchdaemon will start and picks up task in COMMON DRIVE /zs3drive/
         ec2_spot_start(instance_type )
   
-    instance_list = stop_rule(instances_dict)
+  
+    ### Stop instance by rules
+    instance_list = stop_rule(ntask, instances_dict)
     ec2_instance_backup(  instance_list, folder_list=[ "/home/ubuntu/zlog/"])
     ec2_instance_stop(  instance_list)
   
