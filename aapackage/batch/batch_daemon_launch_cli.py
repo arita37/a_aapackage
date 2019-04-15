@@ -4,12 +4,18 @@
 
   scans sub-folder in /tasks/
   and execute  /tasks/taskXXXX/main.py in that folder  (if task is not qdone)
+                               main.sh
   When task is finished, taskXXX is rename to taskXXX_qdone
 
 
+_qstart
+_qdone  : qdone
+_ignore : ignore file
 
+
+
+### CLI usage
 batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode nodaemon  --waitsec 10  &
-
 
 
 batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode nodaemon  --waitsec 10  & batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_file monitor_log_file.log   --log_file   zlog/batchdaemon_monitor.log    --mode daemon     
@@ -31,12 +37,13 @@ from aapackage.batch import util_batch
 from aapackage.batch import util_cpu
 
 
-############### Variable definition ############################################
+############### logger ########################################################
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
 #TASK_FOLDER_DEFAULT = os.getcwd()
 global logger
+TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
 logger = logging.basicConfig()
+
 
 
 ################################################################################
@@ -55,21 +62,21 @@ def load_arguments():
   return options
 
 
-def get_list_valid_task_folder(folder, script_name="main.py"):
+def get_list_valid_task_folder(folder, script_name="main"):
   if not os.path.isdir(folder):
     return []
+    
   valid_folders = []
   for root, dirs, files in os.walk(folder):
     root_splits = root.split("/")
     for filename in files:
-      if filename == script_name and \
-          "_qstart" not in root_splits[-1] and \
-          "_qdone"  not in root_splits[-1] and \
+      if filename == "main.sh" or filename == "main.py"  \
+          "_qstart" not in root_splits[-1] and           \
+          "_qdone"  not in root_splits[-1] and           \
           "_ignore" not in root_splits[-1]:
         valid_folders.append(root)
 
   return valid_folders
-
 
 
 
@@ -106,6 +113,9 @@ def main():
 
 if __name__ == '__main__':
    main()
+
+
+
 
 
 

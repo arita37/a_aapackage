@@ -16,13 +16,16 @@
          
   
 
+ec2_linux_instance
+
+
 ss  = 'aws ec2 request-spot-instances   --region us-west-2  --spot-price "0.55" --instance-count 1 '
 ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
 
 
 {
   "ImageId": "ami-0b01d9c82fc6d1391",
-  "KeyName": "aws_ec2_4", 
+  "KeyName": "ec2_linux_instance", 
   "SecurityGroupIds": [ "sg-4b1d6631"  ,   "sg-42e59e38"  ], 
           
           
@@ -110,9 +113,9 @@ def load_arguments():
   parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="path to task folder.")
   parser.add_argument("--log_file",          default="batchdaemon_autoscale.log", help=".")
   parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")
-  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
+  parser.add_argument("--waitsec",      type=int, default=60, help="wait sec")
   parser.add_argument("--max_instance", type=int, default=2, help="")
-  parser.add_argument("--max_cpu", type=int, default=16, help="")  
+  parser.add_argument("--max_cpu",      type=int, default=16, help="")  
   options = parser.parse_args()
   return options
 
@@ -170,8 +173,8 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
 
 
 
-
-################################################################################s
+#################################################################################
+#################################################################################
 if __name__ == '__main__':
     args   = load_arguments()
     logger = util_log.logger_setup(__name__,

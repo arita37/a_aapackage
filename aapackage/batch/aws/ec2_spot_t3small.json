@@ -1,0 +1,33 @@
+{
+  "ImageId": "ami-0b01d9c82fc6d1391",
+  "KeyName": "ec2_linux_instance", 
+  "SecurityGroupIds": [ "sg-4b1d6631"  ,   "sg-42e59e38"  ], 
+          
+          
+  "InstanceType": "t3.small",
+  
+
+
+
+"IamInstanceProfile": {
+                        "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
+},
+
+
+                    
+
+"BlockDeviceMappings": [
+                        {
+                            "DeviceName": "/dev/sda1",
+                            "Ebs": {
+                                "DeleteOnTermination": true,
+                                "VolumeSize": 60
+                            }
+                            
+                            
+                            
+                        }
+                    ]
+                    
+}
+
