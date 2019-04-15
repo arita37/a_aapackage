@@ -59,13 +59,6 @@ ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsd
 
 
 
-
-
-
-
-util_aws
-  
-
 Oregon West
 You can use this AMI :  ami-0491a657e7ed60af7
 Instance spot :  t3.small
