@@ -82,6 +82,56 @@ def get_list_valid_task_folder(folder, script_name="main"):
 
 ####################################################################################################
 ####################################################################################################
+def main2():
+  """ Driver utility for the script."""
+  global logger
+  args = load_arguments()
+  logger = util_log.logger_setup(__name__,
+                                 log_file=args.log_file,
+                                 formatter=util_log.FORMATTER_4,
+                                 isrotate=True)
+
+  log("Daemon","start ", os.getpid())
+  while True:
+    log("Daemon new loop", args.task_folder)
+    folder = args.task_folder
+    
+    if not os.path.isdir(folder):
+       pass
+      
+      
+  valid_folders = []
+  for root, dirs, files in os.walk(folder):
+    root_splits = root.split("/")
+    for filename in files:
+      if filename == "main.sh" or filename == "main.py"  \
+          "_qstart" not in root_splits[-1] and           \
+          "_qdone"  not in root_splits[-1] and           \
+          "_ignore" not in root_splits[-1]:
+          try :
+            folder_new = root+"_qstart
+            os.rename(root, folder_new )
+            pid_list = util_batch.batch_run_infolder(task_folders=[ folder_new ],
+                                                   log_file= args.log_file)  
+            
+            log("task folder started:", pid_list)            
+          except :
+            pass          
+  
+
+    if folders :
+      log("task folder:", folders)
+
+
+
+    if args.mode != "daemon":
+      log("Daemon","terminated", os.getpid())
+      break
+
+    sleep(args.waitsec)
+
+    
+    
 def main():
   """ Driver utility for the script."""
   global logger
