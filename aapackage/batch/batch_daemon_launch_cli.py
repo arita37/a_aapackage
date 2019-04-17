@@ -130,7 +130,7 @@ def main2():
             log("task folder started:", folder_new,  pid)            
           except :
             pass          
-      os_wait_policy(waitsleep= 5 )
+          os_wait_policy(waitsleep= 5 )
     
    if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
