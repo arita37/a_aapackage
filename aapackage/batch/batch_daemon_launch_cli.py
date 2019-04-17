@@ -79,7 +79,24 @@ def get_list_valid_task_folder(folder, script_name="main"):
   return valid_folders
 
 
+def subprocess_launch(foldername, filename):
+     cmd = os_cmd_generate(foldername, os_python_path)
+     ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+            sub_process_list.append(ps.pid)   
 
+      
+def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
+    """
+      Wait when CPU/Mem  usage is too high 
+    """
+    from aapackage.batch import util_cpu
+    cpu_pct, mem_pct =  util_cpu.ps_get_computer_resources_usage()
+    while cpu_pct > cpu_max or mem_pct > mem_max :
+        log("cpu,mem usage", cpu_pct, mem_pct)
+        cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
+        time.sleep( waitsleep)
+      
+      
 ####################################################################################################
 ####################################################################################################
 def main2():
@@ -92,45 +109,37 @@ def main2():
                                  isrotate=True)
 
   log("Daemon","start ", os.getpid())
+  folder_main = args.task_folder
   while True:
-    log("Daemon new loop", args.task_folder)
-    folder = args.task_folder
-    
-    if not os.path.isdir(folder):
-       pass
-      
-      
-  valid_folders = []
-  for root, dirs, files in os.walk(folder):
-    root_splits = root.split("/")
-    for filename in files:
-      if filename == "main.sh" or filename == "main.py"  \
-          "_qstart" not in root_splits[-1] and           \
-          "_qdone"  not in root_splits[-1] and           \
-          "_ignore" not in root_splits[-1]:
+    log("Daemon new loop", folder_main)
+    if not os.path.isdir( folder_main):
+       break
+       
+    for root, dirs, files in os.walk(folder_main):
+      root_splits = root.split("/")
+      folder_last = root_splits[-1]
+      for filename in files:
+        if filename == "main.sh" or filename == "main.py" and \
+          "_qstart" not in f  "_qdone"  not in f and "_ignore" not in f :
           try :
-            folder_new = root+"_qstart
-            os.rename(root, folder_new )
-            pid_list = util_batch.batch_run_infolder(task_folders=[ folder_new ],
-                                                   log_file= args.log_file)  
+            #### Issue of collision if 2 instances rename the folder
+            folder_new = root + "_qstart"
+            os.rename(root, folder_new )            
             
-            log("task folder started:", pid_list)            
+            pid = subprocess_launch(folder_new, filename)
+            log("task folder started:", folder_new,  pid)            
           except :
             pass          
-  
-
-    if folders :
-      log("task folder:", folders)
-
-
-
-    if args.mode != "daemon":
+      os_wait_policy(waitsleep= 5 )
+    
+   if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
       break
 
-    sleep(args.waitsec)
-
+   sleep(args.waitsec)
+   os_wait_policy(waitsleep= 5 )
     
+
     
 def main():
   """ Driver utility for the script."""
