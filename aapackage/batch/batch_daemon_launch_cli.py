@@ -82,7 +82,7 @@ def get_list_valid_task_folder(folder, script_name="main"):
 def subprocess_launch(foldername, filename):
      cmd = os_cmd_generate(foldername, os_python_path)
      ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-            sub_process_list.append(ps.pid)   
+     sub_process_list.append(ps.pid)   
 
       
 def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
