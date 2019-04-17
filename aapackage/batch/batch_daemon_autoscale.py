@@ -77,6 +77,8 @@ region = 'us-west-2'  # Oregon West
 amiId = 'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
+instances_dict = {"id" :{ "ncpu":0, "ip_adress": "" }  }
+
 
 ################################################################################
 def log(*argv):
@@ -100,6 +102,26 @@ def get_list_valid_task_folder(folder, script_regex=r'main\.(sh|py)'):
   return valid_folders
 
 
+def get_list_valid_task_folder2() :
+  pass
+  
+
+def isvalid_folder(folder_main, folder, folder_check, global_task_file)  :
+  if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
+     return False
+  elif  "_qdone" in folder  or "_qstart" in folder or "_ignore" in folder    :
+     global_task_file_save(folder, folder_check, global_task_file) 
+     return False
+  else :  
+     return True
+
+
+
+
+  
+  
+
+
 ################################################################################
 def load_arguments():
   parser = argparse.ArgumentParser()
@@ -114,14 +136,58 @@ def load_arguments():
 
 
 ################################################################################
-def start_rule(nb_task_remaining=0, nb_CPU_available=10):
-  """ Start spot instance if more than 10 tasks or less than 10 CPUs """
-  return nb_task_remaining > 10 and nb_CPU_available < 10
+def get_ncpu():
+  ss = 0
+  for k,x in instances_dict.items() :
+    ss = ss + x["cpu"]
+  return ss
 
-################################################################################
+
+
+def task_get_remaining() :
+  ###task already started
+  global_task_file = "/home/ubuntu/zs3drive/global_task.json"
+  folder_check     = json.load(open(global_task_file, mode="r")) 
+  task_all     = {x  for x in os.listdir( folder ) if os.dirs.isdir(x)  }    
+  task_started = {k  for k, _ in folder_check  }
+   
+  return len( task_all.intersection(task_started) )
+
+
+
+def start_rule(nb_task_remaining=0, nb_CPU_available=10):
+  """ Start spot instance if more than 10 tasks or less than 10 CPUs 
+  
+  
+  """
+  nb_task_remaining = task_get_remaining()
+  nb_CPU_available  = get_ncpu()
+  if  nb_task_remaining > 30 and nb_CPU_available < 5 :
+    return 't3.medium'
+    
+  if  nb_task_remaining > 10 and nb_CPU_available < 5 :
+    return 't3.small'
+    
+  else :
+    return None
+
+
+
 def stop_rule(nb_task_remaining=0):
-  """ Stop rule for terminating the spot instances. """    
-  return nb_task_remaining == 0
+  """ Stop rule for terminating the spot instances. 
+  
+     IF spot instance usage is ZERO CPU%  and RAM is low --> close instances.
+  
+  """    
+  nb_task_remaining = task_get_remaining()
+  instances_dict = update_instance_dict()
+  
+  if nb_task_remaining == 0  :
+      instance_list = [ k for k,x in instances_dict if x["cpu_usage"] < 5.0 and x["ram_usage"] < 5.0      ]
+      return instances_list
+  else :
+      return None
+
 
 
 ################################################################################
@@ -157,7 +223,7 @@ def build_template_config(instance_type):
 
 
 ################################################################################
-def ec2_spot_start(instance_type, spot_price):
+def ec2_spot_start(instance_type, spot_price=0.30, region=""):
   """
   Request a spot instance based on the price for the instance type
   # Need a check if this request has been successful.
@@ -217,8 +283,8 @@ if __name__ == '__main__':
   log("Daemon start: ", os.getpid())
   while True:
     log("Daemon new loop: ", args.task_folder)
-    folders = get_list_valid_task_folder(args.task_folder)
-    ntask   = len(folders)
+    # folders = get_list_valid_task_folder(args.task_folder)
+    # ntask   = len(folders)
     ### Start instance by rules
     instance_type = start_rule(ntask, instances_dict)
     if instance_type : 
@@ -229,7 +295,7 @@ if __name__ == '__main__':
     ### Stop instance by rules
     instance_list = stop_rule(ntask, instances_dict)
     ec2_instance_backup(  instance_list, folder_list=[ "/home/ubuntu/zlog/"])
-    ec2_instance_stop(  instance_list)
+    ec2_instance_stop(  instance_list )
   
   
 
