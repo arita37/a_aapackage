@@ -80,11 +80,16 @@ def get_list_valid_task_folder(folder, script_name="main"):
 
 
 def subprocess_launch(foldername, filename):
-     cmd = os_cmd_generate(foldername, os_python_path)
-     ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
-     sub_process_list.append(ps.pid)   
+   if filename == "main.py" :
+       os_python_path = sys.executable
+       cmd = [os_python_path, main_file]  
+   else :  
+       cmd = [ main_file]  # main.sh 
+        
+   ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+   return ps.pid   
 
-      
+        
 def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
     """
       Wait when CPU/Mem  usage is too high 
@@ -132,12 +137,12 @@ def main2():
             pass          
           os_wait_policy(waitsleep= 5 )
     
-   if args.mode != "daemon":
+    if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
       break
 
-   sleep(args.waitsec)
-   os_wait_policy(waitsleep= 5 )
+    sleep(args.waitsec)
+    os_wait_policy(waitsleep= 5 )
     
 
     
