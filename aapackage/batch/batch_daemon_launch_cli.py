@@ -15,7 +15,9 @@ _ignore : ignore file
 
 
 ### CLI usage
-batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode nodaemon  --waitsec 10  &
+batch_daemon_launch_cli.py  --task_folder tasks  --log_file zlog/batchdaemong.log  --mode daemon  --waitsec 10  &
+
+
 
 
 batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode nodaemon  --waitsec 10  & batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_file monitor_log_file.log   --log_file   zlog/batchdaemon_monitor.log    --mode daemon     
@@ -27,9 +29,12 @@ batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong
 '''
 import os
 import sys
+import time
 from time import sleep
 import argparse
 import logging
+import json
+import subprocess
 
 ################################################################################
 from aapackage import util_log
@@ -58,6 +63,7 @@ def load_arguments():
   parser.add_argument("--log_file_task",     default="logfile_batchdaemon_task.log", help=".")
   parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")
   parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
+  parser.add_argument("--global_task_file", default="/home/ubuntu/zs3drive/global_task.json", help="synchronize task")
   options = parser.parse_args()
   return options
 
@@ -79,8 +85,8 @@ def get_list_valid_task_folder(folder, script_name="main"):
   return valid_folders
 
 
-def subprocess_launch(foldername, filename):
-   if filename == "main.py" :
+def subprocess_launch(foldername, main_file):
+   if main_file == "main.py" :
        os_python_path = sys.executable
        cmd = [os_python_path, main_file]  
    else :  
@@ -104,39 +110,62 @@ def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
       
 ####################################################################################################
 ####################################################################################################
-def main2():
-  """ Driver utility for the script."""
+def isvalid_folder(folder_main, folder, folder_check, global_task_file)  :
+  if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
+     return False
+  elif  "_qdone" in folder  or "_qstart" in folder or "_ignore" in folder    :
+     global_task_file_save(folder, folder_check, global_task_file) 
+     return False
+  else :  
+     return True
+
+
+def global_task_file_save(folder, folder_check, global_task_file)  :
+  folder_check[folder] = time.time()
+  json.dump( folder_check, open(global_task_file, mode="w"))  
+  
+  
+  
+def main3():
+  """ Driver utility for the script.
+    global_task_file contains the list of task ALREADY PROCESSED.
+    if a task is pick up --> this file is updated Globally.
+  
+  """
   global logger
-  args = load_arguments()
+  args   = load_arguments()
   logger = util_log.logger_setup(__name__,
                                  log_file=args.log_file,
                                  formatter=util_log.FORMATTER_4,
                                  isrotate=True)
 
   log("Daemon","start ", os.getpid())
-  folder_main = args.task_folder
+  folder_main      = args.task_folder
+  global_task_file = args.global_task_file
+  if not os.path.isdir( folder_main):
+       return 0
+  
+  folder_check = json.load(open(global_task_file, mode="r"))
   while True:
+    #log(folder_check)
     log("Daemon new loop", folder_main)
-    if not os.path.isdir( folder_main):
-       break
+    for folder in os.listdir(folder_main):
+       # log(folder)
+       if not isvalid_folder(folder_main, folder, folder_check, global_task_file) :
+         continue
        
-    for root, dirs, files in os.walk(folder_main):
-      root_splits = root.split("/")
-      folder_last = root_splits[-1]
-      for filename in files:
-        if filename == "main.sh" or filename == "main.py" and \
-          "_qstart" not in f  "_qdone"  not in f and "_ignore" not in f :
-          try :
-            #### Issue of collision if 2 instances rename the folder
-            folder_new = root + "_qstart"
-            os.rename(root, folder_new )            
+       folder_check = json.load(open(global_task_file, mode="r"))    # Refresh Global file
+       if folder not in folder_check :
+         global_task_file_save(folder, folder_check, global_task_file)  #Update to prevent 2nd pick up
             
-            pid = subprocess_launch(folder_new, filename)
-            log("task folder started:", folder_new,  pid)            
-          except :
-            pass          
-          os_wait_policy(waitsleep= 5 )
-    
+         folder = os.path.join(folder_main, folder)    
+         files  = [file  for file in os.listdir( folder ) if file == "main.sh" or file == "main.py"  ]    
+         log(files)
+         if files :      
+           pid = subprocess_launch(folder, files[0] )
+           log("task folder started:", folder,  files[0], pid)            
+           os_wait_policy(waitsleep= 5 )      
+   
     if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
       break
@@ -144,6 +173,8 @@ def main2():
     sleep(args.waitsec)
     os_wait_policy(waitsleep= 5 )
     
+
+
 
     
 def main():
@@ -176,13 +207,67 @@ def main():
 
 
 if __name__ == '__main__':
-   main()
+   main3()
 
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def main2():
+  """ Driver utility for the script."""
+  global logger
+  args = load_arguments()
+  logger = util_log.logger_setup(__name__,
+                                 log_file=args.log_file,
+                                 formatter=util_log.FORMATTER_4,
+                                 isrotate=True)
+
+  log("Daemon","start ", os.getpid())
+  folder_main = args.task_folder
+  while True:
+    log("Daemon new loop", folder_main)
+    if not os.path.isdir( folder_main):
+       break
+       
+    for root, dirs, files in os.walk(folder_main):
+      root_splits = root.split("/")
+      f           = root_splits[-1]
+      for filename in files:
+        if filename == "main.sh" or filename == "main.py" and \
+          "_qstart" not in f  and "_qdone"  not in f and "_ignore" not in f :
+          try :
+            #### Issue of collision if 2 instances rename the folder
+            folder_new = root + "_qstart"
+            os.rename(root, folder_new )            
+            
+            pid = subprocess_launch(folder_new, filename)
+            log("task folder started:", folder_new,  pid)            
+          except :
+            pass          
+          os_wait_policy(waitsleep= 5 )
+    
+    if args.mode != "daemon":
+      log("Daemon","terminated", os.getpid())
+      break
+
+    sleep(args.waitsec)
+    os_wait_policy(waitsleep= 5 )
+    
 
 """
 ################### Argument catching ########################################################
