@@ -10,8 +10,13 @@ packages = ['aapackage'] + ['aapackage.' + p for p in find_packages('aapackage')
 
 
 ### CLI Scripts
-scripts  = [ "aapackage/batch/batch_daemon_launch_cli.py", "aapackage/batch/batch_daemon_monitor_cli.py",
-             "aapackage/batch/batch_local_aws_cli.py" ]
+scripts  = [ "aapackage/batch/batch_daemon_launch_cli.py", 
+             "aapackage/batch/batch_daemon_monitor_cli.py",
+             "aapackage/batch/batch_daemon_autoscale_cli.py",
+             
+             "cli_auto_check_module.py",  #i nstall packages
+             "cli_convert_ipny.py"        #  ipny to py scrips
+            ]
 
 
 version = '0.1.0'
@@ -20,7 +25,7 @@ version = '0.1.0'
 setup(name='aapackage',
       version=version,
       description='Tools for Python',
-      author='Kevin Noel',
+      author='KN',
       author_email='brookm291@gmail.com',
       url='https://github.com/arita37/a_aapackage',
       install_requires=['numpy'],
