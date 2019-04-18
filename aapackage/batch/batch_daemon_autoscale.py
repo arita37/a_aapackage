@@ -168,28 +168,30 @@ def task_getcount():
 
   
 ################################################################################
-def instance_start_rule(nb_task_remaining=0, nb_CPU_available=5):
+def instance_start_rule(instance_dict, task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
   
       return instance type, spotprice
   """
-  nb_task_remaining = task_get_remaining()
-  nb_CPU_available  = get_ncpu()
-  if  nb_task_remaining > 30 and nb_CPU_available < 5 :
+  ntask = task_getcount()
+  ncpu =  instance_get_ncpu(instances_dict)
+  
+  if  ntask > 30 and ncpu < 5 :
     return {'type' : 't3.medium', 'spotprice' : 0.25}
-  elif  nb_task_remaining > 10 and nb_CPU_available < 5 :
+  elif  ntask > 10 and ncpu < 5 :
     return {'type' : 't3.small', 'spotprice' : 0.25}  
   else :
     return None
 
   
-def instance_stop_rule(nb_task_remaining=0):
+def instance_stop_rule(instance_dict, task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
   global instances_dict  
-  nb_task_remaining = task_get_remaining()
-  instances_dict = update_instance_dict()
-  if nb_task_remaining == 0  :
-      instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 5.0]
+  # nb_task_remaining = task_get_remaining()
+  # instances_dict = update_instance_dict()
+  ntask = task_getcount()
+  if ntask == 0  :
+      instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
       return instances_list
   else :
       return None
@@ -211,9 +213,10 @@ def ec2_instance_getallstate():
           ip_address
           ncpu, ram,
           cpu_usage, ram_usage
-          
   """
-
+  pass
+  
+  
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
@@ -336,8 +339,7 @@ if __name__ == '__main__':
     log("Daemon new loop: ", args.task_folder)
     
     ### Start instance by rules
-    ntask = task_getcount(args.task_folder)
-    start_instance = instance_start_rule(ntask, instances_dict)
+    start_instance = instance_start_rule( instances_dict, args.task_folder)
     if start_instance : 
         # When instance start, batchdaemon will start and picks up task in 
         # COMMON DRIVE /zs3drive/
@@ -345,8 +347,7 @@ if __name__ == '__main__':
         sleep(30)
   
     ### Stop instance by rules
-    ntask = task_getcount(args.task_folder)
-    stop_instances = instance_stop_rule(ntask, instances_dict)
+    stop_instances = instance_stop_rule(instances_dict, args.task_folder)
     if stop_instances:
       ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
       ec2_instance_stop(stop_instances)
