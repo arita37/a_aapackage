@@ -55,8 +55,7 @@ with open('/tmp/ec_spot_config', 'w') as spot_file:
   spot_file(json.dumps(spot_config))
 
 '''
-
-
+#################################################################################
 import json
 import re
 import os
@@ -84,9 +83,11 @@ spot_cfg_file = '/tmp/ec_spot_config'
 
 
 ### Maintain infos on all instances
-instances_dict = {"id" :{  "ncpu":0, "ip_address": "" }  }
+global instance_dict
+instances_dict = {"id" :{  "ncpu":0, "ip_address": "", 'ram':0, 'cpu_usage': 0, 'ram_usage'0" }  }
 
-### Record the running/done tasks
+
+### Record the running/done tasks on S3 DRIVE, Global File system
 global_task_file = "/home/ubuntu/zs3drive/global_task.json"
 
 
@@ -111,7 +112,6 @@ def load_arguments():
   parser.add_argument("--max_cpu", type=int, default=16, help="")  
   options = parser.parse_args()
   return options
-
 
 
 
@@ -150,7 +150,7 @@ def task_isvalid_folder(folder_main, folder, folder_check, global_task_file):
   if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
      return False
   elif "_qdone" in folder  or "_qstart" in folder or "_ignore" in folder    :
-     global_task_file_save(folder, folder_check, global_task_file) 
+     # global_task_file_save(folder, folder_check, global_task_file) 
      return False
   else :  
      return True
@@ -168,29 +168,30 @@ def task_getcount():
 
   
 ################################################################################
-def instance_start_rule(instance_dict, task_folder):
+def instance_start_rule( task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
-  
       return instance type, spotprice
   """
+  global instance_dict
   ntask = task_getcount()
-  ncpu =  instance_get_ncpu(instances_dict)
+  ncpu  = instance_get_ncpu(instances_dict)
   
-  if  ntask > 30 and ncpu < 5 :
+  if  ntask > 30 and ncpu < 10 :
     return {'type' : 't3.medium', 'spotprice' : 0.25}
+  
   elif  ntask > 10 and ncpu < 5 :
     return {'type' : 't3.small', 'spotprice' : 0.25}  
   else :
     return None
 
   
-def instance_stop_rule(instance_dict, task_folder):
+def instance_stop_rule( task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
-  global instances_dict  
-  # nb_task_remaining = task_get_remaining()
-  # instances_dict = update_instance_dict()
-  ntask = task_getcount()
+  global instance_dict
+  ntask         = task_getcount()
+  instance_dict =  ec2_instance_getallstate()
   if ntask == 0  :
+      # Idle Instances
       instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
       return instances_list
   else :
@@ -217,6 +218,7 @@ def ec2_instance_getallstate():
   pass
   
   
+################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
@@ -228,7 +230,6 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     ssh.cmd(cmdstr)
 
 
-################################################################################
 def build_template_config(instance_type):
   """ Build the spot json config into a json file. """
   spot_config = {
@@ -278,7 +279,6 @@ def ec2_spot_start(instance_type, spot_price):
   return instance_list['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
-################################################################################
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -295,7 +295,6 @@ def ec2_spot_instance_list():
   return instance_list
   
 
-###############################instance#################################################
 def ec2_instance_stop(instance_list) :
   """ Stop the spot instances ainstances u stop any other instance, this should work"""
   instances = instance_list
@@ -308,15 +307,13 @@ def ec2_instance_stop(instance_list) :
     ]
     cmd = ' '.join(cmdargs)
     os.system(cmd)
+    return instances.split(",")
 
-
-################################################################################
+  
 def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
     """
       zip some local folders
       Tansfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
-    
-      Transfer task_out/  to /zs3drive/task_out/
     
     """
     pass
@@ -327,30 +324,31 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
 #################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
-  logging.basicConfig()
+  # logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
                         formatter=util_log.FORMATTER_4, isrotate  = True)
-  
-  # Keep Global state of running instances
-  instances_dict =  ec2_instance_getallstate()
   
   log("Daemon start: ", os.getpid())
   while True:
     log("Daemon new loop: ", args.task_folder)
     
+    # Keep Global state of running instances
+    instances_dict =  ec2_instance_getallstate()
+    
     ### Start instance by rules
-    start_instance = instance_start_rule( instances_dict, args.task_folder)
+    start_instance = instance_start_rule( args.task_folder)
     if start_instance : 
-        # When instance start, batchdaemon will start and picks up task in 
-        # COMMON DRIVE /zs3drive/
+        # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
+        log("Starting instances", instance_list)
         sleep(30)
   
     ### Stop instance by rules
-    stop_instances = instance_stop_rule(instances_dict, args.task_folder)
+    stop_instances = instance_stop_rule( args.task_folder)
     if stop_instances:
       ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
       ec2_instance_stop(stop_instances)
+      log("Stopped instances", stop_instances)
 
     if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
