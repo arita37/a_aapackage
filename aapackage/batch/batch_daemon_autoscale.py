@@ -1,7 +1,21 @@
 # -*- coding: utf-8 -*-
 '''
   Daemon for auto-scale.
-  Only launch in master instance - Some identification so that this scripts silently exits.
+  Only launch in master instance 
+  - Some identification so that this scripts silently exits.
+  
+### S3 does NOT support folder rename, bash shell to replance rename  
+  rename() {
+  #do things with parameters like $1 such as
+  cp  $1   $2  --recursive  && rm $1     --recursive
+}
+
+  
+it takes 3ms to read+write task_list
+2019-04-19 13:59:58,587, 12599, batch_daemon_launch_cli.py,    0.031108617782592773
+
+
+  
   
   Auto-Scale :  
     batch_daemon_autoscale_cli.py(ONLY on master instance) - how to check this ?

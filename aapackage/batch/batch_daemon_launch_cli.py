@@ -17,12 +17,18 @@ _ignore : ignore file
 ### CLI usage
 batch_daemon_launch_cli.py  --task_folder tasks  --log_file zlog/batchdaemong.log  --mode daemon  --waitsec 10  &
 
+### using S3 disk
+batch_daemon_launch_cli.py  --task_folder  zs3drive/tasks  --log_file   zlog/batchdaemong.log  --mode daemon  --waitsec 10  
+
+
+batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_file monitor_log_file.log   --log_file   zlog/batchdaemon_monitor.log    --mode daemon     
 
 
 
-batch_daemon_launch_cli.py  --task_folder  tasks  --log_file   zlog/batchdaemong.log  --mode nodaemon  --waitsec 10  & batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_file monitor_log_file.log   --log_file   zlog/batchdaemon_monitor.log    --mode daemon     
 
 
+cp zs3drive/tasks/ztask_test1_ignore   zs3drive/tasks/task_test1 --recursive
+rm zs3drive/tasks/ztask_test1_ignore  --recursive
 
 
 
@@ -42,7 +48,7 @@ from aapackage.batch import util_batch
 from aapackage.batch import util_cpu
 
 
-############### logger ########################################################
+############### logger #########################################################
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 #TASK_FOLDER_DEFAULT = os.getcwd()
 global logger
@@ -63,7 +69,7 @@ def load_arguments():
   parser.add_argument("--log_file_task",     default="logfile_batchdaemon_task.log", help=".")
   parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")
   parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
-  parser.add_argument("--global_task_file", default="/home/ubuntu/zs3drive/global_task.json", help="synchronize task")
+  parser.add_argument("--global_task_file",  default="/home/ubuntu/zs3drive/global_task.json", help="synchronize task")
   options = parser.parse_args()
   return options
 
@@ -88,14 +94,17 @@ def get_list_valid_task_folder(folder, script_name="main"):
 def subprocess_launch(foldername, main_file):
    if main_file == "main.py" :
        os_python_path = sys.executable
-       cmd = [os_python_path, main_file]  
+       cmd = [os_python_path, os.path.abspath(foldername + "/" + main_file) ]  
    else :  
-       cmd = [ main_file]  # main.sh 
+       main_file =  os.path.abspath(foldername + "/" + main_file)
+       os.system( "chmod 777 " + main_file  )
+       cmd = [ "bash",  main_file]    # main.sh 
+       # cmd = [ "chmod 777 " + main_file  + " && " + main_file]  # main.sh 
         
    ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
    return ps.pid   
 
-        
+    
 def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
     """
       Wait when CPU/Mem  usage is too high 
@@ -107,6 +116,7 @@ def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
         cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
         time.sleep( waitsleep)
       
+
       
 ####################################################################################################
 ####################################################################################################
@@ -123,9 +133,9 @@ def isvalid_folder(folder_main, folder, folder_check, global_task_file)  :
 def global_task_file_save(folder, folder_check, global_task_file)  :
   folder_check[folder] = time.time()
   json.dump( folder_check, open(global_task_file, mode="w"))  
+  log("Inserted task", folder, global_task_file )
   
-  
-  
+
 def main3():
   """ Driver utility for the script.
     global_task_file contains the list of task ALREADY PROCESSED.
@@ -154,17 +164,20 @@ def main3():
        if not isvalid_folder(folder_main, folder, folder_check, global_task_file) :
          continue
        
+       t0 = time.time()
        folder_check = json.load(open(global_task_file, mode="r"))    # Refresh Global file
        if folder not in folder_check :
          global_task_file_save(folder, folder_check, global_task_file)  #Update to prevent 2nd pick up
+         log(time.time() - t0)    
             
          folder = os.path.join(folder_main, folder)    
          files  = [file  for file in os.listdir( folder ) if file == "main.sh" or file == "main.py"  ]    
-         log(files)
+         # log(files)
          if files :      
            pid = subprocess_launch(folder, files[0] )
            log("task folder started:", folder,  files[0], pid)            
            os_wait_policy(waitsleep= 5 )      
+
    
     if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
@@ -172,11 +185,11 @@ def main3():
 
     sleep(args.waitsec)
     os_wait_policy(waitsleep= 5 )
-    
 
 
 
-    
+
+
 def main():
   """ Driver utility for the script."""
   global logger
