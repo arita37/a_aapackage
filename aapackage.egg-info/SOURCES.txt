@@ -2,6 +2,8 @@ README.rst
 setup.cfg
 aapackage/__init__.py
 aapackage/allmodule.py
+aapackage/cli_auto_check_module.py
+aapackage/cli_convert_ipny.py
 aapackage/datanalysis.py
 aapackage/fast.py
 aapackage/function_custom.py
@@ -24,6 +26,7 @@ aapackage.egg-info/dependency_links.txt
 aapackage.egg-info/requires.txt
 aapackage.egg-info/top_level.txt
 aapackage/batch/__init__.py
+aapackage/batch/batch_daemon_autoscale_cli.py
 aapackage/batch/batch_daemon_launch_cli.py
 aapackage/batch/batch_daemon_monitor_cli.py
 aapackage/batch/batch_local_aws_cli.py
@@ -61,6 +64,8 @@ aapackage/inout/report.py
 aapackage/inout/rstatpy.py
 aapackage/ml/__init__.py
 aapackage/ml/util_deepl.py
+aapackage/ml/nlp/__init__.py
+aapackage/ml/nlp/japanese.py
 aapackage/nlp/__init__.py
 aapackage/nlp/japanese.py
 aapackage/tool/_HELP.py
