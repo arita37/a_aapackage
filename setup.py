@@ -14,8 +14,9 @@ scripts  = [ "aapackage/batch/batch_daemon_launch_cli.py",
              "aapackage/batch/batch_daemon_monitor_cli.py",
              "aapackage/batch/batch_daemon_autoscale_cli.py",
              
-             "aapackage/cli_auto_check_module.py",  #i nstall packages
-             "aapackage/cli_convert_ipny.py"        #  ipny to py scrips
+             "aapackage/cli_module_autoinstall.py",  #
+             "aapackage/cli_module_analysis.py",     #
+             "aapackage/cli_convert_ipny.py"         #  ipny to py scrips
             ]
 
 

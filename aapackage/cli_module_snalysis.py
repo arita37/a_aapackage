@@ -1,4 +1,12 @@
 # coding=utf-8
+"""
+ cli_codesource --do    --module jedi
+--do  module_signature_write(arg.module)
+--do module_unitest_write(module_name= arg.module)
+
+
+
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 from importlib import import_module
 from pkgutil import walk_packages
@@ -15,6 +23,7 @@ from collections import OrderedDict
 
 
 ####################################################################################################
+"""
 try:
   from attrdict import AttrDict as dict2
   import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
@@ -23,6 +32,7 @@ try:
   if CFG["pythonversion"] == 2 :  reload(sys); sys.setdefaultencoding('utf8')
 except Exception as e :
    print(e);   print("Project Root Directory unknown")
+"""
 
 
 ###################################################################################################
@@ -251,7 +261,8 @@ def obj_get_type(x) :
 
 #############################################################################################################
 def module_signature_get(module_name):
-    """module_signature(module_name) return a dictionary containing information about the module functions and methods"""
+    """module_signature(module_name) return a dictionary containing information
+       about the module functions and methods"""
     module = Module(module_name)
     members = np_merge(module.functions, module.classes, module.class_methods)
     doc_df = {'module_name': module_name,
@@ -317,10 +328,6 @@ def module_signature_write(module_name, file_out='', return_df=0, isdebug=0):
       if isdebug :  print("Signature Writing")
       print(file_out)
       df.to_csv(file_out, index=False, mode='w')
-
-
-
-
 
 
 
@@ -612,31 +619,6 @@ def obj_guess_arg_type2(full_name, arg_name, type_guess_engine="pytype"):
 
 
     return 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1054,7 +1036,8 @@ def ztest():
 
 
 
-
+####################################################################################################
+####################################################################################################
 if __name__ == "__main__"  :
  import argparse
  ppa = argparse.ArgumentParser()
