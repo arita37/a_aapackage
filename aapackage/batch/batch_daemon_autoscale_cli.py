@@ -86,22 +86,23 @@ from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
 
 
+
 ############### logger ########################################################
 logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
 keypair = 'ec2_linux_instance'
-region = 'us-west-2'  # Oregon West
+region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
 amiId = 'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
-### Maintain infos on all instances
+### Maintain infos on all instances  ###########################################
 global instance_dict
 instances_dict = {"id" :{  "ncpu":0, "ip_address": "", 'ram':0, 'cpu_usage': 0, 'ram_usage'0" }  }
 
 
-### Record the running/done tasks on S3 DRIVE, Global File system
+### Record the running/done tasks on S3 DRIVE, Global File system  #############
 global_task_file = "/home/ubuntu/zs3drive/global_task.json"
 
 
@@ -117,13 +118,15 @@ def load_arguments():
   parser = argparse.ArgumentParser()
   parser.add_argument("--log_file", default="batchdaemon_autoscale.log", help=".")
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-  
+
+  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")    
   parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")  
   parser.add_argument("--instance", default=default_instance_type, help="Type of soot instance")
   parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
   parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
   parser.add_argument("--max_instance", type=int, default=2, help="")
   parser.add_argument("--max_cpu", type=int, default=16, help="")  
+
   options = parser.parse_args()
   return options
 
@@ -197,7 +200,7 @@ def instance_start_rule( task_folder):
     return {'type' : 't3.small', 'spotprice' : 0.25}  
   else :
     return None
-
+   
   
 def instance_stop_rule( task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
@@ -210,16 +213,16 @@ def instance_stop_rule( task_folder):
       return instances_list
   else :
       return None
-
-
+   
+   
 def instance_get_ncpu(instances_dict):
   """ Total cpu count for the launched instances. """
   ss = 0
   for x in instances_dict.values() :
     ss += x["cpu"]
   return ss
-
-
+   
+  
 def ec2_instance_getallstate():
   """
       use to update the global instance_dict
@@ -231,6 +234,7 @@ def ec2_instance_getallstate():
   """
   pass
   
+
   
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
@@ -342,12 +346,15 @@ if __name__ == '__main__':
   logger = logger_setup(__name__, log_file=args.log_file,
                         formatter=util_log.FORMATTER_4, isrotate  = True)
   
+  global_task_file = args.global_task_file
+  
   log("Daemon start: ", os.getpid())
   while True:
     log("Daemon new loop: ", args.task_folder)
     
     # Keep Global state of running instances
     instances_dict =  ec2_instance_getallstate()
+    
     
     ### Start instance by rules
     start_instance = instance_start_rule( args.task_folder)
@@ -356,7 +363,8 @@ if __name__ == '__main__':
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
         log("Starting instances", instance_list)
         sleep(30)
-  
+    
+    
     ### Stop instance by rules
     stop_instances = instance_stop_rule( args.task_folder)
     if stop_instances:
