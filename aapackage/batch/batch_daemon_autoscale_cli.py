@@ -349,7 +349,7 @@ if __name__ == '__main__':
   
   global_task_file = args.global_task_file
   
-  log("Daemon start: ", os.getpid())
+  log("Daemon start: ", os.getpid(), global_task_file)
   while True:
     log("Daemon new loop: ", args.task_folder)
     

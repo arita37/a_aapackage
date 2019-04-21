@@ -130,7 +130,7 @@ def load_arguments():
   parser.add_argument("--log_file", default="batchdaemon_autoscale.log", help=".")
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
   parser.add_argument("--instance", default=default_instance_type, help="Type of soot instance")
-  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
+  parser.add_argument("--spotprice", type=float, default=0.50, help="Actual price offered by us.")
   parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
   parser.add_argument("--max_instance", type=int, default=2, help="")
   parser.add_argument("--max_cpu", type=int, default=16, help="")  
