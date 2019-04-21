@@ -23,7 +23,7 @@ from attrdict import AttrDict as dict2
 from pprint import pprint
 import csv
 
-from aapackage import util
+# from aapackage import util
 
 
 ### Local  #####################################################################

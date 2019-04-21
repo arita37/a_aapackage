@@ -1,21 +1,7 @@
 # -*- coding: utf-8 -*-
 '''
   Daemon for auto-scale.
-  Only launch in master instance 
-  - Some identification so that this scripts silently exits.
-  
-### S3 does NOT support folder rename, bash shell to replance rename  
-  rename() {
-  #do things with parameters like $1 such as
-  cp  $1   $2  --recursive  && rm $1     --recursive
-}
-
-  
-it takes 3ms to read+write task_list
-2019-04-19 13:59:58,587, 12599, batch_daemon_launch_cli.py,    0.031108617782592773
-
-
-  
+  Only launch in master instance - Some identification so that this scripts silently exits.
   
   Auto-Scale :  
     batch_daemon_autoscale_cli.py(ONLY on master instance) - how to check this ?
@@ -69,7 +55,8 @@ with open('/tmp/ec_spot_config', 'w') as spot_file:
   spot_file(json.dumps(spot_config))
 
 '''
-#################################################################################
+
+
 import json
 import re
 import os
@@ -84,28 +71,17 @@ import subprocess
 from aapackage.util_log import logger_setup
 from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
-from aapackage import util_log
-
 
 
 ############### logger ########################################################
 logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
 keypair = 'ec2_linux_instance'
-region  = 'us-west-2'  # Oregon West
+region = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
 amiId = 'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
-
-
-### Maintain infos on all instances  ###########################################
-global instance_dict
-instances_dict = {"id" :{  "ncpu":0, "ip_address": "", 'ram':0, 'cpu_usage': 0, 'ram_usage':0 }  }
-
-
-### Record the running/done tasks on S3 DRIVE, Global File system  #############
-global_task_file = "/home/ubuntu/zs3drive/global_task.json"
-
+instances_dict = {"id" :{ "ncpu":0, "ip_adress": "" }  }
 
 
 ################################################################################
@@ -113,29 +89,8 @@ def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
 
-
 ################################################################################
-def load_arguments():
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--log_file", default="batchdaemon_autoscale.log", help=".")
-  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-
-  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")    
-  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")  
-  parser.add_argument("--instance", default=default_instance_type, help="Type of soot instance")
-  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
-  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
-  parser.add_argument("--max_instance", type=int, default=2, help="")
-  parser.add_argument("--max_cpu", type=int, default=16, help="")  
-
-  options = parser.parse_args()
-  return options
-
-
-
-
-################################################################################
-def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
+def get_list_valid_task_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. """
   if not os.path.isdir(folder):
       return []
@@ -143,101 +98,93 @@ def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   for root, dirs, files in os.walk(folder):
       root_splits = root.split("/")
       for filename in files:
-          if "_qstart" not in root_splits[-1] and  \
-              "_qdone" not in root_splits[-1] and  \
-              re.match(filename, script_regex, re.I) and  "_ignore" not in root_splits[-1]  :
+          if "_qstart" not in root_splits[-1] and 
+              "_qdone" not in root_splits[-1] and 
+              re.match(filename, script_regex, re.I) and 
+              "_ignore" not in root_splits[-1]  :
                   valid_folders.append(root)
   return valid_folders
 
 
-def task_get_list_valid_folder_new(folder_main):
-  """ Why was this added  /
-    --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
-    --->  Solution is to have a Global File global_task_dict which maintains current "running tasks/done tasks"
-          Different logic should be applied ,  see code in batch_daemon_launch.py
-  
-  """
-  folder_check = json.load(open(global_task_file, mode="r")) 
-  task_started = {k  for k, _ in folder_check  }
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)  }    
-  return list( task_all.difference(task_started) ) 
+################################################################################
+def get_list_valid_task_folder2():
+  """ Why was this added ?"""
+  pass
   
 
-def task_isvalid_folder(folder_main, folder, folder_check, global_task_file):
+################################################################################
+def isvalid_folder(folder_main, folder, folder_check, global_task_file):
   if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
      return False
   elif "_qdone" in folder  or "_qstart" in folder or "_ignore" in folder    :
-     # global_task_file_save(folder, folder_check, global_task_file) 
+     global_task_file_save(folder, folder_check, global_task_file) 
      return False
   else :  
      return True
 
-    
-def task_getcount(folder_main):
+
+################################################################################
+def load_arguments():
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
+  parser.add_argument("--log_file", default="batchdaemon_autoscale.log", help=".")
+  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
+  parser.add_argument("--instance", default=default_instance_type, help="Type of soot instance")
+  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
+  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
+  parser.add_argument("--max_instance", type=int, default=2, help="")
+  parser.add_argument("--max_cpu", type=int, default=16, help="")  
+  options = parser.parse_args()
+  return options
+
+
+################################################################################
+def get_ncpu():
+  """ Total cpu count for the launched instances. """
+  ss = 0
+  for x in instances_dict.values() :
+    ss += x["cpu"]
+  return ss
+
+
+################################################################################
+def task_get_remaining():
   """ Number of tasks remaining to be scheduled for run """
   ###task already started
+  global_task_file = "/home/ubuntu/zs3drive/global_task.json"
   folder_check = json.load(open(global_task_file, mode="r")) 
-  task_started = {k  for k, _ in folder_check.items()  }
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)  }    
+  task_all = {x for x in os.listdir(folder) if os.dirs.isdir(x)  }    
+  task_started = {k  for k, _ in folder_check  }
+  return len(task_all.intersection(task_started))
 
-  return len(task_all.difference(task_started))
 
-
-  
 ################################################################################
-def instance_start_rule( task_folder):
-  """ Start spot instance if more than 10 tasks or less than 10 CPUs 
-      return instance type, spotprice
-  """
-  global instance_dict
-  ntask = task_getcount(task_folder)
-  ncpu  = instance_get_ncpu(instances_dict)
-  
-  if  ntask > 30 and ncpu < 10 :
-    return {'type' : 't3.medium', 'spotprice' : 0.25}
-  
-  elif  ntask > 10 and ncpu < 5 :
-    return {'type' : 't3.small', 'spotprice' : 0.25}  
+def start_rule(nb_task_remaining=0, nb_CPU_available=5):
+  """ Start spot instance if more than 10 tasks or less than 10 CPUs """
+  nb_task_remaining = task_get_remaining()
+  nb_CPU_available  = get_ncpu()
+  if  nb_task_remaining > 30 and nb_CPU_available < 5 :
+    return 't3.medium'
+  elif  nb_task_remaining > 10 and nb_CPU_available < 5 :
+    return 't3.small'  
   else :
     return None
-   
-  
-def instance_stop_rule( task_folder):
+
+
+################################################################################
+def stop_rule(nb_task_remaining=0):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
-  global instance_dict
-  ntask         = task_getcount(task_folder)
-  instance_dict =  ec2_instance_getallstate()
-  if ntask == 0 and  instances_dict :
-      # Idle Instances
-      instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
+  global instances_dict  
+  nb_task_remaining = task_get_remaining()
+  instances_dict = update_instance_dict()
+  if nb_task_remaining == 0  :
+      instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 5.0]
       return instances_list
   else :
       return None
-   
-   
-def instance_get_ncpu(instances_dict):
-  """ Total cpu count for the launched instances. """
-  ss = 0
-  if instances_dict :
-   for x in instances_dict.items() :
-     ss += x["cpu"]
-  return ss
-   
-  
-def ec2_instance_getallstate():
-  """
-      use to update the global instance_dict
-          "id" :
-          instance_type,
-          ip_address
-          ncpu, ram,
-          cpu_usage, ram_usage
-  """
-  pass
-  
 
-  
-################################################################################ 
+
+################################################################################
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
@@ -249,6 +196,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     ssh.cmd(cmdstr)
 
 
+################################################################################
 def build_template_config(instance_type):
   """ Build the spot json config into a json file. """
   spot_config = {
@@ -298,6 +246,7 @@ def ec2_spot_start(instance_type, spot_price):
   return instance_list['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
+################################################################################
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -314,11 +263,12 @@ def ec2_spot_instance_list():
   return instance_list
   
 
+###############################instance#################################################
 def ec2_instance_stop(instance_list) :
   """ Stop the spot instances ainstances u stop any other instance, this should work"""
   instances = instance_list
   if instances:
-    if isinstance(instance_list, list) :
+    if isinstance(instance_list, list)
         instances = ','.join(instance_list)
     cmdargs = [
       'aws', 'ec2', 'stop-instances', 
@@ -326,60 +276,49 @@ def ec2_instance_stop(instance_list) :
     ]
     cmd = ' '.join(cmdargs)
     os.system(cmd)
-    return instances.split(",")
 
-  
+
+################################################################################
 def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
     """
       zip some local folders
       Tansfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
     
+      Transfer task_out/  to /zs3drive/task_out/
+    
     """
     pass
 
 
-  
-  
 #################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
-  # logging.basicConfig()
+  logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
                         formatter=util_log.FORMATTER_4, isrotate  = True)
-  
-  global_task_file = args.global_task_file
-  
+  # What is the use of this structure?
+  instances_dict = {"id" :{ "ncpu":0, "ip_adress": "" }  }
   log("Daemon start: ", os.getpid())
   while True:
     log("Daemon new loop: ", args.task_folder)
-    
-    # Keep Global state of running instances
-    instances_dict =  ec2_instance_getallstate()
-    
-    
+    # folders = get_list_valid_task_folder(args.task_folder)
+    # ntask   = len(folders)
     ### Start instance by rules
-    start_instance = instance_start_rule( args.task_folder)
-    if start_instance : 
-        # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
-        instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
-        log("Starting instances", instance_list)
-        sleep(30)
-    
-    
+    start_instances = start_rule(ntask, 10, instances_dict)
+    if start_instances : 
+        # When instance start, batchdaemon will start and picks up task in 
+        # COMMON DRIVE /zs3drive/
+        instance_list = ec2_spot_start(args.instance, args.spotprice )
+  
+    # folders = get_list_valid_task_folder(args.task_folder)
     ### Stop instance by rules
-    stop_instances = instance_stop_rule( args.task_folder)
+    stop_instances = stop_rule(len(folders), instances_dict)
     if stop_instances:
-      ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
-      ec2_instance_stop(stop_instances)
-      log("Stopped instances", stop_instances)
+      ec2_instance_backup(instancinstancee_list, folder_list=[ "/home/ubuntu/zlog/"])
+      ec2_instance_stop(instance_instancelist)
 
     if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
       break
 
     sleep(args.waitsec)
-
-    
-    
-    
-    
