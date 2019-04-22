@@ -13,7 +13,7 @@
   it takes 3ms to read+write task_list
   2019-04-19 13:59:58,587, 12599, batch_daemon_launch_cli.py, 0.031108617782592773
 
-  
+
   Auto-Scale :  
     batch_daemon_autoscale_cli.py(ONLY on master instance) - how to check this ?
     Start Rule:
@@ -28,42 +28,6 @@
     Instance spot :  t3.small
     Common Drive is Task Folders: /home/ubuntu/zs3drive/tasks/
     Out for tasks : /home/ubuntu/zs3drive/tasks_out/
-
-  keypair = 'aws_ec2_ajey'
-  region = 'us-west-2'  # Oregon West
-  amiId = 'ami-0491a657e7ed60af7'
-  instance_type = 't3.small'
-  spot_price = '0.55'
-  cmdargs = [
-    'aws', 'ec2', 'request-spot-instances',
-    '--region', region,
-    '--spot-price', spot_price,
-    '--instance-count', 1,
-    ' --type', 'one-time',
-    '--launch-specification', '/tmp/ec_spot_config.json'
-  ]
-  cmd = ' '.join(cmdargs)
-
-  spot_config = {
-    "ImageId": amiId,
-    "KeyName": keypair,
-    "SecurityGroupIds": ["sg-4b1d6631", "sg-42e59e38"],
-    "InstanceType": instance_type,
-    "IamInstanceProfile": {
-      "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
-    },
-    "BlockDeviceMappings": [
-      {
-        "DeviceName": "/dev/sda1",
-        "Ebs": {
-          "DeleteOnTermination": true,
-          "VolumeSize": 60
-        }
-      }
-    ]
-  }
-  with open('/tmp/ec_spot_config', 'w') as spot_file:
-    spot_file(json.dumps(spot_config))
 
 '''
 #################################################################################
@@ -303,8 +267,11 @@ def ec2_spot_start(instance_type, spot_price):
   # ss  = 'aws ec2 request-spot-instances   --region us-west-2  --spot-price "0.55" --instance-count 1 '
   # ss += ' --type "one-time" --launch-specification "file://ec2_spot_t3small.json" '
   msg = os.system(cmd)
+  
+  sleep(50)
   ll= ec2_spot_instance_list()
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
+
 
 
 def ec2_spot_instance_list():
@@ -337,23 +304,32 @@ def ec2_instance_stop(instance_list) :
     os.system(cmd)
     return instances.split(",")
 
-  
-def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
+
+def ec2_instance_backup(instance_list, folder_list=["/zlog/"], 
+                        folder_backup=" /home/ubuntu/zs3drive/backup/") :
     """
-      zip some local folders
+      Zip some local folders
       Tansfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
+    tar -czvf directorios.tar.gz folder
     
     """
-    pass
+    from datetime import datetime
+    now = datetime.today().strftime('%Y%m%d')
+
+    for inst in instance_list :
+      ssh           = aws_ec2_ssh( inst["ip_address"])
+      target_folder = folder_backup + inst["id"] +  "_ " + now
+      ssh.cmd( "mkdir " + target_folder )
+        
+      for t in folder_list :
+        ssh.cmd( "tar -czvf  "+  target_folder + "/" + t + ".tar.gz "  + t   )
 
 
 
 
 
-
-
-  
-#################################################################################
+##########################################################################################
+##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
   # logging.basicConfig()
@@ -395,4 +371,47 @@ if __name__ == '__main__':
     
     
     
-    
+
+
+
+ 
+"""
+  keypair = 'aws_ec2_ajey'
+  region = 'us-west-2'  # Oregon West
+  amiId = 'ami-0491a657e7ed60af7'
+  instance_type = 't3.small'
+  spot_price = '0.55'
+  cmdargs = [
+    'aws', 'ec2', 'request-spot-instances',
+    '--region', region,
+    '--spot-price', spot_price,
+    '--instance-count', 1,
+    ' --type', 'one-time',
+    '--launch-specification', '/tmp/ec_spot_config.json'
+  ]
+  cmd = ' '.join(cmdargs)
+
+  spot_config = {
+    "ImageId": amiId,
+    "KeyName": keypair,
+    "SecurityGroupIds": ["sg-4b1d6631", "sg-42e59e38"],
+    "InstanceType": instance_type,
+    "IamInstanceProfile": {
+      "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
+    },
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "DeleteOnTermination": true,
+          "VolumeSize": 60
+        }
+      }
+    ]
+  }
+  with open('/tmp/ec_spot_config', 'w') as spot_file:
+    spot_file(json.dumps(spot_config))
+
+
+
+"""
