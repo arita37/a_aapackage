@@ -219,8 +219,11 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
   if instance_id and ipadress:
     ssh = aws_ec2_ssh(hostname=ipadress)
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
-    ssh.cmd(cmdstr)
+    cpu = ssh.command(cmdstr)
 
+    cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
+    ram = ssh.command(cmdstr)
+    
 
 def build_template_config(instance_type):
   """ Build the spot json config into a json file. """
