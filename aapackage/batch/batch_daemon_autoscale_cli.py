@@ -168,7 +168,7 @@ def task_get_list_valid_folder_new(folder_main):
   """
   folder_check = json.load(open(global_task_file, mode="r")) 
   task_started = {k  for k in folder_check  }
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)}
+  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)  }    
   return list( task_all.difference(task_started) ) 
   
 
@@ -347,7 +347,9 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"]) :
     pass
 
 
-  
+
+
+
   
 #################################################################################
 if __name__ == '__main__':
