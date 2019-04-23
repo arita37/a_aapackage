@@ -64,7 +64,7 @@ spot_cfg_file = '/tmp/ec_spot_config'
 # global instance_dict
 instance_dict = {
   "id":{
-    "ncpu": 0,
+    "cpu": 0,
     "ip_address": "",
     'ram': 0,
     'cpu_usage': 0,
@@ -159,7 +159,7 @@ def task_getcount(folder_main):
 
 
 ################################################################################
-def instance_start_rule( task_folder):
+def instance_start_rule(task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
       return instance type, spotprice
   """
@@ -194,7 +194,7 @@ def instance_get_ncpu(instances_dict):
   """ Total cpu count for the launched instances. """
   ss = 0
   if instances_dict :
-   for x in instances_dict.items() :
+   for _, x in instances_dict.items() :
      ss += x["cpu"]
   return ss
 
@@ -206,24 +206,61 @@ def ec2_instance_getallstate():
           "id" :
           instance_type,
           ip_address
-          ncpu, ram,
+          cpu, ram,
           cpu_usage, ram_usage
   """
-  return {}
+  val = {}
   spot_list = ec2_spot_instance_list()
   spot_instances = []
   for spot_instance in spot_list['SpotInstanceRequests']:
     if re.match(spot_instance['State'], 'active', re.I) and \
       'InstanceId' in spot_instance:
         spot_instances.append(spot_instance['InstanceId'])
-  print(spot_instances)
+  # print(spot_instances)
   for spot in spot_instances:
-    cmdargs = ['aws', 'ec2', 'describe-instances',
-      '--instance-id', 'i-00e39e341d1484c10']
+    cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
     cmd = ' '.join(cmdargs)
     value = os.popen(cmd).read()
     inst = json.loads(value)
-    # get instance_type, ncpu, ip_address
+    ncpu = 0
+    ipaddr = None
+    instance_type = default_instance_type
+    if inst and 'Reservations' in inst and inst['Reservations']:
+      reserves = inst['Reservations'][0]
+      if 'Instances' in reserves and reserves['Instances']:
+        instance = reserves['Instances'][0]
+        if 'CpuOptions' in instance and 'CoreCount' in instance['CpuOptions']:
+          ncpu = instance['CpuOptions']['CoreCount']
+        if 'PublicIpAddress' in instance and instance['PublicIpAddress']:
+          ipaddr = instance['PublicIpAddress']
+        instance_type = instance['InstanceType']
+    if ipaddr:
+      cpuusage, ramusage = ec2_instance_usage(spot, ipaddr)
+      # print(cpuusage)
+      # print(ramusage)
+      if not cpuusage:
+        cpuusage = 100.0
+      else:
+        cpuusage = float(cpuusage)
+      if not ramusage:
+        totalram = 0
+        usageram = 100.0
+      else:
+        vals = ramusage.split()
+        usageram = float(vals[0]) if vals and vals[0] else 100.0
+        totalram = int(vals[1]) if vals and vals[1] else 0
+      val[spot] = {
+        'instance_type': instance_type,
+        'cpu': ncpu,
+        'ip_address': ipaddr,
+        'ram': totalram,
+        'cpu_usage': cpuusage,
+        'ram_usage': usageram
+      }
+  # print(val)
+  # get instance_type, ncpu, ip_address
+  return val
+
   
 
 ################################################################################
