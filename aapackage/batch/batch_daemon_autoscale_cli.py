@@ -39,6 +39,7 @@ from time import sleep
 import argparse
 import logging
 import subprocess
+import paramiko
 
 
 ################################################################################
@@ -82,7 +83,6 @@ def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
 
-
 ################################################################################
 def load_arguments():
   parser = argparse.ArgumentParser()
@@ -104,8 +104,6 @@ def load_arguments():
   return options
 
 
-
-
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. """
@@ -123,6 +121,7 @@ def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   return valid_folders
 
 
+################################################################################
 def task_get_list_valid_folder_new(folder_main):
   """ Why was this added  /
     --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
@@ -132,10 +131,11 @@ def task_get_list_valid_folder_new(folder_main):
   """
   folder_check = json.load(open(global_task_file, mode="r")) 
   task_started = {k  for k in folder_check  }
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)  }    
-  return list( task_all.difference(task_started) ) 
-  
+  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)}
+  return list( task_all.difference(task_started))
 
+
+################################################################################
 def task_isvalid_folder(folder_main, folder, folder_check, global_task_file):
   if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
      return False
@@ -145,7 +145,8 @@ def task_isvalid_folder(folder_main, folder, folder_check, global_task_file):
   else :  
      return True
 
-    
+
+################################################################################
 def task_getcount(folder_main):
   """ Number of tasks remaining to be scheduled for run """
   ###task already started
@@ -157,7 +158,6 @@ def task_getcount(folder_main):
   return len(task_all.difference(task_started))
 
 
-  
 ################################################################################
 def instance_start_rule( task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
@@ -173,8 +173,9 @@ def instance_start_rule( task_folder):
     return {'type' : 't3.small', 'spotprice' : 0.25}  
   else :
     return None
-   
-  
+
+
+################################################################################
 def instance_stop_rule(task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
   global instance_dict
@@ -186,8 +187,9 @@ def instance_stop_rule(task_folder):
       return instances_list
   else :
       return None
-   
-   
+
+
+################################################################################
 def instance_get_ncpu(instances_dict):
   """ Total cpu count for the launched instances. """
   ss = 0
@@ -195,8 +197,9 @@ def instance_get_ncpu(instances_dict):
    for x in instances_dict.items() :
      ss += x["cpu"]
   return ss
-   
-  
+
+
+################################################################################
 def ec2_instance_getallstate():
   """
       use to update the global instance_dict
@@ -207,24 +210,66 @@ def ec2_instance_getallstate():
           cpu_usage, ram_usage
   """
   return {}
+  spot_list = ec2_spot_instance_list()
+  spot_instances = []
+  for spot_instance in spot_list['SpotInstanceRequests']:
+    if re.match(spot_instance['State'], 'active', re.I) and \
+      'InstanceId' in spot_instance:
+        spot_instances.append(spot_instance['InstanceId'])
+  print(spot_instances)
+  for spot in spot_instances:
+    cmdargs = ['aws', 'ec2', 'describe-instances',
+      '--instance-id', 'i-00e39e341d1484c10']
+    cmd = ' '.join(cmdargs)
+    value = os.popen(cmd).read()
+    inst = json.loads(value)
+    # get instance_type, ncpu, ip_address
   
 
+################################################################################
+def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True):
+  """ Make an ssh connection using paramiko and  run the command"""
+  try:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    stdin, stdout, stderr = ssh.exec_command(cmdstr)
+    data = stdout.readlines()
+    if remove_newline:
+      value = ''.join(data).replace('\n', '')
+    else:
+      value = ''.join(data)
+    ssh.close()
+  except:
+    value = None
+  return value
   
+
+
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
   https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
   """
+  cpu = None
+  ram = None
   if instance_id and ipadress:
-    ssh = aws_ec2_ssh(hostname=ipadress)
-    cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
-    cpu = ssh.command(cmdstr)
+    identity = "%s/.ssh/%s" % \
+      (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
+    # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
+    # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
+    cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
+    # cpu = ssh.command(cmdstr)
+    cpu = run_command_thru_ssh(ipadress, identity, cmdstr)
 
-    cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
-    ram = ssh.command(cmdstr)
-    
+    cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
+    # ram = ssh.command(cmdstr)
+    ram = run_command_thru_ssh(ipadress, identity, cmdstr)
+  return cpu, ram
 
+
+################################################################################
 def build_template_config(instance_type):
   """ Build the spot json config into a json file. """
   spot_config = {
@@ -267,16 +312,13 @@ def ec2_spot_start(instance_type, spot_price):
     '--launch-specification', 'file://%s' % spot_cfg_file
   ]
   cmd = ' '.join(cmdargs)
-  # ss  = 'aws ec2 request-spot-instances   --region us-west-2  --spot-price "0.55" --instance-count 1 '
-  # ss += ' --type "one-time" --launch-specification "file://ec2_spot_t3small.json" '
   msg = os.system(cmd)
-  
-  sleep(50)
+  sleep(50)  # It may not be fulfilled in 50 secs.
   ll= ec2_spot_instance_list()
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
-
+################################################################################
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -291,8 +333,9 @@ def ec2_spot_instance_list():
       "SpotInstanceRequests": []
     }
   return instance_list
-  
 
+
+################################################################################
 def ec2_instance_stop(instance_list) :
   """ Stop the spot instances ainstances u stop any other instance, this should work"""
   instances = instance_list
@@ -308,6 +351,7 @@ def ec2_instance_stop(instance_list) :
     return instances.split(",")
 
 
+################################################################################
 def ec2_instance_backup(instance_list, folder_list=["/zlog/"], 
                         folder_backup=" /home/ubuntu/zs3drive/backup/") :
     """
@@ -328,10 +372,6 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"],
         ssh.cmd( "tar -czvf  "+  target_folder + "/" + t + ".tar.gz "  + t   )
 
 
-
-
-
-##########################################################################################
 ##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
@@ -370,51 +410,3 @@ if __name__ == '__main__':
       break
 
     sleep(args.waitsec)
-
-    
-    
-    
-
-
-
- 
-"""
-  keypair = 'aws_ec2_ajey'
-  region = 'us-west-2'  # Oregon West
-  amiId = 'ami-0491a657e7ed60af7'
-  instance_type = 't3.small'
-  spot_price = '0.55'
-  cmdargs = [
-    'aws', 'ec2', 'request-spot-instances',
-    '--region', region,
-    '--spot-price', spot_price,
-    '--instance-count', 1,
-    ' --type', 'one-time',
-    '--launch-specification', '/tmp/ec_spot_config.json'
-  ]
-  cmd = ' '.join(cmdargs)
-
-  spot_config = {
-    "ImageId": amiId,
-    "KeyName": keypair,
-    "SecurityGroupIds": ["sg-4b1d6631", "sg-42e59e38"],
-    "InstanceType": instance_type,
-    "IamInstanceProfile": {
-      "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
-    },
-    "BlockDeviceMappings": [
-      {
-        "DeviceName": "/dev/sda1",
-        "Ebs": {
-          "DeleteOnTermination": true,
-          "VolumeSize": 60
-        }
-      }
-    ]
-  }
-  with open('/tmp/ec_spot_config', 'w') as spot_file:
-    spot_file(json.dumps(spot_config))
-
-
-
-"""
