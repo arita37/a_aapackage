@@ -499,7 +499,7 @@ class aws_ec2_ssh(object):
         # supposed to check for key in keys, but I don't much care right now to find the right notation
 
         
-        key_file= AWS_KEY_PEM
+        key_file= AWS_KEY_PEM if key_file is None else key_file
         pkey = paramiko.RSAKey.from_private_key_file(key_file)
         
 
