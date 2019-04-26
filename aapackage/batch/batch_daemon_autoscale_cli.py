@@ -219,10 +219,10 @@ def ec2_instance_getallstate():
   # print(spot_instances)
   for spot in spot_instances:
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
-    cmd = ' '.join(cmdargs)
-    value = os.popen(cmd).read()
-    inst = json.loads(value)
-    ncpu = 0
+    cmd     = ' '.join(cmdargs)
+    value   = os.popen(cmd).read()
+    inst    = json.loads(value)
+    ncpu    = 0
     ipaddr = None
     instance_type = default_instance_type
     if inst and 'Reservations' in inst and inst['Reservations']:
@@ -235,9 +235,12 @@ def ec2_instance_getallstate():
           ipaddr = instance['PublicIpAddress']
         instance_type = instance['InstanceType']
     if ipaddr:
-      cpuusage, ramusage = ec2_instance_usage(spot, ipaddr)
+      # cpuusage, ramusage = ec2_instance_usage(spot, ipaddr)
+      cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
+      
       # print(cpuusage)
       # print(ramusage)
+      """
       if not cpuusage:
         cpuusage = 100.0
       else:
@@ -249,6 +252,8 @@ def ec2_instance_getallstate():
         vals = ramusage.split()
         usageram = float(vals[0]) if vals and vals[0] else 100.0
         totalram = int(vals[1]) if vals and vals[1] else 0
+      """  
+        
       val[spot] = {
         'instance_type': instance_type,
         'cpu': ncpu,
@@ -298,12 +303,27 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
     # cpu = ssh.command(cmdstr)
-    cpu = run_command_thru_ssh(ipadress, identity, cmdstr)
+    cpuusage = run_command_thru_ssh(ipadress, identity, cmdstr)
 
     cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
     # ram = ssh.command(cmdstr)
-    ram = run_command_thru_ssh(ipadress, identity, cmdstr)
-  return cpu, ram
+    ramusage = run_command_thru_ssh(ipadress, identity, cmdstr)
+    
+    
+    if not cpuusage:
+        cpuusage = 100.0
+    else:
+        cpuusage = float(cpuusage)
+    
+    if not ramusage:
+        totalram = 0
+        usageram = 100.0
+    else:
+        vals = ramusage.split()
+        usageram = float(vals[0]) if vals and vals[0] else 100.0
+        totalram = int(vals[1]) if vals and vals[1] else 0
+    
+    return cpu, usageram, totalram
 
 
 ################################################################################
@@ -355,7 +375,7 @@ def ec2_spot_start(instance_type, spot_price):
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
-################################################################################
+
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -438,7 +458,7 @@ if __name__ == '__main__':
     ### Stop instance by rules
     stop_instances = instance_stop_rule( args.task_folder)
     if stop_instances:
-      ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
+      # ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
       ec2_instance_stop(stop_instances)
       log("Stopped instances", stop_instances)
 
