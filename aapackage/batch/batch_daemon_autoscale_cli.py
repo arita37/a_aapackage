@@ -235,25 +235,8 @@ def ec2_instance_getallstate():
           ipaddr = instance['PublicIpAddress']
         instance_type = instance['InstanceType']
     if ipaddr:
-      # cpuusage, ramusage = ec2_instance_usage(spot, ipaddr)
       cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
-      
-      # print(cpuusage)
-      # print(ramusage)
-      """
-      if not cpuusage:
-        cpuusage = 100.0
-      else:
-        cpuusage = float(cpuusage)
-      if not ramusage:
-        totalram = 0
-        usageram = 100.0
-      else:
-        vals = ramusage.split()
-        usageram = float(vals[0]) if vals and vals[0] else 100.0
-        totalram = int(vals[1]) if vals and vals[1] else 0
-      """  
-        
+      print(cpuusage, usageram, totalram)
       val[spot] = {
         'instance_type': instance_type,
         'cpu': ncpu,
@@ -263,7 +246,6 @@ def ec2_instance_getallstate():
         'ram_usage': usageram
       }
   # print(val)
-  # get instance_type, ncpu, ip_address
   return val
 
   
@@ -294,8 +276,9 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
   https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
   """
-  cpu = None
-  ram = None
+  cpuusage = None
+  ramusage = None
+  totalram = None
   if instance_id and ipadress:
     identity = "%s/.ssh/%s" % \
       (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
@@ -323,7 +306,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
         usageram = float(vals[0]) if vals and vals[0] else 100.0
         totalram = int(vals[1]) if vals and vals[1] else 0
     
-    return cpu, usageram, totalram
+  return cpuusage, usageram, totalram
 
 
 ################################################################################
@@ -400,7 +383,7 @@ def ec2_instance_stop(instance_list) :
     if isinstance(instance_list, list) :
         instances = ','.join(instance_list)
     cmdargs = [
-      'aws', 'ec2', 'stop-instances', 
+      'aws', 'ec2', 'terminate-instances',
       '--instance-ids', instances
     ]
     cmd = ' '.join(cmdargs)
