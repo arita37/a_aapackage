@@ -158,6 +158,28 @@ def task_getcount(folder_main):
   return len(task_all.difference(task_started))
 
 
+##########################################################################################
+def get_spot_price(instance_type):
+  """ Get the spot price for instance type in us-west-2"""
+  value = 0.0
+  if os.path.exists('./aws_spot_price.sh') and os.path.isfile('./aws_spot_price.sh'):
+    cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
+    value = os.popen(cmdstr).read()
+    value = value.replace('\n', '') if value else 0.0
+  return parsefloat(value)
+
+
+##########################################################################################
+def parsefloat(value, default=0.0):
+  """ Parse the float value. """
+  fltvalue = default
+  try:
+    fltvalue = float(value)
+  except:
+    pass
+  return fltvalue
+
+
 ################################################################################
 def instance_start_rule(task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
@@ -168,9 +190,9 @@ def instance_start_rule(task_folder):
   ncpu  = instance_get_ncpu(instances_dict)
   # hard coded values here
   if  ntask > 30 and ncpu < 10 :
-    return {'type' : 't3.medium', 'spotprice' : 0.25}
+    return {'type' : 't3.medium', 'spotprice' : get_spot_price('t3.medium')}
   elif  ntask > 10 and ncpu < 5 :
-    return {'type' : 't3.small', 'spotprice' : 0.25}  
+    return {'type' : 't3.small', 'spotprice' : get_spot_price('t3.small')}
   else :
     return None
 
@@ -238,6 +260,7 @@ def ec2_instance_getallstate():
       cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
       print(cpuusage, usageram, totalram)
       val[spot] = {
+        'id': spot,
         'instance_type': instance_type,
         'cpu': ncpu,
         'ip_address': ipaddr,
@@ -248,7 +271,6 @@ def ec2_instance_getallstate():
   # print(val)
   return val
 
-  
 
 ################################################################################
 def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True):
@@ -268,7 +290,6 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True):
     value = None
   return value
   
-
 
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
@@ -358,7 +379,7 @@ def ec2_spot_start(instance_type, spot_price):
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
-
+################################################################################
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -393,7 +414,7 @@ def ec2_instance_stop(instance_list) :
 
 ################################################################################
 def ec2_instance_backup(instance_list, folder_list=["/zlog/"], 
-                        folder_backup=" /home/ubuntu/zs3drive/backup/") :
+                        folder_backup="/home/ubuntu/zs3drive/backup/") :
     """
       Zip some local folders
       Tansfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
