@@ -108,16 +108,14 @@ def load_arguments():
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. """
   if not os.path.isdir(folder):
-      return []
+    return []
   valid_folders = []
   for root, dirs, files in os.walk(folder):
-      root_splits = root.split("/")
-      for filename in files:
-          if "_qstart" not in root_splits[-1] and  \
-              "_qdone" not in root_splits[-1] and  \
-              re.match(filename, script_regex, re.I) and \
-              "_ignore" not in root_splits[-1]  :
-                  valid_folders.append(root)
+    root_splits = root.split("/")
+    for filename in files:
+      if re.match(script_regex, filename, re.I) and \
+        not re.match(r'^.*(_qstart|_qdone|_ignore)$', root_splits[-1], re.I):
+        valid_folders.append(root)
   return valid_folders
 
 
@@ -129,33 +127,34 @@ def task_get_list_valid_folder_new(folder_main):
           Different logic should be applied ,  see code in batch_daemon_launch.py
   
   """
+  # task already started
   folder_check = json.load(open(global_task_file, mode="r")) 
-  task_started = {k  for k in folder_check  }
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)}
-  return list( task_all.difference(task_started))
+  task_started = {k for k in folder_check  }
+  # There could be problem here, if none of them is a directory, so it
+  # becomes a dict, difference  betn a set and dict will not work.
+  task_all = {x for x in os.listdir(folder_main) if os.path.isdir('%s/%s' % (folder_main, x))}
+  folders = list(task_all.difference(task_started))
+  valid_folders = []
+  for folder in folders:
+    if task_isvalid_folder(folder_main, folder, folder_check):
+      valid_folders.append(folder)
+  return valid_folders
 
 
 ################################################################################
-def task_isvalid_folder(folder_main, folder, folder_check, global_task_file):
-  if os.path.isfile(os.path.join(folder_main, folder)) or folder in folder_check :
-     return False
-  elif "_qdone" in folder  or "_qstart" in folder or "_ignore" in folder    :
-     # global_task_file_save(folder, folder_check, global_task_file)
-     return False
-  else :  
+def task_isvalid_folder(folder_main, folder, folder_check):
+  if os.path.isfile(os.path.join(folder_main, folder)) or \
+    folder in folder_check or \
+    re.search(r'_qstart|_qdone|_ignore', folder, re.I):
+    return False
+  else:
      return True
 
 
 ################################################################################
 def task_getcount(folder_main):
   """ Number of tasks remaining to be scheduled for run """
-  ###task already started
-  folder_check = json.load(open(global_task_file, mode="r")) 
-  task_started = {k  for k in folder_check}
-  # There could be problem here, if none of them is a directory, so it
-  # becomes a dict, difference  betn a set and dict will not work.
-  task_all = {x for x in os.listdir(folder_main) if os.path.isdir(x)}    
-  return len(task_all.difference(task_started))
+  return len(task_get_list_valid_folder_new(folder_main))
 
 
 ##########################################################################################
@@ -187,7 +186,7 @@ def instance_start_rule(task_folder):
   """
   global instance_dict
   ntask = task_getcount(task_folder)
-  ncpu  = instance_get_ncpu(instances_dict)
+  ncpu  = instance_get_ncpu(instance_dict)
   # hard coded values here
   if  ntask > 30 and ncpu < 10 :
     return {'type' : 't3.medium', 'spotprice' : get_spot_price('t3.medium')}
@@ -202,10 +201,10 @@ def instance_stop_rule(task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
   global instance_dict
   ntask = task_getcount(task_folder)
-  instances_dict = ec2_instance_getallstate()
-  if ntask == 0 and  instances_dict :
+  instance_dict = ec2_instance_getallstate()
+  if ntask == 0 and  instance_dict :
       # Idle Instances
-      instance_list = [k for k,x in instances_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
+      instance_list = [k for k,x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
       return instances_list
   else :
       return None
@@ -241,10 +240,10 @@ def ec2_instance_getallstate():
   # print(spot_instances)
   for spot in spot_instances:
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
-    cmd     = ' '.join(cmdargs)
-    value   = os.popen(cmd).read()
-    inst    = json.loads(value)
-    ncpu    = 0
+    cmd = ' '.join(cmdargs)
+    value = os.popen(cmd).read()
+    inst = json.loads(value)
+    ncpu = 0
     ipaddr = None
     instance_type = default_instance_type
     if inst and 'Reservations' in inst and inst['Reservations']:
@@ -258,7 +257,7 @@ def ec2_instance_getallstate():
         instance_type = instance['InstanceType']
     if ipaddr:
       cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
-      print(cpuusage, usageram, totalram)
+      # print(cpuusage, usageram, totalram)
       val[spot] = {
         'id': spot,
         'instance_type': instance_type,
@@ -425,10 +424,9 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"],
     now = datetime.today().strftime('%Y%m%d')
 
     for inst in instance_list :
-      ssh           = aws_ec2_ssh( inst["ip_address"])
-      target_folder = folder_backup + inst["id"] +  "_ " + now
+      ssh = aws_ec2_ssh( inst["ip_address"])
+      target_folder = folder_backup + inst["id"] +  "_" + now
       ssh.cmd( "mkdir " + target_folder )
-        
       for t in folder_list :
         ssh.cmd( "tar -czvf  "+  target_folder + "/" + t + ".tar.gz "  + t   )
 
