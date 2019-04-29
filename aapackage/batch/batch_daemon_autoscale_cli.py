@@ -205,7 +205,7 @@ def instance_stop_rule(task_folder):
   instance_dict = ec2_instance_getallstate()
   if ntask == 0 and  instance_dict :
       # Idle Instances
-      instance_list = [k for k,x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
+      instance_list = [x for _, x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
       return instances_list
   else :
       return None
@@ -424,21 +424,20 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
     from datetime import datetime
     now = datetime.today().strftime('%Y%m%d')
     for inst in instances_list :
-      # ssh = aws_ec2_ssh( inst["ip_address"])
+      ssh = aws_ec2_ssh( inst["ip_address"])
       target_folder = folder_backup + inst["id"] +  "_" + now
       cmdstr = "mkdir %s" % target_folder
       print(cmdstr)
-      # ssh.cmd( "mkdir " + target_folder )
+      ssh.cmd( "mkdir " + target_folder )
       for t in folder_list :
         cmdstr = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
-                                                 t.replace('/', '', t)
+                                                 t.replace('/', ''), t)
         print(cmdstr)
-        # ssh.cmd(cmdstr)
+        ssh.cmd(cmdstr)
 
 
 ##########################################################################################
 if __name__ == '__main__':
-  global instance_dict, global_task_file
   args   = load_arguments()
   # logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
@@ -466,7 +465,7 @@ if __name__ == '__main__':
     ### Stop instance by rules
     stop_instances = instance_stop_rule( args.task_folder)
     if stop_instances:
-      # ec2_instance_backup(stop_instances, folder_list=[ "/home/ubuntu/zlog/"])
+      ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
       ec2_instance_stop(stop_instances)
       log("Stopped instances", stop_instances)
 
