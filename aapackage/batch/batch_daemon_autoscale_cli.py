@@ -130,7 +130,7 @@ def task_get_list_valid_folder_new(folder_main):
   """
   # task already started
   folder_check = json.load(open(global_task_file, mode="r")) 
-  task_started = {k for k in folder_check  }
+  task_started = {k for k in folder_check}
   # There could be problem here, if none of them is a directory, so it
   # becomes a dict, difference  betn a set and dict will not work.
   task_all = {x for x in os.listdir(folder_main) if os.path.isdir('%s/%s' % (folder_main, x))}
@@ -466,8 +466,9 @@ if __name__ == '__main__':
     stop_instances = instance_stop_rule( args.task_folder)
     if stop_instances:
       ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
-      ec2_instance_stop(stop_instances)
-      log("Stopped instances", stop_instances)
+      stop_instances_list = [v['id'] for v in stop_instances]
+      ec2_instance_stop(stop_instances_list)
+      log("Stopped instances", stop_instances_list)
 
     if args.mode != "daemon":
       log("Daemon","terminated", os.getpid())
