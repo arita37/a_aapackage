@@ -52,7 +52,7 @@ from aapackage import util_log
 
 ############### logger ########################################################
 logger = None
-TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
+TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
 keypair = 'aws_ec2_ajey'
 region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
@@ -64,6 +64,7 @@ spot_cfg_file = '/tmp/ec_spot_config'
 # global instance_dict
 instance_dict = {
   "id":{
+    "id": "",
     "cpu": 0,
     "ip_address": "",
     'ram': 0,
@@ -412,7 +413,7 @@ def ec2_instance_stop(instance_list) :
 
 
 ################################################################################
-def ec2_instance_backup(instance_list, folder_list=["/zlog/"], 
+def ec2_instance_backup(instances_list, folder_list=["zlog/"],
                         folder_backup="/home/ubuntu/zs3drive/backup/") :
     """
       Zip some local folders
@@ -422,17 +423,22 @@ def ec2_instance_backup(instance_list, folder_list=["/zlog/"],
     """
     from datetime import datetime
     now = datetime.today().strftime('%Y%m%d')
-
-    for inst in instance_list :
-      ssh = aws_ec2_ssh( inst["ip_address"])
+    for inst in instances_list :
+      # ssh = aws_ec2_ssh( inst["ip_address"])
       target_folder = folder_backup + inst["id"] +  "_" + now
-      ssh.cmd( "mkdir " + target_folder )
+      cmdstr = "mkdir %s" % target_folder
+      print(cmdstr)
+      # ssh.cmd( "mkdir " + target_folder )
       for t in folder_list :
-        ssh.cmd( "tar -czvf  "+  target_folder + "/" + t + ".tar.gz "  + t   )
+        cmdstr = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
+                                                 t.replace('/', '', t)
+        print(cmdstr)
+        # ssh.cmd(cmdstr)
 
 
 ##########################################################################################
 if __name__ == '__main__':
+  global instance_dict, global_task_file
   args   = load_arguments()
   # logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
@@ -445,7 +451,7 @@ if __name__ == '__main__':
     log("Daemon new loop: ", args.task_folder)
     
     # Keep Global state of running instances
-    instances_dict =  ec2_instance_getallstate()
+    instance_dict =  ec2_instance_getallstate()
     
     
     ### Start instance by rules
