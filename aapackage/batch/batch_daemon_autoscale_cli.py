@@ -480,6 +480,7 @@ if __name__ == '__main__':
                         formatter=util_log.FORMATTER_4, isrotate  = True)
   
   global_task_file = args.global_task_file
+  key_file = ec2_keypair_get()
   
   log("Daemon start: ", os.getpid(), global_task_file)
   while True:
@@ -503,8 +504,8 @@ if __name__ == '__main__':
         ##### Luanch Batch system
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          run_command_thru_ssh( ipx, ec2_keypair_get(), 
-                                cmdstr="/home/ubuntu/zbatch.sh")
+          log(ipx, "/home/ubuntu/zbatch.sh")
+          run_command_thru_ssh( ipx,  key_file,  cmdstr="/home/ubuntu/zbatch.sh")
           sleep(5)
     
     
