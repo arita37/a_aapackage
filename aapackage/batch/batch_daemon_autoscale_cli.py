@@ -1,5 +1,15 @@
 # -*- coding: utf-8 -*-
 '''
+
+pip installl -e .
+
+
+
+--task_folder  zs3drive/tasks/   --mode daemon  --waitsec 60  &
+
+
+batch_daemon_autoscale_cli --mode daemon  --log_file   zlog/batchautoscale.log   
+
   Daemon for auto-scale.
   Only launch in master instance 
   - Some identification so that this scripts silently exits.
@@ -56,7 +66,7 @@ TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/task
 keypair = 'aws_ec2_ajey'
 region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
-amiId = "ami-03e78814615c16ed6"  #'ami-0491a657e7ed60af7'
+amiId = "ami-01e9f303520739d32"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
@@ -87,17 +97,16 @@ def log(*argv):
 ################################################################################
 def load_arguments():
   parser = argparse.ArgumentParser()
-  parser.add_argument("--log_file", default="batchdaemon_autoscale.log",
-                      help=".")
+  parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-  parser.add_argument("--global_task_file", default=global_task_file,
-                      help="global task file")
-  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT,
-                      help="path to task folder.")
-  parser.add_argument("--instance", default=default_instance_type,
-                      help="Type of soot instance")
-  parser.add_argument("--spotprice", type=float, default=0.0,
-                      help="Actual price offered by us.")
+  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
+  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
+
+
+  parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
+  
+  parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
+  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
   parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
   parser.add_argument("--max_instance", type=int, default=2, help="")
   parser.add_argument("--max_cpu", type=int, default=16, help="")  
@@ -209,8 +218,6 @@ def instance_start_rule(task_folder):
     # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
     # spotprice = 0.05
     # return {'type' : 't3.small', 'spotprice' : spotprice }
-
-
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }  
     
@@ -313,7 +320,12 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True):
   except:
     value = None
   return value
-  
+
+
+def ec2_keypair_get():
+  identity = "%s/.ssh/%s" % \
+            (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
+  return identity
 
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
@@ -325,8 +337,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
   ramusage = None
   totalram = None
   if instance_id and ipadress:
-    identity = "%s/.ssh/%s" % \
-      (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
+    identity = ec2_keypair_get()
     # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
     # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
@@ -399,7 +410,7 @@ def ec2_spot_start(instance_type, spot_price):
   print(cmdargs)
   cmd = ' '.join(cmdargs)
   msg = os.system(cmd)
-  sleep(50)  # It may not be fulfilled in 50 secs.
+  sleep(60)  # It may not be fulfilled in 50 secs.
   ll= ec2_spot_instance_list()
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
@@ -480,19 +491,26 @@ if __name__ == '__main__':
     
     ### Start instance by rules
     start_instance = instance_start_rule( args.task_folder)
+    log("Starting instances", start_instance)
     if start_instance : 
         # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
-        log("Starting instances", start_instance)
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
         log("Started instances", instance_list)
-        sleep(30)
+        
+        instance_dict =  ec2_instance_getallstate()
+        log("Instances running", instance_dict)
+        
+        ##### Luanch Batch system
+        run_command_thru_ssh( instance_dict["ip_adress"], identity=ec2_keypair_get(), 
+                              cmdstr="/home/ubuntu/zbatch.sh")
+        sleep(10)
     
     
     ### Stop instance by rules
     stop_instances = instance_stop_rule( args.task_folder)
-    log(stop_instances)
+    log("Instances to be stopped", stop_instances)
     if stop_instances:
-      ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
+      # ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
       stop_instances_list = [v['id'] for v in stop_instances]
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
@@ -502,3 +520,9 @@ if __name__ == '__main__':
       break
 
     sleep(args.waitsec)
+
+
+
+
+
+
