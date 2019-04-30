@@ -499,11 +499,13 @@ if __name__ == '__main__':
         
         instance_dict =  ec2_instance_getallstate()
         log("Instances running", instance_dict)
-        
+
         ##### Luanch Batch system
-        run_command_thru_ssh( instance_dict["ip_adress"], identity=ec2_keypair_get(), 
+        ipadress_list = [  x["ip_adress"]  for k,x in instance_dict.items() ]
+        for ipx in ipadress_list : 
+          run_command_thru_ssh( ipx, identity=ec2_keypair_get(), 
                               cmdstr="/home/ubuntu/zbatch.sh")
-        sleep(10)
+          sleep(5)
     
     
     ### Stop instance by rules
