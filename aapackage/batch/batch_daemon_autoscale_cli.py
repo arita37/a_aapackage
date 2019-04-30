@@ -56,7 +56,7 @@ TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/task
 keypair = 'aws_ec2_ajey'
 region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
-amiId = 'ami-0491a657e7ed60af7'
+amiId = "ami-03e78814615c16ed6"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
@@ -107,7 +107,11 @@ def load_arguments():
 
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
-  """ Make it regex based so that both shell and python can be checked. """
+  """ Make it regex based so that both shell and python can be checked. 
+       _qstart, _ignore , _qdone are excluded.
+       main.sh or main.py should be in the folder.
+  
+  """
   if not os.path.isdir(folder):
     return []
   valid_folders = []
@@ -120,7 +124,6 @@ def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   return valid_folders
 
 
-################################################################################
 def task_get_list_valid_folder_new(folder_main):
   """ Why was this added  /
     --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
@@ -142,17 +145,17 @@ def task_get_list_valid_folder_new(folder_main):
   return valid_folders
 
 
-################################################################################
 def task_isvalid_folder(folder_main, folder, folder_check):
+  # Invalid cases
   if os.path.isfile(os.path.join(folder_main, folder)) or \
     folder in folder_check or \
     re.search(r'_qstart|_qdone|_ignore', folder, re.I):
     return False
   else:
+     #Valid case
      return True
 
 
-################################################################################
 def task_getcount(folder_main):
   """ Number of tasks remaining to be scheduled for run """
   return len(task_get_list_valid_folder_new(folder_main))
@@ -165,7 +168,8 @@ def get_spot_price(instance_type):
   if os.path.exists('./aws_spot_price.sh') and os.path.isfile('./aws_spot_price.sh'):
     cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
     value = os.popen(cmdstr).read()
-    value = value.replace('\n', '') if value else 0.0
+    value = value.replace('\n', '') if value else 0.10
+    #parsefloat(value)
   return parsefloat(value)
 
 
@@ -190,14 +194,29 @@ def instance_start_rule(task_folder):
   ncpu  = instance_get_ncpu(instance_dict)
   # hard coded values here
   if  ntask > 30 and ncpu < 10 :
-    return {'type' : 't3.medium', 'spotprice' : get_spot_price('t3.medium')}
-  elif  ntask > 10 and ncpu < 5 :
-    return {'type' : 't3.small', 'spotprice' : get_spot_price('t3.small')}
-  else :
-    return None
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    spotprice = 0.05
+    return {'type' : 't3.medium', 'spotprice' : spotprice  }
+    
+
+  if  ntask > 10 and ncpu < 5 :
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    spotprice = 0.05
+    return {'type' : 't3.small', 'spotprice' : spotprice }
+  
+  
+  if  ntask > 2 and ncpu < 5 :
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    # spotprice = 0.05
+    # return {'type' : 't3.small', 'spotprice' : spotprice }
 
 
-################################################################################
+    spotprice = 0.05
+    return {'type' : 't3.medium', 'spotprice' : spotprice }  
+    
+  return None
+
+
 def instance_stop_rule(task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
   global instance_dict
@@ -239,6 +258,7 @@ def ec2_instance_getallstate():
       'InstanceId' in spot_instance:
         spot_instances.append(spot_instance['InstanceId'])
   # print(spot_instances)
+  
   for spot in spot_instances:
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
     cmd = ' '.join(cmdargs)
@@ -251,11 +271,15 @@ def ec2_instance_getallstate():
       reserves = inst['Reservations'][0]
       if 'Instances' in reserves and reserves['Instances']:
         instance = reserves['Instances'][0]
+        
         if 'CpuOptions' in instance and 'CoreCount' in instance['CpuOptions']:
           ncpu = instance['CpuOptions']['CoreCount']
+          
         if 'PublicIpAddress' in instance and instance['PublicIpAddress']:
           ipaddr = instance['PublicIpAddress']
+        
         instance_type = instance['InstanceType']
+    
     if ipaddr:
       cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
       # print(cpuusage, usageram, totalram)
@@ -367,11 +391,12 @@ def ec2_spot_start(instance_type, spot_price):
   cmdargs = [
     'aws', 'ec2', 'request-spot-instances',
     '--region', region,
-    '--spot-price', spot_price,
+    '--spot-price', str(spot_price),
     '--instance-count', "1",
     ' --type', 'one-time',
     '--launch-specification', 'file://%s' % spot_cfg_file
   ]
+  print(cmdargs)
   cmd = ' '.join(cmdargs)
   msg = os.system(cmd)
   sleep(50)  # It may not be fulfilled in 50 secs.
@@ -457,13 +482,15 @@ if __name__ == '__main__':
     start_instance = instance_start_rule( args.task_folder)
     if start_instance : 
         # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
+        log("Starting instances", start_instance)
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
-        log("Starting instances", instance_list)
+        log("Started instances", instance_list)
         sleep(30)
     
     
     ### Stop instance by rules
     stop_instances = instance_stop_rule( args.task_folder)
+    log(stop_instances)
     if stop_instances:
       ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
       stop_instances_list = [v['id'] for v in stop_instances]
@@ -471,7 +498,7 @@ if __name__ == '__main__':
       log("Stopped instances", stop_instances_list)
 
     if args.mode != "daemon":
-      log("Daemon","terminated", os.getpid())
+      log("No Daemon mode","terminated daemon", os.getpid())
       break
 
     sleep(args.waitsec)
