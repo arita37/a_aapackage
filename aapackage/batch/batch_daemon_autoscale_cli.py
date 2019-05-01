@@ -279,22 +279,45 @@ def ec2_instance_getallstate():
 
 
 ################################################################################
-def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True):
-  """ Make an ssh connection using paramiko and  run the command"""
+def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_stdout=True):
+  """ Make an ssh connection using paramiko and  run the command
+  
+  # Send the command (non-blocking)
+stdin, stdout, stderr = ssh.exec_command("my_long_command --arg 1 --arg 2")
+
+# Wait for the command to terminate
+while not stdout.channel.exit_status_ready():
+    # Only print data if there is data to read in the channel
+    if stdout.channel.recv_ready():
+        rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+        if len(rl) > 0:
+            # Print data from stdout
+            print stdout.channel.recv(1024),
+
+  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+  
+  
+  """
   try:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostname, key_filename=key_file, timeout=5)
-    stdin, stdout, stderr = ssh.exec_command(cmdstr)
-    data = stdout.readlines()
-    if remove_newline:
-      value = ''.join(data).replace('\n', '')
-    else:
-      value = ''.join(data)
+    stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking 
+    
+    if not use_stdout :
+       ssh.close()
+       return None
+       
+    #### Can be Blocking for long running process
+    data  = stdout.readlines()  #Blocking code
+    value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
     ssh.close()
+    return value
+    
   except:
     value = None
-  return value
+    return value
 
 
 def ec2_keypair_get():
@@ -537,15 +560,17 @@ if __name__ == '__main__':
         for ipx in ipadress_list : 
           cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
           log(ipx, cmds)
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds)
-          #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking
+          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=True)
           """
            Issues :
            1)   SSH command is time blocked....
            
            
            2) Issues with SH shell vs Bash Shell when doing SSH
-           
+
+
+           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
            cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
            
            
@@ -559,6 +584,8 @@ if __name__ == '__main__':
                                 
           log("ssh",ipx, msg)
           sleep(5)
+    
+    
     
     
     
