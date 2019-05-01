@@ -5,10 +5,15 @@ pip installl -e .
 
 
 
-   --mode daemon  --waitsec 60  &
+
+batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
 
 
-batch_daemon_autoscale_cli --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
+batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
+
+
+#### Test with reset task file, on S3 drive
+batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 
 
@@ -107,6 +112,9 @@ def load_arguments():
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
   parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
   parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
+
+
+  parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
 
 
   parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
@@ -497,7 +505,13 @@ if __name__ == '__main__':
   
   global_task_file = args.global_task_file
   key_file = ec2_keypair_get()
-  
+
+
+  if args.reset_global_task_file :
+    with open(global_task_file, 'w') as f:
+       json.dump({}, f)    
+
+
   log("Daemon start: ", os.getpid(), global_task_file)
   while True:
     log("Daemon new loop: ", args.task_folder)
@@ -520,8 +534,10 @@ if __name__ == '__main__':
         ##### Launch Batch system by SSH 
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          log(ipx, "/home/ubuntu/zbatch.sh")
-          run_command_thru_ssh( ipx,  key_file,  cmdstr="/home/ubuntu/zbatch.sh")
+          log(ipx, "nohup /home/ubuntu/zbatch.sh >/dev/null 2>&1 & ")
+          msg = run_command_thru_ssh( ipx,  key_file,  
+                                cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
+          log("ssh",ipx, msg)
           sleep(5)
     
     
