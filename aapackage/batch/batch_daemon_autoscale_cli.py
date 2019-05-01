@@ -5,10 +5,13 @@ pip installl -e .
 
 
 
---task_folder  zs3drive/tasks/   --mode daemon  --waitsec 60  &
+   --mode daemon  --waitsec 60  &
 
 
-batch_daemon_autoscale_cli --mode daemon  --log_file   zlog/batchautoscale.log   
+batch_daemon_autoscale_cli --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
+
+
+
 
   Daemon for auto-scale.
   Only launch in master instance 
@@ -63,11 +66,14 @@ from aapackage import util_log
 ############### logger ########################################################
 logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
+#TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
+
 keypair = 'aws_ec2_ajey'
 region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
 amiId = "ami-01e9f303520739d32"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
+ISTEST = True
 
 
 ### Maintain infos on all instances  ###########################################
@@ -114,6 +120,8 @@ def load_arguments():
   return options
 
 
+
+
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. 
@@ -151,6 +159,8 @@ def task_get_list_valid_folder_new(folder_main):
   for folder in folders:
     if task_isvalid_folder(folder_main, folder, folder_check):
       valid_folders.append(folder)
+      
+  print(valid_folders)    
   return valid_folders
 
 
@@ -193,48 +203,6 @@ def parsefloat(value, default=0.0):
   return fltvalue
 
 
-################################################################################
-def instance_start_rule(task_folder):
-  """ Start spot instance if more than 10 tasks or less than 10 CPUs 
-      return instance type, spotprice
-  """
-  global instance_dict
-  ntask = task_getcount(task_folder)
-  ncpu  = instance_get_ncpu(instance_dict)
-  # hard coded values here
-  if  ntask > 30 and ncpu < 10 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
-    spotprice = 0.05
-    return {'type' : 't3.medium', 'spotprice' : spotprice  }
-    
-
-  if  ntask > 10 and ncpu < 5 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
-    spotprice = 0.05
-    return {'type' : 't3.small', 'spotprice' : spotprice }
-  
-  
-  if  ntask > 2 and ncpu < 5 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
-    # spotprice = 0.05
-    # return {'type' : 't3.small', 'spotprice' : spotprice }
-    spotprice = 0.05
-    return {'type' : 't3.medium', 'spotprice' : spotprice }  
-    
-  return None
-
-
-def instance_stop_rule(task_folder):
-  """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
-  global instance_dict
-  ntask = task_getcount(task_folder)
-  instance_dict = ec2_instance_getallstate()
-  if ntask == 0 and  instance_dict :
-      # Idle Instances
-      instance_list = [x for _, x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
-      return instances_list
-  else :
-      return None
 
 
 ################################################################################
@@ -327,6 +295,7 @@ def ec2_keypair_get():
             (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
   return identity
 
+
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
@@ -343,16 +312,12 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
     # cpu = ssh.command(cmdstr)
     cpuusage = run_command_thru_ssh(ipadress, identity, cmdstr)
+    cpuusage = 100.0  if not cpuusage else float(cpuusage)
+
 
     cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
     # ram = ssh.command(cmdstr)
     ramusage = run_command_thru_ssh(ipadress, identity, cmdstr)
-    
-    
-    if not cpuusage:
-        cpuusage = 100.0
-    else:
-        cpuusage = float(cpuusage)
     
     if not ramusage:
         totalram = 0
@@ -472,6 +437,57 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
         ssh.cmd(cmdstr)
 
 
+################################################################################
+def instance_start_rule(task_folder):
+  """ Start spot instance if more than 10 tasks or less than 10 CPUs 
+      return instance type, spotprice
+  """
+  global instance_dict
+  ntask = task_getcount(task_folder)
+  ncpu  = instance_get_ncpu(instance_dict)
+  print("Ntask, ncou", ntask, ncpu)
+  
+  if ntask == 0  and not ISTEST :
+    return None
+    
+  # hard coded values here
+  if  ntask > 30 and ncpu < 10 :
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    spotprice = 0.05
+    return {'type' : 't3.medium', 'spotprice' : spotprice  }
+    
+
+  if  ntask > 20 and ncpu < 5 :
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    spotprice = 0.05
+    return {'type' : 't3.small', 'spotprice' : spotprice }
+  
+  
+  if  ntask > 2 and ncpu < 5 :
+    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    # spotprice = 0.05
+    # return {'type' : 't3.small', 'spotprice' : spotprice }
+    spotprice = 0.05
+    return {'type' : 't3.medium', 'spotprice' : spotprice }  
+    
+  return None
+
+
+def instance_stop_rule(task_folder):
+  """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
+  global instance_dict
+  ntask = task_getcount(task_folder)
+  instance_dict = ec2_instance_getallstate()
+  if ntask == 0 and  instance_dict :
+      # Idle Instances
+      instance_list = [x for _, x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
+      return instances_list
+  else :
+      return None
+
+
+
+
 ##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
@@ -501,7 +517,7 @@ if __name__ == '__main__':
         instance_dict =  ec2_instance_getallstate()
         log("Instances running", instance_dict)
 
-        ##### Luanch Batch system
+        ##### Launch Batch system by SSH 
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
           log(ipx, "/home/ubuntu/zbatch.sh")
