@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 '''
-
+## 
+cd aapackage
 pip installl -e .
 
 
 
-
+##### Daemon mode
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
 
-
-batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
 
 
 #### Test with reset task file, on S3 drive
@@ -536,23 +535,23 @@ if __name__ == '__main__':
         ##### Launch Batch system by SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          log(ipx, "nohup /home/ubuntu/zbatch.sh  ")
-          
           cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
+          log(ipx, cmds)
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds)
           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
           """
-           Issues with SH shell vs Bash Shell when doing SSH
+           Issues :
+           1)   SSH command is time blocked....
            
+           
+           2) Issues with SH shell vs Bash Shell when doing SSH
            
            cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
            
            
            ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
-           
            ssh ubuntu@18.237.190.140 " /home/ubuntu/zbatch_cleanup.sh    && nohup  /home/ubuntu/zbatch.sh   "
-           
-          
+
            bash  nohup  bash /home/ubuntu/zbatch.sh
           
           """
@@ -560,6 +559,7 @@ if __name__ == '__main__':
                                 
           log("ssh",ipx, msg)
           sleep(5)
+    
     
     
     ### Stop instance by rules ###############################################
