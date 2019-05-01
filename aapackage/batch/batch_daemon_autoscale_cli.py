@@ -69,6 +69,8 @@ from aapackage import util_log
 
 
 ############### logger ########################################################
+ISTEST = True   ### For test the code
+
 logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
 #TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
@@ -76,9 +78,9 @@ TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/task
 keypair = 'aws_ec2_ajey'
 region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
-amiId = "ami-01e9f303520739d32"  #'ami-0491a657e7ed60af7'
+amiId = "ami-04b010cceb44affce"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
-ISTEST = True
+
 
 
 ### Maintain infos on all instances  ###########################################
@@ -112,7 +114,6 @@ def load_arguments():
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
   parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
   parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
-
 
   parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
 
@@ -200,7 +201,6 @@ def get_spot_price(instance_type):
   return parsefloat(value)
 
 
-##########################################################################################
 def parsefloat(value, default=0.0):
   """ Parse the float value. """
   fltvalue = default
@@ -364,10 +364,12 @@ def build_template_config(instance_type):
 
 
 ################################################################################
-def ec2_spot_start(instance_type, spot_price):
+def ec2_spot_start(instance_type, spot_price, waitsec=100):
   """
   Request a spot instance based on the price for the instance type
   # Need a check if this request has been successful.
+  
+  100 sec to be provisionned and started.
   """
   if not instance_type:
     instance_type = default_instance_type
@@ -383,12 +385,12 @@ def ec2_spot_start(instance_type, spot_price):
   print(cmdargs)
   cmd = ' '.join(cmdargs)
   msg = os.system(cmd)
-  sleep(60)  # It may not be fulfilled in 50 secs.
+  sleep(waitsec)  # It may not be fulfilled in 50 secs.
   ll= ec2_spot_instance_list()
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
 
 
-################################################################################
+
 def ec2_spot_instance_list():
   """ Get the list of current spot instances. """
   cmdargs = [
@@ -520,7 +522,7 @@ if __name__ == '__main__':
     instance_dict =  ec2_instance_getallstate()
     
     
-    ### Start instance by rules
+    ### Start instance by rules ###############################################
     start_instance = instance_start_rule( args.task_folder)
     log("Starting instances", start_instance)
     if start_instance : 
@@ -531,17 +533,33 @@ if __name__ == '__main__':
         instance_dict =  ec2_instance_getallstate()
         log("Instances running", instance_dict)
 
-        ##### Launch Batch system by SSH 
+        ##### Launch Batch system by SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          log(ipx, "nohup /home/ubuntu/zbatch.sh >/dev/null 2>&1 & ")
-          msg = run_command_thru_ssh( ipx,  key_file,  
-                                cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
+          log(ipx, "nohup /home/ubuntu/zbatch.sh  ")
+          
+          cmds = "bash /home/ubuntu/zbatch_cleanup.sh    && nohup  bash /home/ubuntu/zbatch.sh "
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds)
+          #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
+          """
+           Issues with SH shell vs Bash Shell when doing SSH
+           
+           
+           ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
+           
+           ssh ubuntu@18.237.190.140 " /home/ubuntu/zbatch_cleanup.sh    && nohup  /home/ubuntu/zbatch.sh   "
+           
+          
+           bash  nohup  bash /home/ubuntu/zbatch.sh
+          
+          """
+                                
+                                
           log("ssh",ipx, msg)
           sleep(5)
     
     
-    ### Stop instance by rules
+    ### Stop instance by rules ###############################################
     stop_instances = instance_stop_rule( args.task_folder)
     log("Instances to be stopped", stop_instances)
     if stop_instances:
@@ -550,6 +568,8 @@ if __name__ == '__main__':
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
 
+
+    ### No Daemon mode  ######################################################
     if args.mode != "daemon":
       log("No Daemon mode","terminated daemon", os.getpid())
       break
