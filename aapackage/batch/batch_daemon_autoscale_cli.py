@@ -560,8 +560,8 @@ if __name__ == '__main__':
         for ipx in ipadress_list : 
           cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
           log(ipx, cmds)
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking
-          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=True)
+          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=True)
           """
            Issues :
            1)   SSH command is time blocked....
