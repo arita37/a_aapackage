@@ -491,7 +491,7 @@ def instance_stop_rule(task_folder):
   if ntask == 0 and  instance_dict :
       # Idle Instances
       instance_list = [x for _, x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
-      return instances_list
+      return instance_list
   else :
       return None
 
@@ -538,7 +538,7 @@ if __name__ == '__main__':
         for ipx in ipadress_list : 
           log(ipx, "nohup /home/ubuntu/zbatch.sh  ")
           
-          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
+          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds)
           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
           """
