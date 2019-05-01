@@ -538,11 +538,14 @@ if __name__ == '__main__':
         for ipx in ipadress_list : 
           log(ipx, "nohup /home/ubuntu/zbatch.sh  ")
           
-          cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zbatch.sh "
+          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds)
           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
           """
            Issues with SH shell vs Bash Shell when doing SSH
+           
+           
+           cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
            
            
            ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
