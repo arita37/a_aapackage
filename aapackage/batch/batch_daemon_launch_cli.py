@@ -57,6 +57,7 @@ logger = logging.basicConfig()
 
 
 
+
 ################################################################################
 def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
