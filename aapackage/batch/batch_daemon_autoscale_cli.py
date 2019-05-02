@@ -595,7 +595,13 @@ if __name__ == '__main__':
   log("Daemon",  "start: ", os.getpid(), global_task_file)
   while True:
     log("Daemon", "tasks folder: ", args.task_folder)
-    
+
+    ### Retrieve tasks  ######################################################
+    task_get_from_github(repourl=args.task_repourl, 
+                             reponame=args.task_reponame, branch=args.task_repobranch, 
+                             to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
+                             tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
+                             
     # Keep Global state of running instances
     instance_dict =  ec2_instance_getallstate()
     
@@ -635,11 +641,7 @@ if __name__ == '__main__':
       log("Stopped instances", stop_instances_list)
 
 
-    ### Retrieve tasks  ######################################################
-    task_retrieve_fromgithub(repourl=args.task_repourl, 
-                             reponame=args.task_reponame, branch=args.task_repobranch, 
-                             to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
-                             tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
+
 
 
     ### No Daemon mode  ######################################################
