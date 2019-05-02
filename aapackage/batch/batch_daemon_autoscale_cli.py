@@ -148,19 +148,19 @@ def task_retrieve_fromgithub(repourl, reponame="tasks", branch="dev",
   
   
   """
-  repo_folder = tmp_folder + "/" reponame
-  cmds = "rm -rf " + 
+  repo_folder = tmp_folder + "/" + reponame
+  cmds = "rm -rf " + repo_folder 
   cmds += " && cd {tmp_folder} && git clone {repourl}  {reponame}".format(tmp_folder, repourl, reponame )
   cmds += " && git checkout " + branch
   
   task_list_added = []
-  for f in in os.listdir(repo_folder): :
+  for f in os.listdir(repo_folder): 
       if os.path.isdir( repo_folder + "/" + f ) and not os.path.exists(to_task_folder + "/" + f) :
         os.system(" cp {f1} {f2}".format(repo_folder + f, to_task_folder + f) )
         print("Copy", repo_folder + f, to_task_folder + f   )
         task_list_added.append( to_task_folder + f )
   
-   return task_list_added
+  return task_list_added
 
 
 
@@ -591,10 +591,10 @@ if __name__ == '__main__':
         ##### Launch Batch system by SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh >> a.log 2>>a.log & "
+          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "
           log(ipx, "no blocking mode ssh", cmds)
           # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=False)
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, isblocking=False)
           """
            Issues :  see below
           """
@@ -625,6 +625,18 @@ if __name__ == '__main__':
 
 
 """
+
+ found this on google groups: Starting a daemon with ssh - comp.unix.admin | Google Groups
+
+ssh server 'program </dev/null >/dev/null 2>&1 &' 
+
+that redirects the stdin to /dev/null, the stdout to /dev/null, and the stderr to stdout
+
+This worked for me so that the remote execution kicked off the daemon and didn't wait around for output.
+
+Will
+
+
 
            1)   SSH command is time blocked....
            
