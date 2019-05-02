@@ -121,6 +121,11 @@ def load_arguments():
   parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
 
 
+  parser.add_argument("--task_repourl", default="https://github.com/arita37/tasks.git", help="repo for task")
+  parser.add_argument("--task_reponame", default="tasks", help="repo for task")
+  parser.add_argument("--task_repobranch", default="dev", help="repo for task")
+
+
   parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
   
   parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
@@ -135,32 +140,50 @@ def load_arguments():
 
 
 ################################################################################
-def task_retrieve_fromgithub(repourl, reponame="tasks", branch="dev", 
+def task_get_from_github(repourl, reponame="tasks", branch="dev", 
                              to_task_folder="/home/ubuntu/zs3drive/tasks/", 
-                             tmp_folder="/tmp/") :
+                             tmp_folder="/home/ubuntu/data/ztmp/") :
   """
+   Retrieve tasks folder from Github repo and write on S3 drive for automatic processing.
    rm folder
    git clone  https://github.com/arita37/tasks.git
    git checkout branch
    for each subfolder
      cp folder1  folder_s3
-  
-  
-  
   """
-  repo_folder = tmp_folder + "/" + reponame
-  cmds = "rm -rf " + repo_folder 
-  cmds += " && cd {tmp_folder} && git clone {repourl}  {reponame}".format(tmp_folder, repourl, reponame )
-  cmds += " && git checkout " + branch
-  
-  task_list_added = []
+  if not os.path.exists(tmp_folder ) :
+        os.mkdir(tmp_folder)
+
+  repo_folder     = tmp_folder + "/" + reponame + "/"
+  to_task_folder  = to_task_folder + "/"
+  try :
+      msg = os.system("rm -rf " + repo_folder )
+  except : pass
+
+  cmds  = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame )
+  cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
+  # print(cmds)
+  msg = os.system(cmds)
+  # print(msg) 
+    
+  task_list_added, task_list = [], []
   for f in os.listdir(repo_folder): 
-      if os.path.isdir( repo_folder + "/" + f ) and not os.path.exists(to_task_folder + "/" + f) :
-        os.system(" cp {f1} {f2}".format(repo_folder + f, to_task_folder + f) )
-        print("Copy", repo_folder + f, to_task_folder + f   )
-        task_list_added.append( to_task_folder + f )
-  
-  return task_list_added
+       from_f  =  repo_folder + f + "/"
+       to_f    =  to_task_folder + f
+        
+       if  os.path.isdir(from_f) and f not in {".git"} :
+          task_list.append(from_f  )  
+          if not os.path.exists(to_f) :            
+            os.system("cp -avr {f1} {f2}".format(f1=from_f, f2=to_f) )
+            print("Copy", from_f, to_f   )
+        
+            if  os.path.exists(to_f) :
+              task_list_added.append( to_f )
+            else :
+              print("Error copy", from_f, to_f )
+
+  return task_list, task_list_added
+
 
 
 
@@ -610,6 +633,13 @@ if __name__ == '__main__':
       stop_instances_list = [v['id'] for v in stop_instances]
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
+
+
+    ### Retrieve tasks  ######################################################
+    task_retrieve_fromgithub(repourl=args.task_repourl, 
+                             reponame=args.task_reponame, branch=args.task_repobranch, 
+                             to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
+                             tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
 
 
     ### No Daemon mode  ######################################################
