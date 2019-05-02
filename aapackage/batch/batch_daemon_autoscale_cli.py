@@ -577,6 +577,35 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isbloc
 
 
 
+
+def ssh_put(hostname, key_file, remote_file, msg):
+    """ Make an ssh connection using paramiko and  run the command
+  
+     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+ 
+     https://github.com/paramiko/paramiko/issues/501
+
+    """
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    #stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
+    
+    ftp = ssh.open_sftp()
+    file=ftp.file(remote_file, "a", -1)
+    file.write(msg)
+    file.flush()
+    ftp.close()
+    ssh.close()
+
+
+
+
+
+
+
+
 ##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
@@ -620,8 +649,14 @@ if __name__ == '__main__':
 
         ##### Launch Batch system by SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
-        for ipx in ipadress_list : 
-          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "
+        for ipx in ipadress_list :
+          msg= """#!/bin/bash
+               bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
+               """
+          ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
+
+          
+          cmds = "chmod 777  /home/ubuntu/zbatch_ssh.sh && bash screen -d -m  /home/ubuntu/zbatch_ssh.sh"
           log(ipx, "no blocking mode ssh", cmds)
           # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds, isblocking=False)
@@ -660,6 +695,11 @@ if __name__ == '__main__':
 
 """
 
+
+            cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "   
+            f.write(cmds)     
+            
+            
  found this on google groups: Starting a daemon with ssh - comp.unix.admin | Google Groups
 
 ssh server 'program </dev/null >/dev/null 2>&1 &' 
