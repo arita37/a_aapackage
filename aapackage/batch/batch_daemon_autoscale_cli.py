@@ -574,7 +574,7 @@ if __name__ == '__main__':
 get_pty = False
 and use
 nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
-           
+           whic
 
 
           """
