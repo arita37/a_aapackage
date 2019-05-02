@@ -135,6 +135,36 @@ def load_arguments():
 
 
 ################################################################################
+def task_retrieve_fromgithub(repourl, reponame="tasks", branch="dev", 
+                             to_task_folder="/home/ubuntu/zs3drive/tasks/", 
+                             tmp_folder="/tmp/") :
+  """
+   rm folder
+   git clone  https://github.com/arita37/tasks.git
+   git checkout branch
+   for each subfolder
+     cp folder1  folder_s3
+  
+  
+  
+  """
+  repo_folder = tmp_folder + "/" reponame
+  cmds = "rm -rf " + 
+  cmds += " && cd {tmp_folder} && git clone {repourl}  {reponame}".format(tmp_folder, repourl, reponame )
+  cmds += " && git checkout " + branch
+  
+  task_list_added = []
+  for f in in os.listdir(repo_folder): :
+      if os.path.isdir( repo_folder + "/" + f ) and not os.path.exists(to_task_folder + "/" + f) :
+        os.system(" cp {f1} {f2}".format(repo_folder + f, to_task_folder + f) )
+        print("Copy", repo_folder + f, to_task_folder + f   )
+        task_list_added.append( to_task_folder + f )
+  
+   return task_list_added
+
+
+
+################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. 
        _qstart, _ignore , _qdone are excluded.
