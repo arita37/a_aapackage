@@ -462,7 +462,6 @@ def instance_start_rule(task_folder):
   
   if  ntask > 0 and ncpu == 0 :
     # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
-    # return {'type' : 't3.small', 'spotprice' : spotprice }
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }  
     
@@ -470,7 +469,9 @@ def instance_start_rule(task_folder):
 
 
 def instance_stop_rule(task_folder):
-  """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
+  """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances.
+  
+  """
   global instance_dict
   ntask         = task_getcount(task_folder)
   instance_dict = ec2_instance_getallstate()
@@ -479,7 +480,7 @@ def instance_stop_rule(task_folder):
   if ntask == 0 and  instance_dict :
       # Idle Instances
       instance_list = [x for _, x in instance_dict.items()  \
-                      if x["cpu_usage"] < 5.0   and x["ram_usage"] < 10.0 ]
+                      if x["cpu_usage"] < 10.0   and x["ram_usage"] < 10.0 ]
       return instance_list
   else :
       return None
@@ -565,18 +566,7 @@ if __name__ == '__main__':
           # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=False)
           """
-           Issues :
-           1)   SSH command is time blocked....
-           
-           https://github.com/paramiko/paramiko/issues/501
-           
-           set
-get_pty = False
-and use
-nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
-           whic
-
-
+           Issues :  see below
           """
           log("ssh",ipx, msg)
           sleep(5)
@@ -609,7 +599,22 @@ nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
 
 
 """
+
+           1)   SSH command is time blocked....
            
+           https://github.com/paramiko/paramiko/issues/501
+           
+           set
+get_pty = False
+and use
+nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
+           whic
+
+
+
+
+
+       
            2) Issues with SH shell vs Bash Shell when doing SSH
                need to load bashrc manually
 
