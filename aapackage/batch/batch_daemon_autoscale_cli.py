@@ -283,49 +283,6 @@ def ec2_instance_getallstate():
 
 
 ################################################################################
-def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_stdout=True):
-  """ Make an ssh connection using paramiko and  run the command
-  
-  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
- 
-   
-  # Send the command (non-blocking)
-stdin, stdout, stderr = ssh.exec_command("my_long_command --arg 1 --arg 2")
-
-# Wait for the command to terminate
-while not stdout.channel.exit_status_ready():
-    # Only print data if there is data to read in the channel
-    if stdout.channel.recv_ready():
-        rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
-        if len(rl) > 0:
-            # Print data from stdout
-            print stdout.channel.recv(1024),
-
- 
-  
-  """
-  try:
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, key_filename=key_file, timeout=5)
-    stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking 
-    
-    if not use_stdout :
-       sleep(10) # To let run the
-       ssh.close()
-       return None
-       
-    #### Can be Blocking for long running process
-    data  = stdout.readlines()  #Blocking code
-    value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
-    ssh.close()
-    return value
-    
-  except:
-    value = None
-    return value
-
 
 def ec2_keypair_get():
   identity = "%s/.ssh/%s" % \
@@ -530,6 +487,41 @@ def instance_stop_rule(task_folder):
 
 
 
+
+
+def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_stdout=True):
+  """ Make an ssh connection using paramiko and  run the command
+  
+  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+ 
+   https://github.com/paramiko/paramiko/issues/501
+
+  """
+  try:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
+    
+    if not use_stdout :
+       sleep(10) # To let run the
+       ssh.close()
+       return None
+       
+    #### Can be Blocking for long running process
+    data  = stdout.readlines()  #Blocking code
+    value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
+    ssh.close()
+    return value
+    
+  except:
+    value = None
+    return value
+
+
+
+
 ##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
@@ -568,7 +560,7 @@ if __name__ == '__main__':
         ##### Launch Batch system by SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
-          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
+          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh >> a.log 2>>a.log & "
           log(ipx, "no blocking mode ssh", cmds)
           # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
           msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=False)
@@ -576,19 +568,19 @@ if __name__ == '__main__':
            Issues :
            1)   SSH command is time blocked....
            
+           https://github.com/paramiko/paramiko/issues/501
            
-           2) Issues with SH shell vs Bash Shell when doing SSH
-               need to load bashrc manually
+           set
+get_pty = False
+and use
+nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
+It works well for me.
+           
 
-
-           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
-           cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
-           ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
-           ssh ubuntu@18.237.190.140 " /home/ubuntu/zbatch_cleanup.sh    && nohup  /home/ubuntu/zbatch.sh   "
-          
           """
           log("ssh",ipx, msg)
           sleep(5)
+    
     
     
     
@@ -614,5 +606,38 @@ if __name__ == '__main__':
 
 
 
+
+
+"""
+           
+           2) Issues with SH shell vs Bash Shell when doing SSH
+               need to load bashrc manually
+
+
+           #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
+           cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
+           ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
+           ssh ubuntu@18.237.190.140 " /home/ubuntu/zbatch_cleanup.sh    && nohup  /home/ubuntu/zbatch.sh   "
+          
+          
+          
+  # Send the command (non-blocking)
+stdin, stdout, stderr = ssh.exec_command("my_long_command --arg 1 --arg 2")
+
+# Wait for the command to terminate
+while not stdout.channel.exit_status_ready():
+    # Only print data if there is data to read in the channel
+    if stdout.channel.recv_ready():
+        rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+        if len(rl) > 0:
+            # Print data from stdout
+            print stdout.channel.recv(1024),
+
+
+
+
+
+
+"""
 
 
