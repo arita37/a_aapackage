@@ -11,8 +11,12 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
 
 
 
-#### Test with reset task file, on S3 drive
+#### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+
+
+batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+
 
 
 
@@ -243,11 +247,11 @@ def ec2_instance_getallstate():
   
   for spot in spot_instances:
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
-    cmd = ' '.join(cmdargs)
-    value = os.popen(cmd).read()
-    inst = json.loads(value)
-    ncpu = 0
-    ipaddr = None
+    cmd     = ' '.join(cmdargs)
+    value   = os.popen(cmd).read()
+    inst    = json.loads(value)
+    ncpu    = 0
+    ipaddr  = None
     instance_type = default_instance_type
     if inst and 'Reservations' in inst and inst['Reservations']:
       reserves = inst['Reservations'][0]
@@ -282,6 +286,10 @@ def ec2_instance_getallstate():
 def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_stdout=True):
   """ Make an ssh connection using paramiko and  run the command
   
+  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+ 
+   
   # Send the command (non-blocking)
 stdin, stdout, stderr = ssh.exec_command("my_long_command --arg 1 --arg 2")
 
@@ -294,9 +302,7 @@ while not stdout.channel.exit_status_ready():
             # Print data from stdout
             print stdout.channel.recv(1024),
 
-  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-  
+ 
   
   """
   try:
@@ -306,6 +312,7 @@ while not stdout.channel.exit_status_ready():
     stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking 
     
     if not use_stdout :
+       sleep(10) # To let run the
        ssh.close()
        return None
        
@@ -457,17 +464,19 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
     from datetime import datetime
     now = datetime.today().strftime('%Y%m%d')
     for inst in instances_list :
-      ssh = aws_ec2_ssh( inst["ip_address"])
-      target_folder = folder_backup + inst["id"] +  "_" + now
+      # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
+      target_folder = folder_backup +  "/" + inst["id"] +  "_" + now
       cmdstr = "mkdir %s" % target_folder
-      print(cmdstr)
-      ssh.cmd( "mkdir " + target_folder )
+      print(cmds)
+      
+      msg = run_command_thru_ssh( inst["ip_address"],  key_file,   cmds, True)
+      print(msg)      
       for t in folder_list :
-        cmdstr = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
-                                                 t.replace('/', ''), t)
-        print(cmdstr)
-        ssh.cmd(cmdstr)
-
+        cmds = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
+                                               t.replace('/', ''), t)
+        print(cmds)
+        # ssh.cmd(cmdstr)
+        msg = run_command_thru_ssh( inst["ip_address"],  key_file,   cmds, True)
 
 ################################################################################
 def instance_start_rule(task_folder):
@@ -477,27 +486,25 @@ def instance_start_rule(task_folder):
   global instance_dict
   ntask = task_getcount(task_folder)
   ncpu  = instance_get_ncpu(instance_dict)
-  print("Ntask, ncou", ntask, ncpu)
+  log("Start Rule", "Ntask, ncpu", ntask, ncpu)
   
   if ntask == 0  and not ISTEST :
     return None
     
   # hard coded values here
-  if  ntask > 30 and ncpu < 10 :
+  if  ntask > 20 and ncpu < 5 :
     # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice  }
     
 
-  if  ntask > 20 and ncpu < 5 :
+  if  ntask > 10 and ncpu < 2 :
     # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
     spotprice = 0.05
-    return {'type' : 't3.small', 'spotprice' : spotprice }
+    return {'type' : 't3.medium', 'spotprice' : spotprice }
   
-  
-  if  ntask > 2 and ncpu < 5 :
+  if  ntask > 0 and ncpu == 0 :
     # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
-    # spotprice = 0.05
     # return {'type' : 't3.small', 'spotprice' : spotprice }
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }  
@@ -508,11 +515,14 @@ def instance_start_rule(task_folder):
 def instance_stop_rule(task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances."""
   global instance_dict
-  ntask = task_getcount(task_folder)
+  ntask         = task_getcount(task_folder)
   instance_dict = ec2_instance_getallstate()
+  log("Stop rules", "ntask", ntask, instance_dict)
+  
   if ntask == 0 and  instance_dict :
       # Idle Instances
-      instance_list = [x for _, x in instance_dict.items() if x["cpu_usage"] < 5.0 and x["ram_usage"] < 10.0]
+      instance_list = [x for _, x in instance_dict.items()  \
+                      if x["cpu_usage"] < 5.0   and x["ram_usage"] < 10.0 ]
       return instance_list
   else :
       return None
@@ -536,9 +546,9 @@ if __name__ == '__main__':
        json.dump({}, f)    
 
 
-  log("Daemon start: ", os.getpid(), global_task_file)
+  log("Daemon",  "start: ", os.getpid(), global_task_file)
   while True:
-    log("Daemon new loop: ", args.task_folder)
+    log("Daemon", "tasks folder: ", args.task_folder)
     
     # Keep Global state of running instances
     instance_dict =  ec2_instance_getallstate()
@@ -546,11 +556,11 @@ if __name__ == '__main__':
     
     ### Start instance by rules ###############################################
     start_instance = instance_start_rule( args.task_folder)
-    log("Starting instances", start_instance)
+    log("Instances to start", start_instance)
     if start_instance : 
         # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
-        log("Started instances", instance_list)
+        log("Instances started", instance_list)
         
         instance_dict =  ec2_instance_getallstate()
         log("Instances running", instance_dict)
@@ -559,29 +569,24 @@ if __name__ == '__main__':
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list : 
           cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh ; "
-          log(ipx, cmds)
-          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=True)
+          log(ipx, "no blocking mode ssh", cmds)
+          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout=False)
           """
            Issues :
            1)   SSH command is time blocked....
            
            
            2) Issues with SH shell vs Bash Shell when doing SSH
+               need to load bashrc manually
 
 
            #  cmdstr="nohup  /home/ubuntu/zbatch.sh  2>&1 | tee -a /home/ubuntu/zlog/zbatch_log.log")
            cmds = "bash /home/ubuntu/zbatch_cleanup.sh && which python && whoami &&  bash /home/ubuntu/zs3drive/zbatch.sh "
-           
-           
            ssh user@host "nohup command1 > /dev/null 2>&1 &; nohup command2; command3"
            ssh ubuntu@18.237.190.140 " /home/ubuntu/zbatch_cleanup.sh    && nohup  /home/ubuntu/zbatch.sh   "
-
-           bash  nohup  bash /home/ubuntu/zbatch.sh
           
           """
-                                
-                                
           log("ssh",ipx, msg)
           sleep(5)
     
@@ -601,7 +606,7 @@ if __name__ == '__main__':
 
     ### No Daemon mode  ######################################################
     if args.mode != "daemon":
-      log("No Daemon mode","terminated daemon", os.getpid())
+      log("Daemon", "No Daemon mode","terminated daemon" )
       break
 
     sleep(args.waitsec)
