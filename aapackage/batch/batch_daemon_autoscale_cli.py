@@ -490,7 +490,8 @@ def instance_stop_rule(task_folder):
 
 
 
-def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_stdout=True):
+
+def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isblocking=False):
   """ Make an ssh connection using paramiko and  run the command
   
   http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
@@ -505,8 +506,8 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, use_st
     ssh.connect(hostname, key_filename=key_file, timeout=5)
     stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
     
-    if not use_stdout :
-       sleep(10) # To let run the
+    if not isblocking :
+       sleep(10) # To let run the script
        ssh.close()
        return None
        
@@ -570,10 +571,6 @@ if __name__ == '__main__':
           """
           log("ssh",ipx, msg)
           sleep(5)
-    
-    
-    
-    
     
     
     ### Stop instance by rules ###############################################
