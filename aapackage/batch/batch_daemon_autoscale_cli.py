@@ -576,6 +576,7 @@ and use
 nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
            
 
+
           """
           log("ssh",ipx, msg)
           sleep(5)
