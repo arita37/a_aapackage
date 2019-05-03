@@ -543,14 +543,13 @@ def instance_stop_rule(task_folder):
 
 
 
-def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isblocking=False):
+def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
   """ Make an ssh connection using paramiko and  run the command
-  
-  http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-  https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
- 
+   http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+   https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
    https://github.com/paramiko/paramiko/issues/501
-
+   https://unix.stackexchange.com/questions/30400/execute-remote-commands-completely-detaching-from-the-ssh-connection
+   
   """
   try:
     ssh = paramiko.SSHClient()
@@ -559,8 +558,9 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isbloc
     stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
     
     if not isblocking :
+       # Buggy code, use Screen instead
        sleep(10) # To let run the script
-       ssh.close()
+       #ssh.close()
        return None
        
     #### Can be Blocking for long running process
@@ -627,11 +627,11 @@ if __name__ == '__main__':
     log("Daemon", "tasks folder: ", args.task_folder)
 
     ### Retrieve tasks  ######################################################
-    task_get_from_github(repourl=args.task_repourl, 
+    task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
                              reponame=args.task_reponame, branch=args.task_repobranch, 
                              to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
                              tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
-                             
+    log("task", "new from github", task_added  )                         
     # Keep Global state of running instances
     instance_dict =  ec2_instance_getallstate()
     
@@ -647,7 +647,7 @@ if __name__ == '__main__':
         instance_dict =  ec2_instance_getallstate()
         log("Instances running", instance_dict)
 
-        ##### Launch Batch system by SSH  ####################################
+        ##### Launch Batch system by No Blocking SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list :
           msg= """#!/bin/bash
@@ -655,15 +655,14 @@ if __name__ == '__main__':
                """
           ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
 
+
+          cmds  = " bash /home/ubuntu/zs3drive/zbatch_cleanup.sh    "
+          cmds += " && which python && echo  ',' && pwd "
+          cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
           
-          cmds = "chmod 777  /home/ubuntu/zbatch_ssh.sh && bash screen -d -m  /home/ubuntu/zbatch_ssh.sh"
           log(ipx, "no blocking mode ssh", cmds)
-          # msg  = run_command_thru_ssh( ipx,  key_file,   cmds, use_stdout= False) #No blocking mode
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, isblocking=False)
-          """
-           Issues :  see below
-          """
-          log("ssh",ipx, msg)
+          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, isblocking=True)
+          log(ipx, "ssh output", msg)
           sleep(5)
     
     
@@ -675,8 +674,6 @@ if __name__ == '__main__':
       stop_instances_list = [v['id'] for v in stop_instances]
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
-
-
 
 
 
@@ -694,6 +691,11 @@ if __name__ == '__main__':
 
 
 """
+
+
+          cmds = "chmod 777  /home/ubuntu/zbatch_ssh.sh &&  screen -d -m  bash /home/ubuntu/zbatch_ssh.sh"
+
+
 
 
             cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "   
