@@ -533,7 +533,7 @@ def instance_stop_rule(task_folder):
       # Idle Instances
       for idx, x in instance_dict.items() :
          if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
-            instance_list.append(x)  
+            instance_list.append(x["id"])  
 
       return instance_list
   else :
@@ -662,7 +662,7 @@ if __name__ == '__main__':
     log("Instances to be stopped", stop_instances)
     if stop_instances:
       # ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
-      stop_instances_list = [v['InstanceId'] for v in stop_instances]
+      stop_instances_list = [v['id'] for v in stop_instances]
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
 
