@@ -135,14 +135,14 @@ def load_arguments():
 
 
 ################################################################################
-def os_folder_copy(from_folder_root, to_folder, isoverwrite=False) :
+def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude flag="_ignore") :
   ### Copy but NO duplicate folder
   task_list_added, task_list = [], []
   for f in os.listdir( from_folder_root ): 
        from_f =  from_folder_root + f
        to_f   =  to_folder + f + "/"
 
-       if  os.path.isdir(from_f) and f not in {".git"} :
+       if  os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f :
           task_list.append(from_f  )  
           if not os.path.exists(to_f) or isoverwrite :            
             os.system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f) )

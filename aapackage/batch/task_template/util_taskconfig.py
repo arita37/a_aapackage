@@ -1,12 +1,13 @@
-#
+# -*- coding: utf-8 -*-
 """
-python zs3drive/tasks/t_github_test02/main.py
+File containing task configuration and utilities to save data on S3
 
-with open(out_file, mode="w") as f :
-  for i in range(0, 25)
-    f.write(  "{i} \n".format(i=i)   )
-    sleep(2)
-out_file = "/home/ubuntu/zs3drive/tasks_out/t_github_test02.txt"
+
+Folders :
+  task_name :    mytask
+  taskout_local   :  /home/ubuntu/tasks/mytask/
+  taskout_s3_root :  /home/ubuntu/zs3tasks/tasks/
+  
 
 
 """
@@ -16,21 +17,19 @@ import random
 ####################################################################################################
 
 
-task_cpu   = 2
-taskout_s3_root    =  "/home/ubuntu/zs3drive/tasks_out/" 
-taskout_local_root = "/home/ubuntu/tasks_out/" 
+task_cpu = 2
+HOME_DIR = os.environ['HOME']  if 'HOME' in os.environ else '/home/ubuntu'
+taskout_s3_root    =  HOME_DIR + "/zs3drive/tasks_out/" 
+taskout_local_root =  HOME_DIR +  "/tasks_out/" 
 
 
 
 
-
-
-
-####################################################################################################
+######### Folder ###################################################################################
 # print( __file__ )
-task_name      =  __file__.split("/")[-2]
-taskout_local = taskout_local_root + task_name   
-taskout_s3    = taskout_s3_root   + task_name + "/"
+task_name     =  __file__.split("/")[-2]
+taskout_local = taskout_local_root + task_name  + "/" 
+taskout_s3    = taskout_s3_root    + task_name + "/"
 
 if os.path.exists( taskout_local ) :
    print("Task out Local Folder already exist")
@@ -43,6 +42,9 @@ else :
 
 
 def os_copy_local_to_s3( taskout_local, taskout_s3_root ) :
+  """
+    Copy to Local DRIVE to Global File System S3  (ie Spot Instance)
+  """
   
   task_name =  taskout_local.split("/")[-1]
   if not os.path.exists(  taskout_s3_root   ) :
