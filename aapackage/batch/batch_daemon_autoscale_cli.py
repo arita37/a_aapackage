@@ -138,8 +138,6 @@ def load_arguments():
 def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag="_ignore") :
   """
      ### Copy with criteria
-     
-  
   """
 
   task_list_added, task_list = [], []
