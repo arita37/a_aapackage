@@ -531,14 +531,25 @@ def instance_stop_rule(task_folder):
   
   if ntask == 0 and  instance_dict :
       # Idle Instances
+      instance_list = [x for _, x in instance_dict.items()  \
+                      if x["cpu_usage"] < 10.0   and x["ram_usage"] < 10.0 ]
+      return instance_list
+  else :
+      return None
+      
+  """    
+  instance_list = []
+  
+  if ntask == 0 and  instance_dict :
+      # Idle Instances
       for idx, x in instance_dict.items() :
          if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
-            instance_list.append(x["id"])  
+            instance_list.append(x)  
 
       return instance_list
   else :
       return None
-
+  """
 
 
 
