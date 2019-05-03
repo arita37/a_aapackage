@@ -446,7 +446,7 @@ def ec2_config_build_template(instance_type):
 
 
 ################################################################################
-def ec2_spot_start(instance_type, spot_price, waitsec=100):
+def ec2_spot_start(instance_type, spot_price, waitsec=80):
   """
   Request a spot instance based on the price for the instance type
   # Need a check if this request has been successful.
