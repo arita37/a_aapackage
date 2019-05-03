@@ -135,21 +135,27 @@ def load_arguments():
 
 
 ################################################################################
-def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude flag="_ignore") :
-  ### Copy but NO duplicate folder
+def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag="_ignore") :
+  """
+     ### Copy with criteria
+     
+  
+  """
+
   task_list_added, task_list = [], []
   for f in os.listdir( from_folder_root ): 
        from_f =  from_folder_root + f
        to_f   =  to_folder + f + "/"
-
+        
+          
        if  os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f :
-          task_list.append(from_f  )  
           if not os.path.exists(to_f) or isoverwrite :            
             os.system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f) )
             print("Copy", from_f, to_f   )
         
             if  os.path.exists(to_f) :
               task_list_added.append( to_f )
+              task_list.append(from_f  )
             else :
               print("Error copy", from_f, to_f )  
   return task_list, task_list_added
@@ -166,23 +172,33 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
    git checkout branch
    for each subfolder :cp folder1  folder_s3
   """
+  ### Git pull  ########################################################################
   if not os.path.exists(tmp_folder ) :
         os.mkdir(tmp_folder)
 
   repo_folder     = tmp_folder + "/" + reponame + "/"
   to_task_folder  = to_task_folder + "/"
-  try :
-      msg = os.system("rm -rf " + repo_folder )
-  except : pass
-
+  
+  msg = os.system("rm -rf " + repo_folder )
   cmds  = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame )
   cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
   print(cmds)
   msg = os.system(cmds)
   # print(msg) 
+
   
-  ### Copy 
+  ### Copy  ##########################################################################
   task_list, task_list_added = os_folder_copy(repo_folder, to_task_folder)
+
+
+  ### Rename folder to ignore and commit #############################################
+  for f in task_list :
+    os.rename(f, f+"_ignore" if f[-1] != "/" else f[:-1]+"_ignore"  )
+  
+  cmds  = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder )
+  cmds += " &&  git push --all --force "
+  print(cmds)
+  msg = os.system(cmds)    
 
   return task_list, task_list_added
 

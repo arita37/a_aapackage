@@ -29,6 +29,9 @@ pwd
 
 ##############################################################################
 ###### Task Launcher  ########################################################
+# conda env create -n myenv -f requirement.yml
+# source activate myenv
+
 source activate py36
 which python
 

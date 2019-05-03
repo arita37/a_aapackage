@@ -14,9 +14,9 @@ Folders :
 import os, sys
 from time import sleep
 import random
-####################################################################################################
 
 
+######### Variables ################################################################################
 task_cpu = 2
 HOME_DIR = os.environ['HOME']  if 'HOME' in os.environ else '/home/ubuntu'
 taskout_s3_root    =  HOME_DIR + "/zs3drive/tasks_out/" 
@@ -35,12 +35,12 @@ if os.path.exists( taskout_local ) :
    print("Task out Local Folder already exist")
 else :
    os.system("mkdir " + taskout_local )
-   
-####################################################################################################
-
 # print( local_taskout, s3_taskout)
 
 
+
+
+######### Utils ####################################################################################
 def os_copy_local_to_s3( taskout_local, taskout_s3_root ) :
   """
     Copy to Local DRIVE to Global File System S3  (ie Spot Instance)
