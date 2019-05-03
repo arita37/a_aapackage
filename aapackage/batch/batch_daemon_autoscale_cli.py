@@ -187,6 +187,77 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
 
 
 
+
+def task_put_to_github(repourl, reponame="tasks", branch="dev", 
+                             from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
+                             tmp_folder="/home/ubuntu/data/ztmp/") :
+  """
+  
+    copy from task_out to local,
+    
+    git pull --all
+    
+    git add --all, push all
+    
+    git lfs track "*.psd"
+Make sure .gitattributes is tracked
+
+git add .gitattributes
+There is no step three. Just commit and push to GitHub as you normally would.
+
+git add file.psd
+git commit -m "Add design file"
+git push origin master
+    
+    
+   git checkout branch
+
+  """
+  if not os.path.exists(tmp_folder ) :
+        os.mkdir(tmp_folder)
+
+  repo_folder     = tmp_folder + "/" + reponame + "/"
+  from_taskout_foldert  = from_taskout_folder + "/"
+  try :
+      msg = os.system("rm -rf " + repo_folder )
+  except : pass
+
+  cmds  = " cd {a} && git pull --all ".format(a=repo_folder )
+  cmds += " && git checkout {b}".format(b=branch)
+  # print(cmds)
+  msg = os.system(cmds)
+  # print(msg) 
+    
+    
+  task_list_added, task_list = [], []
+  for f in os.listdir( from_taskout_folder ): 
+       to_f  =  repo_folder + f + "/"
+       from_f    =  from_taskout_folder + f
+        
+       if  os.path.isdir(from_f) and f not in {".git"} :
+          task_list.append(from_f  )  
+          if not os.path.exists(to_f) :            
+            os.system("cp -avr {f1} {f2}".format(f1=from_f, f2=to_f) )
+            print("Copy", from_f, to_f   )
+        
+            if  os.path.exists(to_f) :
+              task_list_added.append( to_f )
+            else :
+              print("Error copy", from_f, to_f )
+
+
+  cmds  = " git add --all  && git commit -m 'ok'  "
+  cmds += " && git push --all "
+  # print(cmds)
+  msg = os.system(cmds)
+  return task_list, task_list_added
+
+
+
+
+
+
+
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
   """ Make it regex based so that both shell and python can be checked. 
