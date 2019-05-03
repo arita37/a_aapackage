@@ -60,9 +60,10 @@ from time import sleep
 import argparse
 import logging
 import subprocess
+import copy
+
+
 import paramiko
-
-
 ################################################################################
 from aapackage.util_log import logger_setup
 from aapackage.batch import util_cpu
@@ -83,7 +84,6 @@ region  = 'us-west-2'  # Oregon West
 default_instance_type = 't3.small'
 amiId = "ami-04b010cceb44affce"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
-
 
 
 ### Maintain infos on all instances  ###########################################
@@ -211,7 +211,6 @@ def task_get_list_valid_folder_new(folder_main):
     --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
     --->  Solution is to have a Global File global_task_dict which maintains current "running tasks/done tasks"
           Different logic should be applied ,  see code in batch_daemon_launch.py
-  
   """
   # task already started
   folder_check = json.load(open(global_task_file, mode="r")) 
@@ -246,7 +245,7 @@ def task_getcount(folder_main):
 
 
 ##########################################################################################
-def get_spot_price(instance_type):
+def ec2_get_spot_price(instance_type):
   """ Get the spot price for instance type in us-west-2"""
   value = 0.0
   if os.path.exists('./aws_spot_price.sh') and os.path.isfile('./aws_spot_price.sh'):
@@ -283,11 +282,8 @@ def instance_get_ncpu(instances_dict):
 def ec2_instance_getallstate():
   """
       use to update the global instance_dict
-          "id" :
-          instance_type,
-          ip_address
-          cpu, ram,
-          cpu_usage, ram_usage
+          "id" :  instance_type,
+          ip_address, cpu, ram, cpu_usage, ram_usage
   """
   val = {}
   spot_list = ec2_spot_instance_list()
@@ -358,13 +354,13 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
     # cpu = ssh.command(cmdstr)
-    cpuusage = run_command_thru_ssh(ipadress, identity, cmdstr)
+    cpuusage = ssh_cmdrun(ipadress, identity, cmdstr)
     cpuusage = 100.0  if not cpuusage else float(cpuusage)
 
 
     cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
     # ram = ssh.command(cmdstr)
-    ramusage = run_command_thru_ssh(ipadress, identity, cmdstr)
+    ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
     
     if not ramusage:
         totalram = 0
@@ -378,7 +374,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
 
 
 ################################################################################
-def build_template_config(instance_type):
+def ec2_config_build_template(instance_type):
   """ Build the spot json config into a json file. """
   spot_config = {
     "ImageId": amiId,
@@ -412,7 +408,7 @@ def ec2_spot_start(instance_type, spot_price, waitsec=100):
   """
   if not instance_type:
     instance_type = default_instance_type
-  build_template_config(instance_type)  
+  ec2_config_build_template(instance_type)  
   cmdargs = [
     'aws', 'ec2', 'request-spot-instances',
     '--region', region,
@@ -479,14 +475,15 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
       cmdstr = "mkdir %s" % target_folder
       print(cmds)
       
-      msg = run_command_thru_ssh( inst["ip_address"],  key_file,   cmds, True)
+      msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
       print(msg)      
       for t in folder_list :
         cmds = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
                                                t.replace('/', ''), t)
         print(cmds)
         # ssh.cmd(cmdstr)
-        msg = run_command_thru_ssh( inst["ip_address"],  key_file,   cmds, True)
+        msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
+
 
 ################################################################################
 def instance_start_rule(task_folder):
@@ -503,18 +500,19 @@ def instance_start_rule(task_folder):
     
   # hard coded values here
   if  ntask > 20 and ncpu < 5 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice  }
     
 
   if  ntask > 10 and ncpu < 2 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }
   
+  ##### Minimal instance  ###################################################
   if  ntask > 0 and ncpu == 0 :
-    # spotprice = max(0.05, get_spot_price('t3.medium')* 1.30)
+    # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }  
     
@@ -526,14 +524,17 @@ def instance_stop_rule(task_folder):
   
   """
   global instance_dict
-  ntask         = task_getcount(task_folder)
-  instance_dict = ec2_instance_getallstate()
+  ntask              = task_getcount(task_folder)
+  instance_dict_prev = copy.deepcopy(instance_dict)
+  instance_dict      = ec2_instance_getallstate()
   log("Stop rules", "ntask", ntask, instance_dict)
   
   if ntask == 0 and  instance_dict :
       # Idle Instances
-      instance_list = [x for _, x in instance_dict.items()  \
-                      if x["cpu_usage"] < 10.0   and x["ram_usage"] < 10.0 ]
+      for idx, x in instance_dict.items() :
+         if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
+            instance_list.append(x)  
+
       return instance_list
   else :
       return None
@@ -541,9 +542,7 @@ def instance_stop_rule(task_folder):
 
 
 
-
-
-def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
+def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
   """ Make an ssh connection using paramiko and  run the command
    http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
    https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
@@ -560,7 +559,7 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isbloc
     if not isblocking :
        # Buggy code, use Screen instead
        sleep(10) # To let run the script
-       #ssh.close()
+       ssh.close()
        return None
        
     #### Can be Blocking for long running process
@@ -572,10 +571,6 @@ def run_command_thru_ssh(hostname, key_file, cmdstr, remove_newline=True, isbloc
   except:
     value = None
     return value
-
-
-
-
 
 
 def ssh_put(hostname, key_file, remote_file, msg):
@@ -598,10 +593,6 @@ def ssh_put(hostname, key_file, remote_file, msg):
     file.flush()
     ftp.close()
     ssh.close()
-
-
-
-
 
 
 
@@ -650,10 +641,10 @@ if __name__ == '__main__':
         ##### Launch Batch system by No Blocking SSH  ####################################
         ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
         for ipx in ipadress_list :
-          msg= """#!/bin/bash
-               bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
-               """
-          ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
+          #msg= """#!/bin/bash
+          #     bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
+          #     """
+          # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
 
 
           cmds  = " bash /home/ubuntu/zs3drive/zbatch_cleanup.sh    "
@@ -661,7 +652,7 @@ if __name__ == '__main__':
           cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
           
           log(ipx, "no blocking mode ssh", cmds)
-          msg  = run_command_thru_ssh( ipx,  key_file,   cmds, isblocking=True)
+          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
           log(ipx, "ssh output", msg)
           sleep(5)
     
@@ -671,7 +662,7 @@ if __name__ == '__main__':
     log("Instances to be stopped", stop_instances)
     if stop_instances:
       # ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
-      stop_instances_list = [v['id'] for v in stop_instances]
+      stop_instances_list = [v['InstanceId'] for v in stop_instances]
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
 
@@ -690,12 +681,11 @@ if __name__ == '__main__':
 
 
 
-"""
 
+"""
+Problem o blocking
 
           cmds = "chmod 777  /home/ubuntu/zbatch_ssh.sh &&  screen -d -m  bash /home/ubuntu/zbatch_ssh.sh"
-
-
 
 
             cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "   
@@ -723,10 +713,6 @@ get_pty = False
 and use
 nohup /tmp/b.sh >> /tmp/a.log 2>>/tmp/a.log &
            whic
-
-
-
-
 
        
            2) Issues with SH shell vs Bash Shell when doing SSH
