@@ -87,15 +87,10 @@ spot_cfg_file = '/tmp/ec_spot_config'
 
 
 ### Maintain infos on all instances  ###########################################
-# global instance_dict
-instance_dict = {
+# global INSTANCE_DICT
+INSTANCE_DICT = {
   "id":{
-    "id": "",
-    "cpu": 0,
-    "ip_address": "",
-    'ram': 0,
-    'cpu_usage': 0,
-    'ram_usage':0
+    "id": "", "cpu": 0, "ip_address": "", 'ram': 0, 'cpu_usage': 0, 'ram_usage':0
   }
 }
 
@@ -140,16 +135,36 @@ def load_arguments():
 
 
 ################################################################################
+def os_folder_copy(from_folder_root, to_folder, isoverwrite=False) :
+  ### Copy but NO duplicate folder
+  task_list_added, task_list = [], []
+  for f in os.listdir( from_folder_root ): 
+       from_f =  from_folder_root + f
+       to_f   =  to_folder + f + "/"
+
+       if  os.path.isdir(from_f) and f not in {".git"} :
+          task_list.append(from_f  )  
+          if not os.path.exists(to_f) or isoverwrite :            
+            os.system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f) )
+            print("Copy", from_f, to_f   )
+        
+            if  os.path.exists(to_f) :
+              task_list_added.append( to_f )
+            else :
+              print("Error copy", from_f, to_f )  
+  return task_list, task_list_added
+   
+   
 def task_get_from_github(repourl, reponame="tasks", branch="dev", 
                              to_task_folder="/home/ubuntu/zs3drive/tasks/", 
                              tmp_folder="/home/ubuntu/data/ztmp/") :
   """
+   Get tasks from github repo
    Retrieve tasks folder from Github repo and write on S3 drive for automatic processing.
    rm folder
    git clone  https://github.com/arita37/tasks.git
    git checkout branch
-   for each subfolder
-     cp folder1  folder_s3
+   for each subfolder :cp folder1  folder_s3
   """
   if not os.path.exists(tmp_folder ) :
         os.mkdir(tmp_folder)
@@ -162,98 +177,60 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
 
   cmds  = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame )
   cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
-  # print(cmds)
+  print(cmds)
   msg = os.system(cmds)
   # print(msg) 
-    
-  task_list_added, task_list = [], []
-  for f in os.listdir(repo_folder): 
-       from_f  =  repo_folder + f + "/"
-       to_f    =  to_task_folder + f
-        
-       if  os.path.isdir(from_f) and f not in {".git"} :
-          task_list.append(from_f  )  
-          if not os.path.exists(to_f) :            
-            os.system("cp -avr {f1} {f2}".format(f1=from_f, f2=to_f) )
-            print("Copy", from_f, to_f   )
-        
-            if  os.path.exists(to_f) :
-              task_list_added.append( to_f )
-            else :
-              print("Error copy", from_f, to_f )
+  
+  ### Copy 
+  task_list, task_list_added = os_folder_copy(repo_folder, to_task_folder)
 
   return task_list, task_list_added
-
-
 
 
 
 def task_put_to_github(repourl, reponame="tasks", branch="dev", 
                              from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
-                             tmp_folder="/home/ubuntu/data/ztmp/") :
+                             repo_folder="/home/ubuntu/data/github_tasks_out/") :
   """
-  
-    copy from task_out to local,
+    Put results back to github
+    git clone https://github.com/arita37/tasks_out.git  github_tasks_out
     
     git pull --all
-    
+    copy S3 to github_tasks_out
     git add --all, push all
     
     git lfs track "*.psd"
-Make sure .gitattributes is tracked
-
-git add .gitattributes
+Make sure .gitattributes is tracked  git add .gitattributes
 There is no step three. Just commit and push to GitHub as you normally would.
-
 git add file.psd
 git commit -m "Add design file"
-git push origin master
-    
-    
-   git checkout branch
+    git config  credential.helper store
+    git config --global credential.helper 'cache --timeout 7209990'
 
   """
-  if not os.path.exists(tmp_folder ) :
-        os.mkdir(tmp_folder)
-
-  repo_folder     = tmp_folder + "/" + reponame + "/"
-  from_taskout_foldert  = from_taskout_folder + "/"
-  try :
-      msg = os.system("rm -rf " + repo_folder )
-  except : pass
-
+  if not os.path.exists(repo_folder ) :
+     print("Git clone")   
+     cmds  = " git clone {a} {b} ".format(a=repourl, b=repo_folder )
+     cmds += " && git checkout {b}".format(b=branch)
+     msg = os.system(cmds)
+  
+  
   cmds  = " cd {a} && git pull --all ".format(a=repo_folder )
   cmds += " && git checkout {b}".format(b=branch)
-  # print(cmds)
+  print("Git Pull results", cmds)
   msg = os.system(cmds)
-  # print(msg) 
-    
-    
-  task_list_added, task_list = [], []
-  for f in os.listdir( from_taskout_folder ): 
-       to_f  =  repo_folder + f + "/"
-       from_f    =  from_taskout_folder + f
-        
-       if  os.path.isdir(from_f) and f not in {".git"} :
-          task_list.append(from_f  )  
-          if not os.path.exists(to_f) :            
-            os.system("cp -avr {f1} {f2}".format(f1=from_f, f2=to_f) )
-            print("Copy", from_f, to_f   )
-        
-            if  os.path.exists(to_f) :
-              task_list_added.append( to_f )
-            else :
-              print("Error copy", from_f, to_f )
 
+  ### Copy with OVERWRITE
+  task_list, task_list_added = os_folder_copy(from_taskout_folder, repo_folder, 
+                                              isoverwrite=True)
 
-  cmds  = " git add --all  && git commit -m 'ok'  "
-  cmds += " && git push --all "
-  # print(cmds)
+  ### Git push
+  cmds  = " cd {a} && git add --all  && git commit -m 'oo{b}'  ".format(a= repo_folder , b= ",".join(task_list_added) )
+  cmds += " && git push --all   --force "
+  print("Git push task resut", cmds)
   msg = os.system(cmds)
+  print(msg)
   return task_list, task_list_added
-
-
-
 
 
 
@@ -352,7 +329,7 @@ def instance_get_ncpu(instances_dict):
 ################################################################################
 def ec2_instance_getallstate():
   """
-      use to update the global instance_dict
+      use to update the global INSTANCE_DICT
           "id" :  instance_type,
           ip_address, cpu, ram, cpu_usage, ram_usage
   """
@@ -403,7 +380,6 @@ def ec2_instance_getallstate():
 
 
 ################################################################################
-
 def ec2_keypair_get():
   identity = "%s/.ssh/%s" % \
             (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
@@ -561,9 +537,9 @@ def instance_start_rule(task_folder):
   """ Start spot instance if more than 10 tasks or less than 10 CPUs 
       return instance type, spotprice
   """
-  global instance_dict
+  global INSTANCE_DICT
   ntask = task_getcount(task_folder)
-  ncpu  = instance_get_ncpu(instance_dict)
+  ncpu  = instance_get_ncpu(INSTANCE_DICT)
   log("Start Rule", "Ntask, ncpu", ntask, ncpu)
   
   if ntask == 0  and not ISTEST :
@@ -594,15 +570,15 @@ def instance_stop_rule(task_folder):
   """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances.
   
   """
-  global instance_dict
+  global INSTANCE_DICT
   ntask              = task_getcount(task_folder)
-  instance_dict_prev = copy.deepcopy(instance_dict)
-  instance_dict      = ec2_instance_getallstate()
-  log("Stop rules", "ntask", ntask, instance_dict)
+  INSTANCE_DICT_prev = copy.deepcopy(INSTANCE_DICT)
+  INSTANCE_DICT      = ec2_instance_getallstate()
+  log("Stop rules", "ntask", ntask, INSTANCE_DICT)
   
-  if ntask == 0 and  instance_dict :
+  if ntask == 0 and  INSTANCE_DICT :
       # Idle Instances
-      instance_list = [x for _, x in instance_dict.items()  \
+      instance_list = [x for _, x in INSTANCE_DICT.items()  \
                       if x["cpu_usage"] < 10.0   and x["ram_usage"] < 10.0 ]
       return instance_list
   else :
@@ -611,9 +587,9 @@ def instance_stop_rule(task_folder):
   """    
   instance_list = []
   
-  if ntask == 0 and  instance_dict :
+  if ntask == 0 and  INSTANCE_DICT :
       # Idle Instances
-      for idx, x in instance_dict.items() :
+      for idx, x in INSTANCE_DICT.items() :
          if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
             instance_list.append(x)  
 
@@ -655,7 +631,7 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
     return value
 
 
-def ssh_put(hostname, key_file, remote_file, msg):
+def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
     """ Make an ssh connection using paramiko and  run the command
   
      http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
@@ -669,6 +645,9 @@ def ssh_put(hostname, key_file, remote_file, msg):
     ssh.connect(hostname, key_filename=key_file, timeout=5)
     #stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
     
+    if filename is not None :
+      pass
+    
     ftp = ssh.open_sftp()
     file=ftp.file(remote_file, "a", -1)
     file.write(msg)
@@ -677,6 +656,23 @@ def ssh_put(hostname, key_file, remote_file, msg):
     ssh.close()
 
 
+
+def ec2_instance_initialize_ssh():
+        ##### Launch Batch system by No Blocking SSH  ####################################
+        ipadress_list = [  x["ip_address"]  for k,x in INSTANCE_DICT.items() ]
+        for ipx in ipadress_list :
+          #msg= """#!/bin/bash
+          #     bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
+          #     """
+          # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
+
+          cmds  = " bash /home/ubuntu/zs3drive/zbatch_cleanup.sh    "
+          cmds += " && which python && echo  ',' && pwd "
+          cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
+          
+          log(ipx, "no blocking mode ssh", cmds)
+          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
+          log(ipx, "ssh output", msg)  
 
 
 ##########################################################################################
@@ -696,19 +692,21 @@ if __name__ == '__main__':
 
 
   log("Daemon",  "start: ", os.getpid(), global_task_file)
+  ii = 0
   while True:
     log("Daemon", "tasks folder: ", args.task_folder)
 
-    ### Retrieve tasks  ######################################################
+    ### Retrieve tasks from github ##############################################
     task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
                              reponame=args.task_reponame, branch=args.task_repobranch, 
                              to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
                              tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
-    log("task", "new from github", task_added  )                         
+    log("task", "new from github", task_added  )    
+    
     # Keep Global state of running instances
-    instance_dict =  ec2_instance_getallstate()
+    INSTANCE_DICT =  ec2_instance_getallstate()
     
-    
+
     ### Start instance by rules ###############################################
     start_instance = instance_start_rule( args.task_folder)
     log("Instances to start", start_instance)
@@ -717,29 +715,15 @@ if __name__ == '__main__':
         instance_list = ec2_spot_start(start_instance['type'], start_instance['spotprice']  )
         log("Instances started", instance_list)
         
-        instance_dict =  ec2_instance_getallstate()
-        log("Instances running", instance_dict)
+        INSTANCE_DICT =  ec2_instance_getallstate()
+        log("Instances running", INSTANCE_DICT)
 
-        ##### Launch Batch system by No Blocking SSH  ####################################
-        ipadress_list = [  x["ip_address"]  for k,x in instance_dict.items() ]
-        for ipx in ipadress_list :
-          #msg= """#!/bin/bash
-          #     bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
-          #     """
-          # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
-
-
-          cmds  = " bash /home/ubuntu/zs3drive/zbatch_cleanup.sh    "
-          cmds += " && which python && echo  ',' && pwd "
-          cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
-          
-          log(ipx, "no blocking mode ssh", cmds)
-          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
-          log(ipx, "ssh output", msg)
-          sleep(5)
+        ##### Launch Batch system by No Blocking SSH  #########################
+        ec2_instance_initialize_ssh()
+        sleep(5)
     
     
-    ### Stop instance by rules ###############################################
+    ### Stop instance by rules ################################################
     stop_instances = instance_stop_rule( args.task_folder)
     log("Instances to be stopped", stop_instances)
     if stop_instances:
@@ -749,6 +733,14 @@ if __name__ == '__main__':
       log("Stopped instances", stop_instances_list)
 
 
+    ### Upload results to github ##############################################
+    ii = ii + 1
+    if ii % 5 == 0 :
+      task_new,task_added = task_put_to_github(repourl= "https://github.com/arita37/tasks_out.git", 
+                               reponame="tasks_out", branch="dev", 
+                               from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
+                               repo_folder="/home/ubuntu/data/github_tasks_out/") 
+      log("task", "Add results to github", task_added  ) 
 
     ### No Daemon mode  ######################################################
     if args.mode != "daemon":
@@ -819,10 +811,6 @@ while not stdout.channel.exit_status_ready():
         if len(rl) > 0:
             # Print data from stdout
             print stdout.channel.recv(1024),
-
-
-
-
 
 
 """

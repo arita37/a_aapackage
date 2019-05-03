@@ -59,7 +59,7 @@ def os_copy_local_to_s3( taskout_local, taskout_s3_root ) :
  
 
 
-def os_rename_task(task_name, taskout_s3_root ):
+def os_rename_taskfolder(task_name, taskout_s3_root , suffix="_qdone"):
   """
     Task done, renamed
   
