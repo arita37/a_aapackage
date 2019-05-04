@@ -112,6 +112,7 @@ def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
     """
     from aapackage.batch import util_cpu
     cpu_pct, mem_pct =  util_cpu.ps_get_computer_resources_usage()
+    log("cpu,mem usage", cpu_pct, mem_pct)
     while cpu_pct > cpu_max or mem_pct > mem_max :
         log("cpu,mem usage", cpu_pct, mem_pct)
         cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
@@ -173,7 +174,7 @@ def main3():
             
          folder = os.path.join(folder_main, folder)    
          files  = [file  for file in os.listdir( folder ) if file == "main.sh" or file == "main.py"  ]    
-         # log(files)
+         log(files)
          if files :      
            pid = subprocess_launch(folder, files[0] )
            log("task folder started:", folder,  files[0], pid)   
