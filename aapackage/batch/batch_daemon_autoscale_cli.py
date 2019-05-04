@@ -63,7 +63,7 @@ TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/task
 keypair = 'aws_ec2_ajey'  # Remote Spot Instance
 region  = 'us-west-2'     # Oregon West
 default_instance_type = 't3.small'
-amiId = "ami-04b010cceb44affce"  #'ami-0491a657e7ed60af7'
+amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
@@ -487,7 +487,7 @@ def ec2_config_build_template(instance_type):
 
 
 ################################################################################
-def ec2_spot_start(instance_type, spot_price, waitsec=80):
+def ec2_spot_start(instance_type, spot_price, waitsec=100):
   """
   Request a spot instance based on the price for the instance type
   # Need a check if this request has been successful.
@@ -639,6 +639,9 @@ def instance_stop_rule(task_folder):
       # Idle Instances
       instance_list = [x for _, x in INSTANCE_DICT.items()  \
                       if x["cpu_usage"] < 10.0   and x["ram_usage"] < 9.0 ]
+      
+                      
+                      
       return instance_list
   else :
       return None
@@ -671,23 +674,30 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostname, key_filename=key_file, timeout=5)
-    stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
+    stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking  , get_pty=False
     
+    """
     if not isblocking :
        # Buggy code, use Screen instead
        sleep(10) # To let run the script
        ssh.close()
        return None
-       
+    """
+    
     #### Can be Blocking for long running process  screen -d -m YOURBASH
     data  = stdout.readlines()  #Blocking code
     value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
+    
+    err_msg = stderr.readlines() 
+    if len(err_msg) > 0 :
+      print(err_msg  )
+    
     ssh.close()
     return value
     
-  except:
-    value = None
-    return value
+  except Exception as e :
+    print("Error Paramiko", e)
+    return None
 
 
 def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
@@ -716,27 +726,49 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
 
 
 def ec2_instance_initialize_ssh():
+        """
+          Many issues with S3 and ssh, Very sensitive code...
+        
+        """
         ##### Launch Batch system by No Blocking SSH  ####################################
-        ipadress_list = [  x["ip_address"]  for k,x in INSTANCE_DICT.items() ]
-        for ipx in ipadress_list :
+        for k,x in INSTANCE_DICT.items():
+          ipx         = x["ip_address"]
+          instance_id = x["id"]
           #msg= """#!/bin/bash
           #     bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh   
           #     """
           # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
 
+      
           cmds  = " cp /home/ubuntu/zs3drive/zbatch_cleanup.sh  /home/ubuntu/zbatch_cleanup.sh   "
           cmds += " && cp /home/ubuntu/zs3drive/zbatch.sh  /home/ubuntu/zbatch.sh   "
+          cmds += " && echo  ' copied'   "
+          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
+          log(ipx, "ssh copy script file to Local", msg)  
           
           cmds  = " bash /home/ubuntu/zbatch_cleanup.sh    "
           cmds += " && which python && echo  ',' && pwd "
+          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
+          log(ipx, "ssh zbatch_cleanup", msg)  
           
-          #### MAJOR BUG : CANNOT USE screen on S3 Folder ,due to Permission ISSUES on S#
-          cmds += " && screen -d -m bash /home/ubuntu/zbatch.sh && screen -ls "
-          # cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
           
+          #### MAJOR BUG : CANNOT USE bash script on S3 Folder ,due to Permission ISSUES on S#
+          #### Neeed to add anaconda into the path
+          cmds = " screen -d -m bash /home/ubuntu/zbatch.sh && sleep 5  && screen -ls "
+          # cmds += " screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
+
+                    
           log(ipx, "no blocking mode ssh", cmds)
           msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
-          log(ipx, "ssh output", msg)  
+          log(ipx, "ssh zbatch.sh", msg) 
+          if "Socket" not in str(msg) :  # Screen is not launched....
+            log(ipx, "MAJOR ISSUE, daemon_launcher NOT launched")
+            sleep(10)
+            log(ipx, "Terminating", instance_id, ipx)
+            ec2_instance_stop(instance_list=[instance_id])
+            
+           
+
 
 
 def task_globalfile_reset(global_task_file=None):
