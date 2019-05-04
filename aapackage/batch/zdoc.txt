@@ -1,3 +1,41 @@
+
+################################################################################
+########## Main_server  ########################################################
+batch_daemon_autoscale_cli.py :
+   Copy tasks on S3 Drive
+   Pull from github/tasks to S3 Drive
+
+   Launch SPot Instance to run the tasks
+   Send back task results from S3 to Github/task_out
+   Close Spot Instnance
+
+
+batch_daemon_launch_cli.py
+   Launch the daemon to run the tasks.
+     Scan each folder in zs3drive/tasks/
+       Look for main.sh, task_config.py
+       Execute main.sh
+       
+       Copy file back to zs3drive/tasks_out/
+       Send results to github/tasks_out
+   
+   
+   
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ###############################################################################
 ###### Architecture
 batch_daemon_launch_cli : Launch main.py from /tasks/xxx/ folder.
