@@ -169,15 +169,16 @@ def main3():
        folder_check = json.load(open(global_task_file, mode="r"))    # Refresh Global file
        if folder not in folder_check :
          global_task_file_save(folder, folder_check, global_task_file)  #Update to prevent 2nd pick up
-         log(time.time() - t0)    
+         log("time to save",time.time() - t0)    
             
          folder = os.path.join(folder_main, folder)    
          files  = [file  for file in os.listdir( folder ) if file == "main.sh" or file == "main.py"  ]    
          # log(files)
          if files :      
            pid = subprocess_launch(folder, files[0] )
-           log("task folder started:", folder,  files[0], pid)            
-           os_wait_policy(waitsleep= 5 )      
+           log("task folder started:", folder,  files[0], pid)   
+           sleep( 20)
+           os_wait_policy(waitsleep= 10 )      
 
    
     if args.mode != "daemon":

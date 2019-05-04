@@ -54,10 +54,9 @@ from aapackage import util_log
 
 
 
-############### logger ########################################################
+############### Input  #########################################################
 ISTEST = True   ### For test the code
 
-logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
 #TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
 
@@ -68,12 +67,20 @@ amiId = "ami-04b010cceb44affce"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
+### Global Shared Drive
 TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
 BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
 TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
 
+### Local to each instance
 TASKOUT_REPOURL   = "https://github.com/arita37/tasks_out.git"
+TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
+
 TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
+
+FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
 
 
 
@@ -92,6 +99,7 @@ global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME']
 
 
 ################################################################################
+logger = None
 def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
@@ -341,12 +349,10 @@ def ec2_get_spot_price(instance_type):
 
 def parsefloat(value, default=0.0):
   """ Parse the float value. """
-  fltvalue = default
   try:
-    fltvalue = float(value)
+    return float(value)
   except:
-    pass
-  return fltvalue
+    return default
 
 
 
@@ -541,8 +547,6 @@ def ec2_instance_stop(instance_list) :
 
 
 
-
-
 ################################################################################
 def ec2_instance_backup(instances_list, folder_list=["zlog/"],
                         folder_backup="/home/ubuntu/zs3drive/backup/") :
@@ -604,14 +608,16 @@ def instance_start_rule(task_folder):
     return {'type' : 't3.medium', 'spotprice' : spotprice  }
     
 
-  if  ntask > 15 and ncpu < 2 :
+  if  ntask > 15 and ncpu < 3 :
     # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
-    spotprice = 0.10
-    return {'type' : 't3.medium', 'spotprice' : spotprice }
+    # 8 CPU, 0.10 / hour
+    spotprice = 0.15
+    return {'type' : 't3.2xlarge', 'spotprice' : spotprice }
   
   ##### Minimal instance  ###################################################
   if  ntask > 0 and ncpu == 0 :
     # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
+    # 2 CPU / 0.02 / hour
     spotprice = 0.05
     return {'type' : 't3.medium', 'spotprice' : spotprice }  
     
@@ -632,7 +638,7 @@ def instance_stop_rule(task_folder):
   if ntask == 0 and  INSTANCE_DICT :
       # Idle Instances
       instance_list = [x for _, x in INSTANCE_DICT.items()  \
-                      if x["cpu_usage"] < 10.0   and x["ram_usage"] < 10.0 ]
+                      if x["cpu_usage"] < 10.0   and x["ram_usage"] < 9.0 ]
       return instance_list
   else :
       return None
@@ -698,7 +704,7 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
     #stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
     
     if filename is not None :
-      pass
+      msg = open(filename,mode="r").readlines()
     
     ftp = ssh.open_sftp()
     file=ftp.file(remote_file, "a", -1)
@@ -727,6 +733,11 @@ def ec2_instance_initialize_ssh():
           log(ipx, "ssh output", msg)  
 
 
+def task_globalfile_reset(global_task_file=None):
+    with open(global_task_file, 'w') as f:
+       json.dump({}, f)     
+
+
 ##########################################################################################
 if __name__ == '__main__':
   args   = load_arguments()
@@ -739,8 +750,7 @@ if __name__ == '__main__':
 
 
   if args.reset_global_task_file :
-    with open(global_task_file, 'w') as f:
-       json.dump({}, f)    
+    task_globalfile_reset(global_task_file) 
 
 
   log("Daemon",  "start: ", os.getpid(), global_task_file)
@@ -792,7 +802,7 @@ if __name__ == '__main__':
 
     ### Upload results to github ##############################################
     ii = ii + 1
-    if ii % 5 == 0 :  #5 mins Freq
+    if ii % 10 == 0 :  #10 mins Freq
       task_new,task_added = task_put_to_github(repourl= "https://github.com/arita37/tasks_out.git", 
                                reponame="tasks_out", branch="dev", 
                                from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
