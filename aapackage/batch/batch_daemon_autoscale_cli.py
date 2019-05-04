@@ -1,40 +1,22 @@
 # -*- coding: utf-8 -*-
 '''
-## 
-cd aapackage
-pip installl -e .
-
-
-
 ##### Daemon mode
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
-
-
 
 #### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 
-#### Test
+#### Test with reset of task files
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 
+Daemon for auto-scale.
+Only launch in master instance 
 
-  Daemon for auto-scale.
-  Only launch in master instance 
-  - Some identification so that this scripts silently exits.
-  
-  ### S3 does NOT support folder rename, bash shell to replance rename
-  rename() {
-    #do things with parameters like $1 such as
-    cp  $1   $2  --recursive  && rm $1     --recursive
-  }
+### S3 does NOT support folder rename, bash shell to replance rename
 
-  it takes 3ms to read+write task_list
-  2019-04-19 13:59:58,587, 12599, batch_daemon_launch_cli.py, 0.031108617782592773
-
-
-  Auto-Scale :  
+Auto-Scale :  
     batch_daemon_autoscale_cli.py(ONLY on master instance) - how to check this ?
     Start Rule:
       nb_task_remaining > 10 AND nb_CPU_available < 10 
@@ -42,6 +24,7 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
     Stop Rule:
       nb_task_remaining = 0 for last 5mins : 
         stop instance by AWS CLI.
+
     keypair: ec2_linux_instance
     Oregon West - us-west-2
     AMI :  ami-0491a657e7ed60af7
@@ -78,11 +61,20 @@ logger = None
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
 #TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
 
-keypair = 'aws_ec2_ajey'
-region  = 'us-west-2'  # Oregon West
+keypair = 'aws_ec2_ajey'  # Remote Spot Instance
+region  = 'us-west-2'     # Oregon West
 default_instance_type = 't3.small'
 amiId = "ami-04b010cceb44affce"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
+
+
+TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
+BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
+TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
+
+TASKOUT_REPOURL   = "https://github.com/arita37/tasks_out.git"
+TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+
 
 
 ### Maintain infos on all instances  ###########################################
@@ -134,19 +126,20 @@ def load_arguments():
 
 
 ################################################################################
-def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag="_ignore") :
+def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag="ignore") :
   """
      ### Copy with criteria
   """
-
   task_list_added, task_list = [], []
   for f in os.listdir( from_folder_root ): 
        from_f =  from_folder_root + f
        to_f   =  to_folder + f + "/"
         
-          
+       # Conditions of copy    
        if  os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f :
-          if not os.path.exists(to_f) or isoverwrite :            
+          if not os.path.exists(to_f) or isoverwrite :    
+            
+            
             os.system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f) )
             print("Copy", from_f, to_f   )
         
@@ -161,8 +154,8 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
    
    
 def task_get_from_github(repourl, reponame="tasks", branch="dev", 
-                             to_task_folder="/home/ubuntu/zs3drive/tasks/", 
-                             tmp_folder="/home/ubuntu/data/ztmp/") :
+                         to_task_folder="/home/ubuntu/zs3drive/tasks/", 
+                         tmp_folder="/home/ubuntu/data/ztmp/") :
   """
    Get tasks from github repo
    Retrieve tasks folder from Github repo and write on S3 drive for automatic processing.
@@ -204,8 +197,8 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
 
 
 def task_put_to_github(repourl, reponame="tasks", branch="dev", 
-                             from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
-                             repo_folder="/home/ubuntu/data/github_tasks_out/") :
+                       from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
+                       repo_folder="/home/ubuntu/data/github_tasks_out/") :
   """
     Put results back to github
     git clone https://github.com/arita37/tasks_out.git  github_tasks_out
@@ -213,15 +206,6 @@ def task_put_to_github(repourl, reponame="tasks", branch="dev",
     git pull --all
     copy S3 to github_tasks_out
     git add --all, push all
-    
-    git lfs track "*.psd"
-Make sure .gitattributes is tracked  git add .gitattributes
-There is no step three. Just commit and push to GitHub as you normally would.
-git add file.psd
-git commit -m "Add design file"
-    git config  credential.helper store
-    git config --global credential.helper 'cache --timeout 7209990'
-
   """
   if not os.path.exists(repo_folder ) :
      print("Git clone")   
@@ -572,7 +556,7 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
     now = datetime.today().strftime('%Y%m%d')
     for idx in instances_list :
       
-      target_folder = folder_backup +  "/" + idx +  "_" + now
+      target_folder = folder_backup +  "/a" + now +  "_" + idx
       
       if not os.path.exists(target_folder) :
         os.mkdir(target_folder)
@@ -582,8 +566,6 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
         cmds = "cp -r {a} {b}".format(a=f  , b= target_folder )
         msg  = os.system(cmds) 
         print(cmds, msg)
-      
-      
       
       """
       # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
@@ -691,7 +673,7 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
        ssh.close()
        return None
        
-    #### Can be Blocking for long running process
+    #### Can be Blocking for long running process  screen -d -m YOURBASH
     data  = stdout.readlines()  #Blocking code
     value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
     ssh.close()
@@ -704,7 +686,6 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
 
 def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
     """ Make an ssh connection using paramiko and  run the command
-  
      http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
      https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
  
