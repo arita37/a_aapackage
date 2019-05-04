@@ -724,9 +724,15 @@ def ec2_instance_initialize_ssh():
           #     """
           # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
 
-          cmds  = " bash /home/ubuntu/zs3drive/zbatch_cleanup.sh    "
+          cmds  = " cp /home/ubuntu/zs3drive/zbatch_cleanup.sh  /home/ubuntu/zbatch_cleanup.sh   "
+          cmds += " && cp /home/ubuntu/zs3drive/zbatch.sh  /home/ubuntu/zbatch.sh   "
+          
+          cmds  = " bash /home/ubuntu/zbatch_cleanup.sh    "
           cmds += " && which python && echo  ',' && pwd "
-          cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
+          
+          #### MAJOR BUG : CANNOT USE screen on S3 Folder ,due to Permission ISSUES on S#
+          cmds += " && screen -d -m bash /home/ubuntu/zbatch.sh && screen -ls "
+          # cmds += " && screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
           
           log(ipx, "no blocking mode ssh", cmds)
           msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
