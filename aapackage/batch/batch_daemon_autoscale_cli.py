@@ -15,9 +15,8 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 
+#### Test
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
-
-
 
 
 
@@ -159,6 +158,8 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
   return task_list, task_list_added
    
    
+   
+   
 def task_get_from_github(repourl, reponame="tasks", branch="dev", 
                              to_task_folder="/home/ubuntu/zs3drive/tasks/", 
                              tmp_folder="/home/ubuntu/data/ztmp/") :
@@ -247,7 +248,14 @@ git commit -m "Add design file"
   return task_list, task_list_added
 
 
-
+def os_system(cmds) :
+  import subprocess
+  cmds = cmds.split(" ")
+  p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+  out = p.stdout.read()
+  return out
+  
+  
 
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r'main\.(sh|py)'):
@@ -304,6 +312,26 @@ def task_isvalid_folder(folder_main, folder, folder_check):
 def task_getcount(folder_main):
   """ Number of tasks remaining to be scheduled for run """
   return len(task_get_list_valid_folder_new(folder_main))
+
+
+def os_system(cmds) :
+  import subprocess
+  cmds = cmds.split(" ")
+  p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+  out = p.stdout.read()
+  return out
+  
+
+def task_get_cpuload(folder_main):
+  """ Number of tasks remaining to be scheduled for run """
+  task_list = task_get_list_valid_folder_new(folder_main)
+  ncpu_all = 0
+  for t in task_list :
+     cmds = "python  {a}/util_taskconfig.py --do ncpu_load   ".format(a=folder_main +"/" + f)
+     msg  = os_system(cmds)
+     ncpu = parsefloat(msg, default=1.0)
+     ncpu_all += cpu
+
 
 
 ##########################################################################################
@@ -519,6 +547,9 @@ def ec2_instance_stop(instance_list) :
     return instances.split(",")
 
 
+
+
+
 ################################################################################
 def ec2_instance_backup(instances_list, folder_list=["zlog/"],
                         folder_backup="/home/ubuntu/zs3drive/backup/") :
@@ -530,7 +561,22 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
     """
     from datetime import datetime
     now = datetime.today().strftime('%Y%m%d')
-    for inst in instances_list :
+    for idx in instances_list :
+      
+      target_folder = folder_backup +  "/" + idx +  "_" + now
+      
+      if not os.path.exists(target_folder) :
+        os.mkdir(target_folder)
+      
+      for  f in folder_list :
+        # fname = f.split("/")[-1]
+        cmds = "cp -r {a} {b}".format(a=f  , b= target_folder )
+        msg  = os.system(cmds) 
+        print(cmds, msg)
+      
+      
+      
+      """
       # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
       target_folder = folder_backup +  "/" + inst["id"] +  "_" + now
       cmdstr = "mkdir %s" % target_folder
@@ -544,7 +590,7 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
         print(cmds)
         # ssh.cmd(cmdstr)
         msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
-
+      """
 
 ################################################################################
 def instance_start_rule(task_folder):
@@ -566,9 +612,9 @@ def instance_start_rule(task_folder):
     return {'type' : 't3.medium', 'spotprice' : spotprice  }
     
 
-  if  ntask > 10 and ncpu < 2 :
+  if  ntask > 15 and ncpu < 2 :
     # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
-    spotprice = 0.05
+    spotprice = 0.10
     return {'type' : 't3.medium', 'spotprice' : spotprice }
   
   ##### Minimal instance  ###################################################
@@ -711,11 +757,12 @@ if __name__ == '__main__':
     log("Daemon", "tasks folder: ", args.task_folder)
 
     ### Retrieve tasks from github ##############################################
-    task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
+    if ii % 5 == 0 :
+      task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
                              reponame=args.task_reponame, branch=args.task_repobranch, 
                              to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
                              tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
-    log("task", "new from github", task_added  )    
+      log("task", "new from github", task_added  )    
     
     # Keep Global state of running instances
     INSTANCE_DICT =  ec2_instance_getallstate()
@@ -734,22 +781,26 @@ if __name__ == '__main__':
 
         ##### Launch Batch system by No Blocking SSH  #########################
         ec2_instance_initialize_ssh()
-        sleep(5)
+        sleep(10)
     
     
     ### Stop instance by rules ################################################
     stop_instances = instance_stop_rule( args.task_folder)
     log("Instances to be stopped", stop_instances)
     if stop_instances:
-      # ec2_instance_backup(stop_instances, folder_list=["/home/ubuntu/zlog/"])
       stop_instances_list = [v['id'] for v in stop_instances]
+      
+      ec2_instance_backup(stop_instances_list, 
+                          folder_list=["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
+                          folder_backup="/home/ubuntu/zs3drive/backup/" )
+
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
 
 
     ### Upload results to github ##############################################
     ii = ii + 1
-    if ii % 5 == 0 :
+    if ii % 5 == 0 :  #5 mins Freq
       task_new,task_added = task_put_to_github(repourl= "https://github.com/arita37/tasks_out.git", 
                                reponame="tasks_out", branch="dev", 
                                from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
