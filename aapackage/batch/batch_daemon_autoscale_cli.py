@@ -248,12 +248,8 @@ git commit -m "Add design file"
   return task_list, task_list_added
 
 
-def os_system(cmds) :
-  import subprocess
-  cmds = cmds.split(" ")
-  p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-  out = p.stdout.read()
-  return out
+
+
   
   
 
@@ -314,27 +310,40 @@ def task_getcount(folder_main):
   return len(task_get_list_valid_folder_new(folder_main))
 
 
-def os_system(cmds) :
+
+def os_system(cmds, stdout_only=1) :
+  """
+     Get print output from command line
+  """  
   import subprocess
   cmds = cmds.split(" ")
-  p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-  out = p.stdout.read()
-  return out
-  
+  p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.stdout.read(),  p.stderr.read()
 
-def task_get_cpuload(folder_main):
-  """ Number of tasks remaining to be scheduled for run """
+  if stdout_only :
+        return out
+  return out, err
+
+
+
+def task_getcount_cpurequired(folder_main):
+  """  
+    ncpu_required defined in task_config.py
+    
+  
+  """
   task_list = task_get_list_valid_folder_new(folder_main)
   ncpu_all = 0
-  for t in task_list :
-     cmds = "python  {a}/util_taskconfig.py --do ncpu_load   ".format(a=folder_main +"/" + f)
+  for f in task_list :
+     cmds = "python  {a}/task_config.py --do ncpu_required   ".format(a=folder_main +"/" + f )
      msg  = os_system(cmds)
      ncpu = parsefloat(msg, default=1.0)
-     ncpu_all += cpu
+     ncpu_all += ncpu
+  return ncpu_all
 
 
 
-##########################################################################################
+##################################################################################
 def ec2_get_spot_price(instance_type):
   """ Get the spot price for instance type in us-west-2"""
   value = 0.0
@@ -598,7 +607,8 @@ def instance_start_rule(task_folder):
       return instance type, spotprice
   """
   global INSTANCE_DICT
-  ntask = task_getcount(task_folder)
+  # ntask = task_getcount(task_folder)
+  ntask = task_getcount_cpurequired(task_folder)  
   ncpu  = instance_get_ncpu(INSTANCE_DICT)
   log("Start Rule", "Ntask, ncpu", ntask, ncpu)
   
@@ -631,7 +641,8 @@ def instance_stop_rule(task_folder):
   
   """
   global INSTANCE_DICT
-  ntask              = task_getcount(task_folder)
+  # ntask              = task_getcount(task_folder)
+  ntask              = task_getcount_cpurequired(task_folder)  
   INSTANCE_DICT_prev = copy.deepcopy(INSTANCE_DICT)
   INSTANCE_DICT      = ec2_instance_getallstate()
   log("Stop rules", "ntask", ntask, INSTANCE_DICT)

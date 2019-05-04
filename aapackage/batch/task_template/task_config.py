@@ -4,9 +4,9 @@ File containing task configuration and utilities to save data on S3
 
 
 Folders :
-  task_name :    mytask
-  taskout_local   :  /home/ubuntu/tasks/mytask/
-  taskout_s3_root :  /home/ubuntu/zs3tasks/tasks/
+   task_name :    mytask
+   taskout_local   :  /home/ubuntu/tasks/mytask/
+   taskout_s3_root :  /home/ubuntu/zs3tasks/tasks/
   
 
 
@@ -16,26 +16,31 @@ from time import sleep
 import random
 
 
-######### Variables ################################################################################
-task_cpu_required = 2
 HOME_DIR = os.environ['HOME']  if 'HOME' in os.environ else '/home/ubuntu'
-taskout_s3_root    =  HOME_DIR + "/zs3drive/tasks_out/" 
-taskout_local_root =  HOME_DIR +  "/tasks_out/" 
+
+
+
+######### Variables ################################################################################
+task_cpu_required  = 2
+taskout_s3_root    =  HOME_DIR + "/zs3drive/tasks_out/"   #S3 Global Drive
+taskout_local_root =  HOME_DIR + "/tasks_out/"            #Instance Local Drive
 
 
 
 
 ######### Folder ###################################################################################
 # print( __file__ )
-task_name     =  __file__.split("/")[-2]
-taskout_local = taskout_local_root + task_name  + "/" 
-taskout_s3    = taskout_s3_root    + task_name + "/"
+task_name     =  __file__.split("/")[-2]   #Task name IS folder name
+taskout_local = taskout_local_root + task_name  + "/"   # Local Instance Drive
+taskout_s3    = taskout_s3_root    + task_name + "/"    # Global Drive
+
+
+if not os.path.exists( taskout_local ) :
+  msg =os.system("mkdir " + taskout_local )
+
 
 # if os.path.exists( taskout_local ) :
 #   print("Task out Local Folder already exist")
-#else :
-if not os.path.exists( taskout_local ) :
-  msg =os.system("mkdir " + taskout_local )
 # print( local_taskout, s3_taskout)
 
 
@@ -83,27 +88,36 @@ def os_rename_taskfolder(task_name, taskout_s3_root , suffix="_qdone"):
     
 
 
+
+
+
+####################################################################################################
+######### CLi ######################################################################################
 def load_arguments():
   import argparse
   parser = argparse.ArgumentParser()
   parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
-  parser.add_argument("--do", default="ncpu/ram", help="daemon/ .")
+  parser.add_argument("--do",       default="ncpu_required/ram", help="daemon/ .")
   options = parser.parse_args()
   return options
 
 
 
+# print("test")
+
+
 if  __name__ == "__main__" :
   args = load_arguments()
   
-  if args.do == "ncpu" :
+  if args.do == "ncpu_required" :
     print(task_cpu_required)
       
 
-"""
 
 
 
 
 
-"""
+
+
+
