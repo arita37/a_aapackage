@@ -21,11 +21,11 @@ batch_daemon_launch_cli.py
    
    
    
- 
-
 
 batch_daemon_monitor_cli.py
-   Monitor the tasks
+   Monitor the tasks running from /tasks/ /main.sh
+   
+   
 
 
 

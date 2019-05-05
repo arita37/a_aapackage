@@ -1,0 +1,383 @@
+
+
+
+
+
+
+(py36) ubuntu:~$ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+Rotate log midnight
+2019-05-05 15:04:02,752, 26735, batch_daemon_autoscale_cli.py,    Daemon,start: ,26735,/home/ubuntu/zs3drive/global_task.json
+2019-05-05 15:04:02,752, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+Cloning into 'tasks'...
+remote: Enumerating objects: 85, done.
+remote: Counting objects: 100% (85/85), done.
+remote: Compressing objects: 100% (75/75), done.
+remote: Total 85 (delta 37), reused 26 (delta 7), pack-reused 0
+Unpacking objects: 100% (85/85), done.
+Checking connectivity... done.
+Branch dev set up to track remote branch dev from origin.
+Switched to a new branch 'dev'
+ cd /home/ubuntu/data/ztmp_github//tasks/ && git add --all && git commit -m 'S3 copied ' &&  git push --all --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+2019-05-05 15:04:03,040, 26735, batch_daemon_autoscale_cli.py,    task,new from github,[]
+['t_github_mytask07', 't_github_mytask03', 't_github_mytask08', 't_testout', 't_github_mytask10', 't_github_mytask02', 't_test01', 'task_testd', 't_github_mytask05', 't_github_mytask09', 't_github_template', 'task_testd.1']
+2019-05-05 15:04:04,136, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,12.0,0
+2019-05-05 15:04:04,136, 26735, batch_daemon_autoscale_cli.py,    Instances to start,{'type': 't3.medium', 'spotprice': 0.05}
+['aws', 'ec2', 'request-spot-instances', '--region', 'us-west-2', '--spot-price', '0.05', '--instance-count', '1', ' --type', 'one-time', '--launch-specification', 'file:///tmp/ec_spot_config']
+{
+    "SpotInstanceRequests": [
+        {
+            "CreateTime": "2019-05-05T15:04:04.000Z",
+            "LaunchSpecification": {
+                "SecurityGroups": [
+                    {
+                        "GroupId": "sg-4b1d6631",
+                        "GroupName": "kevin_ip_only"
+                    },
+                    {
+                        "GroupId": "sg-42e59e38",
+                        "GroupName": "kevin_home"
+                    }
+                ],
+                "SubnetId": "subnet-b64726ee",
+                "KeyName": "aws_ec2_ajey",
+                "Monitoring": {
+                    "Enabled": false
+                },
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": true,
+                            "VolumeSize": 60
+                        }
+                    }
+                ],
+                "InstanceType": "t3.medium",
+                "IamInstanceProfile": {
+                    "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
+                },
+                "ImageId": "ami-0d16a0996debff8d4",
+                "Placement": {
+                    "AvailabilityZone": "us-west-2c"
+                }
+            },
+            "SpotPrice": "0.050000",
+            "Type": "one-time",
+            "InstanceInterruptionBehavior": "terminate",
+            "Status": {
+                "Message": "Your Spot request has been submitted for review, and is pending evaluation.",
+                "Code": "pending-evaluation",
+                "UpdateTime": "2019-05-05T15:04:04.000Z"
+            },
+            "ProductDescription": "Linux/UNIX",
+            "SpotInstanceRequestId": "sir-mbir8nwp",
+            "State": "open"
+        }
+    ]
+}
+2019-05-05 15:05:45,832, 26735, batch_daemon_autoscale_cli.py,    Instances started,[{'ValidUntil': '2019-04-06T08:10:30.000Z', 'Type': 'one-time', 'Status': {'Message': 'Your Spot request is canceled, but your instance i-0ba901c302d4c36cf is still running.', 'UpdateTime': '2019-04-22T05:32:37.000Z', 'Code': 'request-canceled-and-instance-running'}, 'SpotPrice': '0.050000', 'ProductDescription': 'Linux/UNIX', 'Tags': [], 'CreateTime': '2019-03-30T08:10:30.000Z', 'SpotInstanceRequestId': 'sir-3kgr9bnn', 'LaunchSpecification': {'SubnetId': 'subnet-b64726ee', 'InstanceType': 't2.medium', 'BlockDeviceMappings': [{'Ebs': {'VolumeType': 'gp2', 'VolumeSize': 60, 'DeleteOnTermination': False}, 'DeviceName': '/dev/sda1'}], 'ImageId': 'ami-077b1d2ff40276c3a', 'Monitoring': {'Enabled': False}, 'KeyName': 'aws_ec2_4', 'EbsOptimized': False, 'SecurityGroups': [{'GroupName': 'ec2_security_kevin', 'GroupId': 'sg-f719628d'}], 'Placement': {'AvailabilityZone': 'us-west-2c'}}, 'InstanceId': 'i-0ba901c302d4c36cf', 'State': 'cancelled', 'LaunchedAvailabilityZone': 'us-west-2c', 'InstanceInterruptionBehavior': 'terminate'}, {'ValidUntil': '2019-05-12T15:04:04.000Z', 'Type': 'one-time', 'Status': {'Message': 'Your spot request is fulfilled.', 'UpdateTime': '2019-05-05T15:04:06.000Z', 'Code': 'fulfilled'}, 'SpotPrice': '0.050000', 'ProductDescription': 'Linux/UNIX', 'Tags': [], 'CreateTime': '2019-05-05T15:04:04.000Z', 'SpotInstanceRequestId': 'sir-mbir8nwp', 'LaunchSpecification': {'SubnetId': 'subnet-b64726ee', 'Monitoring': {'Enabled': False}, 'BlockDeviceMappings': [{'Ebs': {'VolumeSize': 60, 'DeleteOnTermination': True}, 'DeviceName': '/dev/sda1'}], 'SecurityGroups': [{'GroupName': 'kevin_ip_only', 'GroupId': 'sg-4b1d6631'}, {'GroupName': 'kevin_home', 'GroupId': 'sg-42e59e38'}], 'KeyName': 'aws_ec2_ajey', 'InstanceType': 't3.medium', 'ImageId': 'ami-0d16a0996debff8d4', 'Placement': {'AvailabilityZone': 'us-west-2c'}, 'IamInstanceProfile': {'Arn': 'arn:aws:iam::013584577149:instance-profile/ecsInstanceRole'}}, 'InstanceId': 'i-066e8c83f5775eca9', 'State': 'active', 'LaunchedAvailabilityZone': 'us-west-2c', 'InstanceInterruptionBehavior': 'terminate'}, {'ValidUntil': '2019-05-12T14:52:37.000Z', 'Type': 'one-time', 'Status': {'Message': '2019-05-05T15:00:39+0000 : 2019-05-05T15:00:39+0000 : Spot Instance terminated due to user-initiated termination.', 'UpdateTime': '2019-05-05T15:01:54.000Z', 'Code': 'instance-terminated-by-user'}, 'SpotPrice': '0.050000', 'ProductDescription': 'Linux/UNIX', 'Tags': [], 'CreateTime': '2019-05-05T14:52:37.000Z', 'SpotInstanceRequestId': 'sir-pptr81bq', 'LaunchSpecification': {'SubnetId': 'subnet-b64726ee', 'Monitoring': {'Enabled': False}, 'BlockDeviceMappings': [{'Ebs': {'VolumeSize': 60, 'DeleteOnTermination': True}, 'DeviceName': '/dev/sda1'}], 'SecurityGroups': [{'GroupName': 'kevin_ip_only', 'GroupId': 'sg-4b1d6631'}, {'GroupName': 'kevin_home', 'GroupId': 'sg-42e59e38'}], 'KeyName': 'aws_ec2_ajey', 'InstanceType': 't3.medium', 'ImageId': 'ami-0d16a0996debff8d4', 'Placement': {'AvailabilityZone': 'us-west-2c'}, 'IamInstanceProfile': {'Arn': 'arn:aws:iam::013584577149:instance-profile/ecsInstanceRole'}}, 'InstanceId': 'i-0c37fa9e6e10e4934', 'State': 'closed', 'LaunchedAvailabilityZone': 'us-west-2c', 'InstanceInterruptionBehavior': 'terminate'}, {'ValidUntil': '2019-05-11T18:32:40.000Z', 'Type': 'one-time', 'Status': {'Message': '2019-05-05T14:51:49+0000 : 2019-05-05T14:51:49+0000 : Spot Instance terminated due to user-initiated termination.', 'UpdateTime': '2019-05-05T14:53:04.000Z', 'Code': 'instance-terminated-by-user'}, 'SpotPrice': '0.050000', 'ProductDescription': 'Linux/UNIX', 'Tags': [], 'CreateTime': '2019-05-04T18:32:40.000Z', 'SpotInstanceRequestId': 'sir-yh5i8vqq', 'LaunchSpecification': {'SubnetId': 'subnet-b64726ee', 'Monitoring': {'Enabled': False}, 'BlockDeviceMappings': [{'Ebs': {'VolumeSize': 60, 'DeleteOnTermination': True}, 'DeviceName': '/dev/sda1'}], 'SecurityGroups': [{'GroupName': 'kevin_ip_only', 'GroupId': 'sg-4b1d6631'}, {'GroupName': 'kevin_home', 'GroupId': 'sg-42e59e38'}], 'KeyName': 'aws_ec2_ajey', 'InstanceType': 't3.medium', 'ImageId': 'ami-0d16a0996debff8d4', 'Placement': {'AvailabilityZone': 'us-west-2c'}, 'IamInstanceProfile': {'Arn': 'arn:aws:iam::013584577149:instance-profile/ecsInstanceRole'}}, 'InstanceId': 'i-0acf59ed012ffefeb', 'State': 'closed', 'LaunchedAvailabilityZone': 'us-west-2c', 'InstanceInterruptionBehavior': 'terminate'}]
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:39: CryptographyDeprecationWarning: encode_point has been deprecated on EllipticCurvePublicNumbers and will be removed in a future version. Please use EllipticCurvePublicKey.public_bytes to obtain both compressed and uncompressed point encoding.
+  m.add_string(self.Q_C.public_numbers().encode_point())
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:96: CryptographyDeprecationWarning: Support for unsafe construction of public numbers from encoded data will be removed in a future version. Please use EllipticCurvePublicKey.from_encoded_point
+  self.curve, Q_S_bytes
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:111: CryptographyDeprecationWarning: encode_point has been deprecated on EllipticCurvePublicNumbers and will be removed in a future version. Please use EllipticCurvePublicKey.public_bytes to obtain both compressed and uncompressed point encoding.
+  hm.add_string(self.Q_C.public_numbers().encode_point())
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/cryptography/hazmat/backends/openssl/ciphers.py:114: UserWarning: implicit cast from 'char *' to a different pointer type: will be forbidden in the future (check that the types are as you expect; use an explicit ffi.cast() if they are correct)
+  operation
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/cryptography/hazmat/backends/openssl/ciphers.py:140: UserWarning: implicit cast from 'char *' to a different pointer type: will be forbidden in the future (check that the types are as you expect; use an explicit ffi.cast() if they are correct)
+  self._backend._ffi.from_buffer(data), len(data)
+2019-05-05 15:05:50,571, 26735, batch_daemon_autoscale_cli.py,    Instances running,{'i-066e8c83f5775eca9': {'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 5.0, 'ram_usage': 4.74624}}
+2019-05-05 15:05:51,576, 26735, batch_daemon_autoscale_cli.py,    18.237.232.229,ssh zbatch_cleanup,/usr/bin/python,/home/ubuntu
+2019-05-05 15:05:51,577, 26735, batch_daemon_autoscale_cli.py,    18.237.232.229,no blocking mode ssh, screen -d -m bash /home/ubuntu/zbatch.sh && sleep 5  && screen -ls 
+2019-05-05 15:05:57,111, 26735, batch_daemon_autoscale_cli.py,    18.237.232.229,ssh zbatch.sh,There i2093..ip-172-31-13-213  (05/05/2019 03:05:52 PM)        (Detached)1 Socket in /var/run/screen/S-ubuntu.
+['t_github_mytask07', 't_github_mytask03', 't_github_mytask08', 't_testout', 't_github_mytask10', 't_github_mytask02', 't_test01', 'task_testd', 't_github_mytask05', 't_github_mytask09', 't_github_template', 'task_testd.1']
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:39: CryptographyDeprecationWarning: encode_point has been deprecated on EllipticCurvePublicNumbers and will be removed in a future version. Please use EllipticCurvePublicKey.public_bytes to obtain both compressed and uncompressed point encoding.
+  m.add_string(self.Q_C.public_numbers().encode_point())
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:96: CryptographyDeprecationWarning: Support for unsafe construction of public numbers from encoded data will be removed in a future version. Please use EllipticCurvePublicKey.from_encoded_point
+  self.curve, Q_S_bytes
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/paramiko/kex_ecdh_nist.py:111: CryptographyDeprecationWarning: encode_point has been deprecated on EllipticCurvePublicNumbers and will be removed in a future version. Please use EllipticCurvePublicKey.public_bytes to obtain both compressed and uncompressed point encoding.
+  hm.add_string(self.Q_C.public_numbers().encode_point())
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/cryptography/hazmat/backends/openssl/ciphers.py:114: UserWarning: implicit cast from 'char *' to a different pointer type: will be forbidden in the future (check that the types are as you expect; use an explicit ffi.cast() if they are correct)
+  operation
+/home/ubuntu/anaconda3/envs/py36/lib/python3.6/site-packages/cryptography/hazmat/backends/openssl/ciphers.py:140: UserWarning: implicit cast from 'char *' to a different pointer type: will be forbidden in the future (check that the types are as you expect; use an explicit ffi.cast() if they are correct)
+  self._backend._ffi.from_buffer(data), len(data)
+2019-05-05 15:06:10,977, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,12.0,{'i-066e8c83f5775eca9': {'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 5.0, 'ram_usage': 6.68857}}
+2019-05-05 15:06:10,977, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:07:11,006, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+['t_github_mytask07', 't_github_mytask03', 't_github_mytask08', 't_testout', 't_github_mytask10', 't_github_mytask02', 't_test01', 'task_testd', 't_github_mytask05', 't_github_mytask09', 't_github_template', 'task_testd.1']
+2019-05-05 15:07:15,138, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,12.0,1
+2019-05-05 15:07:15,138, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+['t_github_mytask07', 't_github_mytask03', 't_github_mytask08', 't_testout', 't_github_mytask10', 't_github_mytask02', 't_test01', 'task_testd', 't_github_mytask05', 't_github_mytask09', 't_github_template', 'task_testd.1']
+
+
+2019-05-05 15:07:18,996, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,12.0,{'i-066e8c83f5775eca9': {'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 9.5, 'ram_usage': 7.43472}}
+2019-05-05 15:07:18,998, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:08:19,049, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:08:22,801, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,1
+2019-05-05 15:08:22,801, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:08:26,569, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{'i-066e8c83f5775eca9': {'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 20.0, 'ram_usage': 9.8518}}
+2019-05-05 15:08:26,570, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,[]
+2019-05-05 15:09:26,572, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:09:30,743, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,1
+2019-05-05 15:09:30,743, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:09:34,356, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{'i-066e8c83f5775eca9': {'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 8.1, 'ram_usage': 6.84736}}
+2019-05-05 15:09:34,357, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,[{'id': 'i-066e8c83f5775eca9', 'instance_type': 't3.medium', 'cpu': 1, 'ip_address': '18.237.232.229', 'ram': 3985304, 'cpu_usage': 8.1, 'ram_usage': 6.84736}]
+cp -r /home/ubuntu/zlog/ /home/ubuntu/zs3drive/backup//a20190505_i-066e8c83f5775eca9 0
+cp -r /home/ubuntu/tasks_out/ /home/ubuntu/zs3drive/backup//a20190505_i-066e8c83f5775eca9 0
+{
+    "TerminatingInstances": [
+        {
+            "CurrentState": {
+                "Name": "shutting-down",
+                "Code": 32
+            },
+            "InstanceId": "i-066e8c83f5775eca9",
+            "PreviousState": {
+                "Name": "running",
+                "Code": 16
+            }
+        }
+    ]
+}
+2019-05-05 15:09:36,789, 26735, batch_daemon_autoscale_cli.py,    Stopped instances,['i-066e8c83f5775eca9']
+2019-05-05 15:10:36,793, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:10:38,282, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:10:38,283, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:10:39,431, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:10:39,431, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:11:39,466, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+Cloning into 'tasks'...
+remote: Enumerating objects: 85, done.
+remote: Counting objects: 100% (85/85), done.
+remote: Compressing objects: 100% (75/75), done.
+remote: Total 85 (delta 37), reused 26 (delta 7), pack-reused 0
+Unpacking objects: 100% (85/85), done.
+Checking connectivity... done.
+Branch dev set up to track remote branch dev from origin.
+Switched to a new branch 'dev'
+ cd /home/ubuntu/data/ztmp_github//tasks/ && git add --all && git commit -m 'S3 copied ' &&  git push --all --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+2019-05-05 15:11:39,755, 26735, batch_daemon_autoscale_cli.py,    task,new from github,[]
+[]
+2019-05-05 15:11:40,939, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:11:40,939, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:11:42,095, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:11:42,095, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:12:42,154, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:12:43,397, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:12:43,397, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:12:44,529, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:12:44,530, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:13:44,590, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:13:45,386, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:13:45,387, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:13:45,961, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:13:45,961, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:14:46,006, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:14:46,778, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:14:46,778, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:14:47,371, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:14:47,371, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:15:47,431, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:15:48,275, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:15:48,276, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:15:48,858, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:15:48,858, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+Git Pull results  cd /home/ubuntu/data/github_tasks_out/ && git pull --all  && git checkout dev
+Fetching origin
+Already up-to-date.
+Already on 'dev'
+Your branch is up-to-date with 'origin/dev'.
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask02 /home/ubuntu/data/github_tasks_out/t_github_mytask02/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask03 /home/ubuntu/data/github_tasks_out/t_github_mytask03/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask05 /home/ubuntu/data/github_tasks_out/t_github_mytask05/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask07 /home/ubuntu/data/github_tasks_out/t_github_mytask07/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask08 /home/ubuntu/data/github_tasks_out/t_github_mytask08/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask09 /home/ubuntu/data/github_tasks_out/t_github_mytask09/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask10 /home/ubuntu/data/github_tasks_out/t_github_mytask10/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_template /home/ubuntu/data/github_tasks_out/t_github_template/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_test02 /home/ubuntu/data/github_tasks_out/t_github_test02/
+Copy /home/ubuntu/zs3drive/tasks_out/t_testout /home/ubuntu/data/github_tasks_out/t_testout/
+Copy /home/ubuntu/zs3drive/tasks_out/task_template /home/ubuntu/data/github_tasks_out/task_template/
+Git push task resut  cd /home/ubuntu/data/github_tasks_out/ && git add --all  && git commit -m 'oo/home/ubuntu/data/github_tasks_out/t_github_mytask02/,/home/ubuntu/data/github_tasks_out/t_github_mytask03/,/home/ubuntu/data/github_tasks_out/t_github_mytask05/,/home/ubuntu/data/github_tasks_out/t_github_mytask07/,/home/ubuntu/data/github_tasks_out/t_github_mytask08/,/home/ubuntu/data/github_tasks_out/t_github_mytask09/,/home/ubuntu/data/github_tasks_out/t_github_mytask10/,/home/ubuntu/data/github_tasks_out/t_github_template/,/home/ubuntu/data/github_tasks_out/t_github_test02/,/home/ubuntu/data/github_tasks_out/t_testout/,/home/ubuntu/data/github_tasks_out/task_template/'   && git push --all   --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+256
+2019-05-05 15:15:49,265, 26735, batch_daemon_autoscale_cli.py,    task,Add results to github,['/home/ubuntu/data/github_tasks_out/t_github_mytask02/', '/home/ubuntu/data/github_tasks_out/t_github_mytask03/', '/home/ubuntu/data/github_tasks_out/t_github_mytask05/', '/home/ubuntu/data/github_tasks_out/t_github_mytask07/', '/home/ubuntu/data/github_tasks_out/t_github_mytask08/', '/home/ubuntu/data/github_tasks_out/t_github_mytask09/', '/home/ubuntu/data/github_tasks_out/t_github_mytask10/', '/home/ubuntu/data/github_tasks_out/t_github_template/', '/home/ubuntu/data/github_tasks_out/t_github_test02/', '/home/ubuntu/data/github_tasks_out/t_testout/', '/home/ubuntu/data/github_tasks_out/task_template/']
+2019-05-05 15:16:49,308, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+Cloning into 'tasks'...
+remote: Enumerating objects: 85, done.
+remote: Counting objects: 100% (85/85), done.
+remote: Compressing objects: 100% (75/75), done.
+remote: Total 85 (delta 37), reused 26 (delta 7), pack-reused 0
+Unpacking objects: 100% (85/85), done.
+Checking connectivity... done.
+Branch dev set up to track remote branch dev from origin.
+Switched to a new branch 'dev'
+ cd /home/ubuntu/data/ztmp_github//tasks/ && git add --all && git commit -m 'S3 copied ' &&  git push --all --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+2019-05-05 15:16:49,747, 26735, batch_daemon_autoscale_cli.py,    task,new from github,[]
+[]
+2019-05-05 15:16:50,438, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:16:50,438, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:16:51,045, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:16:51,045, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:17:51,105, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:17:51,858, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:17:51,858, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:17:52,453, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:17:52,453, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:18:52,509, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:18:53,283, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:18:53,284, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:18:53,872, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:18:53,872, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:19:53,930, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:19:54,821, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:19:54,821, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:19:55,401, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:19:55,402, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:20:55,462, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:20:56,226, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:20:56,226, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:20:56,828, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:20:56,829, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:21:56,886, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+Cloning into 'tasks'...
+remote: Enumerating objects: 85, done.
+remote: Counting objects: 100% (85/85), done.
+remote: Compressing objects: 100% (75/75), done.
+remote: Total 85 (delta 37), reused 26 (delta 7), pack-reused 0
+Unpacking objects: 100% (85/85), done.
+Checking connectivity... done.
+Branch dev set up to track remote branch dev from origin.
+Switched to a new branch 'dev'
+ cd /home/ubuntu/data/ztmp_github//tasks/ && git add --all && git commit -m 'S3 copied ' &&  git push --all --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+2019-05-05 15:21:57,310, 26735, batch_daemon_autoscale_cli.py,    task,new from github,[]
+[]
+2019-05-05 15:21:57,957, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:21:57,957, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:21:58,557, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:21:58,558, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:22:58,618, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:22:59,315, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:22:59,315, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:22:59,910, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:22:59,911, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:23:59,971, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:24:00,767, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:24:00,768, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:24:01,366, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:24:01,366, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:25:01,426, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:25:02,219, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:25:02,219, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:25:02,823, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:25:02,823, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:26:02,849, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+[]
+2019-05-05 15:26:03,651, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:26:03,651, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:26:04,233, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:26:04,233, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+Git Pull results  cd /home/ubuntu/data/github_tasks_out/ && git pull --all  && git checkout dev
+Fetching origin
+Already up-to-date.
+Already on 'dev'
+Your branch is up-to-date with 'origin/dev'.
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask02 /home/ubuntu/data/github_tasks_out/t_github_mytask02/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask03 /home/ubuntu/data/github_tasks_out/t_github_mytask03/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask05 /home/ubuntu/data/github_tasks_out/t_github_mytask05/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask07 /home/ubuntu/data/github_tasks_out/t_github_mytask07/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask08 /home/ubuntu/data/github_tasks_out/t_github_mytask08/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask09 /home/ubuntu/data/github_tasks_out/t_github_mytask09/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_mytask10 /home/ubuntu/data/github_tasks_out/t_github_mytask10/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_template /home/ubuntu/data/github_tasks_out/t_github_template/
+Copy /home/ubuntu/zs3drive/tasks_out/t_github_test02 /home/ubuntu/data/github_tasks_out/t_github_test02/
+Copy /home/ubuntu/zs3drive/tasks_out/t_testout /home/ubuntu/data/github_tasks_out/t_testout/
+Copy /home/ubuntu/zs3drive/tasks_out/task_template /home/ubuntu/data/github_tasks_out/task_template/
+Git push task resut  cd /home/ubuntu/data/github_tasks_out/ && git add --all  && git commit -m 'oo/home/ubuntu/data/github_tasks_out/t_github_mytask02/,/home/ubuntu/data/github_tasks_out/t_github_mytask03/,/home/ubuntu/data/github_tasks_out/t_github_mytask05/,/home/ubuntu/data/github_tasks_out/t_github_mytask07/,/home/ubuntu/data/github_tasks_out/t_github_mytask08/,/home/ubuntu/data/github_tasks_out/t_github_mytask09/,/home/ubuntu/data/github_tasks_out/t_github_mytask10/,/home/ubuntu/data/github_tasks_out/t_github_template/,/home/ubuntu/data/github_tasks_out/t_github_test02/,/home/ubuntu/data/github_tasks_out/t_testout/,/home/ubuntu/data/github_tasks_out/task_template/'   && git push --all   --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+256
+2019-05-05 15:26:04,637, 26735, batch_daemon_autoscale_cli.py,    task,Add results to github,['/home/ubuntu/data/github_tasks_out/t_github_mytask02/', '/home/ubuntu/data/github_tasks_out/t_github_mytask03/', '/home/ubuntu/data/github_tasks_out/t_github_mytask05/', '/home/ubuntu/data/github_tasks_out/t_github_mytask07/', '/home/ubuntu/data/github_tasks_out/t_github_mytask08/', '/home/ubuntu/data/github_tasks_out/t_github_mytask09/', '/home/ubuntu/data/github_tasks_out/t_github_mytask10/', '/home/ubuntu/data/github_tasks_out/t_github_template/', '/home/ubuntu/data/github_tasks_out/t_github_test02/', '/home/ubuntu/data/github_tasks_out/t_testout/', '/home/ubuntu/data/github_tasks_out/task_template/']
+2019-05-05 15:27:04,675, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+Cloning into 'tasks'...
+remote: Enumerating objects: 85, done.
+remote: Counting objects: 100% (85/85), done.
+remote: Compressing objects: 100% (75/75), done.
+remote: Total 85 (delta 37), reused 26 (delta 7), pack-reused 0
+Unpacking objects: 100% (85/85), done.
+Checking connectivity... done.
+Branch dev set up to track remote branch dev from origin.
+Switched to a new branch 'dev'
+ cd /home/ubuntu/data/ztmp_github//tasks/ && git add --all && git commit -m 'S3 copied ' &&  git push --all --force 
+On branch dev
+Your branch is up-to-date with 'origin/dev'.
+nothing to commit, working directory clean
+2019-05-05 15:27:05,085, 26735, batch_daemon_autoscale_cli.py,    task,new from github,[]
+[]
+2019-05-05 15:27:05,714, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:27:05,714, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:27:06,311, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:27:06,311, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:28:06,314, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+
+[]
+2019-05-05 15:31:11,391, 26735, batch_daemon_autoscale_cli.py,    Start Rule,Ntask, ncpu,0,0
+2019-05-05 15:31:11,391, 26735, batch_daemon_autoscale_cli.py,    Instances to start,None
+[]
+2019-05-05 15:31:11,991, 26735, batch_daemon_autoscale_cli.py,    Stop rules,ntask,0,{}
+2019-05-05 15:31:11,991, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
+2019-05-05 15:32:12,050, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
+ cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
