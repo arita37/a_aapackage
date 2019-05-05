@@ -739,11 +739,12 @@ def ec2_instance_initialize_ssh():
           #     """
           # ssh_put(ipx , key_file, "/home/ubuntu/zbatch_ssh.sh", msg)
 
-      
+          #### issues with access
           cmds  = " cp /home/ubuntu/zs3drive/zbatch_cleanup.sh  /home/ubuntu/zbatch_cleanup.sh   "
           cmds += " && cp /home/ubuntu/zs3drive/zbatch.sh  /home/ubuntu/zbatch.sh   "
+          cmds += " && chmod 777 /home/ubuntu/zbatch_cleanup.sh && chmod 777 /home/ubuntu/zbatch.sh   "
           cmds += " && echo  ' copied'   "
-          msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
+          # msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
           log(ipx, "ssh copy script file to Local", msg)  
           
           cmds  = " bash /home/ubuntu/zbatch_cleanup.sh    "
