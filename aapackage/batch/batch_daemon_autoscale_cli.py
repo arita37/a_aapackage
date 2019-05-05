@@ -73,7 +73,7 @@ BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
 TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
 
 ### Local to each instance
-TASKOUT_REPOURL   = "https://github.com/arita37/tasks_out.git"
+TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
 TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
 
 TASK_REPOURL      = "https://github.com/arita37/tasks.git"
@@ -82,8 +82,14 @@ TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
 FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
 
 
+### Record the running/done tasks on S3 DRIVE, Global File system  #############
+global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
+                     if 'HOME' in os.environ else '/home/ubuntu')
 
 
+
+
+################################################################################
 ### Maintain infos on all instances  ###########################################
 # global INSTANCE_DICT
 INSTANCE_DICT = {
@@ -91,11 +97,6 @@ INSTANCE_DICT = {
     "id": "", "cpu": 0, "ip_address": "", 'ram': 0, 'cpu_usage': 0, 'ram_usage':0
   }
 }
-
-
-### Record the running/done tasks on S3 DRIVE, Global File system  #############
-global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
-                     if 'HOME' in os.environ else '/home/ubuntu')
 
 
 ################################################################################
@@ -157,8 +158,6 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
             else :
               print("Error copy", from_f, to_f )  
   return task_list, task_list_added
-   
-   
    
    
 def task_get_from_github(repourl, reponame="tasks", branch="dev", 
@@ -728,6 +727,8 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
 def ec2_instance_initialize_ssh():
         """
           Many issues with S3 and ssh, Very sensitive code...
+          1) Cannot run bash shell from S3 drive
+          2) Screen uses SH shell, not bash ---> Need to add .bashrc,python path in main.sh script
         
         """
         ##### Launch Batch system by No Blocking SSH  ####################################
@@ -745,7 +746,7 @@ def ec2_instance_initialize_ssh():
           cmds += " && chmod 777 /home/ubuntu/zbatch_cleanup.sh && chmod 777 /home/ubuntu/zbatch.sh   "
           cmds += " && echo  ' copied'   "
           # msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
-          log(ipx, "ssh copy script file to Local", msg)  
+          # log(ipx, "ssh copy script file to Local", msg)  
           
           cmds  = " bash /home/ubuntu/zbatch_cleanup.sh    "
           cmds += " && which python && echo  ',' && pwd "
@@ -769,9 +770,6 @@ def ec2_instance_initialize_ssh():
             ec2_instance_stop(instance_list=[instance_id])
             
            
-
-
-
 def task_globalfile_reset(global_task_file=None):
     with open(global_task_file, 'w') as f:
        json.dump({}, f)     
