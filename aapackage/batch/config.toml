@@ -1,0 +1,60 @@
+title = "batch configuration"
+
+
+
+[prod]
+
+keypair = 'aws_ec2_ajey'  # Remote Spot Instance
+region  = 'us-west-2'     # Oregon West
+default_instance_type = 't3.small'
+amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+spot_cfg_file = '/tmp/ec_spot_config'
+
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
+
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
+
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
+
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
+  global_task_file = "%s/zs3drive/global_task.json" 
+
+
+
+
+[test]
+
+keypair = 'aws_ec2_ajey'  # Remote Spot Instance
+region  = 'us-west-2'     # Oregon West
+default_instance_type = 't3.small'
+amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+spot_cfg_file = '/tmp/ec_spot_config'
+
+
+
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/ztest_tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/ztest_backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/ztest_tasks_out/"
+
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks_out/"
+
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks/"
+
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
+  global_task_file = "/zs3drive/ztest_global_task.json" 
+
+

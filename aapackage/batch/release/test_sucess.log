@@ -1,6 +1,8 @@
 
 
-
+##### This Commit Run Correctly (
+Be careful of AMI 
+https://github.com/arita37/a_aapackage/tree/245d73ec29ae21353ab4d5e318d1b59a20ca2791
 
 
 
@@ -381,3 +383,7 @@ nothing to commit, working directory clean
 2019-05-05 15:31:11,991, 26735, batch_daemon_autoscale_cli.py,    Instances to be stopped,None
 2019-05-05 15:32:12,050, 26735, batch_daemon_autoscale_cli.py,    Daemon,tasks folder: ,zs3drive/tasks/
  cd /home/ubuntu/data/ztmp_github/ && git clone https://github.com/arita37/tasks.git  tasks && cd tasks  && git checkout dev
+ 
+ 
+ 
+ 

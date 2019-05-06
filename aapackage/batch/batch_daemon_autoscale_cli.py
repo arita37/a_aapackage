@@ -57,6 +57,11 @@ from aapackage import util_log
 ############### Input  #########################################################
 ISTEST = True   ### For test the code
 
+cur_path= os.path.dirname(os.path.realpath(__file__))
+config_file = os.path.join(cur_path, "config.toml")
+
+
+
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
 #TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
 
@@ -67,24 +72,45 @@ amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
-### Global Shared Drive
-TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
-BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
-TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
 
-### Local to each instance
-TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
-TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
+if not ISTEST :
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
 
-TASK_REPOURL      = "https://github.com/arita37/tasks.git"
-TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
 
-FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
 
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
 
-### Record the running/done tasks on S3 DRIVE, Global File system  #############
-global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
+  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
+  global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
                      if 'HOME' in os.environ else '/home/ubuntu')
+
+else  :
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/ztest_tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/ztest_backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/ztest_tasks_out/"
+
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks_out/"
+
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks/"
+
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
+  global_task_file = "%s/zs3drive/ztest_global_task.json" % (os.environ['HOME'] 
+                     if 'HOME' in os.environ else '/home/ubuntu')
+
 
 
 
@@ -105,31 +131,9 @@ def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
 
-################################################################################
-def load_arguments():
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
-  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
-  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
-
-  parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
 
 
-  parser.add_argument("--task_repourl", default="https://github.com/arita37/tasks.git", help="repo for task")
-  parser.add_argument("--task_reponame", default="tasks", help="repo for task")
-  parser.add_argument("--task_repobranch", default="dev", help="repo for task")
 
-
-  parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
-  
-  parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
-  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
-  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
-  parser.add_argument("--max_instance", type=int, default=2, help="")
-  parser.add_argument("--max_cpu", type=int, default=16, help="")  
-  options = parser.parse_args()
-  return options
 
 
 
@@ -775,9 +779,92 @@ def task_globalfile_reset(global_task_file=None):
        json.dump({}, f)     
 
 
+################################################################################
+def load_params(param_file) :
+  """
+    Overwrite pars params by command line input
+  
+  """
+  import toml
+  try :
+    pars = toml.load(param_file)
+    return pars
+  except :
+    return {}
+
+
+def load_arguments():
+  """
+     Generic param load
+  
+  """
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--param_file", default=config_file, help="Params File")
+  parser.add_argument("--param_mode", default="test", help="Params File")
+
+  parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
+  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
+
+  
+  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
+  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
+
+  parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
+
+
+  parser.add_argument("--task_repourl", default="https://github.com/arita37/tasks.git", help="repo for task")
+  parser.add_argument("--task_reponame", default="tasks", help="repo for task")
+  parser.add_argument("--task_repobranch", default="dev", help="repo for task")
+
+
+  parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
+  
+  parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
+  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
+  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
+  parser.add_argument("--max_instance", type=int, default=2, help="")
+  parser.add_argument("--max_cpu", type=int, default=16, help="")  
+  args = parser.parse_args()
+  
+  ##### Load file params
+  class to_namespace(object):
+    def __init__(self, adict):
+       self.__dict__.update(adict)
+  
+  # from attrdict import AttrDict
+  pars = load_params(args.param_file)
+  pars = pars[args.param_mode]
+  
+  ### Overwrite params by CLI input
+  for key,x in vars(args).items():
+      pars[key] = x
+  
+  print(pars)
+  pars = to_namespace(pars)
+  # pars = load_arguments()
+  # print( pars.ami, pars.TASK_S3_FOLDER  )
+
+  return pars
+
+
+
+
+
+
+
+
+
+
 ##########################################################################################
 if __name__ == '__main__':
+  
+  ### Variable initialization #####################################################
   args   = load_arguments()
+  print(args)
+
+
+  sys.exit(0)
+
   # logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
                         formatter=util_log.FORMATTER_4, isrotate  = True)
