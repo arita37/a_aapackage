@@ -794,8 +794,7 @@ def load_params(param_file) :
 
 def load_arguments():
   """
-     Generic param load
-  
+     Generic param load : CLI Input + Local file
   """
   parser = argparse.ArgumentParser()
   parser.add_argument("--param_file", default=config_file, help="Params File")
@@ -807,17 +806,13 @@ def load_arguments():
   
   parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
   parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
-
   parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
-
 
   parser.add_argument("--task_repourl", default="https://github.com/arita37/tasks.git", help="repo for task")
   parser.add_argument("--task_reponame", default="tasks", help="repo for task")
   parser.add_argument("--task_repobranch", default="dev", help="repo for task")
 
-
   parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
-  
   parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
   parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
   parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
@@ -825,7 +820,7 @@ def load_arguments():
   parser.add_argument("--max_cpu", type=int, default=16, help="")  
   args = parser.parse_args()
   
-  ##### Load file params
+  ##### Load file params as dict namespace #########################
   class to_namespace(object):
     def __init__(self, adict):
        self.__dict__.update(adict)
@@ -834,23 +829,16 @@ def load_arguments():
   pars = load_params(args.param_file)
   pars = pars[args.param_mode]
   
-  ### Overwrite params by CLI input
+  ### Overwrite params by CLI input 
   for key,x in vars(args).items():
       pars[key] = x
   
-  print(pars)
-  pars = to_namespace(pars)
+  # print(pars)
+  pars = to_namespace(pars)  #  like object/namespace pars.instance
   # pars = load_arguments()
   # print( pars.ami, pars.TASK_S3_FOLDER  )
 
   return pars
-
-
-
-
-
-
-
 
 
 
@@ -859,10 +847,8 @@ if __name__ == '__main__':
   
   ### Variable initialization #####################################################
   args   = load_arguments()
-  print(args)
+  log("args input", args)
 
-
-  sys.exit(0)
 
   # logging.basicConfig()
   logger = logger_setup(__name__, log_file=args.log_file,
