@@ -731,9 +731,9 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
 def ec2_instance_initialize_ssh():
         """
           Many issues with S3 and ssh, Very sensitive code...
-          1) Cannot run bash shell from S3 drive
+          1) Cannot run bash shell from S3 drive folder
           2) Screen uses SH shell, not bash ---> Need to add .bashrc,python path in main.sh script
-        
+             see task_template/
         """
         ##### Launch Batch system by No Blocking SSH  ####################################
         for k,x in INSTANCE_DICT.items():
@@ -781,20 +781,17 @@ def task_globalfile_reset(global_task_file=None):
 
 ################################################################################
 def load_params(param_file) :
-  """
-    Load toml file
-  """
+  """ Load toml file """
   import toml
   try :
-    pars = toml.load(param_file)
-    return pars
+    return toml.load(param_file)
   except :
     return {}
 
 
 def load_arguments():
   """
-     Generic param load : CLI Input + Local file
+     Load CLI input, load config.toml , overwrite config.toml by CLI Input
   """
   parser = argparse.ArgumentParser()
   parser.add_argument("--param_file", default=config_file, help="Params File")
@@ -829,7 +826,7 @@ def load_arguments():
   pars = load_params(args.param_file)
   pars = pars[args.param_mode]
   
-  ### Overwrite params by CLI input 
+  ### Overwrite params by CLI input and merge with toml file
   for key,x in vars(args).items():
       pars[key] = x
   
@@ -844,20 +841,15 @@ def load_arguments():
 
 ##########################################################################################
 if __name__ == '__main__':
-  
   ### Variable initialization #####################################################
   args   = load_arguments()
-  log("args input", args)
-
-
-  # logging.basicConfig()
+  
   logger = logger_setup(__name__, log_file=args.log_file,
                         formatter=util_log.FORMATTER_4, isrotate  = True)
-  
-  global_task_file = args.global_task_file
+  # print("args input", args)
   key_file = ec2_keypair_get()
 
-
+  global_task_file = args.global_task_file
   if args.reset_global_task_file :
     task_globalfile_reset(global_task_file) 
 
@@ -870,9 +862,10 @@ if __name__ == '__main__':
     ### Retrieve tasks from github ##############################################
     if ii % 5 == 0 :
       task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
-                             reponame=args.task_reponame, branch=args.task_repobranch, 
-                             to_task_folder=r"/home/ubuntu/zs3drive/tasks/",   
-                             tmp_folder=r"/home/ubuntu/data/ztmp_github/") 
+                             reponame       = args.task_reponame, 
+                             branch         = args.task_repobranch, 
+                             to_task_folder = args.task_s3_folder  #r"/home/ubuntu/zs3drive/tasks/",   
+                             tmp_folder     = args.task_local_folder #r"/home/ubuntu/data/ztmp_github/") 
       log("task", "new from github", task_added  )    
     
     # Keep Global state of running instances
@@ -902,8 +895,8 @@ if __name__ == '__main__':
       stop_instances_list = [v['id'] for v in stop_instances]
       
       ec2_instance_backup(stop_instances_list, 
-                          folder_list=["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
-                          folder_backup="/home/ubuntu/zs3drive/backup/" )
+                          folder_list  = args.folder_to_backup,      # ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
+                          folder_backup= args.backup_s3_folder  )  # "/home/ubuntu/zs3drive/backup/"
 
       ec2_instance_stop(stop_instances_list)
       log("Stopped instances", stop_instances_list)
@@ -912,10 +905,10 @@ if __name__ == '__main__':
     ### Upload results to github ##############################################
     ii = ii + 1
     if ii % 10 == 0 :  #10 mins Freq
-      task_new,task_added = task_put_to_github(repourl= "https://github.com/arita37/tasks_out.git", 
-                               reponame="tasks_out", branch="dev", 
-                               from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/", 
-                               repo_folder="/home/ubuntu/data/github_tasks_out/") 
+      task_new,task_added = task_put_to_github(repourl=args.taskout_repourl , # "https://github.com/arita37/tasks_out.git"
+                                reponame           = args.taskout_reponame, branch= args.taskout_repobranch,  # "tasks_out", branch="dev", 
+                                from_taskout_folder= args.taskout_s3_folder,  #"/home/ubuntu/zs3drive/tasks_out/"
+                                repo_folder        = args.taskout_local_folder ) # "/home/ubuntu/data/github_tasks_out/" 
       log("task", "Add results to github", task_added  ) 
 
     ### No Daemon mode  ######################################################
@@ -924,7 +917,6 @@ if __name__ == '__main__':
       break
 
     sleep(args.waitsec)
-
 
 
 
