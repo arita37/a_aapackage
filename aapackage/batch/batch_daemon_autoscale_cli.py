@@ -11,6 +11,14 @@ batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/ba
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 
+
+#### Test with reset of task files and test parameters
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test
+
+
+
+
+
 Daemon for auto-scale.
 Only launch in master instance 
 
@@ -54,6 +62,10 @@ from aapackage import util_log
 
 
 
+import warnings
+warnings.filterwarnings(action='ignore',module='.*paramiko.*')
+
+
 ############### Input  #########################################################
 ISTEST = True   ### For test the code
 
@@ -72,7 +84,7 @@ amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
-
+"""
 if not ISTEST :
   ### Global Shared Drive
   TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
@@ -107,8 +119,11 @@ else  :
 
   FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
 
-  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
-  global_task_file = "%s/zs3drive/ztest_global_task.json" % (os.environ['HOME'] 
+
+
+"""
+### Record the running/done tasks on S3 DRIVE, Global File system  #############
+global_task_file_default = "%s/zs3drive/ztest_global_task.json" % (os.environ['HOME'] 
                      if 'HOME' in os.environ else '/home/ubuntu')
 
 
@@ -793,29 +808,34 @@ def load_arguments():
   """
      Load CLI input, load config.toml , overwrite config.toml by CLI Input
   """
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--param_file", default=config_file, help="Params File")
-  parser.add_argument("--param_mode", default="test", help=" test/ prod /uat")
+  cur_path= os.path.dirname(os.path.realpath(__file__))
+  config_file = os.path.join(cur_path, "config.toml")
 
-  parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
-  parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
-
+  p = argparse.ArgumentParser()
+  p.add_argument("--param_file", default=config_file, help="Params File")
+  p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
   
-  parser.add_argument("--global_task_file", default=global_task_file, help="global task file")
-  parser.add_argument("--task_folder", default=TASK_FOLDER_DEFAULT, help="path to task folder.")
-  parser.add_argument("--reset_global_task_file", default=0, help="global task file Reset File")
+  p.add_argument("--mode",  help="daemon/ .")  # default="nodaemon",
+  
+  p.add_argument("--log_file",   help=".")  # default="batchdaemon_autoscale.log",
 
-  parser.add_argument("--task_repourl", default="https://github.com/arita37/tasks.git", help="repo for task")
-  parser.add_argument("--task_reponame", default="tasks", help="repo for task")
-  parser.add_argument("--task_repobranch", default="dev", help="repo for task")
+  p.add_argument("--global_task_file", help="global task file") #  default=global_task_file_default,
+  p.add_argument("--task_folder", help="path to task folder.")  # default=TASK_FOLDER_DEFAULT, 
+  p.add_argument("--reset_global_task_file",  help="global task file Reset File")
 
-  parser.add_argument("--ami", default=amiId,   help="AMI used for spot")
-  parser.add_argument("--instance", default=default_instance_type,   help="Type of soot instance")
-  parser.add_argument("--spotprice", type=float, default=0.0, help="Actual price offered by us.")
-  parser.add_argument("--waitsec", type=int, default=60, help="wait sec")
-  parser.add_argument("--max_instance", type=int, default=2, help="")
-  parser.add_argument("--max_cpu", type=int, default=16, help="")  
-  args = parser.parse_args()
+  p.add_argument("--task_repourl", help="repo for task") # default="https://github.com/arita37/tasks.git"
+  p.add_argument("--task_reponame", help="repo for task")  # default="tasks", 
+  p.add_argument("--task_repobranch", help="repo for task") #  default="dev",
+
+
+  p.add_argument("--ami",   help="AMI used for spot")  #  default=amiId,
+  p.add_argument("--instance",   help="Type of soot instance")  # default=default_instance_type, 
+  p.add_argument("--spotprice", type=float, help="Actual price offered by us.")
+  p.add_argument("--waitsec", type=int,  help="wait sec")
+  p.add_argument("--max_instance", type=int,  help="")
+  p.add_argument("--max_cpu", type=int,  help="")  
+  args = p.parse_args()
+  
   
   ##### Load file params as dict namespace #########################
   class to_namespace(object):
@@ -824,13 +844,14 @@ def load_arguments():
   
   # from attrdict import AttrDict
   pars = load_params(args.param_file)
-  pars = pars[args.param_mode]
+  pars = pars[args.param_mode]  # test / prod
   
   ### Overwrite params by CLI input and merge with toml file
   for key,x in vars(args).items():
+    if x is not None :  # only values NOT set by CLI
       pars[key] = x
   
-  # print(pars)
+  print(pars)
   pars = to_namespace(pars)  #  like object/namespace pars.instance
   # pars = load_arguments()
   # print( pars.ami, pars.TASK_S3_FOLDER  )
@@ -839,7 +860,7 @@ def load_arguments():
 
 
 
-##########################################################################################
+###################################################################################
 if __name__ == '__main__':
   ### Variable initialization #####################################################
   args   = load_arguments()
@@ -864,8 +885,8 @@ if __name__ == '__main__':
       task_new,task_added = task_get_from_github(repourl=args.task_repourl, 
                              reponame       = args.task_reponame, 
                              branch         = args.task_repobranch, 
-                             to_task_folder = args.task_s3_folder  #r"/home/ubuntu/zs3drive/tasks/",   
-                             tmp_folder     = args.task_local_folder #r"/home/ubuntu/data/ztmp_github/") 
+                             to_task_folder = args.task_s3_folder,  #r"/home/ubuntu/zs3drive/tasks/",   
+                             tmp_folder     = args.task_local_folder )  #r"/home/ubuntu/data/ztmp_github/") 
       log("task", "new from github", task_added  )    
     
     # Keep Global state of running instances
@@ -926,15 +947,13 @@ if __name__ == '__main__':
 
 """
 Problem o blocking
-
           cmds = "chmod 777  /home/ubuntu/zbatch_ssh.sh &&  screen -d -m  bash /home/ubuntu/zbatch_ssh.sh"
 
-
-            cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "   
+          cmds = "bash /home/ubuntu/zs3drive/zbatch_cleanup.sh && which python && whoami &&  nohup bash /home/ubuntu/zs3drive/zbatch.sh </dev/null >/dev/null 2>&1 & "   
             f.write(cmds)     
             
             
- found this on google groups: Starting a daemon with ssh - comp.unix.admin | Google Groups
+Found this on google groups: Starting a daemon with ssh - comp.unix.admin | Google Groups
 
 ssh server 'program </dev/null >/dev/null 2>&1 &' 
 
@@ -943,9 +962,6 @@ that redirects the stdin to /dev/null, the stdout to /dev/null, and the stderr t
 This worked for me so that the remote execution kicked off the daemon and didn't wait around for output.
 
 Will
-
-
-
            1)   SSH command is time blocked....
            
            https://github.com/paramiko/paramiko/issues/501
