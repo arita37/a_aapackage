@@ -782,8 +782,7 @@ def task_globalfile_reset(global_task_file=None):
 ################################################################################
 def load_params(param_file) :
   """
-    Overwrite pars params by command line input
-  
+    Load toml file
   """
   import toml
   try :
@@ -800,7 +799,7 @@ def load_arguments():
   """
   parser = argparse.ArgumentParser()
   parser.add_argument("--param_file", default=config_file, help="Params File")
-  parser.add_argument("--param_mode", default="test", help="Params File")
+  parser.add_argument("--param_mode", default="test", help=" test/ prod /uat")
 
   parser.add_argument("--log_file", default="batchdaemon_autoscale.log",  help=".")
   parser.add_argument("--mode", default="nodaemon", help="daemon/ .")
