@@ -42,13 +42,23 @@ conda install torchvision --no-update-deps
 
 
 """
-from aapackage.mlmodel import util
-
-
+#from aapackage.mlmodel import util
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+from importlib import import_module  
+import glob
 
 
 def create(modelname="", params={}) :
-    pass
+    module_path = glob.glob('model_dl/{}.py'.format(modelname))
+    if len(module_path)==0:
+        raise NameError("Module {} notfound".format(modelname))
+    
+    module = import_module('model_dl.{}'.format(modelname))
+    model = module.Model(**params)
+    
+    return module, model
+    
 
 
 
@@ -60,20 +70,39 @@ def save(model, folder, saveformat=""):
     pass
 
 
-def fit(model, X=None, foldername=None):
-  pass
+def fit(model, module, X):
+    return module.fit(model, X)
     
 
-def predict(model, X=None):
-    pass
+def predict(model, module, sess, X):
+    return module.predict(model, sess, X)
 
 
-def predict_file(model,  foldername=None, fileprefix=None, output_folder):
+def predict_file(model,  foldername=None, fileprefix=None):
     pass
 
 
 def fit_file(model,  foldername=None, fileprefix=None):
   pass
+
+
+## Testing
+df = pd.read_csv('dataset/GOOG-year.csv')
+date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+df.head()
+
+
+minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+df_log = pd.DataFrame(df_log) 
+
+module, model =create('1_lstm',
+{'learning_rate':0.001,'num_layers':1,
+'size':df_log.shape[1],'size_layer':128,
+'output_size':df_log.shape[1],'timestep':5,'epoch':5})
+
+sess = fit(model, module, df_log)
+predictions = predict(model, module, sess, df_log)
 
 
 
