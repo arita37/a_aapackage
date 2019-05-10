@@ -22,9 +22,14 @@ This will install editable package, and this can be used
 
 
 ############### conda DL ####################################################
-conda create -n  py36c    python=3.6.7
+conda create -n  py36f    python=3.6.7
 
-conda install -y mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch scikit-learn  optuna  chainer  dask  ipykernel        
+conda install -y  tensorflow=1.9.0 keras xgboost  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel pandas        
+
+
+
+
+conda install -y mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel        
 
 # pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0  github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0             
 
@@ -86,24 +91,32 @@ def fit_file(model,  foldername=None, fileprefix=None):
   pass
 
 
+
+####################################################################################
 ## Testing
-df = pd.read_csv('dataset/GOOG-year.csv')
-date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-df.head()
+def test_lstm() :
+  df = pd.read_csv('dataset/GOOG-year.csv')
+  date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+  print( df.head(5) )
 
 
-minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-df_log = pd.DataFrame(df_log) 
+  minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+  df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+  df_log = pd.DataFrame(df_log) 
 
-module, model =create('1_lstm',
-{'learning_rate':0.001,'num_layers':1,
-'size':df_log.shape[1],'size_layer':128,
-'output_size':df_log.shape[1],'timestep':5,'epoch':5})
+  module, model =create('1_lstm',
+    {'learning_rate':0.001,'num_layers':1,
+     'size':df_log.shape[1],'size_layer':128,
+     'output_size':df_log.shape[1],'timestep':5,'epoch':5})
 
-sess = fit(model, module, df_log)
-predictions = predict(model, module, sess, df_log)
+  sess = fit(model, module, df_log)
+  predictions = predict(model, module, sess, df_log)
+  print(predictions)
 
+
+
+if __name__ == "__main__":
+   test_lstm()
 
 
 
