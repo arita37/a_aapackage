@@ -25,11 +25,15 @@ batch_daemon_monitor_cli.py --monitor_log_folder   tasks_out/   --monitor_log_fi
 
 
 
+########## Details 
+batch_daemon_launch_cli.py --param_file zs3drive/config_batch.toml --param_mode test_launch
 
 
+
+
+###############################################################################
 cp zs3drive/tasks/ztask_test1_ignore   zs3drive/tasks/task_test1 --recursive
 rm zs3drive/tasks/ztask_test1_ignore  --recursive
-
 
 
 '''
@@ -64,17 +68,54 @@ def log(*argv):
 
 
 def load_arguments():
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--task_folder",       default=TASK_FOLDER_DEFAULT, help="path to task folder.")
-  parser.add_argument("--log_file",          default="logfile_batchdaemon.log", help=".")
-  parser.add_argument("--log_file_task",     default="logfile_batchdaemon_task.log", help=".")
-  parser.add_argument("--mode",              default="nodaemon", help="daemon/ .")
-  parser.add_argument("--waitsec", type=int, default=30, help="wait sec")
-  parser.add_argument("--global_task_file",  default="/home/ubuntu/zs3drive/global_task.json", help="synchronize task")
-  options = parser.parse_args()
-  return options
+  """
+       --param_file /zs3drive/config_batch.toml --param_mode test_launch
+  """
+  cur_path= os.path.dirname(os.path.realpath(__file__))
+  config_file = os.path.join(cur_path, "config.toml")
+  
+  p = argparse.ArgumentParser()
+  p.add_argument("--param_file", default=config_file, help="Params File")
+  p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
+  
+  p.add_argument("--task_folder",        help="path to task folder.") #     default=TASK_FOLDER_DEFAULT
+  p.add_argument("--log_file",           help=".") # default="logfile_batchdaemon.log"
+  p.add_argument("--log_file_task",     help=".") #     default="logfile_batchdaemon_task.log",
+  p.add_argument("--mode",           help="daemon/ .") #     default="nodaemon",
+  p.add_argument("--waitsec", type=int, help="wait sec")   #  default=30,
+  p.add_argument("--global_task_file",   help="synchronize task")  # default="/home/ubuntu/zs3drive/global_task.json",
+   
+  args = p.parse_args()
+  
+  ##### Load file params as dict namespace #########################
+  import toml
+  class to_namespace(object):
+    def __init__(self, adict):
+       self.__dict__.update(adict)
+
+  try :   
+    pars = toml.load(args.param_file)
+    # print(pars)
+    pars = pars[args.param_mode]  # test / prod
+    # print(pars)
+  
+    ### Overwrite params by CLI input and merge with toml file
+    for key,x in vars(args).items():
+      if x is not None :  # only values NOT set by CLI
+        pars[key] = x
+  
+    print(pars)
+    pars = to_namespace(pars)  #  like object/namespace pars.instance
+    return pars
+  except Exception as e :
+    print(e)
+    return args
 
 
+
+
+################################################################################
+################################################################################
 def get_list_valid_task_folder(folder, script_name="main"):
   if not os.path.isdir(folder):
     return []
@@ -190,6 +231,21 @@ def main3():
     os_wait_policy(waitsleep= 5 )
 
 
+if __name__ == '__main__':
+   main3()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -218,26 +274,6 @@ def main():
       break
 
     sleep(args.waitsec)
-
-
-
-
-if __name__ == '__main__':
-   main3()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -390,9 +426,9 @@ argecho.py
 
 '''
 import argparse
-parser.add_argument('-i','--input', help='Script File Name', required=False)
-parser.add_argument('-o','--output',help='Script ID', required=False)
-args = parser.parse_args()
+p.add_argument('-i','--input', help='Script File Name', required=False)
+p.add_argument('-o','--output',help='Script ID', required=False)
+args = p.parse_args()
 
 ## show values ##
 print ("Input file: %s" % args.input )

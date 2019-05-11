@@ -1,6 +1,20 @@
 title = "batch configuration "
 
 
+[launch_test]
+
+task_folder   =   "/home/ubuntu/zs3drive/tasks/"
+log_file      =   "/home/ubuntu/zlog/batchdaemon.log"
+log_file_task =   "/home/ubuntu/zlog/batchdaemon_task.log"
+mode          =   "daemon"
+waitsec= 30
+global_task_file= "/home/ubuntu/zs3drive/global_task.json"
+  
+
+
+
+
+
 [prod]
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
@@ -71,7 +85,7 @@ spot_cfg_file = '/tmp/ec_spot_config'
 reset_global_task_file = 1
 
 
-log_file = "/home/ubuntu/zlog/ztest/batch_autoscale_test.log"
+log_file = "/home/ubuntu/zlog/batch_autoscale_test.log"
 
 
   ### global shared drive
@@ -94,7 +108,7 @@ log_file = "/home/ubuntu/zlog/ztest/batch_autoscale_test.log"
   task_repourl      = "https://github.com/arita37/tasks.git"
   task_local_folder = "/home/ubuntu/data/ztest/github_tasks/"
 
-  folder_to_backup  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+  folder_to_backup  = ["/home/ubuntu/zlog/= "/home/ubuntu/tasks_out/" ]
 
 
   ### record the running/done tasks on s3 drive, global file system  #############

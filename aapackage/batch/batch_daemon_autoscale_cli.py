@@ -16,9 +16,14 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test
 
 
+#### Prod setup of task files
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode prod
 
 
 
+
+
+###########################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
 
@@ -84,44 +89,6 @@ amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 
-"""
-if not ISTEST :
-  ### Global Shared Drive
-  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
-  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
-  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
-
-  ### Local to each instance
-  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
-  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
-
-  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
-  TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
-
-  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
-
-  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
-  global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
-                     if 'HOME' in os.environ else '/home/ubuntu')
-
-else  :
-  ### Global Shared Drive
-  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/ztest_tasks/"
-  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/ztest_backup/"
-  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/ztest_tasks_out/"
-
-  ### Local to each instance
-  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
-  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks_out/"
-
-  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
-  TASK_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks/"
-
-  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
-
-
-
-"""
 ### Record the running/done tasks on S3 DRIVE, Global File system  #############
 global_task_file_default = "%s/zs3drive/ztest_global_task.json" % (os.environ['HOME'] 
                      if 'HOME' in os.environ else '/home/ubuntu')
@@ -943,6 +910,44 @@ if __name__ == '__main__':
 
 
 
+"""
+if not ISTEST :
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/tasks_out/"
+
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks_out/"
+
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/github_tasks/"
+
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+  ### Record the running/done tasks on S3 DRIVE, Global File system  #############
+  global_task_file = "%s/zs3drive/global_task.json" % (os.environ['HOME'] 
+                     if 'HOME' in os.environ else '/home/ubuntu')
+
+else  :
+  ### Global Shared Drive
+  TASK_S3_FOLDER    = "/home/ubuntu/zs3drive/ztest_tasks/"
+  BACKUP_S3_FOLDER  = "/home/ubuntu/zs3drive/ztest_backup/"
+  TASKOUT_S3_FOLDER = "/home/ubuntu/zs3drive/ztest_tasks_out/"
+
+  ### Local to each instance
+  TASKOUT_REPOURL      = "https://github.com/arita37/tasks_out.git"
+  TASKOUT_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks_out/"
+
+  TASK_REPOURL      = "https://github.com/arita37/tasks.git"
+  TASK_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks/"
+
+  FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+
+
+"""
 
 
 """
