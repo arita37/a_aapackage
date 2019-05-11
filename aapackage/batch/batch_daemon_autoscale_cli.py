@@ -12,7 +12,7 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
 
 
 
-#### Test with reset of task files and test parameters
+#### Test with reset of task files and test p
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test
 
 

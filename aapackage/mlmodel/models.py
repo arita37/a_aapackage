@@ -1,5 +1,3 @@
-
-
 """
 Lightweight Functional interface to wrap access
 to Deep Learning, RLearning models.
@@ -7,11 +5,9 @@ Logic follows Scikit Learn API and simple for easy extentions.Logic
 
 
 1) Installation as follow
-
    source activate yourCOndaEnv
    cd /home/ubuntu/aagit/aapackage/
    pip install -e .
-
 
 This will install editable package, and this can be used
    from aapackage.mlmodel import models
@@ -20,14 +16,22 @@ This will install editable package, and this can be used
   /home/ubuntu/aagit/aapackage/mlmodel/
 
 
-
-############### conda DL ####################################################
+############### conda DL #######################################################
 conda create -n  py36f    python=3.6.7
 
 conda install -y  tensorflow=1.9.0 keras xgboost  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel pandas        
+conda install matplotlib seaborn --no-update-deps
+
+
+##Install TF with AVC
+conda uninstall tensorflow --force
+anaconda3/envs/py36d/bin/pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  
 
 
 
+
+##############################################################################
+conda create -n  py36e    python=3.6.7
 
 conda install -y mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel        
 
@@ -35,15 +39,31 @@ conda install -y mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch 
 
 ##Install TF with
 conda uninstall tensorflow --force
+
+anaconda3/envs/py36d/bin/pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  
+
+
+
+anaconda3/envs/py36c/bin/pip install -e /home/ubuntu/aagit/aapackage/
+
+
+
+
+
 pip install --ignore-installed --upgrade https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl 
+
+pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  --user
+
 
 
 conda install dask --no-update-deps
-conda install matplotlib seaborn --no-update-deps
+
 conda install torchvision --no-update-deps
 
 
 
+
+anaconda3/envs/py36c/bin/pip 
 
 
 """
@@ -54,16 +74,24 @@ from importlib import import_module
 import glob
 
 
-def create(modelname="", params={}) :
+
+
+def create(modelname="", params=None) :
+    """
+    
+    """
     module_path = glob.glob('model_dl/{}.py'.format(modelname))
     if len(module_path)==0:
         raise NameError("Module {} notfound".format(modelname))
     
     module = import_module('model_dl.{}'.format(modelname))
-    model = module.Model(**params)
-    
-    return module, model
-    
+
+    if params :
+      model = module.Model(**params)
+      return module, model
+    else :
+      return module, None        
+        
 
 
 
@@ -92,31 +120,60 @@ def fit_file(model,  foldername=None, fileprefix=None):
 
 
 
-####################################################################################
-## Testing
-def test_lstm() :
-  df = pd.read_csv('dataset/GOOG-year.csv')
-  date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-  print( df.head(5) )
+########################################################################
+##### CLI1
+def load_arguments():
+  """
+     Load CLI input, load config.toml , overwrite config.toml by CLI Input
+  """
+  cur_path= os.path.dirname(os.path.realpath(__file__))
+  config_file = os.path.join(cur_path, "config.toml")
 
+  p = argparse.ArgumentParser()
+  p.add_argument("--param_file", default=config_file, help="Params File")
+  p.add_argument("--param_mode", default="test",      help="test/ prod /uat")
+  p.add_argument("--log_file",   help="log.log")  # default="batchdaemon_autoscale.log",
 
-  minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-  df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-  df_log = pd.DataFrame(df_log) 
-
-  module, model =create('1_lstm',
-    {'learning_rate':0.001,'num_layers':1,
-     'size':df_log.shape[1],'size_layer':128,
-     'output_size':df_log.shape[1],'timestep':5,'epoch':5})
-
-  sess = fit(model, module, df_log)
-  predictions = predict(model, module, sess, df_log)
-  print(predictions)
-
-
-
+  p.add_argument("--do",   help="test")  # default="nodaemon",
+  p.add_argument("--name", help=".")  # default="batchdaemon_autoscale.log",
+  
+  args = p.parse_args()
+  
+  ##### Load file params as dict namespace #########################
+  class to_namespace(object):
+    def __init__(self, adict):
+       self.__dict__.update(adict)
+  
+  import toml
+  try :
+    pars = toml.load(args.param_file)
+    pars = pars[args.param_mode]  # test / prod
+  
+    ### Overwrite params by CLI input and merge with toml file
+    for key,x in vars(args).items():
+      if x is not None :  # only values NOT set by CLI
+        pars[key] = x
+  
+    print(pars)
+    pars = to_namespace(pars)  #  like object/namespace pars.instance
+    return pars
+    
+  except :
+    return args
+  
+  
+  
 if __name__ == "__main__":
-   test_lstm()
+  args = load_arguments()
+
+  if args.do == "test" :
+    module,_ =create(args.name, None) # '1_lstm'
+    module.test() 
+
+
+
+
+
 
 
 

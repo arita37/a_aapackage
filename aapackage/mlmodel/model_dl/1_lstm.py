@@ -6,13 +6,12 @@
 
 import tensorflow as tf
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
 from datetime import timedelta
-sns.set()
+
+
 
 
 
@@ -96,9 +95,48 @@ def predict(model,sess,data_frame):
         output_predict[k + 1 : k + model.timestep + 1] = out_logits   
     return output_predict, init_value
 
-# In[5]:
 
+
+def params(choice=None):
+  # output parms    
+  if choice is None :    
+   return {'learning_rate':0.001,'num_layers':1,
+           'size':df_log.shape[1],'size_layer':128,
+           'output_size':df_log.shape[1],'timestep':5,'epoch':5}
+
+
+
+def test(filename= 'dataset/GOOG-year.csv') :
+  from aapackage.mlmodel.models import create, fit, predict      
+  df = pd.read_csv(filename)
+  date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+  print( df.head(5) )
+
+
+  minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+  df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+  df_log = pd.DataFrame(df_log) 
+
+  module, model =create('1_lstm',
+          {'learning_rate':0.001,'num_layers':1,
+           'size':df_log.shape[1],'size_layer':128,
+           'output_size':df_log.shape[1],'timestep':5,'epoch':5})
+
+  sess = fit(model, module, df_log)
+  predictions = predict(model, module, sess, df_log)
+  print(predictions)
+
+
+
+
+####################################################################################################
+####################################################################################################
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set()
+
+
     num_layers = 1
     size_layer = 128
     timestamp = 5
