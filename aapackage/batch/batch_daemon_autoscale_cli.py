@@ -85,7 +85,7 @@ TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/task
 keypair = 'aws_ec2_ajey'  # Remote Spot Instance
 region  = 'us-west-2'     # Oregon West
 default_instance_type = 't3.small'
-amiId = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+amiId = "ami-090b189f0e2ffe4df" # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 spot_cfg_file = '/tmp/ec_spot_config'
 
 

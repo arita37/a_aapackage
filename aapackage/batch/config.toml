@@ -1,13 +1,24 @@
 title = "batch configuration "
 
 
+####################################################################################################
+#####################   Batch Launch  ##############################################################
 [launch_test]
+task_folder   =   "/home/ubuntu/zs3drive/ztest/tasks/"
+log_file      =   "/home/ubuntu/zlog/test_batchdaemon.log"
+log_file_task =   "/home/ubuntu/zlog/test_batchdaemon_task.log"
+mode          =   "daemon"
+waitsec       =   20
+global_task_file= "/home/ubuntu/zs3drive/ztest/global_task.json"
+  
 
+
+[launch_prod]
 task_folder   =   "/home/ubuntu/zs3drive/tasks/"
 log_file      =   "/home/ubuntu/zlog/batchdaemon.log"
 log_file_task =   "/home/ubuntu/zlog/batchdaemon_task.log"
 mode          =   "daemon"
-waitsec= 30
+waitsec       =   60
 global_task_file= "/home/ubuntu/zs3drive/global_task.json"
   
 
@@ -15,6 +26,11 @@ global_task_file= "/home/ubuntu/zs3drive/global_task.json"
 
 
 
+
+
+
+####################################################################################################
+######################## Auto Scale Batch ##########################################################
 [prod]
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west

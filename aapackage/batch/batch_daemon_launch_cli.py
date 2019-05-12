@@ -55,18 +55,19 @@ from aapackage.batch import util_cpu
 ############### logger #########################################################
 #DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 #TASK_FOLDER_DEFAULT = os.getcwd()
-global logger
 TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztestasks/"
-logger = logging.basicConfig()
 
 
 
 
 ################################################################################
+global logger
+logger = logging.basicConfig()
 def log(*argv):
   logger.info(",".join([str(x) for x in argv]))
 
 
+################################################################################
 def load_arguments():
   """
        --param_file /zs3drive/config_batch.toml --param_mode test_launch
@@ -80,21 +81,21 @@ def load_arguments():
   
   p.add_argument("--task_folder",        help="path to task folder.") #     default=TASK_FOLDER_DEFAULT
   p.add_argument("--log_file",           help=".") # default="logfile_batchdaemon.log"
-  p.add_argument("--log_file_task",     help=".") #     default="logfile_batchdaemon_task.log",
-  p.add_argument("--mode",           help="daemon/ .") #     default="nodaemon",
-  p.add_argument("--waitsec", type=int, help="wait sec")   #  default=30,
+  p.add_argument("--log_file_task",      help=".") #     default="logfile_batchdaemon_task.log",
+  p.add_argument("--mode",               help="daemon/ .") #     default="nodaemon",
+  p.add_argument("--waitsec", type=int,  help="wait sec")   #  default=30,
   p.add_argument("--global_task_file",   help="synchronize task")  # default="/home/ubuntu/zs3drive/global_task.json",
    
   args = p.parse_args()
   
-  ##### Load file params as dict namespace #########################
+  ##### Load default file params as dict namespace #########################
   import toml
   class to_namespace(object):
     def __init__(self, adict):
        self.__dict__.update(adict)
 
   try :   
-    pars = toml.load(args.param_file)
+    pars = toml.load(args.param_file)   #Load Default params
     # print(pars)
     pars = pars[args.param_mode]  # test / prod
     # print(pars)
@@ -108,7 +109,7 @@ def load_arguments():
     pars = to_namespace(pars)  #  like object/namespace pars.instance
     return pars
   except Exception as e :
-    print(e)
+    print("Load_argument error", e)
     return args
 
 
@@ -179,6 +180,9 @@ def global_task_file_save(folder, folder_check, global_task_file)  :
   log("Inserted task", folder, global_task_file )
   
 
+
+
+
 def main3():
   """ Driver utility for the script.
     global_task_file contains the list of task ALREADY PROCESSED.
@@ -237,6 +241,27 @@ if __name__ == '__main__':
 
 
 
+
+
+####################################################################################################
+####################################################################################################
+
+
+"""
+
+class global_task(object):
+    def __init__(self, task_file):
+       self.__dict__.update(adict)
+  
+    def save(self) :
+      pass
+      
+    def load(self):
+      pass
+
+
+
+"""
 
 
 
