@@ -13,11 +13,11 @@ batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --lo
 
 
 #### Test with reset of task files and test p
-batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/config_batch.toml  
 
 
 #### Prod setup of task files
-batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode prod
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1 --param_file zs3drive/config_batch.toml  --param_mode prod
 
 
 
@@ -710,7 +710,7 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
 
 
 
-def ec2_instance_initialize_ssh():
+def ec2_instance_initialize_ssh(args):
         """
           Many issues with S3 and ssh, Very sensitive code...
           1) Cannot run bash shell from S3 drive folder
@@ -733,8 +733,10 @@ def ec2_instance_initialize_ssh():
           cmds += " && echo  ' copied'   "
           # msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
           # log(ipx, "ssh copy script file to Local", msg)  
-          
-          cmds  = " bash /home/ubuntu/zbatch_cleanup.sh    "
+
+
+          cmds += " chmod 777 /home/ubuntu/zbatch_test.sh && chmod 777 /home/ubuntu/zbatch.sh   "          
+          cmds += " && bash /home/ubuntu/zbatch_cleanup.sh    "
           cmds += " && which python && echo  ',' && pwd "
           msg  = ssh_cmdrun( ipx,  key_file,   cmds, isblocking=True)
           log(ipx, "ssh zbatch_cleanup", msg)  
@@ -742,7 +744,11 @@ def ec2_instance_initialize_ssh():
           
           #### MAJOR BUG : CANNOT USE bash script on S3 Folder ,due to Permission ISSUES on S#
           #### Neeed to add anaconda into the path
-          cmds = " screen -d -m bash /home/ubuntu/zbatch.sh && sleep 5  && screen -ls "
+          if "test" in args.param_mode :
+            cmds = " screen -d -m bash /home/ubuntu/zbatch_test.sh && sleep 5  && screen -ls "
+          else :
+            cmds = " screen -d -m bash /home/ubuntu/zbatch.sh && sleep 5  && screen -ls "
+                        
           # cmds += " screen -d -m bash /home/ubuntu/zs3drive/zbatch.sh && screen -ls "
 
                     
@@ -762,15 +768,6 @@ def task_globalfile_reset(global_task_file=None):
 
 
 ################################################################################
-def load_params(param_file) :
-  """ Load toml file """
-  import toml
-  try :
-    return toml.load(param_file)
-  except :
-    return {}
-
-
 def load_arguments():
   """
      Load CLI input, load config.toml , overwrite config.toml by CLI Input
@@ -805,24 +802,24 @@ def load_arguments():
   
   
   ##### Load file params as dict namespace #########################
+  import toml
   class to_namespace(object):
     def __init__(self, adict):
        self.__dict__.update(adict)
   
-  # from attrdict import AttrDict
-  pars = load_params(args.param_file)
+  print(args.param_file )
+  pars = toml.load(args.param_file)
+  # print(args.param_file, pars)
   pars = pars[args.param_mode]  # test / prod
-  
+  print(args.param_file, pars)
+    
   ### Overwrite params by CLI input and merge with toml file
   for key,x in vars(args).items():
     if x is not None :  # only values NOT set by CLI
       pars[key] = x
   
-  print(pars)
+  # print(pars)
   pars = to_namespace(pars)  #  like object/namespace pars.instance
-  # pars = load_arguments()
-  # print( pars.ami, pars.TASK_S3_FOLDER  )
-
   return pars
 
 
@@ -872,7 +869,7 @@ if __name__ == '__main__':
         log("Instances running", INSTANCE_DICT)
 
         ##### Launch Batch system by No Blocking SSH  #########################
-        ec2_instance_initialize_ssh()
+        ec2_instance_initialize_ssh(args)
         sleep(10)
     
     
@@ -944,6 +941,8 @@ else  :
   TASK_LOCAL_FOLDER = "/home/ubuntu/data/ztest_github_tasks/"
 
   FOLDER_TO_BACKUP  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
+
+
 
 
 

@@ -35,7 +35,7 @@ global_task_file= "/home/ubuntu/zs3drive/global_task.json"
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
 
-ami = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+ami = "ami-090b189f0e2ffe4df"  #'ami-0491a657e7ed60af7'
 instance = 't3.small'
 spotprice = 0.05
 waitsec = 60
@@ -89,10 +89,10 @@ log_file = "/home/ubuntu/zlog/batch_autoscale.log"
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
 
-ami = "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+ami = "ami-090b189f0e2ffe4df" # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 instance = 't3.small'
 spotprice = 0.05
-waitsec = 60
+waitsec = 20
 max_instance = 2
 max_cpu = 16
 
@@ -124,7 +124,7 @@ log_file = "/home/ubuntu/zlog/batch_autoscale_test.log"
   task_repourl      = "https://github.com/arita37/tasks.git"
   task_local_folder = "/home/ubuntu/data/ztest/github_tasks/"
 
-  folder_to_backup  = ["/home/ubuntu/zlog/= "/home/ubuntu/tasks_out/" ]
+  folder_to_backup  = ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ]
 
 
   ### record the running/done tasks on s3 drive, global file system  #############
