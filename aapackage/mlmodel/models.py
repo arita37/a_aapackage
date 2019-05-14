@@ -165,7 +165,8 @@ def load_arguments():
   
 if __name__ == "__main__":
   args = load_arguments()
-
+  
+  # still not supported yet
   if args.do == "test" :
     module,_ =create(args.name, None) # '1_lstm'
     module.test() 

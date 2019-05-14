@@ -22,7 +22,7 @@ sns.set()
 
 
 def reducedimension(
-    input_, dimension = 2, learning_rate = 0.01, hidden_layer = 256, epoch = 20
+    input_, dimension = 2, learning_rate = 0.01, hidden_layer = 256, epoch = 20, sess=None
 ):
 
     input_size = input_.shape[1]
@@ -41,20 +41,20 @@ def reducedimension(
     )
     cost = tf.reduce_mean(tf.square(X - second_layer_decoder))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
-    sess = tf.InteractiveSession()
-    sess.run(tf.global_variables_initializer())
+    if sess is None:
+        sess = tf.InteractiveSession()
+        sess.run(tf.global_variables_initializer())
 
-    for i in range(epoch):
-        last_time = time.time()
-        _, loss = sess.run([optimizer, cost], feed_dict = {X: input_})
-        if (i + 1) % 10 == 0:
-            print(
-                'epoch:', i + 1, 'loss:', loss, 'time:', time.time() - last_time
-            )
+        for i in range(epoch):
+            last_time = time.time()
+            _, loss = sess.run([optimizer, cost], feed_dict = {X: input_})
+            if (i + 1) % 10 == 0:
+                print(
+                    'epoch:', i + 1, 'loss:', loss, 'time:', time.time() - last_time
+                )
 
     vectors = sess.run(second_layer_encoder, feed_dict = {X: input_})
-    tf.reset_default_graph()
-    return vectors
+    return vectors, sess, second_layer_encoder, X
 
 
 # You can try to reduce dimensions if you more features like sentiment value, sentiment spike and etc
@@ -115,7 +115,7 @@ class Model:
 
 def fit(model, data_frame):
     tf.reset_default_graph()
-    thought_vector = reducedimension(
+    thought_vector, sess_reduction, second_layer_encoder, X = reducedimension(
     data_frame.values,
     dimension = 16,
     learning_rate = model.learning_rate,
@@ -149,10 +149,16 @@ def fit(model, data_frame):
         total_loss /= data_frame.shape[0] // timestamp
         if (i + 1) % 100 == 0:
             print('epoch:', i + 1, 'avg loss:', total_loss)
-    return sess
+    return {
+        'main':sess, 
+        'reduction': sess_reduction, 
+        'second_layer_encoder':second_layer_encoder,
+        'X': X}
 
 
 def predict(model, sess, data_frame):
+    thought_vector = sess['reduction'].run(sess['second_layer_encoder'], feed_dict = {sess['X']: data_frame.values})
+    sess = sess['main']
     output_predict = np.zeros((data_frame.shape[0] + 1, data_frame.shape[1]))
     output_predict[0, :] = data_frame.iloc[0, :]
     upper_b = (data_frame.shape[0] // model.timestep) * model.timestep
@@ -191,12 +197,7 @@ if __name__ == "__main__":
     epoch = 500
     dropout_rate = 0.1
     
-    
-    # In[9]:
-    tf.reset_default_graph()
-    modelnn = Model(0.001, num_layers, 16, size_layer, df_log.shape[1], dropout_rate, epoch=epoch) 
-    
-    
+
     # In[2]:
     
     
@@ -213,6 +214,12 @@ if __name__ == "__main__":
     df_log = pd.DataFrame(df_log)
     df_log.head()
     
+    # In[9]:
+    tf.reset_default_graph()
+    modelnn = Model(0.001, num_layers, 16, size_layer, df_log.shape[1], dropout_rate, epoch=epoch) 
+    
+    
+    
     # In[10]:
     
     sess = fit(modelnn, df_log)
@@ -225,13 +232,13 @@ if __name__ == "__main__":
     
     
     
-    df_log.loc[df_log.shape[0]] = out_logits[-1]
-    date_ori.append(date_ori[-1] + timedelta(days = 1))
+
     
     
     # In[12]:
     
-    output_predict  = predict(model,sess, df_log)
+    # check if this is the requested way of prediction
+    output_predict  = predict(modelnn,sess, df_log)
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format = '%Y-%m-%d').tolist()
     

@@ -176,6 +176,7 @@ if __name__ == "__main__":
     output_predict    = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
     output_predict[0] = df_log.iloc[0]
     upper_b = (df_log.shape[0] // timestamp) * timestamp
+    # needs to be checked as there's more values that needs to be predicted other than the ne predicted by predict function
     output_predict[:df_log.shape[0],:], init_value = predict(modelnn, sess, df_log)
     
     out_logits, last_state = sess.run(
