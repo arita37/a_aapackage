@@ -9,20 +9,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import time
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
 from datetime import timedelta
+import time
 sns.set()
 
 
-
-
-# In[1]:
+# In[2]:
 
 
 def reducedimension(
-    input_, dimension = 2, learning_rate = 0.01, hidden_layer = 256, epoch = 20, sess=None
+    input_, dimension = 2, learning_rate = 0.01, hidden_layer = 256, epoch = 20
 ):
 
     input_size = input_.shape[1]
@@ -41,27 +39,22 @@ def reducedimension(
     )
     cost = tf.reduce_mean(tf.square(X - second_layer_decoder))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
-    if sess is None:
-        sess = tf.InteractiveSession()
-        sess.run(tf.global_variables_initializer())
+    sess = tf.InteractiveSession()
+    sess.run(tf.global_variables_initializer())
 
-        for i in range(epoch):
-            last_time = time.time()
-            _, loss = sess.run([optimizer, cost], feed_dict = {X: input_})
-            if (i + 1) % 10 == 0:
-                print(
-                    'epoch:', i + 1, 'loss:', loss, 'time:', time.time() - last_time
-                )
+    for i in range(epoch):
+        last_time = time.time()
+        _, loss = sess.run([optimizer, cost], feed_dict = {X: input_})
+        if (i + 1) % 10 == 0:
+            print(
+                'epoch:', i + 1, 'loss:', loss, 'time:', time.time() - last_time
+            )
 
     vectors = sess.run(second_layer_encoder, feed_dict = {X: input_})
     return vectors, sess, second_layer_encoder, X
 
 
-# You can try to reduce dimensions if you more features like sentiment value, sentiment spike and etc
-
-
-
-# In[7]:
+# In[3]:
 
 
 class Model:
@@ -73,25 +66,24 @@ class Model:
         size_layer,
         output_size,
         forget_bias = 0.1,
-        epoch=5,
-        timestep=5
+        timestep = 5,
+        epoch = 1
     ):
 
         self.learning_rate = learning_rate
         self.size_layer = size_layer
-        self.num_layers= num_layers
-        self.hidden_layer_size = num_layers * 2 * size_layer
-        self.epoch = epoch
         self.timestep = timestep
+        self.epoch = epoch
+        self.hidden_layer_size = num_layers * size_layer
         self.size = size
         self.output_size = output_size
         self.forget_bias = forget_bias
-        self.build_model()
+        self.num_layers = num_layers
 
 
     def build_model(self):
         def lstm_cell(size_layer):
-            return tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple = False)
+            return tf.nn.rnn_cell.GRUCell(size_layer)
         rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
             [lstm_cell(self.size_layer) for _ in range(self.num_layers)],
             state_is_tuple = False,
@@ -102,7 +94,7 @@ class Model:
             rnn_cells, output_keep_prob = self.forget_bias
         )
         self.hidden_layer = tf.placeholder(
-            tf.float32, (None, self.hidden_layer_size)
+            tf.float32, (None, self.hidden_layer_size )
         )
         self.outputs, self.last_state = tf.nn.dynamic_rnn(
             drop, self.X, initial_state = self.hidden_layer, dtype = tf.float32
@@ -113,14 +105,15 @@ class Model:
             self.cost
         )
 
+
 def fit(model, data_frame):
     tf.reset_default_graph()
     thought_vector, sess_reduction, second_layer_encoder, X = reducedimension(
-    data_frame.values,
-    dimension = 16,
-    learning_rate = model.learning_rate,
-    hidden_layer = model.size_layer,
-    epoch = 100,
+        data_frame.values,
+        dimension = 16,
+        learning_rate = model.learning_rate,
+        hidden_layer = model.size_layer,
+        epoch = 100,
     )
     tf.reset_default_graph()
     model.build_model() # to put the model in the graph
@@ -168,7 +161,7 @@ def predict(model, sess, data_frame):
             [model.logits, model.last_state],
             feed_dict = {
                 model.X: np.expand_dims(
-                    thought_vector[k : k + model.timestep, :], axis = 0
+                    thought_vector[k : k + timestamp], axis = 0
                 ),
                 model.hidden_layer: init_value,
             },
@@ -176,76 +169,73 @@ def predict(model, sess, data_frame):
         init_value = last_state
         output_predict[k + 1 : k + model.timestep + 1] = out_logits
     out_logits, last_state = sess.run(
-        [model.logits, model.last_state],
-        feed_dict = {
-            model.X: np.expand_dims(thought_vector[upper_b:], axis = 0),
-            model.hidden_layer: init_value,
-        },
-    )
+            [model.logits, model.last_state],
+            feed_dict = {
+                model.X: np.expand_dims(
+                    thought_vector[upper_b:], axis = 0
+                ),
+                model.hidden_layer: init_value,
+            },
+        )
     init_value = last_state
     output_predict[upper_b + 1 : data_frame.shape[0] + 1] = out_logits
     return output_predict
 
 
 if __name__ == "__main__":
+    # In[4]:
+
+
+    df = pd.read_csv('../dataset/GOOG-year.csv')
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    df.head()
+
+
+    # In[5]:
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log)
+    df_log.head()
+
+
+
+
+
     # In[8]:
-    
-    
+
+
     num_layers = 1
     size_layer = 128
     timestamp = 5
     epoch = 500
     dropout_rate = 0.1
-    
 
-    # In[2]:
-    
-    
-    df = pd.read_csv('../dataset/GOOG-year.csv')
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    df.head()
-    
-    
-    # In[3]:
-    
-    
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    df_log = pd.DataFrame(df_log)
-    df_log.head()
-    
+
     # In[9]:
-    tf.reset_default_graph()
-    modelnn = Model(0.001, num_layers, 16, size_layer, df_log.shape[1], dropout_rate, epoch=epoch) 
-    
-    
-    
-    # In[10]:
-    
-    sess = fit(modelnn, df_log)
-    
-    
-    
-    # In[11]:
-    
-    
-    
-    
-    
 
-    
-    
-    # In[12]:
-    
-    # check if this is the requested way of prediction
+
+    tf.reset_default_graph()
+    modelnn = Model(0.001, num_layers, 16, size_layer, df_log.shape[1], dropout_rate , timestamp, epoch)
+
+    sess = fit(modelnn, df_log)
+    # In[11]:
     output_predict  = predict(modelnn,sess, df_log)
+    df_log.loc[df_log.shape[0]] = output_predict[-1]
+    date_ori.append(date_ori[-1] + timedelta(days = 1))
+
+
+    # In[12]:
+
+
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format = '%Y-%m-%d').tolist()
-    
-    
+
+
     # In[13]:
-    
-    
+
+
     def anchor(signal, weight):
         buffer = []
         last = signal[0]
@@ -254,11 +244,11 @@ if __name__ == "__main__":
             buffer.append(smoothed_val)
             last = smoothed_val
         return buffer
-    
-    
+
+
     # In[14]:
-    
-    
+
+
     current_palette = sns.color_palette('Paired', 12)
     fig = plt.figure(figsize = (15, 10))
     ax = plt.subplot(111)
@@ -338,6 +328,10 @@ if __name__ == "__main__":
     plt.title('overlap stock market')
     plt.xticks(x_range_future[::30], date_ori[::30])
     plt.show()
-    
-    
+
+
     # In[ ]:
+
+
+
+

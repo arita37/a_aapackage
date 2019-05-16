@@ -90,7 +90,7 @@ aapackage/mlmodel/model_dl/27.byte-net.py
 aapackage/mlmodel/model_dl/28.attention-is-all-you-need.py
 aapackage/mlmodel/model_dl/29.fairseq.py
 aapackage/mlmodel/model_dl/2_encoder-lstm.py
-aapackage/mlmodel/model_dl/3.bidirectional-lstm.py
+aapackage/mlmodel/model_dl/3_bidirectional-lstm.py
 aapackage/mlmodel/model_dl/4.lstm-2path.py
 aapackage/mlmodel/model_dl/5.gru.py
 aapackage/mlmodel/model_dl/6.encoder-gru.py
