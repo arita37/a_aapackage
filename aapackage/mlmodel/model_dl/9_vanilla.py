@@ -27,14 +27,13 @@ class Model:
         size_layer,
         output_size,
         forget_bias = 0.1,
-        epoch = 1,
+        epoch=500,
         timestep=5
     ):
         def lstm_cell(size_layer):
-            return tf.nn.rnn_cell.GRUCell(size_layer)
-
+            return tf.nn.rnn_cell.BasicRNNCell(size_layer)
         self.epoch = epoch
-        self.timestep  = timestep
+        self.timestep = timestep
         self.hidden_layer_size = num_layers * size_layer
         rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
             [lstm_cell(size_layer) for _ in range(num_layers)],
@@ -51,9 +50,7 @@ class Model:
         self.outputs, self.last_state = tf.nn.dynamic_rnn(
             drop, self.X, initial_state = self.hidden_layer, dtype = tf.float32
         )
-        rnn_W = tf.Variable(tf.random_normal((size_layer, output_size)))
-        rnn_B = tf.Variable(tf.random_normal([output_size]))
-        self.logits = tf.matmul(self.outputs[-1], rnn_W) + rnn_B
+        self.logits = tf.layers.dense(self.outputs[-1], output_size)
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(
             self.cost
@@ -78,7 +75,7 @@ def fit(model,data_frame):
                     model.hidden_layer: init_value,
                 },
             )
-            loss = np.mean(loss) # dont know why you are taking the average of the loss more than one time
+            loss = np.mean(loss)
             init_value = last_state
             total_loss += loss
         total_loss /= data_frame.shape[0] // model.timestep
@@ -90,29 +87,28 @@ def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None ):
     if init_value is None:
         init_value = np.zeros((1, model.hidden_layer_size))
     output_predict = np.zeros((data_frame.shape[0] , data_frame.shape[1]))
-    
     upper_b = (data_frame.shape[0] // model.timestep) * model.timestep
     
     if upper_b == model.timestep:
         out_logits, init_value = sess.run(
-                [model.logits, model.last_state],
-                feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
-                },
-            )
+            [model.logits, model.last_state],
+            feed_dict = {
+                model.X: np.expand_dims(
+                    data_frame.values, axis = 0
+                ),
+                model.hidden_layer: init_value,
+            },
+        )
     else:
         for k in range(0, (data_frame.shape[0] // model.timestep) * model.timestep, model.timestep):
             out_logits, last_state = sess.run(
-                [model.logits, model.last_state],
-                feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.iloc[k : k + model.timestep, :].values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
-                },
+            [model.logits, model.last_state],
+            feed_dict = {
+                model.X: np.expand_dims(
+                    data_frame.iloc[k : k + model.timestep], axis = 0
+                ),
+                model.hidden_layer: init_value,
+            },
             )
             init_value = last_state
             output_predict[k + 1 : k + model.timestep + 1] = out_logits  
@@ -121,7 +117,6 @@ def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None ):
     return output_predict
 
 if __name__ == "__main__":
-        
     # In[3]:
 
 
@@ -150,49 +145,50 @@ if __name__ == "__main__":
     future_day = 50
 
 
-    # In[7]:
+    # In[6]:
 
 
     tf.reset_default_graph()
     modelnn = Model(
-        0.01, num_layers, df_log.shape[1], size_layer, df_log.shape[1], dropout_rate, epoch, timestamp
+        0.01, num_layers, df_log.shape[1], size_layer, df_log.shape[1], dropout_rate
     )
-
     sess = fit(modelnn, df_log)
-    # In[11]:
+
+
+    # In[8]:
 
 
     output_predict = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
-    output_predict[0, :] = df_log.iloc[0, :]
+    output_predict[0] = df_log.iloc[0]
     upper_b = (df_log.shape[0] // timestamp) * timestamp
     output_predict[:df_log.shape[0],:],init_value  = predict(modelnn, sess, df_log,True)
 
     out_logits, init_value  = predict(modelnn, sess, df_log.iloc[upper_b:, :],True, init_value)
     
-   
-    output_predict[upper_b + 1 : df_log.shape[0] + 1, :] = out_logits
-    df_log.loc[df_log.shape[0]] = out_logits[-1, :]
+    output_predict[upper_b + 1 : df_log.shape[0] + 1] = out_logits
+    df_log.loc[df_log.shape[0]] = out_logits[-1]
     date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[12]:
+    # In[9]:
 
 
     for i in range(future_day - 1):
-        out_logits, init_value = predict(modelnn, sess, df_log.iloc[-timestamp:, :],True, init_value)
-        output_predict[df_log.shape[0], :] = out_logits[-1, :]
-        df_log.loc[df_log.shape[0]] = out_logits[-1, :]
+        out_logits, init_value  = predict(modelnn, sess, df_log.iloc[-timestamp:],True, init_value)
+        
+        output_predict[df_log.shape[0]] = out_logits[-1]
+        df_log.loc[df_log.shape[0]] = out_logits[-1]
         date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[13]:
+    # In[10]:
 
 
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format = '%Y-%m-%d').tolist()
 
 
-    # In[14]:
+    # In[11]:
 
 
     def anchor(signal, weight):
@@ -205,7 +201,7 @@ if __name__ == "__main__":
         return buffer
 
 
-    # In[15]:
+    # In[12]:
 
 
     current_palette = sns.color_palette('Paired', 12)
@@ -289,7 +285,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[16]:
+    # In[13]:
 
 
     fig = plt.figure(figsize = (20, 8))
@@ -364,7 +360,22 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[17]:
+    # In[14]:
+
+
+    fig = plt.figure(figsize = (15,10))
+    ax = plt.subplot(111)
+    ax.plot(x_range_original, df.iloc[:, -1], label = 'true Volume')
+    ax.plot(x_range_future, df_log[:, -1], label = 'predict Volume')
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
+    ax.legend(loc = 'upper center', bbox_to_anchor= (0.5, -0.05), fancybox = True, shadow = True, ncol = 5)
+    plt.xticks(x_range_future[::30], date_ori[::30])
+    plt.title('overlap market volume')
+    plt.show()
+
+
+    # In[14]:
 
 
     fig = plt.figure(figsize = (15, 10))
@@ -387,7 +398,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[18]:
+    # In[15]:
 
 
     fig = plt.figure(figsize = (20, 8))
