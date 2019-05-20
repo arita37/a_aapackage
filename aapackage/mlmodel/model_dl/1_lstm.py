@@ -125,7 +125,12 @@ def params(choice=None):
 
 
 def test(filename= 'dataset/GOOG-year.csv') :
-  from aapackage.mlmodel.models import create, fit, predict      
+  import os,sys,inspect
+  current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+  parent_dir = os.path.dirname(current_dir)
+  sys.path.insert(0, parent_dir) 
+
+  from models import create, fit, predict      
   df = pd.read_csv(filename)
   date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
   print( df.head(5) )
@@ -143,6 +148,10 @@ def test(filename= 'dataset/GOOG-year.csv') :
   sess = fit(model, module, df_log)
   predictions = predict(model, module, sess, df_log)
   print(predictions)
+
+
+
+
 
 
 

@@ -74,12 +74,24 @@ from importlib import import_module
 import glob
 import os
 
-
+import re
+import os
+def get_recursive_files(folderPath,ext):
+		results  = os.listdir(folderPath)
+		outFiles = [] 
+		for file in results:
+			if os.path.isdir(os.path.join(folderPath,file)):
+				outFiles+=get_recursive_files(os.path.join(folderPath,file),ext)
+			elif re.match(ext, file) :
+				outFiles.append(file)
+			
+		return outFiles  
 
 def create(modelname="", params=None) :
     """
     
     """
+    modelname = modelname.replace('.py','')
     module_path = glob.glob('model_dl/{}.py'.format(modelname))
     if len(module_path)==0:
         raise NameError("Module {} notfound".format(modelname))
@@ -109,6 +121,7 @@ def fit(model, module, X):
 
 def predict(model, module, sess, X):
     return module.predict(model, sess, X)
+    
 
 
 def predict_file(model,  foldername=None, fileprefix=None):
@@ -123,55 +136,68 @@ def fit_file(model,  foldername=None, fileprefix=None):
 ########################################################################
 ##### CLI1
 def load_arguments():
-  """
-     Load CLI input, load config.toml , overwrite config.toml by CLI Input
-  """
-  cur_path= os.path.dirname(os.path.realpath(__file__))
-  config_file = os.path.join(cur_path, "config.toml")
+    """
+        Load CLI input, load config.toml , overwrite config.toml by CLI Input
+    """
+    cur_path= os.path.dirname(os.path.realpath(__file__))
+    config_file = os.path.join(cur_path, "config.toml")
 
-  p = argparse.ArgumentParser()
-  p.add_argument("--param_file", default=config_file, help="Params File")
-  p.add_argument("--param_mode", default="test",      help="test/ prod /uat")
-  p.add_argument("--log_file",   help="log.log")  # default="batchdaemon_autoscale.log",
+    p = argparse.ArgumentParser()
+    p.add_argument("--param_file", default=config_file, help="Params File")
+    p.add_argument("--param_mode", default="test",      help="test/ prod /uat")
+    p.add_argument("--log_file",   help="log.log")  # default="batchdaemon_autoscale.log",
 
-  p.add_argument("--do",   help="test")  # default="nodaemon",
-  p.add_argument("--name", help=".")  # default="batchdaemon_autoscale.log",
-  
-  args = p.parse_args()
-  
-  ##### Load file params as dict namespace #########################
-  class to_namespace(object):
-    def __init__(self, adict):
-       self.__dict__.update(adict)
-  
-  import toml
-  try :
-    pars = toml.load(args.param_file)
-    pars = pars[args.param_mode]  # test / prod
-  
-    ### Overwrite params by CLI input and merge with toml file
-    for key,x in vars(args).items():
-      if x is not None :  # only values NOT set by CLI
-        pars[key] = x
-  
-    print(pars)
-    pars = to_namespace(pars)  #  like object/namespace pars.instance
-    return pars
+    p.add_argument("--do",   help="test")  # default="nodaemon",
+    p.add_argument("--name", help=".")  # default="batchdaemon_autoscale.log",
     
-  except :
-    return args
+    args = p.parse_args()
+    
+    ##### Load file params as dict namespace #########################
+    class to_namespace(object):
+        def __init__(self, adict):
+            self.__dict__.update(adict)
+    
+    import toml
+    try :
+        pars = toml.load(args.param_file)
+        pars = pars[args.param_mode]  # test / prod
+    
+        ### Overwrite params by CLI input and merge with toml file
+        for key,x in vars(args).items():
+            if x is not None :  # only values NOT set by CLI
+                pars[key] = x
+    
+        print(pars)
+        pars = to_namespace(pars)  #  like object/namespace pars.instance
+        return pars
+        
+    except :
+        return args
   
-  
-  
+def test_all(parent_folder='model_dl'):
+    module_names = get_recursive_files(parent_folder,r'[0-9]+_.+\.py$')
+    
+    failed_scripts = []
+    import tensorflow as tf
+    for module_name in module_names:
+        print('#######################')
+        print(module_name)
+        print('######################')
+        module = import_module('{}.{}'.format(parent_folder, module_name.replace('.py','')))
+        module.test()
+        tf.reset_default_graph()
+        del module
+       
 if __name__ == "__main__":
-  args = load_arguments()
-  
-  # still not supported yet
-  if args.do == "test" :
-    module,_ =create(args.name, None) # '1_lstm'
-    module.test() 
 
-
+    #test_all() # tot test all te modules inside model_dl
+    
+    args = load_arguments()
+    
+    # still not supported yet
+    if args.do == "test" :
+        module,_ =create(args.name, None) # '1_lstm'
+        module.test() 
 
 
 

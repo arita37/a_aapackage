@@ -14,8 +14,6 @@ from datetime import datetime
 from datetime import timedelta
 sns.set()
 
-
-
 # In[5]:
 
 
@@ -40,7 +38,7 @@ def layer(inp, conv_block, kernel_width, n_hidden, residual=None):
     z = conv_block(inp, n_hidden, (kernel_width, 1))
     return glu(z) + (residual if residual is not None else 0)
 
-class Fairseq:
+class Model:
     def __init__(self, n_layers, size, output_size, emb_size, n_hidden, n_attn_heads, learning_rate, epoch=1, timestep=5):
         self.timestep = timestep
         self.epoch = epoch
@@ -133,6 +131,28 @@ def predict(model,sess,data_frame):
             output_predict[k + 1 : k + model.timestep + 1] = out_logits  
     return output_predict
 
+ 
+def test(filename= 'dataset/GOOG-year.csv') :
+    import os,sys,inspect
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    sys.path.insert(0, parent_dir) 
+    from models import create, fit, predict       
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( df.head(5) )
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+
+    module, model =create('29_fairseq.py',{"epoch": 1, "timestep": 5, "n_layers": 1, "size": df_log.shape[1], "output_size": df_log.shape[1], "emb_size": 128, "n_hidden": 128, "n_attn_heads": 16, "learning_rate": 0.001})
+
+    sess = fit(model, module, df_log)
+    predictions = predict(model, module, sess, df_log)
+    print(predictions)
+
 if __name__ == "__main__":
     # In[2]:
 
@@ -169,7 +189,7 @@ if __name__ == "__main__":
 
 
     tf.reset_default_graph()
-    modelnn = Fairseq(n_layers, size, output_size, emb_size, n_hidden, n_attn_heads, learning_rate, epoch=epoch, timestep=timestamp)
+    modelnn = Model(n_layers, size, output_size, emb_size, n_hidden, n_attn_heads, learning_rate, epoch=epoch, timestep=timestamp)
     sess = fit(modelnn, df_log)
 
 

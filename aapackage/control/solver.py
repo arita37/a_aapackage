@@ -27,8 +27,8 @@ class FeedForwardModel(object):
         # ops for statistics update of batch normalization
         self._extra_train_ops = []
 
-        self._config.num_iterations = None  # "Nepoch"
-        self._train_ops = None  # Gradient, Vale,  
+        #self._config.num_iterations = None  # "Nepoch"
+        #self._train_ops = None  # Gradient, Vale,  
         
 
 

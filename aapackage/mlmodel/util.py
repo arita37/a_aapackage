@@ -76,12 +76,12 @@ class BaseModelDl(object):
         # this function is common for all children classes
         for parameter, value in parameters.items():
             if hasattr(self,parameter):
-			    setattr(self, parameter, value)
+               setattr(self, parameter, value)
             else:
                 raise AttributeError('Class {} does not have parameter {}'.format(
                  self.name, parameter  
                 ))
-		return self
+        return self
 
     def build_model(self):
         # used to create placeholders and optimizer based on parameters set
@@ -122,6 +122,7 @@ class LSTM(BaseModelDl):
         self.forget_bias = 0.1
         self.model = None
 
+
     def get_params(self):
         return {
             'num_layers': self.num_layers,
@@ -133,6 +134,7 @@ class LSTM(BaseModelDl):
             'feat_size': self.feat_size,
             'forget_bias': self.forget_bias
         }
+
 
     def build_model(self):
         def lstm_cell(size_layer):
@@ -156,6 +158,7 @@ class LSTM(BaseModelDl):
 
         self.sess    = tf.InteractiveSession()
         self.sess.run(tf.global_variables_initializer())
+
     
     def fit(self):
         for i in range(self.epoch):
@@ -178,4 +181,4 @@ class LSTM(BaseModelDl):
     def predict(self,):
         # takes a sampler as the one in datasampler class
         # in this function it should take a sampler 
-        # 
+

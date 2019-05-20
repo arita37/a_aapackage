@@ -13,6 +13,10 @@ from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
 from datetime import timedelta
 import copy
+
+import os,sys,inspect
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+sys.path.insert(0, current_dir) 
 from dnc import DNC
 sns.set()
 
@@ -22,7 +26,7 @@ sns.set()
 
 
 class Model:
-    def __init__(self, learning_rate, size, size_layer, output_size, epoch, timestep):
+    def __init__(self, learning_rate, size, size_layer, output_size, epoch, timestep,access_config,controller_config,clip_value):
         self.epoch = epoch
         self.timestep = timestep
         self.X = tf.placeholder(tf.float32, (None, None, size))
@@ -44,7 +48,7 @@ def fit(model,data_frame):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
     for i in range(model.epoch):
-        modelnn.initial_state = modelnn.cells.initial_state(1)
+        model.initial_state = model.cells.initial_state(1)
         total_loss = 0
         for k in range(0, data_frame.shape[0] - 1, model.timestep):
             index   = min(k + model.timestep, data_frame.shape[0] -1)
@@ -66,7 +70,7 @@ def fit(model,data_frame):
 
 def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None):
     if init_value is None:
-        modelnn.initial_state = modelnn.cells.initial_state(1)
+        model.initial_state = model.cells.initial_state(1)
     else:
         model.initial_state = init_value
     output_predict = np.zeros((data_frame.shape[0] , data_frame.shape[1]))
@@ -96,6 +100,40 @@ def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None):
     if get_hidden_state: 
         return output_predict, model.initial_state
     return output_predict
+
+def test(filename= 'dataset/GOOG-year.csv') :
+    import os,sys,inspect
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    sys.path.insert(0, parent_dir) 
+    from models import create, fit, predict        
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( df.head(5) )
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+    num_writes = 1
+    num_reads = 4
+    memory_size = 16
+    word_size = 16
+    access_config = {
+        "memory_size": memory_size,
+        "word_size": word_size,
+        "num_reads": num_reads,
+        "num_writes": num_writes,
+    }
+    controller_config = {
+        "hidden_size": 128,
+    }
+
+    module, model =create('25_dnc.py',{"learning_rate":0.01, "size":df_log.shape[1], "size_layer":128, "output_size":df_log.shape[1], "epoch":1, "timestep":5,"access_config":access_config,"controller_config":controller_config,"clip_value":20})
+
+    sess = fit(model, module, df_log)
+    predictions = predict(model, module, sess, df_log)
+    print(predictions)
 
 if __name__ == "__main__":
 
@@ -149,7 +187,7 @@ if __name__ == "__main__":
 
 
     tf.reset_default_graph()
-    modelnn = Model(0.01, df_log.shape[1], size_layer, df_log.shape[1], epoch=epoch, timestep=timestamp)
+    modelnn = Model(0.01, df_log.shape[1], size_layer, df_log.shape[1], epoch, timestamp,access_config,controller_config,clip_value)
     sess = fit(modelnn, df_log)
 
     # In[ ]:

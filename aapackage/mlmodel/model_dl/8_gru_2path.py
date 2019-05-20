@@ -15,7 +15,8 @@ from datetime import timedelta
 sns.set()
 
 
-# In[2]:
+
+# In[5]:
 
 
 class Model:
@@ -27,33 +28,56 @@ class Model:
         size_layer,
         output_size,
         forget_bias = 0.1,
-        epoch = 1,
-        timestep=5
+        epoch=500,
+        timestep = 5
     ):
         def lstm_cell(size_layer):
             return tf.nn.rnn_cell.GRUCell(size_layer)
 
         self.epoch = epoch
-        self.timestep  = timestep
+        self.timestep = timestep
         self.hidden_layer_size = num_layers * size_layer
-        rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
-            [lstm_cell(size_layer) for _ in range(num_layers)],
-            state_is_tuple = False,
-        )
-        self.X = tf.placeholder(tf.float32, (None, None, size))
+        with tf.variable_scope('forward', reuse = False):
+            rnn_cells_forward = tf.nn.rnn_cell.MultiRNNCell(
+                [lstm_cell(size_layer) for _ in range(num_layers)],
+                state_is_tuple = False,
+            )
+            self.X_forward = tf.placeholder(tf.float32, (None, None, size))
+            drop_forward = tf.contrib.rnn.DropoutWrapper(
+                rnn_cells_forward, output_keep_prob = forget_bias
+            )
+            self.hidden_layer_forward = tf.placeholder(
+                tf.float32, (None, self.hidden_layer_size )
+            )
+            self.outputs_forward, self.last_state_forward = tf.nn.dynamic_rnn(
+                drop_forward,
+                self.X_forward,
+                initial_state = self.hidden_layer_forward,
+                dtype = tf.float32,
+            )
+
+        with tf.variable_scope('backward', reuse = False):
+            rnn_cells_backward = tf.nn.rnn_cell.MultiRNNCell(
+                [lstm_cell(size_layer) for _ in range(num_layers)],
+                state_is_tuple = False,
+            )
+            self.X_backward = tf.placeholder(tf.float32, (None, None, size))
+            drop_backward = tf.contrib.rnn.DropoutWrapper(
+                rnn_cells_backward, output_keep_prob = forget_bias
+            )
+            self.hidden_layer_backward = tf.placeholder(
+                tf.float32, (None, self.hidden_layer_size)
+            )
+            self.outputs_backward, self.last_state_backward = tf.nn.dynamic_rnn(
+                drop_backward,
+                self.X_backward,
+                initial_state = self.hidden_layer_backward,
+                dtype = tf.float32,
+            )
+
+        self.outputs = self.outputs_backward - self.outputs_forward
         self.Y = tf.placeholder(tf.float32, (None, output_size))
-        drop = tf.contrib.rnn.DropoutWrapper(
-            rnn_cells, output_keep_prob = forget_bias
-        )
-        self.hidden_layer = tf.placeholder(
-            tf.float32, (None, self.hidden_layer_size)
-        )
-        self.outputs, self.last_state = tf.nn.dynamic_rnn(
-            drop, self.X, initial_state = self.hidden_layer, dtype = tf.float32
-        )
-        rnn_W = tf.Variable(tf.random_normal((size_layer, output_size)))
-        rnn_B = tf.Variable(tf.random_normal([output_size]))
-        self.logits = tf.matmul(self.outputs[-1], rnn_W) + rnn_B
+        self.logits = tf.layers.dense(self.outputs[-1], output_size)
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(
             self.cost
@@ -64,62 +88,100 @@ def fit(model,data_frame):
     sess.run(tf.global_variables_initializer())
     for i in range(model.epoch):
 
-        init_value = np.zeros((1, model.hidden_layer_size))
+        init_value_forward = np.zeros((1, model.hidden_layer_size))
+        init_value_backward = np.zeros((1, model.hidden_layer_size))
         total_loss = 0
         for k in range(0, data_frame.shape[0] - 1, model.timestep):
             index   = min(k + model.timestep, data_frame.shape[0] -1)
-            batch_x = np.expand_dims( data_frame.iloc[k : index, :].values, axis = 0)
-            batch_y = data_frame.iloc[k + 1 : index + 1, :].values
-            last_state, _, loss = sess.run(
-                [model.last_state, model.optimizer, model.cost],
+            batch_x_forward = np.expand_dims(
+                data_frame.iloc[k : index].values, axis = 0
+            )
+            batch_x_backward = np.expand_dims(
+                np.flip(data_frame.iloc[k : index].values, axis = 0),
+                axis = 0,
+            )
+            batch_y = data_frame.iloc[k + 1 : index + 1].values
+            last_state_forward, last_state_backward, _, loss = sess.run(
+                [
+                    model.last_state_forward,
+                    model.last_state_backward,
+                    model.optimizer,
+                    model.cost,
+                ],
                 feed_dict = {
-                    model.X: batch_x,
+                    model.X_forward: batch_x_forward,
+                    model.X_backward: batch_x_backward,
                     model.Y: batch_y,
-                    model.hidden_layer: init_value,
+                    model.hidden_layer_forward: init_value_forward,
+                    model.hidden_layer_backward: init_value_backward,
                 },
             )
-            loss = np.mean(loss) # dont know why you are taking the average of the loss more than one time
-            init_value = last_state
+            init_value_forward = last_state_forward
+            init_value_backward = last_state_backward
             total_loss += loss
         total_loss /= data_frame.shape[0] // model.timestep
         if (i + 1) % 100 == 0:
             print('epoch:', i + 1, 'avg loss:', total_loss)
     return sess
 
-def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None ):
-    if init_value is None:
-        init_value = np.zeros((1, model.hidden_layer_size))
+def predict(model,sess,data_frame,  get_hidden_state=False, init_value_forward=None, init_value_backward=None):
+    if init_value_forward is None:
+        init_value_forward = np.zeros((1, model.hidden_layer_size))
+    if init_value_backward is None:
+        init_value_backward = np.zeros((1, model.hidden_layer_size))
     output_predict = np.zeros((data_frame.shape[0] , data_frame.shape[1]))
     
     upper_b = (data_frame.shape[0] // model.timestep) * model.timestep
     
     if upper_b == model.timestep:
-        out_logits, init_value = sess.run(
-                [model.logits, model.last_state],
-                feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
-                },
-            )
+        out_logits, last_state_forward, last_state_backward = sess.run(
+            [
+                model.logits,
+                model.last_state_forward,
+                model.last_state_backward,
+            ],
+            feed_dict = {
+                model.X_forward: np.expand_dims(
+                data_frame.values, axis = 0
+            ),
+                model.X_backward: np.expand_dims(
+                np.flip(data_frame.values, axis = 0), axis = 0
+            ),
+                model.hidden_layer_forward: init_value_forward,
+                model.hidden_layer_backward: init_value_backward,
+            },
+        )
+        init_value_forward = last_state_forward
+        init_value_backward = last_state_backward
     else:
         for k in range(0, (data_frame.shape[0] // model.timestep) * model.timestep, model.timestep):
-            out_logits, last_state = sess.run(
-                [model.logits, model.last_state],
+            batch_x_forward = np.expand_dims(
+                data_frame.iloc[k : k + model.timestep], axis = 0
+            )
+            batch_x_backward = np.expand_dims(
+                np.flip(data_frame.iloc[k : k + model.timestep].values, axis = 0), axis = 0
+            )
+            out_logits, last_state_forward, last_state_backward = sess.run(
+                [
+                    model.logits,
+                    model.last_state_forward,
+                    model.last_state_backward,
+                ],
                 feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.iloc[k : k + model.timestep, :].values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
+                    model.X_forward: batch_x_forward,
+                    model.X_backward: batch_x_backward,
+                    model.hidden_layer_forward: init_value_forward,
+                    model.hidden_layer_backward: init_value_backward,
                 },
             )
-            init_value = last_state
+            init_value_forward = last_state_forward
+            init_value_backward = last_state_backward
             output_predict[k + 1 : k + model.timestep + 1] = out_logits  
     if get_hidden_state: 
-        return output_predict, init_value
+        return output_predict, init_value_forward, init_value_backward
     return output_predict
 
+ 
 def test(filename= 'dataset/GOOG-year.csv') :
     import os,sys,inspect
     current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -135,18 +197,15 @@ def test(filename= 'dataset/GOOG-year.csv') :
     df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
     df_log = pd.DataFrame(df_log) 
 
-    module, model =create('5_gru.py',
-            {'learning_rate':0.001,'num_layers':1,
-            'size':df_log.shape[1],'size_layer':128,
-            'output_size':df_log.shape[1],'timestep':5,'epoch':5})
+    module, model =create('8_gru_2path.py',{"learning_rate": 0.01, "num_layers": 1, "size": df_log.shape[1], "size_layer": 128, "output_size": df_log.shape[1], "epoch": 1})
 
     sess = fit(model, module, df_log)
     predictions = predict(model, module, sess, df_log)
     print(predictions)
 
 if __name__ == "__main__":
-        
-    # In[3]:
+
+    # In[2]:
 
 
     df = pd.read_csv('../dataset/GOOG-year.csv')
@@ -154,7 +213,7 @@ if __name__ == "__main__":
     df.head()
 
 
-    # In[4]:
+    # In[3]:
 
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
@@ -163,7 +222,7 @@ if __name__ == "__main__":
     df_log.head()
 
 
-    # In[5]:
+    # In[4]:
 
 
     num_layers = 1
@@ -174,7 +233,7 @@ if __name__ == "__main__":
     future_day = 50
 
 
-    # In[7]:
+    # In[6]:
 
 
     tf.reset_default_graph()
@@ -183,40 +242,43 @@ if __name__ == "__main__":
     )
 
     sess = fit(modelnn, df_log)
-    # In[11]:
+    # In[8]:
 
 
     output_predict = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
-    output_predict[0, :] = df_log.iloc[0, :]
+    output_predict[0] = df_log.iloc[0]
     upper_b = (df_log.shape[0] // timestamp) * timestamp
-    output_predict[:df_log.shape[0],:],init_value  = predict(modelnn, sess, df_log,True)
-
-    out_logits, init_value  = predict(modelnn, sess, df_log.iloc[upper_b:, :],True, init_value)
     
-   
+    output_predict = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
+    output_predict[0, :] = df_log.iloc[0, :]
+    
+    output_predict[:df_log.shape[0],:],init_value_forward, init_value_backward  = predict(modelnn, sess, df_log,True)
+    out_logits, init_value_forward, init_value_backward  = predict(modelnn, sess, df_log.iloc[upper_b:, :],True, init_value_forward, init_value_backward)
+    
+
     output_predict[upper_b + 1 : df_log.shape[0] + 1, :] = out_logits
-    df_log.loc[df_log.shape[0]] = out_logits[-1, :]
+    df_log.loc[df_log.shape[0]] = out_logits[-1]
     date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[12]:
+    # In[9]:
 
 
     for i in range(future_day - 1):
-        out_logits, init_value = predict(modelnn, sess, df_log.iloc[-timestamp:, :],True, init_value)
+        out_logits, init_value_forward, init_value_backward = predict(modelnn, sess, df_log.iloc[-timestamp:, :],True, init_value_forward, init_value_backward)
         output_predict[df_log.shape[0], :] = out_logits[-1, :]
         df_log.loc[df_log.shape[0]] = out_logits[-1, :]
         date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[13]:
+    # In[10]:
 
 
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format = '%Y-%m-%d').tolist()
 
 
-    # In[14]:
+    # In[11]:
 
 
     def anchor(signal, weight):
@@ -229,7 +291,7 @@ if __name__ == "__main__":
         return buffer
 
 
-    # In[15]:
+    # In[12]:
 
 
     current_palette = sns.color_palette('Paired', 12)
@@ -313,7 +375,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[16]:
+    # In[13]:
 
 
     fig = plt.figure(figsize = (20, 8))
@@ -388,7 +450,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[17]:
+    # In[14]:
 
 
     fig = plt.figure(figsize = (15, 10))
@@ -411,7 +473,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[18]:
+    # In[15]:
 
 
     fig = plt.figure(figsize = (20, 8))
@@ -426,10 +488,4 @@ if __name__ == "__main__":
     plt.legend()
     plt.title('predict market volume')
     plt.show()
-
-
-    # In[ ]:
-
-
-
 
