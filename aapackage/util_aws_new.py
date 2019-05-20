@@ -17,6 +17,7 @@ import csv
 import sys
 import os
 from aapackage.globals import AWSGLOBALS
+from aapackage import util
 
 
 def aws_accesskey_get(access='', key='', mode=""):
@@ -48,7 +49,7 @@ def aws_conn_create_windows(aws_region=AWSGLOBALS.AWS_REGION):
     if sys.platform.find('win') > -1 and not ec2_conn:
         dd = {}
         with open(AWSGLOBALS.AWS_ACCESS_LOCAL) as aws_file:
-            dd = json.loads(saws_file.read())
+            dd = json.loads(aws_file.read())
         if 'AWS_ACCESS_KEY_ID' in dd:
             access = dd['AWS_ACCESS_KEY_ID']
         if 'AWS_SECRET_ACCESS_KEY' in dd:
@@ -101,7 +102,7 @@ def aws_conn_getinfo(conn):
 def aws_ec2_ami_create(conn, ip_address='', ami_name=''):
     """ Createan an AMI for the instance represented by the ipadress"""
     if conn and ip_address:
-        instance_list = con.get_all_instances(
+        instance_list = conn.get_all_instances(
             filters={
                 "ip_address": ip_address
             }
@@ -121,7 +122,7 @@ def aws_ec2_get_instanceid(conn, filters=None):
             "ip_address": ""
         }
     if conn:
-        instance_list = con.get_all_instances(filters=filters)
+        instance_list = conn.get_all_instances(filters=filters)
         instance = instance_list[0].instances[0] if instance_list else None
         if instance:
             return instance.id
@@ -136,7 +137,7 @@ def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip='',
             eip = conn.allocate_address()
             elastic_ip = eip.public_ip
         if elastic_ip:
-            con.associate_address(instance_id=instance_id, public_ip=elastic_ip)
+            conn.associate_address(instance_id=instance_id, public_ip=elastic_ip)
             print('Elastic assigned Public IP: %s,Instance_ID: %s' % (elastic_ip, instance_id))
             return elastic_ip
     return None
@@ -241,8 +242,8 @@ def aws_ec2_spot_stop(conn, ipadress="", instance_id=""):
     return False
 
 
-def aws_ec2_res_start(conn, region, key_name, ami_id, inst_type="cx2.2", min_count =1,
-                      max_count=1, pars=None):
+def aws_ec2_res_start(conn, region, key_name, ami_id, inst_type="cx2.2",
+                      min_count =1, max_count=1, pars=None):
     """
     normal instance start
     :param conn: Connector to Boto
@@ -253,7 +254,7 @@ def aws_ec2_res_start(conn, region, key_name, ami_id, inst_type="cx2.2", min_cou
     :param ami_id:  AWS AMI ID
     :param min_count: Minumum number of instances
     :param max_count : Maximum number of instances
-    :param pars: Disk Size, Volume type (General Purpose SSD - gp2, Magnetic etc)
+    :param pars: Disk Size, Volume type (General Purpose SSD - gp2,Magnetic etc)
     :return
     """
     if not conn:
@@ -274,9 +275,11 @@ def aws_ec2_res_start(conn, region, key_name, ami_id, inst_type="cx2.2", min_cou
         device.delete_on_termination = False
         block_map["/dev/xvda"] = device
         print("created a block device")
-        req = conn.run_instances(image_id=ami_id, min_count=min_count, max_count=max_count,
+        req = conn.run_instances(image_id=ami_id, min_count=min_count,
+                                 max_count=max_count,
                                  instance_type=inst_type, key_name=key_name,
-                                 security_groups= pars.security_group, block_device_map=block_map)
+                                 security_groups= pars.security_group,
+                                 block_device_map=block_map)
         instance_id = req.instances[0].id
         print("EC2 instance has been created. Instance ID : %s" % instance_id)
         print("Waiting for EC2 instance provisioning")
@@ -321,7 +324,7 @@ def aws_ec2_printinfo(instance=None, ipadress="", instance_id=""):
     :param instance_id:
     :return: return info on the instance : ip, ip_adress,
     """
-    if not ipadres:
+    if not ipadress:
         print("")
     if not instance_id:
         pass
@@ -422,7 +425,8 @@ def aws_s3_folder_printtall(bucket_name='zdisk'):
     """ Print all S3 bucket folders"""
     access, secret = aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
-    bucket = conn.create_bucket(bucket_name, location=boto.s3.connection.Location.DEFAULT)
+    bucket = conn.create_bucket(bucket_name,
+                                location=boto.s3.connection.Location.DEFAULT)
     folders = bucket.list("", "/")
     for folder in folders:
         print(folder.name)
@@ -433,7 +437,8 @@ def aws_s3_file_read(bucket1, filepath, isbinary=1):
     """
     s3_client = boto3.client('s3')
     # Download private key file from secure S3 bucket
-    s3_client.download_file('s3-key-bucket','keys/keyname.pem', '/tmp/keyname.pem')
+    s3_client.download_file('s3-key-bucket','keys/keyname.pem',
+                            '/tmp/keyname.pem')
     """
     from boto.s3.connection import S3Connection
     conn = S3Connection(aws_accesskey_get())
@@ -645,8 +650,9 @@ class aws_ec2_ssh(object):
             if verbose:
                 print(ss)
 
-def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22, username='ubuntu',
-                           keyfilepath='', password='', keyfiletype='RSA', isprint=1):
+def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
+                           username='ubuntu', keyfilepath='', password='',
+                           keyfiletype='RSA', isprint=1):
     """
     Transfert File  host = '52.79.79.1'
     keyfilepath = 'D:/_devs/aws/keypairs/ec2_instanc'
@@ -673,7 +679,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22, username='ubu
             transport.connect(None, username, pkey=key)
             sftp = paramiko.SFTPClient.from_transport(transport)
             if isprint:
-                print('Root Directory :\n'.sftp.listdir())
+                print('Root Directory : %s\n' % sftp.listdir())
             return sftp
 
         if contype == 'ssh':
@@ -792,7 +798,7 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # unzip -o filename.zip
 
     folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
-    tofolderfull = AWSGLOBALS.EC2CWD + '/' + tofolder if tofolder.find(EC2CWD) == -1 else tofolder
+    tofolderfull = AWSGLOBALS.EC2CWD + '/' + tofolder if tofolder.find(AWSGLOBALS.EC2CWD) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
@@ -813,6 +819,7 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
     :param tofolder:
     :param host:
     """
+    DIRCWD  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if fromfolder.find('.') > -1:  # Copy 1 file
         aws_ec2_putfile(fromfolder=fromfolder, tofolder=tofolder, host=host)
     else:  # Copy Folder to
@@ -821,7 +828,8 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
         if typecopy == 'code' and fromfolder.find('.') == -1:
             # foldername = fromfolder
             # fromfolder = DIRCWD+ '/' + foldername
-            tempfolder = DIRCWD + '/ztemp/' + foldername
+            tempfolder = DIRCWD + '/ztemp/' + fromfolder
+            # TODO os_folder_delete to be added in util.py
             util.os_folder_delete(tempfolder)
             util.os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
             sftp.put(tempfolder, tofolder)
@@ -877,7 +885,7 @@ def sleep2(wsec):
         sleep(1)
 
 
-def sftp_isdir(path):
+def sftp_isdir(path, sftp):
     from stat import S_ISDIR
     try:
         return S_ISDIR(sftp.stat(path).st_mode)
@@ -886,7 +894,7 @@ def sftp_isdir(path):
         return False
 
 
-def aws_ec2_getfolder():
+def aws_ec2_getfolder(remotepath, sftp):
     import paramiko, os
     paramiko.util.log_to_file('/tmp/paramiko.log')
     from stat import S_ISDIR
@@ -935,7 +943,8 @@ if __name__ == '__main__':
         os.system(ss)
         sleep2(65)
         AWSGLOBALS.EC2_CONN = aws_conn_create_windows()
-        ec2_list = aws_ec2_get_instances(EC2_CONN, csv_filename="zz_ec2_instance.csv")
+        ec2_list = aws_ec2_get_instances(AWSGLOBALS.EC2_CONN,
+                                         csv_filename="zz_ec2_instance.csv")
         print(ec2_list)
         for x in ec2_list :
             if x["state"] == "running":
