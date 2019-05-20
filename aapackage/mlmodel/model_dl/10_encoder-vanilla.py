@@ -184,6 +184,25 @@ def predict(model, sess, data_frame):
     output_predict[upper_b + 1 : data_frame.shape[0] + 1] = out_logits
     return output_predict
 
+def test(filename= 'dataset/GOOG-year.csv') :
+    from aapackage.mlmodel.models import create, fit, predict      
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( df.head(5) )
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+
+    module, model =create('10_encoder-vanilla.py',
+            {'learning_rate':0.001,'num_layers':1,
+            'size':df_log.shape[1],'size_layer':128,
+            'output_size':df_log.shape[1],'timestep':5,'epoch':5})
+
+    sess = fit(model, module, df_log)
+    predictions = predict(model, module, sess, df_log)
+    print(predictions)
 
 if __name__ == "__main__":
 
@@ -218,7 +237,7 @@ if __name__ == "__main__":
 
 
     tf.reset_default_graph()
-    modelnn = Model(0.001, num_layers, 16, size_layer, df_log.shape[1], dropout_rate, epoch, timestamp)
+    modelnn = Model(0.001, num_layers, thought_vector.shape[1], size_layer, df_log.shape[1], dropout_rate, epoch, timestamp)
 
     sess = fit(modelnn, df_log)
 
@@ -227,6 +246,7 @@ if __name__ == "__main__":
     # In[11]:
 
     output_predict  = predict(modelnn,sess, df_log)
+    df_log.loc[df_log.shape[0]] = out_logits[-1]
     date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 

@@ -12,59 +12,47 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
 from datetime import timedelta
+import copy
 sns.set()
 
 
-# In[2]:
+
+# In[9]:
 
 
 class Model:
     def __init__(
-        self,
-        learning_rate,
-        num_layers,
-        size,
-        size_layer,
-        output_size,
-        forget_bias = 0.1,
-        epoch = 500,
-        timestep = 5
+        self, learning_rate, num_layers, size, size_layer, output_size, epoch=1, timestep=5
     ):
-        def lstm_cell():
-            return tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple = False)
+        def lstm_cell(size_layer):
+            return tf.contrib.rnn.ResidualWrapper(
+                tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple = False)
+            )
 
-        self.timestep = timestep
         self.epoch = epoch
+        self.timestep = timestep
         self.hidden_layer_size = num_layers * 2 * size_layer
-        self.rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
-            [lstm_cell() for _ in range(num_layers)], state_is_tuple = False
+        rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
+            [lstm_cell(size_layer) for _ in range(num_layers)],
+            state_is_tuple = False,
         )
-        self.X = tf.placeholder(tf.float32, [None, None, size])
-        self.Y = tf.placeholder(tf.float32, [None, output_size])
+        self.X = tf.placeholder(tf.float32, (None, None, size))
+        self.Y = tf.placeholder(tf.float32, (None, output_size))
         self.hidden_layer = tf.placeholder(
             tf.float32, (None, self.hidden_layer_size)
         )
-        drop = tf.contrib.rnn.DropoutWrapper(
-            self.rnn_cells, output_keep_prob = forget_bias
+        self.outputs, self.last_state = tf.nn.dynamic_rnn(
+            tf.contrib.rnn.DropoutWrapper(rnn_cells, output_keep_prob = 0.7),
+            self.X,
+            initial_state = self.hidden_layer,
+            dtype = tf.float32,
         )
-        _, last_state = tf.nn.dynamic_rnn(
-            drop, self.X, initial_state = self.hidden_layer, dtype = tf.float32
-        )
-        with tf.variable_scope('decoder', reuse = False):
-            self.rnn_cells_dec = tf.nn.rnn_cell.MultiRNNCell(
-                [lstm_cell() for _ in range(num_layers)], state_is_tuple = False
-            )
-            drop_dec = tf.contrib.rnn.DropoutWrapper(
-                self.rnn_cells_dec, output_keep_prob = forget_bias
-            )
-            self.outputs, self.last_state = tf.nn.dynamic_rnn(
-                drop_dec, self.X, initial_state = last_state, dtype = tf.float32
-            )
-        self.logits = tf.layers.dense(self.outputs[:, -1], output_size)
+        self.logits = tf.layers.dense(self.outputs[-1], output_size)
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
-        self.optimizer = tf.train.AdamOptimizer(
-            learning_rate = learning_rate
-        ).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(
+            self.cost
+        )
+
 
 def fit(model,data_frame):
     sess = tf.InteractiveSession()
@@ -126,28 +114,8 @@ def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None ):
     return output_predict
 
 
-
- 
-def test(filename= 'dataset/GOOG-year.csv') :
-    from aapackage.mlmodel.models import create, fit, predict      
-    df = pd.read_csv(filename)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    print( df.head(5) )
-
-
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    df_log = pd.DataFrame(df_log) 
-
-    module, model =create('13_lstm-seq2seq.py',{"learning_rate": 0.01, "num_layers": 1.0, "size": df_log.shape[1], "size_layer": 128.0, "output_size": df_log.shape[1], "epoch": 1})
-
-    sess = fit(model, module, df_log)
-    predictions = predict(model, module, sess, df_log)
-    print(predictions)
-
 if __name__ == "__main__":
-
-    # In[3]:
+    # In[2]:
 
 
     df = pd.read_csv('../dataset/GOOG-year.csv')
@@ -155,7 +123,7 @@ if __name__ == "__main__":
     df.head()
 
 
-    # In[4]:
+    # In[3]:
 
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
@@ -164,30 +132,24 @@ if __name__ == "__main__":
     df_log.head()
 
 
-    # In[5]:
+    # In[8]:
 
 
     num_layers = 1
-    size_layer = 128
+    size_layer = 6
     timestamp = 5
     epoch = 500
-    dropout_rate = 0.7
     future_day = 50
 
-
-    # In[6]:
+    # In[10]:
 
 
     tf.reset_default_graph()
-    modelnn = Model(0.01, num_layers, df_log.shape[1], size_layer, df_log.shape[1], dropout_rate, epoch, timestamp)
-    
-
-
-    # In[7]:
-
+    modelnn = Model(
+        0.01, num_layers, df_log.shape[1], size_layer, df_log.shape[1], epoch=epoch, timestep = timestamp
+    )
     sess = fit(modelnn, df_log)
-
-    # In[8]:
+    # In[12]:
 
 
     output_predict = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
@@ -196,12 +158,12 @@ if __name__ == "__main__":
     output_predict[:df_log.shape[0],:], init_value = predict(modelnn, sess, df_log, True)
 
     output_predict[upper_b + 1 : df_log.shape[0] + 1], init_value = predict(modelnn, sess, df_log.iloc[upper_b:], True, init_value)
-    
     df_log.loc[df_log.shape[0]] = output_predict[upper_b + 1 : df_log.shape[0] + 1][-1]
+    
     date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[9]:
+    # In[13]:
 
 
     for i in range(future_day - 1):
@@ -218,14 +180,14 @@ if __name__ == "__main__":
         date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
-    # In[10]:
+    # In[14]:
 
 
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format = '%Y-%m-%d').tolist()
 
 
-    # In[11]:
+    # In[15]:
 
 
     def anchor(signal, weight):
@@ -238,7 +200,7 @@ if __name__ == "__main__":
         return buffer
 
 
-    # In[12]:
+    # In[16]:
 
 
     current_palette = sns.color_palette('Paired', 12)
@@ -322,7 +284,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[13]:
+    # In[17]:
 
 
     fig = plt.figure(figsize = (20, 8))
@@ -397,7 +359,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[14]:
+    # In[18]:
 
 
     fig = plt.figure(figsize = (15, 10))
@@ -420,7 +382,7 @@ if __name__ == "__main__":
     plt.show()
 
 
-    # In[15]:
+    # In[19]:
 
 
     fig = plt.figure(figsize = (20, 8))

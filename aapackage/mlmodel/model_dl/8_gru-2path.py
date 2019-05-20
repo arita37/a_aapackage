@@ -181,6 +181,24 @@ def predict(model,sess,data_frame,  get_hidden_state=False, init_value_forward=N
         return output_predict, init_value_forward, init_value_backward
     return output_predict
 
+ 
+def test(filename= 'dataset/GOOG-year.csv') :
+    from aapackage.mlmodel.models import create, fit, predict      
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( df.head(5) )
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+
+    module, model =create('8_gru-2path.py',{"learning_rate": 0.01, "num_layers": 1.0, "size": df_log.shape[1], "size_layer": 128.0, "output_size": df_log.shape[1], "epoch": 1})
+
+    sess = fit(model, module, df_log)
+    predictions = predict(model, module, sess, df_log)
+    print(predictions)
+
 if __name__ == "__main__":
 
     # In[2]:

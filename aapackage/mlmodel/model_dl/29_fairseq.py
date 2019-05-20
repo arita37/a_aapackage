@@ -15,139 +15,126 @@ from datetime import timedelta
 sns.set()
 
 
-# In[2]:
+
+# In[5]:
 
 
-class Model:
-    def __init__(
-        self,
-        learning_rate,
-        num_layers,
-        size,
-        size_layer,
-        output_size,
-        forget_bias = 0.1,
-        epoch = 500,
-        timestep = 5
-    ):
-        def lstm_cell():
-            return tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple = False)
+def encoder_block(inp, n_hidden, filter_size):
+    inp = tf.expand_dims(inp, 2)
+    inp = tf.pad(inp, [[0, 0], [(filter_size[0]-1)//2, (filter_size[0]-1)//2], [0, 0], [0, 0]])
+    conv = tf.layers.conv2d(inp, n_hidden, filter_size, padding="VALID", activation=None)
+    conv = tf.squeeze(conv, 2)
+    return conv
 
+def decoder_block(inp, n_hidden, filter_size):
+    inp = tf.expand_dims(inp, 2)
+    inp = tf.pad(inp, [[0, 0], [filter_size[0]-1, 0], [0, 0], [0, 0]])
+    conv = tf.layers.conv2d(inp, n_hidden, filter_size, padding="VALID", activation=None)
+    conv = tf.squeeze(conv, 2)
+    return conv
+
+def glu(x):
+    return tf.multiply(x[:, :, :tf.shape(x)[2]//2], tf.sigmoid(x[:, :, tf.shape(x)[2]//2:]))
+
+def layer(inp, conv_block, kernel_width, n_hidden, residual=None):
+    z = conv_block(inp, n_hidden, (kernel_width, 1))
+    return glu(z) + (residual if residual is not None else 0)
+
+class Fairseq:
+    def __init__(self, n_layers, size, output_size, emb_size, n_hidden, n_attn_heads, learning_rate, epoch=1, timestep=5):
         self.timestep = timestep
         self.epoch = epoch
-        self.hidden_layer_size = num_layers * 2 * size_layer
-        self.rnn_cells = tf.nn.rnn_cell.MultiRNNCell(
-            [lstm_cell() for _ in range(num_layers)], state_is_tuple = False
-        )
-        self.X = tf.placeholder(tf.float32, [None, None, size])
-        self.Y = tf.placeholder(tf.float32, [None, output_size])
-        self.hidden_layer = tf.placeholder(
-            tf.float32, (None, self.hidden_layer_size)
-        )
-        drop = tf.contrib.rnn.DropoutWrapper(
-            self.rnn_cells, output_keep_prob = forget_bias
-        )
-        _, last_state = tf.nn.dynamic_rnn(
-            drop, self.X, initial_state = self.hidden_layer, dtype = tf.float32
-        )
-        with tf.variable_scope('decoder', reuse = False):
-            self.rnn_cells_dec = tf.nn.rnn_cell.MultiRNNCell(
-                [lstm_cell() for _ in range(num_layers)], state_is_tuple = False
-            )
-            drop_dec = tf.contrib.rnn.DropoutWrapper(
-                self.rnn_cells_dec, output_keep_prob = forget_bias
-            )
-            self.outputs, self.last_state = tf.nn.dynamic_rnn(
-                drop_dec, self.X, initial_state = last_state, dtype = tf.float32
-            )
-        self.logits = tf.layers.dense(self.outputs[:, -1], output_size)
-        self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
-        self.optimizer = tf.train.AdamOptimizer(
-            learning_rate = learning_rate
-        ).minimize(self.cost)
+        self.X = tf.placeholder(tf.float32, (None, None, size))
+        self.Y = tf.placeholder(tf.float32, (None, output_size))
+        
+        encoder_embedded = tf.layers.dense(self.X, emb_size)
+        encoder_embedded = tf.nn.dropout(encoder_embedded, keep_prob = 0.75)
+        
+        e = tf.identity(encoder_embedded)
+        for i in range(n_layers):
+            z = layer(encoder_embedded, encoder_block, 3, n_hidden * 2, encoder_embedded)
+            encoder_embedded = z
+        
+        encoder_output, output_memory = z, z + e
+        g = tf.identity(encoder_embedded)
 
-def fit(model,data_frame):
+        for i in range(n_layers):
+            attn_res = h = layer(encoder_embedded, decoder_block, 3, n_hidden * 2, 
+                                         residual=tf.zeros_like(encoder_embedded))
+            C = []
+            for j in range(n_attn_heads):
+                h_ = tf.layers.dense(h, n_hidden//n_attn_heads)
+                g_ = tf.layers.dense(g, n_hidden//n_attn_heads)
+                zu_ = tf.layers.dense(encoder_output, n_hidden//n_attn_heads)
+                ze_ = tf.layers.dense(output_memory, n_hidden//n_attn_heads)
+
+                d = tf.layers.dense(h_, n_hidden//n_attn_heads) + g_
+                dz = tf.matmul(d, tf.transpose(zu_, [0, 2, 1]))
+                a = tf.nn.softmax(dz)
+                c_ = tf.matmul(a, ze_)
+                C.append(c_)
+
+            c = tf.concat(C, 2)
+            h = tf.layers.dense(attn_res + c, n_hidden)
+            encoder_embedded = h
+
+        encoder_embedded = tf.sigmoid(h)
+        self.logits = tf.layers.dense(encoder_embedded[-1], output_size)
+        self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
+        self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(
+            self.cost
+        )
+
+def fit(model, data_frame):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
-    for i in range(model.epoch):
 
-        init_value = np.zeros((1, model.hidden_layer_size))
+    for i in range(model.epoch):
         total_loss = 0
         for k in range(0, data_frame.shape[0] - 1, model.timestep):
-            index   = min(k + model.timestep, data_frame.shape[0] -1)
-            batch_x = np.expand_dims( data_frame.iloc[k : index, :].values, axis = 0)
+            index = min(k +  model.timestep, data_frame.shape[0] -1)
+            batch_x = np.expand_dims(
+                data_frame.iloc[k : index, :].values, axis = 0
+            )
             batch_y = data_frame.iloc[k + 1 : index + 1, :].values
-            last_state, _, loss = sess.run(
-                [model.last_state, model.optimizer, model.cost],
+            _, loss = sess.run(
+                [model.optimizer, model.cost],
                 feed_dict = {
                     model.X: batch_x,
-                    model.Y: batch_y,
-                    model.hidden_layer: init_value,
+                    model.Y: batch_y
                 },
             )
-            init_value = last_state
             total_loss += loss
-        total_loss /= data_frame.shape[0] // model.timestep
+        total_loss /= data_frame.shape[0] //  model.timestep
         if (i + 1) % 100 == 0:
             print('epoch:', i + 1, 'avg loss:', total_loss)
+    
     return sess
 
-def predict(model,sess,data_frame,  get_hidden_state=False, init_value=None ):
-    if init_value is None:
-        init_value = np.zeros((1, model.hidden_layer_size))
+def predict(model,sess,data_frame):
     output_predict = np.zeros((data_frame.shape[0] , data_frame.shape[1]))
     upper_b = (data_frame.shape[0] // model.timestep) * model.timestep
     
     if upper_b == model.timestep:
-        out_logits, init_value = sess.run(
-                [model.logits, model.last_state],
-                feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
-                },
-            )
+        out_logits = sess.run(
+            model.logits,
+            feed_dict = {
+                model.X: np.expand_dims(data_frame.values, axis = 0)
+            },
+        )
     else:
         for k in range(0, (data_frame.shape[0] // model.timestep) * model.timestep, model.timestep):
-            out_logits, last_state = sess.run(
-                [model.logits, model.last_state],
-                feed_dict = {
-                    model.X: np.expand_dims(
-                        data_frame.iloc[k : k + model.timestep].values, axis = 0
-                    ),
-                    model.hidden_layer: init_value,
-                },
+            out_logits = sess.run(
+            model.logits,
+            feed_dict = {
+                model.X: np.expand_dims(data_frame.iloc[k : k + model.timestep], axis = 0)
+            },
             )
-            init_value = last_state
             output_predict[k + 1 : k + model.timestep + 1] = out_logits  
-    if get_hidden_state: 
-        return output_predict, init_value
     return output_predict
 
-
-
- 
-def test(filename= 'dataset/GOOG-year.csv') :
-    from aapackage.mlmodel.models import create, fit, predict      
-    df = pd.read_csv(filename)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    print( df.head(5) )
-
-
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    df_log = pd.DataFrame(df_log) 
-
-    module, model =create('13_lstm-seq2seq.py',{"learning_rate": 0.01, "num_layers": 1.0, "size": df_log.shape[1], "size_layer": 128.0, "output_size": df_log.shape[1], "epoch": 1})
-
-    sess = fit(model, module, df_log)
-    predictions = predict(model, module, sess, df_log)
-    print(predictions)
-
 if __name__ == "__main__":
-
-    # In[3]:
+    # In[2]:
 
 
     df = pd.read_csv('../dataset/GOOG-year.csv')
@@ -155,7 +142,7 @@ if __name__ == "__main__":
     df.head()
 
 
-    # In[4]:
+    # In[3]:
 
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
@@ -164,40 +151,39 @@ if __name__ == "__main__":
     df_log.head()
 
 
-    # In[5]:
+    # In[4]:
 
 
-    num_layers = 1
-    size_layer = 128
+    emb_size = 128
+    n_hidden = 128
+    n_layers = 1
+    n_attn_heads = 16
+    learning_rate = 1e-3
     timestamp = 5
     epoch = 500
-    dropout_rate = 0.7
     future_day = 50
-
+    size = df_log.shape[1]
+    output_size = df_log.shape[1]
 
     # In[6]:
 
 
     tf.reset_default_graph()
-    modelnn = Model(0.01, num_layers, df_log.shape[1], size_layer, df_log.shape[1], dropout_rate, epoch, timestamp)
-    
-
-
-    # In[7]:
-
+    modelnn = Fairseq(n_layers, size, output_size, emb_size, n_hidden, n_attn_heads, learning_rate, epoch=epoch, timestep=timestamp)
     sess = fit(modelnn, df_log)
+
 
     # In[8]:
 
 
     output_predict = np.zeros((df_log.shape[0] + future_day, df_log.shape[1]))
-    output_predict[0] = df_log.iloc[0]
+    output_predict[0, :] = df_log.iloc[0, :]
     upper_b = (df_log.shape[0] // timestamp) * timestamp
-    output_predict[:df_log.shape[0],:], init_value = predict(modelnn, sess, df_log, True)
+    output_predict[:df_log.shape[0],:] = predict(modelnn,sess,df_log)
+    output_predict[upper_b + 1 : df_log.shape[0] +1] = predict(modelnn, sess, df_log.iloc[upper_b:])
 
-    output_predict[upper_b + 1 : df_log.shape[0] + 1], init_value = predict(modelnn, sess, df_log.iloc[upper_b:], True, init_value)
-    
     df_log.loc[df_log.shape[0]] = output_predict[upper_b + 1 : df_log.shape[0] + 1][-1]
+    
     date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
@@ -205,16 +191,9 @@ if __name__ == "__main__":
 
 
     for i in range(future_day - 1):
-        out_logits, last_state = sess.run(
-            [modelnn.logits, modelnn.last_state],
-            feed_dict = {
-                modelnn.X: np.expand_dims(df_log.iloc[-timestamp:], axis = 0),
-                modelnn.hidden_layer: init_value,
-            },
-        )
-        init_value = last_state
-        output_predict[df_log.shape[0]] = out_logits[-1]
-        df_log.loc[df_log.shape[0]] = out_logits[-1]
+        out_logits = predict(modelnn, sess, df_log.iloc[-timestamp:])
+        output_predict[df_log.shape[0], :] = out_logits[-1, :]
+        df_log.loc[df_log.shape[0]] = out_logits[-1, :]
         date_ori.append(date_ori[-1] + timedelta(days = 1))
 
 
@@ -417,23 +396,6 @@ if __name__ == "__main__":
     )
     plt.xticks(x_range_future[::30], date_ori[::30])
     plt.title('overlap market volume')
-    plt.show()
-
-
-    # In[15]:
-
-
-    fig = plt.figure(figsize = (20, 8))
-    plt.subplot(1, 2, 1)
-    plt.plot(x_range_original, df.iloc[:, -1], label = 'true Volume')
-    plt.xticks(x_range_original[::60], df.iloc[:, 0].tolist()[::60])
-    plt.legend()
-    plt.title('true market volume')
-    plt.subplot(1, 2, 2)
-    plt.plot(x_range_future, anchor(df_log[:, -1], 0.5), label = 'predict Volume')
-    plt.xticks(x_range_future[::60], date_ori[::60])
-    plt.legend()
-    plt.title('predict market volume')
     plt.show()
 
 
