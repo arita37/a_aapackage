@@ -68,20 +68,54 @@ class Agent:
             discounted_r[t] = running_add
         return discounted_r
     
+    
     def get_predicted_action(self, sequence):
         prediction = self.predict(np.array(sequence))[0]
         return np.argmax(prediction)
     
+    
+    def predict_sequence(self, do_action, result_list  ):
+        """
+          Generate the states, and get action result intoList
+        
+          dict_res = {         "starting_money" = initial_money
+             "states_sell"    = []
+             "states_buy"     = []
+             "inventory      = []
+          result_list = [ dict_res ]
+    
+        
+        """
+        state       = self.get_state(0)
+        #result_list = []
+        
+        for t in range(0, len(self.trend) - 1, self.skip):
+            action     = self.get_predicted_action(state)
+       
+    
+            dict_res = do_action(state, action, result_list )  # dict_res
+            result_list.append( dict_res )
+
+
+            next_state = self.get_state(t + 1)     
+            state      = next_state
+            
+        return result_list    
+
+
+
     def buy(self, initial_money):
         starting_money = initial_money
-        states_sell = []
-        states_buy = []
-        inventory = []
+        states_sell    = []
+        states_buy     = []
+        inventory      = []
+        
+        
         state = self.get_state(0)
         for t in range(0, len(self.trend) - 1, self.skip):
-            action = self.get_predicted_action(state)
-            next_state = self.get_state(t + 1)
+            action     = self.get_predicted_action(state)
             
+            ###### do_action ########################################
             if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
                 inventory.append(self.trend[t])
                 initial_money -= self.trend[t]
@@ -101,8 +135,10 @@ class Agent:
                     'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
                     % (t, close[t], invest, initial_money)
                 )
-            
+            ########################################################
+            next_state = self.get_state(t + 1)
             state = next_state
+            
         invest = ((initial_money - starting_money) / starting_money) * 100
         total_gains = initial_money - starting_money
         return states_buy, states_sell, total_gains, invest
@@ -115,9 +151,14 @@ class Agent:
             inventory = []
             state = self.get_state(0)
             starting_money = initial_money
+            
+            
             for t in range(0, len(self.trend) - 1, self.skip):
                 action = self.get_predicted_action(state)
                 next_state = self.get_state(t + 1)
+                
+                
+                ######## do_action ###################################
                 if action == 1 and starting_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
                     inventory.append(self.trend[t])
                     starting_money -= close[t]
@@ -126,6 +167,9 @@ class Agent:
                     bought_price = inventory.pop(0)
                     total_profit += self.trend[t] - bought_price
                     starting_money += self.trend[t]
+                ###################################################
+                
+                
                 ep_history.append([state,action,starting_money,next_state])
                 state = next_state
             ep_history = np.array(ep_history)
@@ -136,6 +180,57 @@ class Agent:
             if (i+1) % checkpoint == 0:
                 print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, total_profit, cost,
                                                                                   starting_money))
+
+
+
+
+def action_example(state, action, result_list):
+            # Input of the model
+            d = result_list[-1]
+            initial_money = d["initial_money"]
+            inventory     = d["inventory"]
+            states_buy    = d["states_buy"]
+            states_sell   = d["states_sell"]
+            
+            trend = d["trend"]
+            half_window = d["half_window"]
+        
+        
+            ###### Specific to App ###################################
+            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
+                inventory.append(self.trend[t])
+                initial_money -= self.trend[t]
+                states_buy.append(t)
+                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
+                
+                
+            elif action == 2 and len(inventory):
+                bought_price = inventory.pop(0)
+                initial_money += self.trend[t]
+                states_sell.append(t)
+                try:
+                    invest = ((close[t] - bought_price) / bought_price) * 100
+                except:
+                    invest = 0
+                print(
+                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
+                    % (t, close[t], invest, initial_money)
+                )
+            ########################################################
+            return {"initial_money" :  initial_money,
+                    "inventory"     :  inventory,
+                    "states_buy"    :  states_buy,
+                    "states_sell"   :  states_sell 
+                   }           
+          
+
+
+
+
+
+
+
+
 
 
 # In[4]:
