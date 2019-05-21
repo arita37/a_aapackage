@@ -1,49 +1,5 @@
 # -*- coding: utf-8 -*-
 
-class AWSGLOBALS:
-    """All the globals for AWS utility functionalities."""
-    AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
-    AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
-    AWS_REGION = "us-west-2"
-    APNORTHEAST2 = 'ap-northeast-2'
-    EC2CWD = '/home/ubuntu/notebook/'
-    EC2_CONN = None
-    EC2_FILTERS = ('id', 'ip_address')
-    EC2_ATTRIBUTES = (
-        "id", "instance_type", "state", "public_dns_name", "private_dns_name",
-        "state_code", "previous_state", "previous_state_code", "key_name",
-        "launch_time", "image_id", "placement", "placement_group",
-        "placement_tenancy", "kernel", "ramdisk", "architecture", "hypervisor",
-        "virtualization_type", "product_codes", "ami_launch_index", "monitored",
-        "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id",
-        "private_ip_address", "ip_address", "platform", "root_device_name",
-        "root_device_type", "state_reason", "interfaces", "ebs_optimized",
-        "instance_profile"
-    )
-
-    def __init__(self, ):
-        """Nothing to be constructed """
-        pass
-
-    @classmethod
-    def get_keypair(cls):
-        """Get the current keypair used"""
-        return None, None
-
-    @classmethod
-    def set_keypair(cls, keypairname, keypairlocation):
-        """Set the keypair to be used."""
-        pass
-
-    @classmethod
-    def set_attribute(cls, key, value):
-        """Add or update attribute to the class, maybe protect with a lock."""
-        setattr(cls, key, value)
-
-    @classmethod
-    def get_ec2_conn(cls):
-        """Return the current EC2 connection."""
-        return
 
 
 """ Global variables

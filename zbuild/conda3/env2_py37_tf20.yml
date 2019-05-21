@@ -1,4 +1,4 @@
-name: env2_py37_tf20
+name: py37_tf20
 
 channels:
 - anaconda

@@ -6,20 +6,74 @@ from future import standard_library
 standard_library.install_aliases()
 
 ###############################################################################
-from boto import ec2
 import json
-import boto
-from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from time import sleep
-from attrdict import AttrDict as dict2
-from pprint import pprint
 import csv
 import sys
 import os
-from aapackage.globals import AWSGLOBALS
+
+
+
+import boto
+from boto import ec2
+from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
+
+from attrdict import AttrDict as dict2
+# from pprint import pprint
+
+
+# from aapackage.globals import AWSGLOBALS
 from aapackage import util
 
 
+class AWSGLOBALS:
+    """All the globals for AWS utility functionalities."""
+    AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
+    AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
+    AWS_REGION = "us-west-2"
+    APNORTHEAST2 = 'ap-northeast-2'   ### Not good.. HARD coded
+    EC2CWD = '/home/ubuntu/notebook/'
+    EC2_CONN = None
+    EC2_FILTERS = ('id', 'ip_address')
+    EC2_ATTRIBUTES = (
+        "id", "instance_type", "state", "public_dns_name", "private_dns_name",
+        "state_code", "previous_state", "previous_state_code", "key_name",
+        "launch_time", "image_id", "placement", "placement_group",
+        "placement_tenancy", "kernel", "ramdisk", "architecture", "hypervisor",
+        "virtualization_type", "product_codes", "ami_launch_index", "monitored",
+        "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id",
+        "private_ip_address", "ip_address", "platform", "root_device_name",
+        "root_device_type", "state_reason", "interfaces", "ebs_optimized",
+        "instance_profile"
+    )
+
+    def __init__(self, ):
+        """Nothing to be constructed """
+        pass
+
+    @classmethod
+    def get_keypair(cls):
+        """Get the current keypair used"""
+        return None, None
+
+    @classmethod
+    def set_keypair(cls, keypairname, keypairlocation):
+        """Set the keypair to be used."""
+        pass
+
+    @classmethod
+    def set_attribute(cls, key, value):
+        """Add or update attribute to the class, maybe protect with a lock."""
+        setattr(cls, key, value)
+
+    @classmethod
+    def get_ec2_conn(cls):
+        """Return the current EC2 connection."""
+        return
+
+
+####################################################################################################
+####################################################################################################
 def aws_accesskey_get(access='', key='', mode=""):
     """Return a tuple of AWS credentials (access key id and secret access key)"""
     if access and key:
@@ -43,6 +97,22 @@ def aws_accesskey_get(access='', key='', mode=""):
     return access, key
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
 def aws_conn_create_windows(aws_region=AWSGLOBALS.AWS_REGION):
     """ Return ec2_conn for windows system, otherwise none."""
     ec2_conn = AWSGLOBALS.EC2_CONN
@@ -919,18 +989,10 @@ def aws_ec2_getfolder(remotepath, sftp):
             sftp.get(os.path.join(os.path.join(path, file1)), '/local/path/')
 
 
-############################ CLI #############################################################
-if __name__ == '__main__':
-    print("Start")
-    import argparse
-    ppa = argparse.ArgumentParser()  # Command Line input
-    ppa.add_argument('--do', type=str, default='action', help='start_spot')
-    ppa.add_argument('--price', type=float, default=0.5, help='spot price')
-    ppa.add_argument('--spec_file', type=str, default="", help='spec file')
-    ppa.add_argument('--spec_file2', type=str, default="", help='spec file')
-    arg0 = ppa.parse_args()
-    print(arg0.do)
-    if arg0.do == "start_spot_windows":
+
+####################################################################################################
+############################ CLI ###################################################################
+def start_spot_windows():
         # :\_devs\Python01\aws\aapackage\
         # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
         # aws_ec2_spot_start(EC2_CONN, "west-2", key_name="ecsInstanceRole", inst_type="cx2.2",
@@ -951,7 +1013,34 @@ if __name__ == '__main__':
                 sleep(5) 
                 ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
                 ss += ' "http://' +  x["ip_address"] + ':8888/tree#notebooks"  '
-                os.system(ss)
-    elif arg0.do == "put_file":
-        aws_ec2_putfile(fromfolder=arg0.fromfolder,
-                        tofolder=arg0.tofolder, host=arg0.host)
+                os.system(ss)    
+    
+def test_all():
+    pass
+
+
+    
+    
+if __name__ == '__main__':
+    print("Start")
+    import argparse
+    p = argparse.ArgumentParser()  # Command Line input
+    p.add_argument('--do', type=str, default='action', help='start_spot')
+    p.add_argument('--price', type=float, default=0.5, help='spot price')
+    p.add_argument('--spec_file', type=str, default="", help='spec file')
+    p.add_argument('--spec_file2', type=str, default="", help='spec file')
+    
+    args = p.parse_args()
+    print(args.do)
+    
+    if args.do == "test_all":
+        test_all()
+    
+    if args.do == "start_spot_windows":
+        start_spot_windows()
+
+    if args.do == "put_file":
+        aws_ec2_putfile(fromfolder=args.fromfolder,
+                        tofolder=args.tofolder, host=args.host)
+                        
+                        
