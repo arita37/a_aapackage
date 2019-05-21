@@ -11,27 +11,28 @@ from time import sleep
 import csv
 import sys
 import os
+import re
 
-
-
+import paramiko
 import boto
 from boto import ec2
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 
-from attrdict import AttrDict as dict2
+# from attrdict import AttrDict as dict2
 # from pprint import pprint
+# from aapackage.globals import AWS
+from aapackage import util   # want to remove after refactor 
+###############################################################################
 
 
-# from aapackage.globals import AWSGLOBALS
-from aapackage import util
 
-
-class AWSGLOBALS:
+###############################################################################
+class AWS:
     """All the globals for AWS utility functionalities."""
     AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
     AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
     AWS_REGION = "us-west-2"
-    APNORTHEAST2 = 'ap-northeast-2'   ### Not good.. HARD coded
+    APNORTHEAST2 = 'ap-northeast-2'   ### Not good.. HARD coded  APNORTHEAST2 
     EC2CWD = '/home/ubuntu/notebook/'
     EC2_CONN = None
     EC2_FILTERS = ('id', 'ip_address')
@@ -88,7 +89,7 @@ def aws_accesskey_get(access='', key='', mode=""):
 
     # Finally try the manual Config
     dd = {}
-    with open(AWSGLOBALS.AWS_ACCESS_LOCAL) as aws_file:
+    with open(AWS.AWS_ACCESS_LOCAL) as aws_file:
         dd = json.loads(aws_file.read())
     if 'AWS_ACCESS_KEY_ID' in dd:
         access = dd['AWS_ACCESS_KEY_ID']
@@ -100,6 +101,265 @@ def aws_accesskey_get(access='', key='', mode=""):
 
 
 
+####################################################################################################
+###############StandAlone access ###################################################################
+def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
+  """ Make an ssh connection using paramiko and  run the command
+   http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+   https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+   https://github.com/paramiko/paramiko/issues/501
+   https://unix.stackexchange.com/questions/30400/execute-remote-commands-completely-detaching-from-the-ssh-connection
+   
+  """
+  try:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking  , get_pty=False
+    
+    """
+    if not isblocking :
+       # Buggy code, use Screen instead
+       sleep(10) # To let run the script
+       ssh.close()
+       return None
+    """
+    
+    #### Can be Blocking for long running process  screen -d -m YOURBASH
+    data  = stdout.readlines()  #Blocking code
+    value = ''.join(data).replace('\n', '') if remove_newline else ''.join(data)
+    
+    err_msg = stderr.readlines() 
+    if len(err_msg) > 0 :
+      print(err_msg  )
+    
+    ssh.close()
+    return value
+    
+  except Exception as e :
+    print("Error Paramiko", e)
+    return None
+
+
+def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
+    """ Make an ssh connection using paramiko and  run the command
+     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+ 
+     https://github.com/paramiko/paramiko/issues/501
+    """
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    #stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking 
+    
+    if filename is not None :
+      msg = open(filename,mode="r").readlines()
+    
+    ftp = ssh.open_sftp()
+    file=ftp.file(remote_file, "a", -1)
+    file.write(msg)
+    file.flush()
+    ftp.close()
+    ssh.close()
+
+
+
+
+################################################################################
+def ec2_keypair_get( keypair=""):
+  identity = "%s/.ssh/%s" % \
+            (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
+  return identity
+
+
+def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
+  """
+      use to update the global INSTANCE_DICT
+          "id" :  instance_type,
+          ip_address, cpu, ram, cpu_usage, ram_usage
+  """
+  val = {}
+  spot_list = ec2_spot_instance_list()
+  spot_instances = []
+  for spot_instance in spot_list['SpotInstanceRequests']:
+    if re.match(spot_instance['State'], 'active', re.I) and \
+      'InstanceId' in spot_instance:
+        spot_instances.append(spot_instance['InstanceId'])
+  # print(spot_instances)
+  
+  for spot in spot_instances:
+    cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
+    cmd     = ' '.join(cmdargs)
+    value   = os.popen(cmd).read()
+    inst    = json.loads(value)
+    ncpu    = 0
+    ipaddr  = None
+    instance_type = default_instance_type
+    if inst and 'Reservations' in inst and inst['Reservations']:
+      reserves = inst['Reservations'][0]
+      if 'Instances' in reserves and reserves['Instances']:
+        instance = reserves['Instances'][0]
+        
+        if 'CpuOptions' in instance and 'CoreCount' in instance['CpuOptions']:
+          ncpu = instance['CpuOptions']['CoreCount']
+          
+        if 'PublicIpAddress' in instance and instance['PublicIpAddress']:
+          ipaddr = instance['PublicIpAddress']
+        
+        instance_type = instance['InstanceType']
+    
+    if ipaddr:
+      cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
+      # print(cpuusage, usageram, totalram)
+      val[spot] = {
+        'id': spot,
+        'instance_type': instance_type,
+        'cpu': ncpu,
+        'ip_address': ipaddr,
+        'ram': totalram,
+        'cpu_usage': cpuusage,
+        'ram_usage': usageram
+      }
+  # print(val)
+  return val
+
+
+
+
+
+################################################################################ 
+def ec2_instance_usage(instance_id=None, ipadress=None):
+  """
+  https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
+  https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
+  """
+  cpuusage = None
+  ramusage = None
+  totalram = None
+  if instance_id and ipadress:
+    identity = ec2_keypair_get()
+    # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
+    # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
+    cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
+    # cpu = ssh.command(cmdstr)
+    cpuusage = ssh_cmdrun(ipadress, identity, cmdstr)
+    cpuusage = 100.0  if not cpuusage else float(cpuusage)
+
+
+    cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
+    # ram = ssh.command(cmdstr)
+    ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
+    
+    if not ramusage:
+        totalram = 0
+        usageram = 100.0
+    else:
+        vals = ramusage.split()
+        usageram = float(vals[0]) if vals and vals[0] else 100.0
+        totalram = int(vals[1]) if vals and vals[1] else 0
+    
+  return cpuusage, usageram, totalram
+
+
+
+def ec2_config_build_template_cli(instance_type, amiId=None, keypair=None, 
+         default_instance_type=None, spot_cfg_file=None):
+  """ Build the spot json config into a json file. """
+  spot_config = {
+    "ImageId": amiId,
+    "KeyName": keypair, 
+    "SecurityGroupIds": ["sg-4b1d6631", "sg-42e59e38"],        
+    "InstanceType": instance_type if instance_type else default_instance_type,
+    "IamInstanceProfile": {
+      "Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"
+    },
+    "BlockDeviceMappings": [
+      {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+          "DeleteOnTermination": True,
+          "VolumeSize": 60
+        }                      
+      }
+    ]
+  }
+  with open(spot_cfg_file, 'w') as spot_file:
+    spot_file.write(json.dumps(spot_config))
+
+
+
+def ec2_spot_start_cli(instance_type, spot_price, waitsec=100):
+  """
+  Request a spot instance based on the price for the instance type
+  # Need a check if this request has been successful.
+  
+  100 sec to be provisionned and started.
+  """
+  if not instance_type:
+    instance_type = default_instance_type
+  ec2_config_build_template(instance_type)  
+  cmdargs = [
+    'aws', 'ec2', 'request-spot-instances',
+    '--region', region,
+    '--spot-price', str(spot_price),
+    '--instance-count', "1",
+    ' --type', 'one-time',
+    '--launch-specification', 'file://%s' % spot_cfg_file
+  ]
+  print(cmdargs)
+  cmd = ' '.join(cmdargs)
+  msg = os.system(cmd)
+  sleep(waitsec)  # It may not be fulfilled in 50 secs.
+  ll= ec2_spot_instance_list()
+  return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
+
+
+
+def ec2_spot_instance_list():
+  """ Get the list of current spot instances. """
+  cmdargs = [
+    'aws', 'ec2', 'describe-spot-instance-requests'
+  ]
+  cmd = ' '.join(cmdargs)
+  value = os.popen(cmd).read()
+  try:
+    instance_list = json.loads(value)
+  except:
+    instance_list = {
+      "SpotInstanceRequests": []
+    }
+  return instance_list
+
+
+def ec2_instance_stop(instance_list) :
+  """ Stop the spot instances ainstances u stop any other instance, this should work"""
+  instances = instance_list
+  if instances:
+    if isinstance(instance_list, list) :
+        instances = ','.join(instance_list)
+    cmdargs = [
+      'aws', 'ec2', 'terminate-instances',
+      '--instance-ids', instances
+    ]
+    cmd = ' '.join(cmdargs)
+    os.system(cmd)
+    return instances.split(",")
+
+
+
+def ec2_get_spot_price(instance_type):
+  """ Get the spot price for instance type in us-west-2"""
+  value = 0.0
+  if os.path.exists('./aws_spot_price.sh') and os.path.isfile('./aws_spot_price.sh'):
+    cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
+    value = os.popen(cmdstr).read()
+    value = value.replace('\n', '') if value else 0.10
+    #parsefloat(value)
+  return tofloat(value)
+
+
+
 
 
 
@@ -113,12 +373,12 @@ def aws_accesskey_get(access='', key='', mode=""):
 
 ####################################################################################################
 ####################################################################################################
-def aws_conn_create_windows(aws_region=AWSGLOBALS.AWS_REGION):
+def aws_conn_create_windows(aws_region=AWS.AWS_REGION):
     """ Return ec2_conn for windows system, otherwise none."""
-    ec2_conn = AWSGLOBALS.EC2_CONN
+    ec2_conn = AWS.EC2_CONN
     if sys.platform.find('win') > -1 and not ec2_conn:
         dd = {}
-        with open(AWSGLOBALS.AWS_ACCESS_LOCAL) as aws_file:
+        with open(AWS.AWS_ACCESS_LOCAL) as aws_file:
             dd = json.loads(aws_file.read())
         if 'AWS_ACCESS_KEY_ID' in dd:
             access = dd['AWS_ACCESS_KEY_ID']
@@ -128,12 +388,12 @@ def aws_conn_create_windows(aws_region=AWSGLOBALS.AWS_REGION):
             ec2_conn = boto.ec2.connect_to_region(aws_region, aws_access_key_id=access,
                                                   aws_secret_access_key=key)
             print(ec2_conn)
-            # We should store this in AWSGLOBALS
-            AWSGLOBALS.EC2_CONN = ec2_conn
+            # We should store this in AWS
+            AWS.EC2_CONN = ec2_conn
     return ec2_conn
 
 
-def aws_conn_create(region=AWSGLOBALS.APNORTHEAST2, access='', key=''):
+def aws_conn_create(region=AWS.APNORTHEAST2, access='', key=''):
     """ EC2 connection to AP NORTH EAST2 """
     from boto.ec2.connection import EC2Connection
 
@@ -200,7 +460,7 @@ def aws_ec2_get_instanceid(conn, filters=None):
 
 
 def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip='',
-                                region=AWSGLOBALS.APNORTHEAST2):
+                                region=AWS.APNORTHEAST2):
     """ Allocate elastic IP in the region."""
     if conn and instance_id:
         if not elastic_ip:
@@ -549,7 +809,7 @@ class aws_ec2_ssh(object):
         # supposed to check for key in keys, but I don't much care right now to
         # find the right notation
 
-        key_file = AWSGLOBALS.AWS_KEY_PEM if not key_file else key_file
+        key_file = AWS.AWS_KEY_PEM if not key_file else key_file
         pkey = paramiko.RSAKey.from_private_key_file(key_file)
         self.t.auth_publickey(username, pkey)
         self.sftp = paramiko.SFTPClient.from_transport(self.t)
@@ -736,7 +996,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
     sftp, ssh, transport = None, None, None
     try:
         if not keyfilepath:
-            keyfilepath = AWSGLOBALS.AWS_KEY_PEM
+            keyfilepath = AWS.AWS_KEY_PEM
         if keyfiletype == 'DSA':
             key = paramiko.DSSKey.from_private_key_file(keyfilepath)
         else:
@@ -829,7 +1089,7 @@ def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=
       attributes: Tuple of attributes to retrieve. Default: id, ip_address
       filters={"ip_address":""}
     """
-    if not attributes: attributes = AWSGLOBALS.EC2_ATTRIBUTES
+    if not attributes: attributes = AWS.EC2_ATTRIBUTES
     instances = con.get_only_instances(filters=filters)
     instance_list = []
     for instance in instances:
@@ -868,7 +1128,7 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # unzip -o filename.zip
 
     folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
-    tofolderfull = AWSGLOBALS.EC2CWD + '/' + tofolder if tofolder.find(AWSGLOBALS.EC2CWD) == -1 else tofolder
+    tofolderfull = AWS.EC2CWD + '/' + tofolder if tofolder.find(AWS.EC2CWD) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
@@ -991,8 +1251,71 @@ def aws_ec2_getfolder(remotepath, sftp):
 
 
 ####################################################################################################
+############################ UTILS #################################################################
+class dict2(object):
+    # {} INTO   mydict.key1   ,  mydict.key2 ,   mydict.key4
+    def __init__(self, adict):
+       self.__dict__.update(adict)
+
+
+def os_system(cmds, stdout_only=1) :
+  #   Get print output from command line
+  import subprocess
+  cmds = cmds.split(" ")
+  p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = p.stdout.read(),  p.stderr.read()
+
+  if stdout_only :
+        return out
+  return out, err
+
+
+def tofloat(value, default=0.0):
+  #  Parse the float value. 
+  try:
+    return float(value)
+  except:
+    return default
+
+
+
+### Remove util dependencies
+def os_file_getname(fromdir_file) :
+    pass
+
+
+def os_file_getpath(fromdir_file) :
+    pass
+
+
+def os_zipfolder(dir_tozip="", zipname="",       dir_prefix=True, iscompress=True) :
+    pass                                    
+
+
+def  z_key_splitinto_dir_name(key) :
+    pass
+
+
+def os_folder_delete(tempfolder) :
+    pass
+
+def os_folder_copy(fromfolder, tempfolder, pattern1="*.py") :
+    pass
+
+
+
+
+
+
+
+
+
+
+
+
+####################################################################################################
 ############################ CLI ###################################################################
-def start_spot_windows():
+def cli_windows_start_spot():
         # :\_devs\Python01\aws\aapackage\
         # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
         # aws_ec2_spot_start(EC2_CONN, "west-2", key_name="ecsInstanceRole", inst_type="cx2.2",
@@ -1004,8 +1327,8 @@ def start_spot_windows():
         print(ss)
         os.system(ss)
         sleep2(65)
-        AWSGLOBALS.EC2_CONN = aws_conn_create_windows()
-        ec2_list = aws_ec2_get_instances(AWSGLOBALS.EC2_CONN,
+        AWS.EC2_CONN = aws_conn_create_windows()
+        ec2_list = aws_ec2_get_instances(AWS.EC2_CONN,
                                          csv_filename="zz_ec2_instance.csv")
         print(ec2_list)
         for x in ec2_list :
@@ -1014,13 +1337,13 @@ def start_spot_windows():
                 ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
                 ss += ' "http://' +  x["ip_address"] + ':8888/tree#notebooks"  '
                 os.system(ss)    
-    
+
+
 def test_all():
     pass
 
 
-    
-    
+
 if __name__ == '__main__':
     print("Start")
     import argparse
@@ -1037,7 +1360,7 @@ if __name__ == '__main__':
         test_all()
     
     if args.do == "start_spot_windows":
-        start_spot_windows()
+        cli_windows_start_spot()
 
     if args.do == "put_file":
         aws_ec2_putfile(fromfolder=args.fromfolder,
