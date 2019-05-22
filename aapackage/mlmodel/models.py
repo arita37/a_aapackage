@@ -87,12 +87,16 @@ def get_recursive_files(folderPath,ext):
 			
 		return outFiles  
 
+
+
 def create(modelname="", params=None) :
     """
-    
+      modelname= model_dl/1_lstm
+      
+      
     """
     modelname = modelname.replace('.py','')
-    module_path = glob.glob('model_dl/{}.py'.format(modelname))
+    module_path = glob.glob('{}.py'.format(modelname))
     if len(module_path)==0:
         raise NameError("Module {} notfound".format(modelname))
     
