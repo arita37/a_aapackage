@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
 
+ python main.py  --mode train
+ 
+ python main.py  --mode test 
+
+
+
+
+"""
 from argparse import ArgumentParser
 import json
 import pandas as pd
@@ -17,8 +26,8 @@ sns.set_style("darkgrid")
 
 
 eps=10e-8
-epochs=0
-M=0
+epochs=1
+M=2
 PATH_prefix=''
 
 class StockTrader():
