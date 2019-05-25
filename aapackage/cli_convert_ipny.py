@@ -1,3 +1,12 @@
+"""
+Convert notebook to Code
+
+python cli_convert_ipny.py  --in_folder  notebook/  --out_folder  py_code/
+
+
+
+"""
+
 import sys, os
 import glob
 import shutil
