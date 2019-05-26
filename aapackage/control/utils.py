@@ -1,18 +1,65 @@
+
+from math import sqrt, exp, log
+from scipy.linalg import cholesky
+import scipy as sp
+import numpy as np
+import numexpr as ne
+import pandas as pd
+
+#from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
+from timeit import default_timer as timer
+
+
+
+def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, 
+              correl, choice=0):
+  """
+     dS/St =  drift.dt + voldt.dWt
+     
+     Girsanov :  drift - compensator).dt
+     T : years
+     S0 : Initial vector price
+     vol0 : vector of volatiltiies  1..nasset
+     drift :  Interest rates
+     correl : Correlation Matrix 
+  
+  """
+  # np.random.seed(1234)
+  dt           = T / (1.0 * nstep )
+  drift        = drift * dt
+  
+  
+  allprocess   = np.zeros((nsimul,nasset,nstep)) #ALl time st,ep
+  iidbrownian  = np.random.normal(0, 1, (nasset,nstep-1,nsimul))  
+  print(  iidbrownian.shape )
+
+  correl_upper_cholesky = cholesky(correl, lower=False)
+
+  for k in range(0, nsimul):  # k MonteCarlo simulation
+    price      = np.zeros((nasset,nstep)) 
+    price[:,0] = S0
+    volt       = vol0
+
+    corrbm      = np.dot(correl_upper_cholesky, iidbrownian[:,:,k])    # correlated brownian    
+    bm_process  = np.multiply(corrbm,volt)  #multiply element by elt
+    drift_adj   = drift -0.5 * np.sum(volt*volt)
     
+    price[:,1:] = np.exp(drift_adj * dt + bm_process * np.sqrt(dt) )  
+    price       = np.cumprod(price, axis = 1)  #exponen product st = st-1 *st
+     
+    allprocess[k,:] = price # Simul. k
+    
+  return allprocess, bm_process, corrbm,  correl_upper_cholesky  
 
 
 
 
 
 
-
-
-
-
-
-
-def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
-                   a=0.2, b=0.2, Nsteps=252, Nsim=100, alpha=0.05, seed=None):
+def jump_diffusion(S=1, X=0.5, T=1, 
+                   mu=0.12, sigma=0.3, 
+                   Lambda=0.25, a=0.2, b=0.2, 
+                   Nsteps=252, Nsim=100, alpha=0.05, seed=None):
     '''
     Monte Carlo simulation [1] of Merton's Jump Diffusion Model [2].
     The model is specified through the stochastic differential equation (SDE):
@@ -51,25 +98,18 @@ def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
     import time
     import numpy as np
     from scipy import stats
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+    #import matplotlib.pyplot as plt
+    #import seaborn as sns
 
     # Set random seed
     np.random.seed(seed)
 
-    '''
-    Time the whole path-generating process, using a tic-toc method familiar
-    to MATLAB users
-    '''
     tic = time.time()
 
     # Calculate the length of the time step
     Delta_t = T/Nsteps
 
     '''
-    Compute mean and variance of a standard lognormal distribution from user
-    defined parameters a and b. The latter are useful to simulate the jump
-    component in Monte Carlo.
     a and b are chosen such that log(Y(j)) ~ N(a, b**2). This implies that the
     mean and variance of the multiplicative jumps will be:
      * mean_Y = np.exp(a + 0.5*(b**2))
@@ -91,10 +131,7 @@ def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
         - np.exp(2*mu*T + 2*Lambda*T*(mean_Y - 1)))
 
     '''
-    Generate an Nsim x (Nsteps+1) array of zeros to preallocate the simulated
-    paths of the Monte Carlo simulation. Each row of the matrix represents a
-    full, possible path for the stock, each column all values of the asset at
-    a particular instant in time.
+    Generate an Nsim x (Nsteps+1) array of zeros to preallocate
     '''
     simulated_paths = np.zeros([Nsim, Nsteps+1])
 
@@ -102,10 +139,7 @@ def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
     simulated_paths[:,0] = S
 
     '''
-    To account for the multiple sources of uncertainty in the jump diffusion
-    process, generate three arrays of random variables.
-     - The first one is related to the standard Brownian motion, the component
-       epsilon(0,1) in epsilon(0,1) * np.sqrt(dt);
+     - The first one is related to the standard Brownian motion, 
      - The second and third ones model the jump, a compound Poisson process:
        the former (a Poisson process with intensity Lambda) causes the asset
        price to jump randomly (random timing); the latter (a Gaussian variable)
@@ -117,11 +151,11 @@ def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
 
     # Populate the matrix with Nsim randomly generated paths of length Nsteps
     for i in range(Nsteps):
-        simulated_paths[:,i+1] = simulated_paths[:,i]*np.exp((mu
-                               - sigma**2/2)*Delta_t + sigma*np.sqrt(Delta_t) \
-                               * Z_1[:,i] + a*Poisson[:,i] \
-                               + np.sqrt(b**2) * np.sqrt(Poisson[:,i]) \
-                               * Z_2[:,i])
+        simulated_paths[:,i+1] = simulated_paths[:,i]*np.exp((  \
+                               mu - sigma**2/2)*Delta_t  \
+                               + sigma*np.sqrt(Delta_t) * Z_1[:,i]  \
+                               + a*Poisson[:,i] \
+                               + np.sqrt(b**2) * np.sqrt(Poisson[:,i])  * Z_2[:,i])
 
     # Single out array of simulated prices at maturity T
     final_prices = simulated_paths[:,-1]
@@ -142,14 +176,9 @@ def jump_diffusion(S=1, X=0.5, T=1, mu=0.12, sigma=0.3, Lambda=0.25,
     return simulated_paths
     
     
+
     
     
     
     
-    
-    
-    
-   
-   
-   
-   
+ 

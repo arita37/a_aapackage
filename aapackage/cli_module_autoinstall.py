@@ -5,7 +5,6 @@ Auto install missing package by scanning error message
 conda create -y -n ztest  python=3.6.5
 source activate Emptyconda
 
-
 cd /home/ubuntu/aagit/aapackage/aapackage/
 
 python cli_module_autoinstall.py  --folder_input  /home/ubuntu/aagit/aapackage/aapackage/batch

@@ -22,3 +22,40 @@ import datetime
 
 
 
+"""
+Simulate Path
+Correlated path
+Brownian Motions
+
+
+
+Cost
+    Variance :
+    
+    
+Weight at each steps
+
+
+Xinput = PastReturns
+Output :  Weights
+
+
+
+
+
+
+
+Return target
+
+
+
+Scenarios :
+
+  regime change
+  
+  
+
+
+
+
+"""
