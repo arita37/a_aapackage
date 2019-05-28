@@ -17,11 +17,11 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift,
      dS/St =  drift.dt + voldt.dWt
      
      Girsanov :  drift - compensator).dt
-     T : years
-     S0 : Initial vector price
-     vol0 : vector of volatiltiies  1..nasset
-     drift :  Interest rates
-     correl : Correlation Matrix 
+     T      :  Years
+     S0     :  Initial vector price
+     vol0   :  Vector of volatiltiies  1..nasset  0.05  5% / pa
+     drift  :  Interest rates
+     correl :  Correlation Matrix 
   
   """
   # np.random.seed(1234)
@@ -29,7 +29,7 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift,
   drift        = drift * dt
   
   
-  allprocess   = np.zeros((nsimul,nasset,nstep)) #ALl time st,ep
+  allpaths     = np.zeros((nsimul,nasset,nstep)) #ALl time st,ep
   iidbrownian  = np.random.normal(0, 1, (nasset,nstep-1,nsimul))  
   print(  iidbrownian.shape )
 
@@ -42,15 +42,38 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift,
 
     corrbm      = np.dot(correl_upper_cholesky, iidbrownian[:,:,k])    # correlated brownian    
     bm_process  = np.multiply(corrbm,volt)  #multiply element by elt
-    drift_adj   = drift -0.5 * np.sum(volt*volt)
+    # drift_adj   = drift - 0.5 * np.sum(volt*volt)   # Girsanove theorem
+    drift_adj   = drift - 0.5 * np.dot(volt.T, np.dot( correl, volt   ))
     
     price[:,1:] = np.exp(drift_adj * dt + bm_process * np.sqrt(dt) )  
     price       = np.cumprod(price, axis = 1)  #exponen product st = st-1 *st
      
-    allprocess[k,:] = price # Simul. k
-    
-  return allprocess, bm_process, corrbm,  correl_upper_cholesky  
+    allpaths[k,:] = price # Simul. k
 
+  if choice == "all" :    
+     return allpaths, bm_process, corrbm,  correl_upper_cholesky, iidbrownian[:,:k-1]  
+
+  if choice == "path" :    
+     return allpaths
+
+
+
+def test() :
+ nasset = 2
+ nsimul=1
+ nstep= 5
+ T=5
+ s0  = np.ones((nasset))*100.0
+ vol0  = np.ones((nasset,1))*0.1
+ drift = 0.0
+ correl = np.identity(nasset) 
+
+ correl[1,0] = -0.99
+ correl[0,1] = -0.99
+
+ allpath = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+                     correl, choice="path")
+    
 
 
 
