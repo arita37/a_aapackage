@@ -12,15 +12,22 @@ import seaborn as sns
 sns.set()
 
 
-# In[2]:
-
-
-df = pd.read_csv('../dataset/GOOG-year.csv')
-df.head()
 
 
 # In[3]:
 
+class Model:
+    def __init__(self,
+        state_size,
+        window_size,
+        trend,
+        skip,
+        iterations,
+        initial_reward
+    ):
+        self.agent = Agent(state_size, window_size, trend, skip)
+        self.iterations = iterations
+        self.initial_reward = initial_reward
 
 class Agent:
 
@@ -184,88 +191,99 @@ class Agent:
 
 
 
-def action_example(state, action, result_list):
-            # Input of the model
-            d = result_list[-1]
-            initial_money = d["initial_money"]
-            inventory     = d["inventory"]
-            states_buy    = d["states_buy"]
-            states_sell   = d["states_sell"]
-            
-            trend = d["trend"]
-            half_window = d["half_window"]
-        
-        
-            ###### Specific to App ###################################
-            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
-                inventory.append(self.trend[t])
-                initial_money -= self.trend[t]
-                states_buy.append(t)
-                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
-                
-                
-            elif action == 2 and len(inventory):
-                bought_price = inventory.pop(0)
-                initial_money += self.trend[t]
-                states_sell.append(t)
-                try:
-                    invest = ((close[t] - bought_price) / bought_price) * 100
-                except:
-                    invest = 0
-                print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, close[t], invest, initial_money)
-                )
-            ########################################################
-            return {"initial_money" :  initial_money,
-                    "inventory"     :  inventory,
-                    "states_buy"    :  states_buy,
-                    "states_sell"   :  states_sell 
-                   }           
+def action_example(data_frame, starting_reward, action, trend, half_window, iteration_number, inventory=[], total_reward=0):
+    if action == 1 and starting_reward >= trend[iteration_number] and iteration_number < (len(trend) - half_window):
+        inventory.append(trend[iteration_number])
+        starting_reward -= data_frame[iteration_number]
+    elif action == 2 and len(inventory):
+        bought_price = inventory.pop(0)
+        total_reward += trend[iteration_number] - bought_price
+        starting_reward += trend[iteration_number]
+    return starting_reward, total_reward
           
 
+def fit(model, data_frame, do_action):
+    agent = model.agent
+    for i in range(model.iterations):
+        ep_history = []
+        total_reward = 0
+        inventory = [] # passed by reference
+        state = agent.get_state(0)
+        starting_reward = model.initial_reward
+        
+        
+        for t in range(0, len(agent.trend) - 1, agent.skip):
+            action = agent.get_predicted_action(state)
+            next_state = agent.get_state(t + 1)
+            
+            
+            ######## do_action ###################################
+            reward, total_reward = do_action(data_frame, starting_reward, action, data_frame, agent.half_window, t, inventory, total_reward)
+
+            ###################################################
+            ep_history.append([state,action,reward,next_state])
+            state = next_state
+        ep_history = np.array(ep_history)
+        ep_history[:,2] = agent.discount_rewards(ep_history[:,2])
+        cost, _ = agent.sess.run([agent.cost, agent.optimizer], feed_dict={agent.X:np.vstack(ep_history[:,0]),
+                                                agent.REWARDS:ep_history[:,2],
+                                                agent.ACTIONS:ep_history[:,1]})
+        if (i+1) % 10 == 0:
+            print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, total_reward, cost,
+                                                                                starting_reward))
+
+    return agent.sess
 
 
 
 
 
+if __name__ == "__main__":
 
 
+    # In[2]:
 
 
-# In[4]:
+    df = pd.read_csv('../dataset/GOOG-year.csv')
+    df.head()
 
 
-close = df.Close.values.tolist()
-initial_money = 10000
-window_size = 30
-skip = 1
-agent = Agent(state_size = window_size,
-             window_size = window_size,
-             trend = close,
-             skip = skip)
-agent.train(iterations = 200, checkpoint = 10, initial_money = initial_money)
+    # In[4]:
 
 
-# In[5]:
+    close = df.Close.values.tolist()
+    initial_money = 10000
+    window_size = 30
+    skip = 1
+    agent = Agent(state_size = window_size,
+                window_size = window_size,
+                trend = close,
+                skip = skip)
+    #agent.train(iterations = 200, checkpoint = 10, initial_money = initial_money)
 
 
-states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
+    # In[5]:
 
 
-# In[6]:
+    
+
+    # In[6]:
+    model = Model(window_size, window_size, close, skip, 200, initial_money)
+    sess = fit(model, close, action_example)
+    agent.sess = sess
+    states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
+    
+    fig = plt.figure(figsize = (15,5))
+    plt.plot(close, color='r', lw=2.)
+    plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
+    plt.plot(close, 'v', markersize=10, color='k', label = 'selling signal', markevery = states_sell)
+    plt.title('total gains %f, total investment %f%%'%(total_gains, invest))
+    plt.legend()
+    plt.show()
+    
 
 
-fig = plt.figure(figsize = (15,5))
-plt.plot(close, color='r', lw=2.)
-plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
-plt.plot(close, 'v', markersize=10, color='k', label = 'selling signal', markevery = states_sell)
-plt.title('total gains %f, total investment %f%%'%(total_gains, invest))
-plt.legend()
-plt.show()
-
-
-# In[ ]:
+    # In[ ]:
 
 
 
