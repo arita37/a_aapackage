@@ -8,31 +8,36 @@
 """
 from __future__ import division, print_function
 
+import arrow
 import copy
 import datetime
+import dill
 import errno
 import fnmatch
 import gc
 import operator
 import os
+import pickle
+import psutil
 import re
 import shutil
 import subprocess
 import sys
 import time
+import util
+import zipfile
 from builtins import map, next, object, range, str, zip
 
 import matplotlib.pyplot as plt
 import urllib3
 
-import arrow
 import IPython
 import numexpr as ne
 import numpy as np
 import pandas as pd
 import scipy as sci
 from bs4 import BeautifulSoup
-##############Date Manipulation#####################################################################
+# Date Manipulation
 from dateutil import parser
 from future import standard_library
 from numba import float32, jit
@@ -45,7 +50,6 @@ if sys.platform.find("win") > -1:
     print("")
     # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
-####################################################################################
 DIRCWD = os.path.dirname(os.path.abspath(__file__))
 # os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
@@ -57,7 +61,7 @@ __version__ = "1.0.0"
 # __file__=     "util.py"
 
 
-############## #Serialize Python Session ##########################################
+# Serialize Python Session
 def session_load_function(name="test_20160815"):
     import dill
 
@@ -68,8 +72,6 @@ def session_load_function(name="test_20160815"):
 
 
 def session_save_function(name="test"):
-    import dill, pickle
-
     t1 = date_now()
     n1 = DIRCWD + "/aaserialize/session/dill_session_" + name + "_" + t1 + ".pkl"
 
@@ -78,15 +80,13 @@ def session_save_function(name="test"):
 
 
 def py_save_obj_dill(obj1, keyname="", otherfolder=0):
-    import dill, pickle, numpy, pandas
-
     dir0, keyname = z_key_splitinto_dir_name(keyname)
     os_folder_create(DIRCWD + "/aaserialize/" + dir0)
     dir1 = DIRCWD + "/aaserialize/" + dir0 + "/" + keyname + ".pkl" if otherfolder == 0 else keyname
 
     type_list = [
-        numpy,
-        pandas.core.series,
+        np,
+        pd.core.series,
         dill.source.getmodule(int),
         dill.source.getmodule(str),
         dill.source.getmodule(float),
@@ -95,7 +95,7 @@ def py_save_obj_dill(obj1, keyname="", otherfolder=0):
 
     type1 = dill.source.getmodule(type(obj1))
     name1 = ""
-    if not name1 in type_list and not type1 in type_list:
+    if name1 not in type_list and type1 not in type_list:
         with open(dir1, "wb") as f:
             dill.dumps(obj1, protocol=pickle.HIGHEST_PROTOCOL)
     else:
@@ -251,7 +251,6 @@ def spyder_load_gui_session(name1) :
 """
 
 
-#####################################################################################
 #  Import File
 # runfile('D:/_devs/Python01/project27/stockMarket/google_intraday.py', wdir='D:/_devs/Python01/project27/stockMarket')
 
@@ -513,7 +512,7 @@ def a_get_pythonversion():
     return sys.version_info[0]
 
 
-#################### Printers ###################################################################
+# Printers
 def print_object(vv, txt=""):
     """ #Print Object Table  """
     print(("\n\n" + txt + "\n"))
@@ -522,10 +521,10 @@ def print_object(vv, txt=""):
     for k in range(0, kkmax):
         aux = ""
         for i in range(0, iimax):
-            if vv[k, 0] != None:
+            if vv[k, 0] is not None:
                 aux += str(vv[k, i]) + ","
 
-        if vv[k, 0] != None:
+        if vv[k, 0] is not None:
             print(aux)
 
 
@@ -538,10 +537,10 @@ def print_object_tofile(vv, txt, file1="d:/regression_output.py"):
         for k in range(0, kkmax):
             aux = ""
             for i in range(0, iimax):
-                if vv[k, 0] != None:
+                if vv[k, 0] is not None:
                     aux += str(vv[k, i]) + ","
 
-            if vv[k, 0] != None:
+            if vv[k, 0] is not None:
                 # print (aux )
                 file1.write(aux + "\n")
 
@@ -574,10 +573,8 @@ def print_ProgressBar(iteration, total, prefix="", suffix="", decimals=1, barLen
     """
 
 
-###################### OS- ######################################################################
+# OS-
 def os_zip_checkintegrity(filezip1):
-    import zipfile
-
     zip_file = zipfile.ZipFile(filezip1)
     try:
         ret = zip_file.testzip()
@@ -591,8 +588,6 @@ def os_zip_checkintegrity(filezip1):
 
 
 def os_zipfile(folderin, folderzipname, iscompress=True):
-    import os, zipfile
-
     compress = zipfile.ZIP_DEFLATED if iscompress else zipfile.ZIP_STORED
     zf = zipfile.ZipFile(folderzipname, "w", compress, allowZip64=True)
 
@@ -692,10 +687,12 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
     else:
         return -1
 
+
 def _default_fun_file_toignore(src, names):
     pattern = "!" + pattern1
     file_toignore = fnmatch.filter(names, pattern)
     return file_toignore
+
 
 def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=None):
     """
@@ -847,7 +844,6 @@ def os_file_listall2(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
    # aa= listallfile(DIRCWD, "*.*", 2)
    # aa[0][30];   aa[2][30]
   """
-    import fnmatch, os, numpy as np
 
     matches = {}
     dir1 = dir1.rstrip(os.path.sep)
@@ -1275,17 +1271,15 @@ def os_path_append(p1, p2=None, p3=None, p4=None):
         sys.path.append(p4)
 
 
-########### WAIT BEFORE LAUNCH #####################################################################
+# WAIT BEFORE LAUNCH
 def os_wait_cpu(priority=300, cpu_min=50):
-    from time import sleep
-    import psutil, arrow
 
     aux = psutil.cpu_percent()
     while aux > cpu_min:
         print("CPU:", aux, arrow.utcnow().to("Japan").format())
-        sleep(priority)
+        time.sleep(priority)
         aux = psutil.cpu_percent()
-        sleep(10)
+        time.sleep(10)
         aux = 0.5 * (aux + psutil.cpu_percent())
     print("Starting script:", aux, arrow.utcnow().to("Japan").format())
 
@@ -1352,7 +1346,7 @@ p.wait()
 """
 
 
-#######################  Python Interpreter ###################################################
+# Python Interpreter
 def py_importfromfile(modulename, dir1):
     # Import module from file:  (Although this has been deprecated in Python 3.4.)
     vv = a_get_pythonversion()
@@ -1454,7 +1448,7 @@ def z_key_splitinto_dir_name(keyname):
     return dir1, keyname
 
 
-############# Object ########################################################################
+# Object
 def sql_getdate():
     pass
 
@@ -1527,7 +1521,7 @@ save_obj(aux, 'batch/elvis_usd_9assets_3_regime_perf_best_population_01')
 """
 
 
-############### Object Class Introspection ##################################################
+# Object Class Introspection
 def obj_getclass_of_method(meth):
     import inspect
 
@@ -1542,7 +1536,7 @@ def obj_getclass_property(pfi):
         print(property, ": ", value)
 
 
-################# XML / HTML processing  ####################################################
+# XML / HTML processing
 """
 https://pypi.python.org/pypi/RapidXml/
 http://pugixml.org/benchmark.html
@@ -1550,7 +1544,6 @@ http://pugixml.org/benchmark.html
 """
 
 
-#####################################################################################
 # -------- PDF processing ------------------------------------------------------------
 def print_topdf():
     import datetime
@@ -1593,7 +1586,6 @@ def print_topdf():
         d["ModDate"] = datetime.datetime.today()
 
 
-#####################################################################################
 # --------CSV processing -------------------------------------------------------------
 # Put Excel and CSV into Database / Extract CSV from database
 
@@ -1817,7 +1809,7 @@ def pd_toexcel_many(
         pd_toexcel(df6, outfile, sheet_name="df6")
 
 
-############# STRING- ########################################################################
+# STRING-
 def find_fuzzy(xstring, list_string):
     """ if xstring matches partially, add to the list   """
     return [xi for xi in list_string if xi.find(xstring) > -1]
@@ -2028,7 +2020,7 @@ zfill() retains any sign given (less one zero).
 """
 
 
-################### LIST UTIL / Array  ############################################################
+# LIST UTIL / Array
 def np_minimize(
         fun_obj, x0=[0.0], argext=(0, 0), bounds1=[(0.03, 0.20), (10, 150)], method="Powell"
 ):
@@ -2226,17 +2218,17 @@ def np_interpolate_nan(y):
 
 
 def np_and1(x, y, x3=None, x4=None, x5=None, x6=None, x7=None, x8=None):
-    if not x8 is None:
+    if x8 is not None:
         return np.logical_and.reduce((x8, x7, x6, x5, x4, x3, x, y))
-    if not x7 is None:
+    if x7 is not None:
         return np.logical_and.reduce((x7, x6, x5, x4, x3, x, y))
-    if not x6 is None:
+    if x6 is not None:
         return np.logical_and.reduce((x6, x5, x4, x3, x, y))
-    if not x5 is None:
+    if x5 is not None:
         return np.logical_and.reduce((x5, x4, x3, x, y))
-    if not x4 is None:
+    if x4 is not None:
         return np.logical_and.reduce((x4, x3, x, y))
-    if not x3 is None:
+    if x3 is not None:
         return np.logical_and.reduce((x3, x, y))
 
 
@@ -2328,7 +2320,7 @@ def find(item, vec):
 def findnone(vec):
     """return the index of the first occurence of item in vec"""
     for i in range(len(vec)):
-        if vec[i] == None:
+        if vec[i] is None:
             return i
     return -1
 
@@ -2514,19 +2506,19 @@ def np_stack(v1, v2=None, v3=None, v4=None, v5=None):
     sh = np.shape(v1)
     if sh[0] < sh[1]:
         v1 = np.row_stack((v1, v2))
-        if v3 != None:
+        if v3 is not None:
             v1 = np.row_stack((v1, v3))
-        if v4 != None:
+        if v4 is not None:
             v1 = np.row_stack((v1, v4))
-        if v5 != None:
+        if v5 is not None:
             v1 = np.row_stack((v1, v5))
     else:
         v1 = np.column_stack((v1, v2))
-        if v3 != None:
+        if v3 is not None:
             v1 = np.column_stack((v1, v3))
-        if v4 != None:
+        if v4 is not None:
             v1 = np.column_stack((v1, v4))
-        if v5 != None:
+        if v5 is not None:
             v1 = np.column_stack((v1, v5))
 
     return v1
@@ -2632,7 +2624,7 @@ def np_pivotable_create(table, left, top, value):
     return t
 
 
-############### PANDA UTIL  ################################################################
+# PANDA UTIL
 
 
 def pd_info(df, doreturn=1):
@@ -2861,7 +2853,7 @@ def pd_dtypes(df, returnasdict=0):
     print(ss)
     print(
         """\n df.astype(typedict)  Pandas 'object' : 'category', 'unicode' , 'str'  'boolean',
-    	float16, float32, int8, int16, int32,uint8, uint16, uint32 """
+        float16, float32, int8, int16, int32,uint8, uint16, uint32 """
     )
 
 
@@ -2936,7 +2928,7 @@ def pd_dtypes_getblaze(df1) :
  x=x.replace("OrderedDict[", "{")
  x=x.replace("]", "}")
  print(" string 5char: |S5 object in Pandas,  object_bool, string_, unicode
-	float16, float32, float64, int8, int16, int32, int64,	uint8, uint16, uint32, uint64")
+    float16, float32, float64, int8, int16, int32, int64, uint8, uint16, uint32, uint64")
  return x
 """
 
@@ -3488,7 +3480,7 @@ def date_generatedatetime(start="20100101", nbday=10, end=""):
     return np.array(date_list)
 
 
-############################# Utilities for Numerical Calc ######################################
+# Utilities for Numerical Calc
 def np_numexpr_vec_calc(
         filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
@@ -3528,7 +3520,7 @@ def np_numexpr_tohdfs(
 # ----------------------------------------------------------------------------
 
 
-##################### Statistics    ################################################################
+# Statistics
 def np_comoment(xx, yy, nsample, kx, ky):
     #   cx= ne.evaluate("sum(xx)") /  (nsample);   cy= ne.evaluate("sum( yy)")  /  (nsample)
     #   cxy= ne.evaluate("sum((xx-cx)**kx * (yy-cy)**ky)") / (nsample)
@@ -3551,7 +3543,7 @@ def np_acf(data):
     return acf_coeffs
 
 
-##################### Plot Utilities ###############################################################
+# Plot Utilities
 def plot_XY(
         xx,
         yy,
@@ -3625,7 +3617,6 @@ def plot_heatmap(frame, ax=None, cmap=None, vmin=None, vmax=None, interpolation=
     return
 
 
-##########
 def np_map_dict_to_bq_schema(source_dict, schema, dest_dict):
     """
      new_dict = {}
@@ -3670,7 +3661,7 @@ def np_map_dict_to_bq_schema(source_dict, schema, dest_dict):
                 format_value_bq(source_dict[field["name"]], field["type"])
 
 
-########################### Google Drive    ########################################################
+# Google Drive
 def googledrive_get():
     """
    https://github.com/ctberthiaume/gdcp
@@ -3885,8 +3876,6 @@ def py_exception_print():
 
 
 def py_log_write(LOGFILE, prefix):
-    import arrow, os
-
     ###########################################################################
     # LOGFILE =     DIRCWD + '/aapackage/'+ 'ztest_all.txt';
     print(LOGFILE)
@@ -3908,8 +3897,7 @@ def py_log_write(LOGFILE, prefix):
     ##############################################################################
 
 
-###############################################################################
-############################ UNIT TEST ########################################
+# UNIT TEST
 if __name__ == "__main__":
     import argparse
 
@@ -3920,13 +3908,9 @@ if __name__ == "__main__":
     if arg.do == "test":
         print(__file__, dircwd)
         try:
-            import util
-
             unique_id = util.py_log_write(dircwd + "/aapackage/ztest_log_all.txt", "util")
 
             #############################################################################
-            import numpy as np, pandas as pd, scipy as sci
-            import util
 
             print(util)
             print("")
