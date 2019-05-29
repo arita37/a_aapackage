@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 #---------Various Utilities function for Python--------------------------------------
@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 import scipy as sci
 from bs4 import BeautifulSoup
-##############Date Manipulation#######################################################################
+##############Date Manipulation#####################################################################
 from dateutil import parser
 from future import standard_library
 from numba import float32, jit
@@ -177,7 +177,10 @@ def session_save(filename="/folder1/name1", globals1=None):
 
    BIG issue with Import, Impor FULL MODULE ----> BIG ISSUE
      BIG ISSUE with DICT, USE LIST INSTEAD
-        If you try to put this code in a module and import the function then you will have to pass globals() to the function explicitly as the globals() in the function is not the IPython global namespace. However, you can put the above code inside your ~/.ipython/profile_PROFILE/startup/startup.ipy file and it will work as expected.
+        If you try to put this code in a module and import the function then you will have to pass
+        globals() to the function explicitly as the globals() in the function is not the IPython
+        global namespace. However, you can put the above code inside your
+        ~/.ipython/profile_PROFILE/startup/startup.ipy file and it will work as expected.
        PROFILE is the name of the profile that you plan to start IPython with.
     """
     # from spyderlib.utils.iofuncs import save_dictionary
@@ -447,8 +450,8 @@ def a_help():
     !pip install packagename
     The ! prefix is a short-hand for the %sc command to run a shell command.
 
-    You can also use the !! prefix which is a short-hand for the %sx command to execute a shell command
-    and capture its output (saved into the _ variable by default).
+    You can also use the !! prefix which is a short-hand for the %sx command to execute a shell
+    command and capture its output (saved into the _ variable by default).
 
   6) Compile a modified package
     1) Put into a folder
@@ -627,11 +630,17 @@ def os_zipfolder(
 
     shutil.make_archive(zipname.replace(".zip", ""), "zip", dir_tozip, base_dir=dir_prefix)
     """
-   shutil.make_archive(base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
+   shutil.make_archive(
+      base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
 
-   base_name is the name of the file to create, including the path, minus any format-specific extension. format is the archive format: one of "zip" (if the zlib module or external zip executable is available), "tar", "gztar" (if the zlib module is available), or "bztar" (if the bz2 module is available).
-   root_dir is a directory that will be the root directory of the archive; ie. we typically chdir into root_dir before creating the archive.
-   base_dir is the directory where we start archiving from; ie. base_dir will be the common prefix of all files and directories in the archive.
+   base_name is the name of the file to create, including the path, minus any format-specific
+   extension. format is the archive format: one of "zip" (if the zlib module or external zip
+   executable is available), "tar", "gztar" (if the zlib module is available), or "bztar"
+   (if the bz2 module is available).
+   root_dir is a directory that will be the root directory of the archive; ie. we typically chdir
+   into root_dir before creating the archive.
+   base_dir is the directory where we start archiving from; ie. base_dir will be the common
+   prefix of all files and directories in the archive.
    root_dir and base_dir both default to the current directory.
    owner and group are used when creating a tar archive.
 
@@ -694,7 +703,8 @@ def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=
        'src' parameter, which is the directory being visited by copytree(), and
        'names' which is the list of `src` contents, as returned by os.listdir():
 
-    Since copytree() is called recursively, the callable will be called once for each directory that is copied.
+    Since copytree() is called recursively, the callable will be called once for each
+    directory that is copied.
     It returns a  list of names relative to the `src` directory that should not be copied.
    :param fun_ignore:
    """
@@ -757,7 +767,8 @@ def os_file_replacestring1(findStr, repStr, filePath):
 
 
 def os_file_replacestring2(findstr, replacestr, some_dir, pattern="*.*", dirlevel=1):
-    """ #fil_replacestring_files("logo.png", "logonew.png", r"D:/__Alpaca__details/aiportfolio",    pattern="*.html", dirlevel=5  )
+    """ #fil_replacestring_files("logo.png", "logonew.png", r"D:/__Alpaca__details/aiportfolio",
+    pattern="*.html", dirlevel=5  )
   """
     list_file = os_file_listall(some_dir, pattern=pattern, dirlevel=dirlevel)
     list_file = list_file[2]
@@ -911,8 +922,10 @@ def os_file_search_content(
     return df
 
 
-# aa= os_file_search_content( srch_pattern=[ u"from ","import "], mode="str", dir1=DIRCWD, file_pattern="*.py", dirlevel=1)
-# aa= os_file_search_content( srch_pattern=[ u"from ","import "], mode="full", dir1=DIRCWD, file_pattern="*.py", dirlevel=1)
+# aa= os_file_search_content(
+#    srch_pattern=[ u"from ","import "], mode="str", dir1=DIRCWD, file_pattern="*.py", dirlevel=1)
+# aa= os_file_search_content(
+#    srch_pattern=[ u"from ","import "], mode="full", dir1=DIRCWD, file_pattern="*.py", dirlevel=1)
 
 
 def os_file_rename(some_dir, pattern="*.*", pattern2="", dirlevel=1):
@@ -969,41 +982,55 @@ def os_print_tofile(vv, file1, mode1="a"):  # print into a file='a
     """
     Here is a list of the different modes of opening a file:
 r
-Opens a file for reading only. The file pointer is placed at the beginning of the file. This is the default mode.
+Opens a file for reading only. The file pointer is placed at the beginning of the file.
+This is the default mode.
 
 rb
 
-Opens a file for reading only in binary format. The file pointer is placed at the beginning of the file. This is the default mode.
+Opens a file for reading only in binary format. The file pointer is placed at the
+beginning of the file. This is the default mode.
 r+
 
 Opens a file for both reading and writing. The file pointer will be at the beginning of the file.
 rb+
 
-Opens a file for both reading and writing in binary format. The file pointer will be at the beginning of the file.
+Opens a file for both reading and writing in binary format. The file pointer will be at the
+beginning of the file.
 w
 
-Opens a file for writing only. Overwrites the file if the file exists. If the file does not exist, creates a new file for writing.
+Opens a file for writing only. Overwrites the file if the file exists. If the file does not exist,
+creates a new file for writing.
 wb
 
-Opens a file for writing only in binary format. Overwrites the file if the file exists. If the file does not exist, creates a new file for writing.
+Opens a file for writing only in binary format. Overwrites the file if the file exists.
+If the file does not exist, creates a new file for writing.
 w+
 
-Opens a file for both writing and reading. Overwrites the existing file if the file exists. If the file does not exist, creates a new file for reading and writing.
+Opens a file for both writing and reading. Overwrites the existing file if the file exists.
+If the file does not exist, creates a new file for reading and writing.
 wb+
 
-Opens a file for both writing and reading in binary format. Overwrites the existing file if the file exists. If the file does not exist, creates a new file for reading and writing.
+Opens a file for both writing and reading in binary format. Overwrites the existing file if
+the file exists. If the file does not exist, creates a new file for reading and writing.
 a
 
-Opens a file for appending. The file pointer is at the end of the file if the file exists. That is, the file is in the append mode. If the file does not exist, it creates a new file for writing.
+Opens a file for appending. The file pointer is at the end of the file if the file exists. That is,
+the file is in the append mode. If the file does not exist, it creates a new file for writing.
 ab
 
-Opens a file for appending in binary format. The file pointer is at the end of the file if the file exists. That is, the file is in the append mode. If the file does not exist, it creates a new file for writing.
+Opens a file for appending in binary format. The file pointer is at the end of the file if the file
+exists. That is, the file is in the append mode. If the file does not exist, it creates a new file
+for writing.
 a+
 
-Opens a file for both appending and reading. The file pointer is at the end of the file if the file exists. The file opens in the append mode. If the file does not exist, it creates a new file for reading and writing.
+Opens a file for both appending and reading. The file pointer is at the end of the file if the
+file exists. The file opens in the append mode. If the file does not exist, it creates a new file
+for reading and writing.
 ab+
 
-Opens a file for both appending and reading in binary format. The file pointer is at the end of the file if the file exists. The file opens in the append mode. If the file does not exist, it creates a new file for reading and writing.
+Opens a file for both appending and reading in binary format. The file pointer is at the end of
+the file if the file exists. The file opens in the append mode. If the file does not exist,
+it creates a new file for reading and writing.
 To open a text file, use:
 fh = open("hello.txt", "r")
 
@@ -1248,7 +1275,7 @@ def os_path_append(p1, p2=None, p3=None, p4=None):
         sys.path.append(p4)
 
 
-########### WAIT BEFORE LAUNCH #########################################################################
+########### WAIT BEFORE LAUNCH #####################################################################
 def os_wait_cpu(priority=300, cpu_min=50):
     from time import sleep
     import psutil, arrow
@@ -1632,15 +1659,20 @@ if __name__ == "__main__":
 A couple of key points with the code above:
 Always wrap the CSV reader in a function that returns a generator (via the yield statement).
 Open the file in universal newline mode with 'rU' for backwards compatibility.
-Use context managers with [callable] as [name] to ensure that the handle to the file is closed automatically.
-Use the csv.DictReader class only when headers are present, otherwise just use csv.reader. (You can pass a list of fieldnames, but you'll see its better just to use a namedtuple as we discuss below).
-This code allows you to treat the data source as just another iterator or list in your code. In fact if you do the following:
+Use context managers with [callable] as [name] to ensure that the handle to the file is closed
+automatically.
+Use the csv.DictReader class only when headers are present, otherwise just use csv.reader.
+(You can pass a list of fieldnames, but you'll see its better just to use a namedtuple as
+we discuss below).
+This code allows you to treat the data source as just another iterator or list in your code.
+In fact if you do the following:
 
 data = read_funding_data(FUNDING)
 print repr(data)
 
 Encoding reading :
-These encoders translate the native file encoding to UTF-8, which the csv module can read because it's 8-bit safe.
+These encoders translate the native file encoding to UTF-8, which the csv module can read because
+it's 8-bit safe.
 try:
     import unicodecsv as csv
 except ImportError:
@@ -1652,7 +1684,8 @@ pip install unicodecsv
 
 from collections import namedtuple
 
-fields = ("permalink","company","numEmps", "category","city","state","fundedDate", "raisedAmt","raisedCurrency","round")
+fields = ("permalink","company","numEmps", "category","city","state","fundedDate", "raisedAmt",
+    "raisedCurrency","round")
 FundingRecord = namedtuple('FundingRecord', fields)
 
 def read_funding_data(path):
@@ -1671,7 +1704,8 @@ https://districtdatalabs.silvrback.com/simple-csv-data-wrangling-with-python
 
 from datetime import datetime
 
-fields = ("permalink","company","numEmps", "category","city","state","fundedDate", "raisedAmt","raisedCurrency","round")
+fields = ("permalink","company","numEmps", "category","city","state","fundedDate", "raisedAmt",
+    "raisedCurrency","round")
 
 class FundingRecord(namedtuple('FundingRecord_', fields)):
 
@@ -1924,14 +1958,19 @@ spam.lstrip()
 spam.rstrip()  Performs both lstrip() and rstrip() on string
 
 count(str, beg= 0,end=len(string))  Counts how many times str occurs in string or in a substring of
-find(str, beg=0 end=len(string))  str occurs in string or in a substring of strindex if found  -1 otherwise.
-replace(old, new [, max])   Replaces all occurrences of old in string with new or at most max occurrences if max given.
+find(str, beg=0 end=len(string))  str occurs in string or in a substring of strindex if found
+-1 otherwise.
+replace(old, new [, max])   Replaces all occurrences of old in string with new or at most
+max occurrences if max given.
 
 isdecimal()   Returns true if a unicode string contains only decimal characters and false otherwise.
-isalnum()  Returns true if string has at least 1 character and all characters are alphanumeric and false otherwise.
-salpha()   Returns true if string has at least 1 character and all characters are alphabetic and false otherwise.
+isalnum()  Returns true if string has at least 1 character and all characters are alphanumeric and
+false otherwise.
+salpha()   Returns true if string has at least 1 character and all characters are alphabetic and
+false otherwise.
 isdigit()  Returns true if string contains only digits and false otherwise.
-islower()  Returns true if string has at least 1 cased character and all cased characters are in lowercase and false otherwise.
+islower()  Returns true if string has at least 1 cased character and all cased characters are in
+lowercase and false otherwise.
 isnumeric() Returns true if a unicode string contains only numeric characters and false otherwise.
 isspace()  Returns true if string contains only whitespace characters and false otherwise.
 istitle()  Returns true if string is properly "titlecased" and false otherwise.
@@ -1939,15 +1978,20 @@ istitle()  Returns true if string is properly "titlecased" and false otherwise.
 lower()   Converts all uppercase letters in string to lowercase.
 capitalize()   Capitalizes first letter of string
 center(width, fillchar)  Returns space-padded string with string centered  w
-title()  Returns "titlecased" version of string, that is, all words begin with uppercase and the rest are lowercase.
+title()  Returns "titlecased" version of string, that is, all words begin with uppercase and the
+rest are lowercase.
 upper()   Converts lowercase letters in string to uppercase.
 
-join(seq)  Merges (concatenates) the string representations of elements in sequence seq into a string, with separator string.
+join(seq)  Merges (concatenates) the string representations of elements in sequence seq into a
+string, with separator string.
 
-split(str="", num=string.count(str))   Splits string according to delimiter str  and returns list of substrings;
-splitlines( num=string.count('\n'))  Splits string at all (or num) NEWLINEs and returns a list of each line with NEWLINEs removed.
+split(str="", num=string.count(str))   Splits string according to delimiter str  and returns list
+of substrings;
+splitlines( num=string.count('\n'))  Splits string at all (or num) NEWLINEs and returns a list of
+each line with NEWLINEs removed.
 
-ljust(width[, fillchar])   Returns a space-padded string with the original string left-justified to a total of width columns.
+ljust(width[, fillchar])   Returns a space-padded string with the original string left-justified to
+a total of width columns.
 
 maketrans()  Returns a translation table to be used in translate function.
 
@@ -1956,25 +2000,30 @@ rfind(str, beg=0,end=len(string))   Same as find(), but search backwards in stri
 
 rindex( str, beg=0, end=len(string))   Same as index(), but search backwards in string.
 
-rjust(width,[, fillchar])  Returns a space-padded string with string right-jus to a total of width columns.
+rjust(width,[, fillchar])  Returns a space-padded string with string right-jus to a total of width
+columns.
 
 startswith(str, beg=0,end=len(string))
-Determines if string or a substring of string (if starting index beg and ending index end are given) starts with substring str; returns true if so and false otherwise.
+Determines if string or a substring of string (if starting index beg and ending index end are given)
+starts with substring str; returns true if so and false otherwise.
 
 decode(encoding='UTF-8',errors='strict')
-Decodes the string using the codec registered for encoding. encoding defaults to the default string encoding.
+Decodes the string using the codec registered for encoding. encoding defaults to the default string
+encoding.
 
 encode(encoding='UTF-8',errors='strict')
 Returns encoded string version of string; on error, default is to raise a ValueError
 
 endswith(suffix, beg=0, end=len(string))
-Determines if string or a substring of string  ends with suffix; returns true if so and false otherwise.
+Determines if string or a substring of string  ends with suffix; returns true if so and false
+otherwise.
 
 expandtabs(tabsize=8)
 Expands tabs in string to multiple spaces; defaults to 8 spaces per tab if tabsize not provided.
 
 zfill (width)
-Returns original string leftpadded with zeros to a total of width characters; intended for numbers, zfill() retains any sign given (less one zero).
+Returns original string leftpadded with zeros to a total of width characters; intended for numbers,
+zfill() retains any sign given (less one zero).
 
 """
 
@@ -2163,7 +2212,8 @@ def np_pivottable_count(mylist):
 
 def np_nan_helper(y):
     """ Input:  - y, 1d numpy array with possible NaNs
-        Output - nans, logical indices of NaNs - index, a function, with signature indices= index(logical_indices),
+        Output - nans, logical indices of NaNs - index, a function, with signature
+              indices= index(logical_indices),
               to convert logical indices of NaNs to 'equivalent' indices
     """
     return np.isnan(y), lambda z: z.nonzero()[0]
@@ -2774,7 +2824,8 @@ def pd_find(df, regex_pattern="*", col_restrict=[], isnumeric=False, doreturnpos
             pos_tempj = np.array([i for i in range(0, mask.shape[0]) if mask[i, j]], dtype=np.int32)
             locate[colx[j]] = pos_tempj
 
-        # locate= np.array([ (colx[j], i) for i in xrange(0,mask.shape[0]) for j in xrange(0, mask.shape[1])  if mask[i,j] ])
+        # locate= np.array([ (colx[j], i) for i in xrange(0,mask.shape[0]) for j in
+        #     xrange(0, mask.shape[1])  if mask[i,j] ])
         return df.loc[mask.any(axis=1)], locate
     else:
         return df.loc[mask.any(axis=1)]
@@ -2955,7 +3006,8 @@ def pd_str_unicode_tostr(df, targetype=str):
 
 encode(): Gets you from Unicode -> bytes
 decode(): Gets you from bytes -> Unicode
-codecs.open(encoding="utf-8"): Read and write files directly to/from Unicode (you can use any encoding,
+codecs.open(encoding="utf-8"): Read and write files directly to/from Unicode (you can use any
+encoding,
  not just utf-8, but utf-8 is most common).
 u": Makes your string literals into Unicode objects rather than byte sequences.
 Warning: Don't use encode() on bytes or decode() on Unicode objects
@@ -3124,7 +3176,8 @@ def pd_h5_fromcsv_tohdfs(
                 dtype0 = df_i.dtypes.to_dict()
                 col_list = []
                 # for col, x  in dtype0.items():
-                #   if x == np.dtype('O') :    #Object == date, string, need to convert to string....
+                #   if x == np.dtype('O') :    #Object == date, string, need to convert to
+                #                              #string....
                 #      col_list.append(col)
                 # df_i[col] =    df_i[col].map(lambda x:  str(str(x).encode(encoding)))
                 # max_size[col]= max(15, df_i[col].str.len().max())
@@ -3160,7 +3213,7 @@ def pd_np_toh5file(numpyarr, fileout="file.h5", table1="data"):
 def date_allinfo():
     """
 
-   https://aboutsimon.com/blog/2016/08/04/datetime-vs-Arrow-vs-Pendulum-vs-Delorean-vs-udatetime.html
+https://aboutsimon.com/blog/2016/08/04/datetime-vs-Arrow-vs-Pendulum-vs-Delorean-vs-udatetime.html
 
 
    """
@@ -3292,7 +3345,8 @@ cal = USFederalHolidayCalendar()
 holidays = cal.holidays('2012', '2016', return_name=True)
 holidays.head()
 
-holidays_all = pd.concat([holidays, "Day Before " + holidays.shift(-1, 'D'),  "Day After " + holidays.shift(1, 'D')])
+holidays_all = pd.concat([holidays, "Day Before " + holidays.shift(-1, 'D'),  "Day After "
++ holidays.shift(1, 'D')])
 holidays_all = holidays_all.sort_index()
 holidays_all.head()
 
@@ -3439,7 +3493,7 @@ def np_numexpr_vec_calc(
         filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     """ New= xx*xx  over very large series
- #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'  ):
+ #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'):
 """
     pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
     xx = pdframe.values
@@ -3467,14 +3521,14 @@ def np_numexpr_tohdfs(
     del pdf
 
 
-# numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'  ):
+# numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'):
 
 
 # yy1= getrandom_tonumpy('E:\_data\_QUASI_SOBOL_gaussian_xx2.h5', 16384, 4096)
 # ----------------------------------------------------------------------------
 
 
-##################### Statistics    #################################################################
+##################### Statistics    ################################################################
 def np_comoment(xx, yy, nsample, kx, ky):
     #   cx= ne.evaluate("sum(xx)") /  (nsample);   cy= ne.evaluate("sum( yy)")  /  (nsample)
     #   cxy= ne.evaluate("sum((xx-cx)**kx * (yy-cy)**ky)") / (nsample)
@@ -3497,7 +3551,7 @@ def np_acf(data):
     return acf_coeffs
 
 
-##################### Plot Utilities ################################################################
+##################### Plot Utilities ###############################################################
 def plot_XY(
         xx,
         yy,
@@ -3616,7 +3670,7 @@ def np_map_dict_to_bq_schema(source_dict, schema, dest_dict):
                 format_value_bq(source_dict[field["name"]], field["type"])
 
 
-########################### Google Drive    ###############################################################
+########################### Google Drive    ########################################################
 def googledrive_get():
     """
    https://github.com/ctberthiaume/gdcp
@@ -3631,11 +3685,13 @@ gdrive [global] upload [options] <path>
 global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
-  --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --access-token <accessToken>     Oauth access token, only recommended for short-lived requests
+                                   because of short lifetime (for advanced users)
 
 options:
   -r, --recursive           Upload directory recursively
-  -p, --parent <parent>     Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
+  -p, --parent <parent>     Parent id, used to upload file to a specific directory, can be
+                            specified multiple times to give many parents
   --name <name>             Filename
   --no-progress             Hide progress
   --mime <mime>             Force mime type
@@ -3900,17 +3956,3 @@ if __name__ == "__main__":
         except exception as e:
             print(e)
 
-"""
-  try :
-
-  except exception as e: print(e)
-
-
-import numpy as np, arrow
-unique_id=    str(np.random.randint(10**14, 10**15,  dtype='int64'))
-
-
-print("\n\n###################### start util # :" + arrow.utcnow().to('japan').format() + "###########################") ; sys.stdout.flush()
-
-
-"""
