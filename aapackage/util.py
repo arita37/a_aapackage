@@ -285,7 +285,7 @@ def isfloat(x):
             return False
         float(x)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -321,15 +321,15 @@ def os_platform():
 
 def a_start_log(id1="", folder="aaserialize/log/"):
     a_run_ipython(
-        "logstart -o -r -t "
-        + folder
-        + "log"
-        + str(id1)
-        + "_"
-        + os_platform()
-        + "_"
-        + date_now()
-        + " rotate"
+        "logstart -o -r -t " +
+        folder +
+        "log" +
+        str(id1) +
+        "_" +
+        os_platform() +
+        "_" +
+        date_now() +
+        " rotate"
     )
 
 
@@ -354,7 +354,7 @@ def a_module_doc(module_str="pandas"):
 
 
 def a_module_generatedoc(module_str="pandas", fileout=""):
-    """ #  getmodule_doc("jedi", r"D:\_devs\Python01\aapackage\doc.txt")"""
+    r""" #  getmodule_doc("jedi", r"D:\_devs\Python01\aapackage\doc.txt")"""
     from .automaton import codeanalysis as ca
 
     # pathout= DIRCWD+'/docs/'+ module1.__name__
@@ -878,7 +878,7 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
                     if found is not None:
                         try:
                             line_enc = line.decode(enc)
-                        except:
+                        except Exception:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found.start(), line_enc))
 
@@ -890,7 +890,7 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
                     if found > -1:
                         try:
                             line_enc = line.decode(enc)
-                        except:
+                        except Exception:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found, line_enc))
 
@@ -1055,7 +1055,7 @@ fh.close()
 
 
 def os_path_norm(pth):  # Normalize path for Python directory
-    """ #r"D:\_devs\Python01\project\03-Connect_Java_CPP_Excel\PyBindGen\examples" """
+    r""" #r"D:\_devs\Python01\project\03-Connect_Java_CPP_Excel\PyBindGen\examples" """
     if a_get_pythonversion() == 2:
         ind = pth.find(":")
         if ind > -1:
@@ -1866,7 +1866,7 @@ def str_isfloat(value):
     try:
         float(value)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -1874,7 +1874,7 @@ def str_is_azchar(x):
     try:
         float(x)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -1882,7 +1882,7 @@ def str_is_az09char(x):
     try:
         float(x)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -1922,7 +1922,7 @@ def pd_str_isascii(x):
     try:
         x.decode("ascii")
         return True
-    except:
+    except Exception:
         return false
 
 
@@ -2051,7 +2051,7 @@ def np_minimizeDE(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
         res = (copy.deepcopy(solver), i, xbest, fbest)
         try:
             save(res, name1 + date_now() + "_" + np_int_tostr(i))
-        except:
+        except Exception:
             pass
         if np.mod(i + 1, 11) == 0:
             if np.abs(fbest - fbest0) < 0.001:
@@ -2114,14 +2114,14 @@ def np_list_tofreqdict(l1, wweight=[]):
         for x in l1:
             try:
                 dd[x] += 1
-            except:
+            except Exception:
                 dd[x] = 1
         return dd
     else:
         for ii, x in enumerate(l1):
             try:
                 dd[x] += wweight[ii]
-            except:
+            except Exception:
                 dd[x] = wweight[ii]
         return dd
 
@@ -2333,7 +2333,7 @@ def findx(item, vec):
         else:
             i = np.where(vec == item)[0]
             i2 = i[0] if len(i) > 0 else -1
-    except:
+    except Exception:
         i2 = -1
     return i2
 
@@ -2877,7 +2877,7 @@ def pd_df_todict(df, colkey="machine_code", colval="adress"):
     for ii, row in df.iterrows():
         try:
             dict0[row[colkey]] = row[colval]
-        except:
+        except Exception:
             pass
 
     return dict0
@@ -2900,7 +2900,7 @@ def pd_col_addfrom_dfmap(
     def map_dict_fun(rowi):
         try:
             return map_dict[rowi[df_colused]]
-        except:
+        except Exception:
             return exceptval
 
     df[df_colnew] = df.apply(lambda x: map_dict_fun(x), axis=1)
@@ -2979,7 +2979,7 @@ def pd_is_categorical(z):
         return True
     try:
         return isinstance(z.values, pd.Categorical)
-    except:
+    except Exception:
         return False
 
 
@@ -3092,7 +3092,7 @@ def pd_h5_tableinfo(filenameh5, table):
     return store.get_storer(table).table
 
 
-def pd_h5_dumpinfo(dbfile="E:\_data\stock\intraday_google.h5"):
+def pd_h5_dumpinfo(dbfile=r"E:\_data\stock\intraday_google.h5"):
     store = pd.HDFStore(dbfile)
     extract = []
     errsym = []
@@ -3109,7 +3109,7 @@ def pd_h5_dumpinfo(dbfile="E:\_data\stock\intraday_google.h5"):
                 ]
             )
 
-        except:
+        except Exception:
             errsym.append(symbol)
     return np.array(extract), errsym
 
@@ -3214,7 +3214,7 @@ https://aboutsimon.com/blog/2016/08/04/datetime-vs-Arrow-vs-Pendulum-vs-Delorean
 def date_convert(t1, fromtype, totype):
     try:
         n = len(t1)
-    except:
+    except Exception:
         t1 = [t1]
         n = 1
     t0 = t1[0]
@@ -3482,9 +3482,9 @@ def date_generatedatetime(start="20100101", nbday=10, end=""):
 
 # Utilities for Numerical Calc
 def np_numexpr_vec_calc(
-        filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+        filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
-    """ New= xx*xx  over very large series
+    r""" New= xx*xx  over very large series
  #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'):
 """
     pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
@@ -3500,7 +3500,7 @@ def np_numexpr_vec_calc(
 
 
 def np_numexpr_tohdfs(
-        filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+        filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
     xx = pdframe.values
@@ -3885,11 +3885,11 @@ def py_log_write(LOGFILE, prefix):
     )
     sys.stdout = open(LOGFILE, "a")
     print(
-        "\n\n"
-        + UNIQUE_ID
-        + " ###################### Start:"
-        + arrow.utcnow().to("Japan").format()
-        + "###########################"
+        "\n\n" +
+        UNIQUE_ID +
+        " ###################### Start:" +
+        arrow.utcnow().to("Japan").format() +
+        "###########################"
     )
     sys.stdout.flush()
     print(os)
@@ -3930,13 +3930,12 @@ if __name__ == "__main__":
 
             #############################################################################
             print(
-                "\n\n"
-                + unique_id
-                + " ###################### end:"
-                + arrow.utcnow().to("japan").format()
-                + "###########################"
+                "\n\n" +
+                unique_id +
+                " ###################### end:" +
+                arrow.utcnow().to("japan").format() +
+                "###########################"
             )
             sys.stdout.flush()
         except exception as e:
             print(e)
-
