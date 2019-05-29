@@ -38,12 +38,9 @@ from past.utils import old_div
 
 standard_library.install_aliases()
 
-
 if sys.platform.find("win") > -1:
     print("")
     # from guidata import qthelpers  #Otherwise Error with Spyder Save
-
-
 
 ####################################################################################
 DIRCWD = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +49,8 @@ DIRCWD = os.path.dirname(os.path.abspath(__file__))
 
 __path__ = DIRCWD + "/aapackage/"
 __version__ = "1.0.0"
+
+
 # __file__=     "util.py"
 
 
@@ -609,7 +608,7 @@ def os_zipfile(folderin, folderzipname, iscompress=True):
 
 
 def os_zipfolder(
-    dir_tozip="/zdisks3/output", zipname="/zdisk3/output.zip", dir_prefix=True, iscompress=True
+        dir_tozip="/zdisks3/output", zipname="/zdisk3/output.zip", dir_prefix=True, iscompress=True
 ):
     """
  shutil.make_archive('/zdisks3/results/output', 'zip',
@@ -656,7 +655,7 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
     """os_zipextractall( 'aapackage.zip','zdisk/test/'      )  """
     import zipfile
 
-    if filezip_or_dir.find("*") > -1:  #  Many Zip
+    if filezip_or_dir.find("*") > -1:  # Many Zip
         ziplist1 = os_file_listall(filezip_or_dir[: filezip_or_dir.find("*")], "*.zip")
         fileziplist_full = ziplist1[2]
 
@@ -917,7 +916,7 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
 
 
 def os_file_search_content(
-    srch_pattern=["from ", "import "], mode="str", dir1="", file_pattern="*.*", dirlevel=1
+        srch_pattern=["from ", "import "], mode="str", dir1="", file_pattern="*.*", dirlevel=1
 ):
     list_all = os_file_listall(dir1, pattern=file_pattern, dirlevel=dirlevel)
     ll = []
@@ -950,7 +949,6 @@ def os_file_rename(some_dir, pattern="*.*", pattern2="", dirlevel=1):
         matches.append([])
         # Filename, DirName
         for files in fnmatch.filter(files, pattern):
-
             # replace pattern by pattern2
             nfile = re.sub(pattern, pattern2, files)
             os.path.abspath(root)
@@ -1053,7 +1051,7 @@ def os_path_norm(pth):  # Normalize path for Python directory
     if a_get_pythonversion() == 2:
         ind = pth.find(":")
         if ind > -1:
-            a, b = pth[:ind], pth[ind + 1 :].encode("string-escape").replace("\\x", "/")
+            a, b = pth[:ind], pth[ind + 1:].encode("string-escape").replace("\\x", "/")
             return "{}://{}".format(a, b.lstrip("\\//").replace("\\\\", "/"))
         else:
             return pth
@@ -1785,7 +1783,7 @@ wb.save('Scores.xlsx')
 
 
 def pd_toexcel_many(
-    outfile="file1.xlsx", df1=None, df2=None, df3=None, df4=None, df5=None, df6=None
+        outfile="file1.xlsx", df1=None, df2=None, df3=None, df4=None, df5=None, df6=None
 ):
     pd_toexcel(df1, outfile, sheet_name="df1")
     if df2 is not None:
@@ -1823,7 +1821,7 @@ def str_parse_stringcalendar(cal):
     cal4 = []
     for x in cal3:
         i0 = x.find(":")
-        cal4.append([datetime_toint(dateutil.parser.parse(x[:i0])), x[i0 + 1 :]])
+        cal4.append([datetime_toint(dateutil.parser.parse(x[:i0])), x[i0 + 1:]])
     cal4 = np.array(cal4)
     cal5 = np.array(sortcol(cal4, 0), dtype=str)
     for x in cal5:
@@ -1998,7 +1996,7 @@ Returns original string leftpadded with zeros to a total of width characters; in
 
 ################### LIST UTIL / Array  ############################################################
 def np_minimize(
-    fun_obj, x0=[0.0], argext=(0, 0), bounds1=[(0.03, 0.20), (10, 150)], method="Powell"
+        fun_obj, x0=[0.0], argext=(0, 0), bounds1=[(0.03, 0.20), (10, 150)], method="Powell"
 ):
     def penalty(vv):  # Constraints Penalty
         penalty = 0.0
@@ -2223,7 +2221,7 @@ def np_sort(arr, colid, asc=1):
 
 def np_ma(vv, n):
     """Moving average """
-    return np.convolve(vv, np.ones((n,)) / n)[(n - 1) :]
+    return np.convolve(vv, np.ones((n,)) / n)[(n - 1):]
 
 
 @jit(float32[:, :](float32[:, :]))
@@ -2353,8 +2351,6 @@ def findlower(x, vec):
     return -1
 
 
-
-
 def np_find_minpos(values):
     min_index, min_value = min(enumerate(values), key=operator.itemgetter(1))
     return min_index, min_value
@@ -2399,7 +2395,7 @@ def np_findlocalmax2(v, trig):
     for k in range(0, len(v2)):
         kmax = v2[k, 0]
         kmaxl = findhigher(v2[k, 1], v[:kmax][::-1])  # Find same level of max
-        kmaxr = findhigher(v2[k, 1], v[kmax + 1 :])
+        kmaxr = findhigher(v2[k, 1], v[kmax + 1:])
 
         kmaxl = 0 if kmaxl == -1 else kmax - kmaxl
         kmaxr = n if kmaxr == -1 else kmaxr + kmax
@@ -2436,7 +2432,7 @@ def np_findlocalmin2(v, trig):
             if v2[k, 1] != 0.0:
                 kmin = v2[k, 0]
                 kminl = findlower(v2[k, 1], v[:kmin][::-1])  # Find same level of min
-                kminr = findlower(v2[k, 1], v[kmin + 1 :])
+                kminr = findlower(v2[k, 1], v[kmin + 1:])
 
                 kminl = 0 if kminl == -1 else kmin - kminl
                 kminr = n if kminr == -1 else kminr + kmin
@@ -2695,7 +2691,7 @@ def pd_csv_randomread(filename, nsample=10000, filemaxline=-1, dtype=None):
 def pd_array_todataframe(array, colname=None, index1=None, dotranspose=False):
     sh = np.shape(array)
     if len(sh) > 1:
-        if sh[0] < sh[1] and dotranspose:  #  masset x time , need Transpose
+        if sh[0] < sh[1] and dotranspose:  # masset x time , need Transpose
             return pd.DataFrame(data=array.T, index=index1, columns=colname)
         else:
             return pd.DataFrame(data=array, index=index1, columns=colname)
@@ -2865,7 +2861,7 @@ def pd_df_todict(df, colkey="machine_code", colval="adress"):
 
 
 def pd_col_addfrom_dfmap(
-    df, dfmap, colkey, colval, df_colused, df_colnew, exceptval=-1, inplace=True
+        df, dfmap, colkey, colval, df_colused, df_colnew, exceptval=-1, inplace=True
 ):
     """ Add new columns based on df_map:  In Place Modification of df
     df:     Dataframe of transactions.
@@ -2912,7 +2908,6 @@ def pd_dtypes_getblaze(df1) :
 	float16, float32, float64, int8, int16, int32, int64,	uint8, uint16, uint32, uint64")
  return x
 """
-
 
 """
  # return df1.dtypes.apply(lambda x: x.name).to_dict()
@@ -3103,12 +3098,12 @@ def pd_h5_save(df, filenameh5="E:/_data/_data_outlier.h5", key="data"):
 
 
 def pd_h5_load(
-    filenameh5="E:/_data/_data_outlier.h5",
-    table_id="data",
-    exportype="pandas",
-    rowstart=-1,
-    rowend=-1,
-    cols=[],
+        filenameh5="E:/_data/_data_outlier.h5",
+        table_id="data",
+        exportype="pandas",
+        rowstart=-1,
+        rowend=-1,
+        cols=[],
 ):
     if rowend == -1:
         df = pd.read_hdf(filenameh5, table_id)
@@ -3121,19 +3116,18 @@ def pd_h5_load(
 
 
 def pd_h5_fromcsv_tohdfs(
-    dircsv="dir1/dir2/",
-    filepattern="*.csv",
-    tofilehdfs="file1.h5",
-    tablename="df",
-    col_category=[],
-    dtype0=None,
-    encoding="utf-8",
-    chunksize=2000000,
-    mode="a",
-    format="table",
-    complib=None,
+        dircsv="dir1/dir2/",
+        filepattern="*.csv",
+        tofilehdfs="file1.h5",
+        tablename="df",
+        col_category=[],
+        dtype0=None,
+        encoding="utf-8",
+        chunksize=2000000,
+        mode="a",
+        format="table",
+        complib=None,
 ):
-
     csvlist = os_file_listall(dircsv, filepattern)
     csvlist = csvlist[2]  # 2: Full_path + filename
 
@@ -3183,8 +3177,6 @@ def pd_np_toh5file(numpyarr, fileout="file.h5", table1="data"):
     del pd
 
 
-
-
 def date_allinfo():
     """
 
@@ -3215,7 +3207,7 @@ def date_convert(t1, fromtype, totype):
         pass
 
     for t in t1:
-        t2 = _dateconvert_from(t, type1)  #  to Datetime
+        t2 = _dateconvert_from(t, type1)  # to Datetime
         t3 = _dateconvert_from(t, totype)  # Datetime  to target type
         tlist.append(t3)
     return tlist
@@ -3456,7 +3448,7 @@ def date_generatedatetime(start="20100101", nbday=10, end=""):
 
     start = datestring_todatetime(start)
     if end == "":
-        end = date_add_bdays(start, nbday - 1)  #  + datetime.timedelta(days=nbday)
+        end = date_add_bdays(start, nbday - 1)  # + datetime.timedelta(days=nbday)
     date_list = list(rrule(DAILY, dtstart=start, until=end, byweekday=(MO, TU, WE, TH, FR)))
 
     return np.array(date_list)
@@ -3464,7 +3456,7 @@ def date_generatedatetime(start="20100101", nbday=10, end=""):
 
 ############################# Utilities for Numerical Calc ######################################
 def np_numexpr_vec_calc(
-    filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+        filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     """ New= xx*xx  over very large series
  #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'  ):
@@ -3482,7 +3474,7 @@ def np_numexpr_vec_calc(
 
 
 def np_numexpr_tohdfs(
-    filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+        filename, expr, i0=0, imax=1000, fileout="E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
     xx = pdframe.values
@@ -3527,18 +3519,17 @@ def np_acf(data):
 
 ##################### Plot Utilities ################################################################
 def plot_XY(
-    xx,
-    yy,
-    zcolor=None,
-    tsize=None,
-    title1="",
-    xlabel="",
-    ylabel="",
-    figsize=(8, 6),
-    dpi=75,
-    savefile="",
+        xx,
+        yy,
+        zcolor=None,
+        tsize=None,
+        title1="",
+        xlabel="",
+        ylabel="",
+        figsize=(8, 6),
+        dpi=75,
+        savefile="",
 ):
-
     # Color change
     if zcolor is None:
         c = [[0, 0, 0]]
@@ -3763,11 +3754,11 @@ def ztest_processify():
 
 
 def date_getspecificdate(
-    datelist,
-    datetype1="yearend",
-    outputype1="intdate",
-    includelastdate=True,
-    includefirstdate=False,
+        datelist,
+        datetype1="yearend",
+        outputype1="intdate",
+        includelastdate=True,
+        includefirstdate=False,
 ):
     vec2 = []
 
@@ -3864,7 +3855,7 @@ def py_log_write(LOGFILE, prefix):
     print(LOGFILE)
     DATENOW = arrow.utcnow().to("Japan").format("YYYYMMDDHHmm")
     UNIQUE_ID = (
-        prefix + "_" + DATENOW + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
+            prefix + "_" + DATENOW + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
     )
     sys.stdout = open(LOGFILE, "a")
     print(
@@ -3888,7 +3879,6 @@ if __name__ == "__main__":
     ppa = argparse.ArgumentParser()  # Command Line input
     ppa.add_argument("--do", type=str, default="action", help="test / test02")
     arg = ppa.parse_args()
-
 
 if __name__ == "__main__" and arg.do == "test":
     print(__file__, DIRCWD)
@@ -3928,7 +3918,6 @@ if __name__ == "__main__" and arg.do == "test":
         sys.stdout.flush()
     except Exception as e:
         print(e)
-
 
 """
   try :
