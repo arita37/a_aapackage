@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+
 """
 #---------Various Utilities function for Python--------------------------------------
 
@@ -9,6 +10,8 @@ from __future__ import division, print_function
 
 import copy
 import datetime
+import errno
+import fnmatch
 import gc
 import operator
 import os
@@ -140,6 +143,8 @@ def session_load(filename, dict1=None, towhere="main"):
     """ .spydata file,  dict1: already provided Dict,  towhere= main, function, dict """
     from spyderlib.utils.iofuncs import load_dictionary
 
+    data = None
+
     print("Loading : ", end=" ")
     if dict1 is None:
         if filename.find(".") == -1:  # Use default folder
@@ -148,6 +153,9 @@ def session_load(filename, dict1=None, towhere="main"):
             filename = DIRCWD + "/aaserialize/session/" + dir0 + "/" + keyname + ".spydata"
         print(filename)
         data = load_dictionary(filename)
+
+    if data is None:
+        raise RuntimeError("data has not been set")
 
     if towhere == "main":  # Load in interpreter module
         module = sys.modules["__main__"]
@@ -269,14 +277,6 @@ http://farmdev.com/talks/unicode/
    """
 
 
-def isexist(a):
-    try:
-        a
-        return True
-    except NameError:
-        return False
-
-
 def isfloat(x):
     try:
         if x == np.inf:
@@ -391,7 +391,7 @@ def a_info_conda_jupyter():
 
 
 def a_run_cmd(cmd1):
-    os_process_run(cmd1, shell=True)
+    os_process_run(cmd1)
 
 
 # cmd("ipconfig")
@@ -557,7 +557,7 @@ def print_ProgressBar(iteration, total, prefix="", suffix="", decimals=1, barLen
     formatStr = "{0:." + str(decimals) + "f}"
     percent = formatStr.format(100 * (iteration / float(total)))
     filledLength = int(round(barLength * iteration / float(total)))
-    bar = "█" * filledLength + "-" * (barLength - filledLength)
+    bar = "#" * filledLength + "-" * (barLength - filledLength)
     sys.stdout.write("\r%s |%s| %s%s %s" % (prefix, bar, percent, "%", suffix)),
     if iteration == total:
         sys.stdout.write("\n")
@@ -629,7 +629,7 @@ def os_zipfolder(
     """
    shutil.make_archive(base_name, format[, root_dir[, base_dir[, verbose[, dry_run[, owner[, group[, logger]]]]]]])
 
-   base_name is the name of the file to create, including the path, minus any format-specific extension. format is the archive format: one of “zip” (if the zlib module or external zip executable is available), “tar”, “gztar” (if the zlib module is available), or “bztar” (if the bz2 module is available).
+   base_name is the name of the file to create, including the path, minus any format-specific extension. format is the archive format: one of "zip" (if the zlib module or external zip executable is available), "tar", "gztar" (if the zlib module is available), or "bztar" (if the bz2 module is available).
    root_dir is a directory that will be the root directory of the archive; ie. we typically chdir into root_dir before creating the archive.
    base_dir is the directory where we start archiving from; ie. base_dir will be the common prefix of all files and directories in the archive.
    root_dir and base_dir both default to the current directory.
@@ -668,6 +668,7 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
     #   # lastfolder, beforelast= tofolderextract.split('/')[]
     #   os_folder_copy(foldernew2,  foldernew2+'_' )
 
+    isok = None
     for filezip in fileziplist_full:
         filezip_name = os_file_getname(filezip)
         zip_ref = zipfile.ZipFile(filezip, "r")
@@ -677,11 +678,15 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
         if not isok:
             print("Error: " + filezip_name)
 
-    if isok:
+    if isok is not None and isok:
         return tofolderextract
     else:
         return -1
 
+def _default_fun_file_toignore(src, names):
+    pattern = "!" + pattern1
+    file_toignore = fnmatch.filter(names, pattern)
+    return file_toignore
 
 def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=None):
     """
@@ -693,12 +698,8 @@ def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=
     It returns a  list of names relative to the `src` directory that should not be copied.
    :param fun_ignore:
    """
-    import shutil, errno, fnmatch
-
-    def fun_file_toignore(src, names):
-        pattern = "!" + pattern1
-        file_toignore = fnmatch.filter(names, pattern)
-        return file_toignore
+    if fun_file_toignore is None:
+        fun_file_toignore = _default_fun_file_toignore
 
     try:
         shutil.copytree(src, dst, symlinks=False, ignore=fun_file_toignore)
@@ -885,22 +886,6 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
                         except:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found, line_enc))
-
-        elif mode == "full":
-            texts = [(text, text.encode(enc)) for text in texts]
-            with open(fname, "rb") as f1:
-                lines = f1.readlines()
-
-            for text, textc in texts:
-                pos = lines.find(textc)
-                lineo = lines.text("\n", 0, pos)
-                if pos > -1:
-                    try:
-                        line_enc = line.decode(enc)
-                    except:
-                        line_enc = line
-
-                    res.append((text, fname, lineno + 1, pos, line_enc))
 
     except IOError as xxx_todo_changeme:
         (_errno, _strerror) = xxx_todo_changeme.args
@@ -2212,13 +2197,6 @@ def np_sortcol(arr, colid, asc=1):
     return arr.values
 
 
-def np_sort(arr, colid, asc=1):
-    """ df.sort(['A', 'B'], ascending=[1, 0])  """
-    df = pd.DataFrame(arr)
-    arr = df.sort_values(colid, ascending=asc)
-    return arr.values
-
-
 def np_ma(vv, n):
     """Moving average """
     return np.convolve(vv, np.ones((n,)) / n)[(n - 1):]
@@ -2364,6 +2342,7 @@ def np_find_maxpos(values):
 def np_find_maxpos_2nd(numbers):
     count = 0
     m1 = m2 = float("-inf")
+    i2 = None
     for i, x in enumerate(numbers):
         count += 1
         if x > m2:
@@ -2758,6 +2737,7 @@ def pd_find(df, regex_pattern="*", col_restrict=[], isnumeric=False, doreturnpos
     dtype0 = df.dtypes.to_dict()
     col0 = df.columns if col_restrict == [] else col_restrict
 
+    mask = None
     if not isnumeric:  # object string columns
         colx = [col for col in col0 if str(dtype0[col]) == "object"]
         print(("Searching Cols: " + str(colx)))
@@ -2975,10 +2955,10 @@ def pd_str_unicode_tostr(df, targetype=str):
 
 encode(): Gets you from Unicode -> bytes
 decode(): Gets you from bytes -> Unicode
-codecs.open(encoding=”utf-8″): Read and write files directly to/from Unicode (you can use any encoding,
+codecs.open(encoding="utf-8"): Read and write files directly to/from Unicode (you can use any encoding,
  not just utf-8, but utf-8 is most common).
-u”: Makes your string literals into Unicode objects rather than byte sequences.
-Warning: Don’t use encode() on bytes or decode() on Unicode objects
+u": Makes your string literals into Unicode objects rather than byte sequences.
+Warning: Don't use encode() on bytes or decode() on Unicode objects
 
 >>> uni_greeting % utf8_name
 Traceback (most recent call last):
@@ -3171,10 +3151,10 @@ def pd_h5_fromcsv_tohdfs(
 
 
 def pd_np_toh5file(numpyarr, fileout="file.h5", table1="data"):
-    pd = pd.DataFrame(numpyarr)
+    pddf = pd.DataFrame(numpyarr)
     st = pd.HDFStore(fileout)
-    st.append(table1, pd)
-    del pd
+    st.append(table1, pddf)
+    del pddf
 
 
 def date_allinfo():
@@ -3530,6 +3510,7 @@ def plot_XY(
         dpi=75,
         savefile="",
 ):
+    c = None
     # Color change
     if zcolor is None:
         c = [[0, 0, 0]]
@@ -3880,56 +3861,56 @@ if __name__ == "__main__":
     ppa.add_argument("--do", type=str, default="action", help="test / test02")
     arg = ppa.parse_args()
 
-if __name__ == "__main__" and arg.do == "test":
-    print(__file__, DIRCWD)
-    try:
-        import util
+    if arg.do == "test":
+        print(__file__, dircwd)
+        try:
+            import util
 
-        UNIQUE_ID = util.py_log_write(DIRCWD + "/aapackage/ztest_log_all.txt", "util")
+            unique_id = util.py_log_write(dircwd + "/aapackage/ztest_log_all.txt", "util")
 
-        #############################################################################
-        import numpy as np, pandas as pd, scipy as sci
-        import util
+            #############################################################################
+            import numpy as np, pandas as pd, scipy as sci
+            import util
 
-        print(util)
-        print("")
-        # util.a_info_system()
-        util.isanaconda()
-        util.date_allinfo()
+            print(util)
+            print("")
+            # util.a_info_system()
+            util.isanaconda()
+            util.date_allinfo()
 
-        vv = np.random.rand(1, 10)
-        mm = np.random.rand(100, 5)
-        df1 = pd.DataFrame(mm, columns=["aa", "bb", "c", "d", "e"])
+            vv = np.random.rand(1, 10)
+            mm = np.random.rand(100, 5)
+            df1 = pd.dataframe(mm, columns=["aa", "bb", "c", "d", "e"])
 
-        # util.pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
-        print(util.np_sort(vv))
+            # util.pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
+            print(util.np_sort(vv))
 
-        util.save(df1, "ztest_df")
-        df2 = util.load("ztest_df")
+            util.save(df1, "ztest_df")
+            df2 = util.load("ztest_df")
 
-        #############################################################################
-        print(
-            "\n\n"
-            + UNIQUE_ID
-            + " ###################### End:"
-            + arrow.utcnow().to("Japan").format()
-            + "###########################"
-        )
-        sys.stdout.flush()
-    except Exception as e:
-        print(e)
+            #############################################################################
+            print(
+                "\n\n"
+                + unique_id
+                + " ###################### end:"
+                + arrow.utcnow().to("japan").format()
+                + "###########################"
+            )
+            sys.stdout.flush()
+        except exception as e:
+            print(e)
 
 """
   try :
 
-  except Exception as e: print(e)
+  except exception as e: print(e)
 
 
 import numpy as np, arrow
-UNIQUE_ID=    str(np.random.randint(10**14, 10**15,  dtype='int64'))
+unique_id=    str(np.random.randint(10**14, 10**15,  dtype='int64'))
 
 
-print("\n\n###################### Start util # :" + arrow.utcnow().to('Japan').format() + "###########################") ; sys.stdout.flush()
+print("\n\n###################### start util # :" + arrow.utcnow().to('japan').format() + "###########################") ; sys.stdout.flush()
 
 
 """
