@@ -5,33 +5,44 @@
 
 
 """
-from __future__ import division
-from __future__ import print_function
-from future import standard_library
+from __future__ import division, print_function
 
-standard_library.install_aliases()
-from builtins import next
-from builtins import map
-from builtins import zip
-from builtins import str
-from builtins import range
+import copy
+import datetime
+import gc
+import operator
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from builtins import map, next, object, range, str, zip
+
+import matplotlib.pyplot as plt
+import urllib3
+
+import arrow
+import IPython
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
+from bs4 import BeautifulSoup
+##############Date Manipulation#######################################################################
+from dateutil import parser
+from future import standard_library
+from numba import float32, jit
 from past.builtins import basestring
 from past.utils import old_div
-from builtins import object
 
-import os, sys
+standard_library.install_aliases()
+
 
 if sys.platform.find("win") > -1:
     print("")
     # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
-import datetime, time, arrow, shutil, IPython, gc, copy, re
-import matplotlib.pyplot as plt
-import numexpr as ne, numpy as np, pandas as pd, scipy as sci
-import urllib3
-from bs4 import BeautifulSoup
-from numba import jit, float32
-import subprocess
 
 
 ####################################################################################
@@ -2342,7 +2353,6 @@ def findlower(x, vec):
     return -1
 
 
-import operator
 
 
 def np_find_minpos(values):
@@ -3173,8 +3183,6 @@ def pd_np_toh5file(numpyarr, fileout="file.h5", table1="data"):
     del pd
 
 
-##############Date Manipulation#######################################################################
-from dateutil import parser
 
 
 def date_allinfo():
