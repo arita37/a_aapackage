@@ -1,9 +1,7 @@
-
-
-
 # coding=utf-8
 from __future__ import division
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import next
 from builtins import map
@@ -15,83 +13,95 @@ from past.utils import old_div
 from builtins import object
 
 #####################################################################################################
-import os, sys; from attrdict import AttrDict as dict2
-#CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-#DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
-#DIRCWD= os.environ["DIRCWD"];
-#os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-#f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()
+import os, sys
+from attrdict import AttrDict as dict2
+
+# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
+# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
+# DIRCWD= os.environ["DIRCWD"];
+# os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+# f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()
 
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+os.chdir(DIRCWD)
+sys.path.append(DIRCWD + "/aapackage")
 
 
-
-
-#---------Various Utilities function for Python--------------------------------------
+# ---------Various Utilities function for Python--------------------------------------
 # if sys.platform.find('win') > -1 :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
-import datetime, time, arrow,  shutil,  IPython
-import  numpy as np, pandas as pd, scipy as sci, urllib3
+import datetime, time, arrow, shutil, IPython
+import numpy as np, pandas as pd, scipy as sci, urllib3
 from bs4 import BeautifulSoup
 
 
 import util as util
 
 
-#__path__= DIRCWD +'/aapackage/'
-#__version__= "1.0.0"
-#__file__= "util.py"
+# __path__= DIRCWD +'/aapackage/'
+# __version__= "1.0.0"
+# __file__= "util.py"
 
 ########################################################################################################
 # print(os.environ)
 
 
-
-
-
-
-
 #######Headless PhantomJS ##############################################################################
-def web_get_url_loginpassword(url_list= ["url1",   "url2" ], browser="phantomjs",
-                      login="", password="", phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe", pars= {"url_login": 'https://github.com/login', "login_field": "username",
-                      "password_field": "password", "submit_field": "commit"}):
- '''
+def web_get_url_loginpassword(
+    url_list=["url1", "url2"],
+    browser="phantomjs",
+    login="",
+    password="",
+    phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe",
+    pars={
+        "url_login": "https://github.com/login",
+        "login_field": "username",
+        "password_field": "password",
+        "submit_field": "commit",
+    },
+):
+    """
    from selenium import webdriver
    import time
    # Issue with recent selenium on firefox...
    # conda install -c conda-forge selenium ==2.53.6 
- '''
- pa= dict2(pars)
+ """
+    pa = dict2(pars)
 
- from selenium import webdriver
- from selenium.webdriver import PhantomJS
- from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+    from selenium import webdriver
+    from selenium.webdriver import PhantomJS
+    from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
- DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:16.0) Gecko/20121026 Firefox/16.0'
+    DesiredCapabilities.PHANTOMJS[
+        "phantomjs.page.settings.userAgent"
+    ] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:16.0) Gecko/20121026 Firefox/16.0"
 
- if      browser=="firefox": driver= webdriver.Firefox()
- else :  driver = webdriver.PhantomJS(phantomjs_path)    # r"D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe"
+    if browser == "firefox":
+        driver = webdriver.Firefox()
+    else:
+        driver = webdriver.PhantomJS(
+            phantomjs_path
+        )  # r"D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe"
 
+    ######## Login      ######
+    if login != "" and password != "":
+        driver.get(pa.url_login)
+        username = driver.find_element_by_id(pa.login_field)
+        password = driver.find_element_by_id(pa.password_field)
+        username.clear()
+        username.send_keys(login)
+        password.clear()
+        password.send_keys(password)
+        driver.find_element_by_name(pa.submit_field).click()
 
- ######## Login      ######
- if login != "" and password != "" :
-   driver.get(pa.url_login)
-   username = driver.find_element_by_id(pa.login_field)
-   password = driver.find_element_by_id(pa.password_field)
-   username.clear() ; username.send_keys( login)
-   password.clear() ; password.send_keys( password)
-   driver.find_element_by_name(pa.submit_field).click()
+    # Search Query
+    for url in url_list:
+        driver.get(url)
+        html = driver.page_source
+        print(html)
 
-
- #Search Query
- for url in url_list :
-  driver.get(url)
-  html = driver.page_source
-  print(html)
-
- '''
+    '''
   os_folder_create(outputfolder)
 
  # INSERT KEYWORDS
@@ -155,25 +165,8 @@ def web_get_url_loginpassword(url_list= ["url1",   "url2" ], browser="phantomjs"
  '''
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##############Internet data connect- #################################################################
-'''
+"""
 https://moz.com/devblog/benchmarking-python-content-extraction-algorithms-dragnet-readability-goose-and-eatiht/
 pip install numpy
 pip install --upgrade cython
@@ -198,85 +191,97 @@ article.meta_description
 
 article.cleaned_text[:150]
 
-'''
+"""
+
 
 def web_restapi_toresp(apiurl1):
- import requests
- resp = requests.get(apiurl1)
- if resp.status_code != 200:     # This means something went wrong.
-    raise ApiError('GET /tasks_folder/ {}'.format(resp.status_code))
- return resp
+    import requests
 
-def web_getrawhtml(url1) :
- import requests
- resp = requests.get(url1)
- if resp.status_code != 200:  # This means something went wrong.
-    raise ApiError('GET /tasks_folder/ {}'.format(resp.status_code))
- else:
-    return resp.text
+    resp = requests.get(apiurl1)
+    if resp.status_code != 200:  # This means something went wrong.
+        raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+    return resp
+
+
+def web_getrawhtml(url1):
+    import requests
+
+    resp = requests.get(url1)
+    if resp.status_code != 200:  # This means something went wrong.
+        raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+    else:
+        return resp.text
+
 
 def web_importio_todataframe(apiurl1, isurl=1):
- import requests
- if isurl :
-   resp = requests.get(apiurl1)
-   if resp.status_code != 200:     # This means something went wrong.
-    raise ApiError('GET /tasks_folder/ {}'.format(resp.status_code))
- au= resp.json()
- txt= au['extractorData']['data'][0]['group']
- colname=[]; i=-1
- for row in txt :
-   i+=1;
-   if i==1: break;
-   for key, value in list(row.items()):
-     if i==0:  colname.append( str(key))
- colname= np.array(colname); colmax=len(colname)
+    import requests
 
- dictlist= np.empty((5000, colmax), dtype=np.object); i=-1
- for row in txt :
-   j=0; i+=1
-   for key, value in list(row.items()):
-     dictlist[i,j]= str(value[0]['text'])
-     j+=1
+    if isurl:
+        resp = requests.get(apiurl1)
+        if resp.status_code != 200:  # This means something went wrong.
+            raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+    au = resp.json()
+    txt = au["extractorData"]["data"][0]["group"]
+    colname = []
+    i = -1
+    for row in txt:
+        i += 1
+        if i == 1:
+            break
+        for key, value in list(row.items()):
+            if i == 0:
+                colname.append(str(key))
+    colname = np.array(colname)
+    colmax = len(colname)
 
- dictlist= dictlist[0:i+1,:]
- df= pd_createdf(dictlist, col1=colname, idx1= np.arange(0, len(dictlist)))
- return df
+    dictlist = np.empty((5000, colmax), dtype=np.object)
+    i = -1
+    for row in txt:
+        j = 0
+        i += 1
+        for key, value in list(row.items()):
+            dictlist[i, j] = str(value[0]["text"])
+            j += 1
+
+    dictlist = dictlist[0 : i + 1, :]
+    df = pd_createdf(dictlist, col1=colname, idx1=np.arange(0, len(dictlist)))
+    return df
+
 
 def web_getjson_fromurl(url):
- import json
- http = urllib3.connection_from_url(url)
- jsonurl = http.urlopen('GET',url)
+    import json
 
- # soup = BeautifulSoup(page)
- print(jsonurl)
- data = json.loads(jsonurl.read())
+    http = urllib3.connection_from_url(url)
+    jsonurl = http.urlopen("GET", url)
 
- return data
+    # soup = BeautifulSoup(page)
+    print(jsonurl)
+    data = json.loads(jsonurl.read())
 
+    return data
 
-
- # return the title and the text of the article at the specified url
-
-def web_gettext_fromurl(url, htmltag='p'):
- http = urllib3.connection_from_url(url)
- page = http.urlopen('GET',url).data.decode('utf8')
-
- soup = BeautifulSoup(page, "lxml")
- text = ' \n\n'.join([p.text for p in soup.find_all('p')])
- return soup.title.text + "\n\n" + text
-
-def web_gettext_fromhtml(file1, htmltag='p'):
- with open(file1, 'r',encoding='UTF-8',) as f:
-   page=f.read()
-
- soup = BeautifulSoup(page, "lxml")
- text = ' \n\n'.join([p.text for p in soup.find_all(htmltag)])
- return soup.title.text + "\n\n" + text
+    # return the title and the text of the article at the specified url
 
 
+def web_gettext_fromurl(url, htmltag="p"):
+    http = urllib3.connection_from_url(url)
+    page = http.urlopen("GET", url).data.decode("utf8")
+
+    soup = BeautifulSoup(page, "lxml")
+    text = " \n\n".join([p.text for p in soup.find_all("p")])
+    return soup.title.text + "\n\n" + text
 
 
-'''
+def web_gettext_fromhtml(file1, htmltag="p"):
+    with open(file1, "r", encoding="UTF-8") as f:
+        page = f.read()
+
+    soup = BeautifulSoup(page, "lxml")
+    text = " \n\n".join([p.text for p in soup.find_all(htmltag)])
+    return soup.title.text + "\n\n" + text
+
+
+"""
 I know its been said already, 
 but I'd highly recommend the Requests python package
 : http://docs.python-requests.org/en/latest/index.html
@@ -322,54 +327,78 @@ Connection Timeouts
 List item
 Python 2.6—3.4
 Thread-safe.
-'''
+"""
+
 
 def web_getlink_fromurl(url):
- http = urllib3.connection_from_url(url)
- page = http.urlopen('GET',url).data.decode('utf8')
- soup = BeautifulSoup(page, "lxml")
- soup.prettify()
- links=[]
- for anchor in soup.findAll('a', href=True):
-    lnk= anchor['href']
-    links.append(  anchor['href'])
+    http = urllib3.connection_from_url(url)
+    page = http.urlopen("GET", url).data.decode("utf8")
+    soup = BeautifulSoup(page, "lxml")
+    soup.prettify()
+    links = []
+    for anchor in soup.findAll("a", href=True):
+        lnk = anchor["href"]
+        links.append(anchor["href"])
 
- return set(links)
+    return set(links)
 
-def web_send_email(FROM, recipient, subject, body, login1="mizenjapan@gmail.com", pss1="sophieelise237", server1="smtp.gmail.com", port1=465):
-    '''  # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt") '''
+
+def web_send_email(
+    FROM,
+    recipient,
+    subject,
+    body,
+    login1="mizenjapan@gmail.com",
+    pss1="sophieelise237",
+    server1="smtp.gmail.com",
+    port1=465,
+):
+    """  # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt") """
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
-#    TO = recipient if type(recipient) is list else [recipient]
-    TO= recipient
-    msg = MIMEMultipart("alternative");    msg.set_charset("utf-8")
+
+    #    TO = recipient if type(recipient) is list else [recipient]
+    TO = recipient
+    msg = MIMEMultipart("alternative")
+    msg.set_charset("utf-8")
     msg["Subject"] = subject
     msg["From"] = FROM
     msg["To"] = TO
     part2 = MIMEText(body, "plain", "utf-8")
     msg.attach(part2)
 
-    try:   # SMTP_SSL Example
-        server_ssl = smtplib.SMTP_SSL( server1, port1)
-        server_ssl.ehlo() # optional, called by login()
+    try:  # SMTP_SSL Example
+        server_ssl = smtplib.SMTP_SSL(server1, port1)
+        server_ssl.ehlo()  # optional, called by login()
         server_ssl.login(login1, pss1)
         server_ssl.sendmail(FROM, [TO], msg.as_string())
-        server_ssl.close();        print ('successfully sent the mail'  )
+        server_ssl.close()
+        print("successfully sent the mail")
         return 1
     except:
-        print( "failed to send mail")
+        print("failed to send mail")
         return -1
 
-def web_send_email_tls(FROM, recipient, subject, body, login1="mizenjapan@gmail.com", pss1="sophieelise237",
-                   server1="smtp.gmail.com", port1=465):
+
+def web_send_email_tls(
+    FROM,
+    recipient,
+    subject,
+    body,
+    login1="mizenjapan@gmail.com",
+    pss1="sophieelise237",
+    server1="smtp.gmail.com",
+    port1=465,
+):
     # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt")
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
+
     #    TO = recipient if type(recipient) is list else [recipient]
     TO = recipient
-    msg = MIMEMultipart("alternative");
+    msg = MIMEMultipart("alternative")
     msg.set_charset("utf-8")
     msg["Subject"] = subject
     msg["From"] = FROM
@@ -390,7 +419,7 @@ def web_send_email_tls(FROM, recipient, subject, body, login1="mizenjapan@gmail.
         mailserver.sendmail(FROM, [TO], msg.as_string())
         mailserver.quit()
 
-        print ('successfully sent the mail')
+        print("successfully sent the mail")
         return 1
     except:
         print("failed to send mail")
@@ -398,14 +427,6 @@ def web_send_email_tls(FROM, recipient, subject, body, login1="mizenjapan@gmail.
 
 
 def web_sendurl(url1):
- # Send Text by email
- mm= web_gettext_fromurl(url1)
- send_email("Python", "brookm291@gmail.com", mm[0:30] , url1 + '\n\n'+ mm )
-
-
-
-
-
-
-
-
+    # Send Text by email
+    mm = web_gettext_fromurl(url1)
+    send_email("Python", "brookm291@gmail.com", mm[0:30], url1 + "\n\n" + mm)

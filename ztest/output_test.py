@@ -23,8 +23,12 @@ class TestOutput(unittest.TestCase):
         mock_function_or_class.name = "function_name"
 
         output.writeCSV(
-            {("source.py", mock_function_or_class, "global_variable", False),
-             ("source.py", mock_function_or_class, "local_variable", True)}, mock_file_handle)
+            {
+                ("source.py", mock_function_or_class, "global_variable", False),
+                ("source.py", mock_function_or_class, "local_variable", True),
+            },
+            mock_file_handle,
+        )
 
         want = TestOutput.HEADER_ROW
         want += "source.py,function_name,global_variable,False\n"

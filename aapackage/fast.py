@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-#utilities for Fast Computation
-import  numpy as np, math as mm,  numba, numexpr as ne
-from numba import jit, njit, autojit, int32, int64, float32, float64,  double
+# utilities for Fast Computation
+import numpy as np, math as mm, numba, numexpr as ne
+from numba import jit, njit, autojit, int32, int64, float32, float64, double
 from math import exp, sqrt, cos, sin, log1p
 
 
-
-'''
+"""
 #------  High Speed Computation utilities
 https://bitbucket.org/arita237/fast_utilities/overview
 
@@ -65,10 +64,10 @@ def f(a, b) :
 
 Vectorize, Parallel, cuda : Works very Badly
 
-'''
+"""
 
 
-'''
+"""
 https://aboutsimon.com/blog/2016/08/04/datetime-vs-Arrow-vs-Pendulum-vs-Delorean-vs-udatetime.html
 
 Decode a date-time string
@@ -80,10 +79,10 @@ Instantiate object from timestamp in local timezone
 
 
 
-'''
+"""
 
 
-'''
+"""
 
 ######################################################################################
 # http://toolz.readthedocs.io/en/latest/api.html#dicttoolz
@@ -125,143 +124,166 @@ def _weekday(s2):
   return arrow.get(s2, 'YYYY-MM-DD').weekday()
   
 
-'''
+"""
 
-def day(s):    return int(s[8:10])
-def month(s):  return int(s[5:7])
-def year(s):   return int(s[0:4])
-def hour(s):   return int(s[11:13])
+
+def day(s):
+    return int(s[8:10])
+
+
+def month(s):
+    return int(s[5:7])
+
+
+def year(s):
+    return int(s[0:4])
+
+
+def hour(s):
+    return int(s[11:13])
+
+
 # def weekday(s):  return arrow.get(s, 'YYYY-MM-DD HH:mm:ss').weekday()
 
 
 ###Super Fast because of caching
-cache_weekday= {}
+cache_weekday = {}
+
+
 def weekday(s):
-  s2= s[0:10]
-  try :
-    return  cache_weekday[s2]
-  except KeyError:
-    wd= arrow.get(s2, 'YYYY-MM-DD').weekday()
-    cache_weekday[s2]= wd
-  return wd
+    s2 = s[0:10]
+    try:
+        return cache_weekday[s2]
+    except KeyError:
+        wd = arrow.get(s2, "YYYY-MM-DD").weekday()
+        cache_weekday[s2] = wd
+    return wd
+
 
 def season(d):
-  m=  int(d[5:7])
-  if m > 3 and m  < 10: return 1
-  else: return 0 
+    m = int(d[5:7])
+    if m > 3 and m < 10:
+        return 1
+    else:
+        return 0
 
 
 def daytime(d):
-  h= int(d[11:13])
-  if   h < 11 :   return 0
-  elif h < 14 : return 1    #lunch
-  elif h < 18 : return 2    # afternoon
-  elif h < 21 : return 3    # dinner
-  else :        return 4   #night
+    h = int(d[11:13])
+    if h < 11:
+        return 0
+    elif h < 14:
+        return 1  # lunch
+    elif h < 18:
+        return 2  # afternoon
+    elif h < 21:
+        return 3  # dinner
+    else:
+        return 4  # night
 
 
-
-def fastStrptime(val, format) :
+def fastStrptime(val, format):
     l = len(val)
-    if format == '%Y%m%d-%H:%M:%S.%f' and (l == 21 or l == 24):
+    if format == "%Y%m%d-%H:%M:%S.%f" and (l == 21 or l == 24):
         us = int(val[18:24])
         # If only milliseconds are given we need to convert to microseconds.
         if l == 21:
             us *= 1000
         return datetime.datetime(
-            int(val[0:4]), # %Y
-            int(val[4:6]), # %m
-            int(val[6:8]), # %d
-            int(val[9:11]), # %H
-            int(val[12:14]), # %M
-            int(val[15:17]), # %s
-            us, # %f
+            int(val[0:4]),  # %Y
+            int(val[4:6]),  # %m
+            int(val[6:8]),  # %d
+            int(val[9:11]),  # %H
+            int(val[12:14]),  # %M
+            int(val[15:17]),  # %s
+            us,  # %f
         )
 
     # Default to the native strptime for other formats.
     return datetime.datetime.strptime(val, format)
-    
-    
-    
 
 
-
-@njit([ float32(float32[:]), float64(float64[:]) ],  cache=True, nogil=True, target='cpu')
+@njit([float32(float32[:]), float64(float64[:])], cache=True, nogil=True, target="cpu")
 def drawdown_calc_fast(price):
-    n= len(price);
-    maxprice = np.zeros(n); ddowndur2 = np.zeros(n);
-    dd = np.zeros(n); ddowndur = np.zeros(n); ddstart = np.zeros(n);
-    ddmin_date = np.zeros(n);
-    maxstartdate=0
-    minlevel= 0
+    n = len(price)
+    maxprice = np.zeros(n)
+    ddowndur2 = np.zeros(n)
+    dd = np.zeros(n)
+    ddowndur = np.zeros(n)
+    ddstart = np.zeros(n)
+    ddmin_date = np.zeros(n)
+    maxstartdate = 0
+    minlevel = 0
     for t in range(1, n):
-        if maxprice[t-1] < price[t]:
-          maxprice[t]= price[t]  #update
-          maxstartdate= t        #update the start date
-          minlevel=0
-        else :
-          maxprice[t]= maxprice[t-1]
+        if maxprice[t - 1] < price[t]:
+            maxprice[t] = price[t]  # update
+            maxstartdate = t  # update the start date
+            minlevel = 0
+        else:
+            maxprice[t] = maxprice[t - 1]
 
-        dd[t] = price[t]/maxprice[t] -1 #drawdown level
+        dd[t] = price[t] / maxprice[t] - 1  # drawdown level
 
-        if dd[t] !=0 : #Increase period of same drawdown
-         ddstart[t] = maxstartdate
-         ddowndur[t]=  1 + ddowndur[t-1]
-         if dd[t] < minlevel : #Find lowest level
-             minlevel = dd[t]
-             ddowndur2[t]=  ddowndur[t]
-             ddmin_date[t]=  t
-         else:
-             ddowndur2[t]= ddowndur2[t-1]
-             ddmin_date[t]=  ddmin_date[t-1]
+        if dd[t] != 0:  # Increase period of same drawdown
+            ddstart[t] = maxstartdate
+            ddowndur[t] = 1 + ddowndur[t - 1]
+            if dd[t] < minlevel:  # Find lowest level
+                minlevel = dd[t]
+                ddowndur2[t] = ddowndur[t]
+                ddmin_date[t] = t
+            else:
+                ddowndur2[t] = ddowndur2[t - 1]
+                ddmin_date[t] = ddmin_date[t - 1]
 
     return minlevel
 
 
-
-
 ###################################  Statistical #######################################################################
-@njit([ float32(float32[:]), float64(float64[:]) ],  cache=True, nogil=True, target='cpu')
+@njit([float32(float32[:]), float64(float64[:])], cache=True, nogil=True, target="cpu")
 def std(x):
     """Std Deviation 1D array"""
     n = x.shape[0]
     m = x.sum() / n
-    return sqrt((( (x - m)**2 ).sum() / (n - 1)))
+    return sqrt((((x - m) ** 2).sum() / (n - 1)))
+
 
 # bsk= np.array(bsk, dtype=np.float64)
 # %timeit std(bsk)
 
 
-@njit([ float32(float32[:]), float64(float64[:]) ],  cache=True, nogil=True, target='cpu')
+@njit([float32(float32[:]), float64(float64[:])], cache=True, nogil=True, target="cpu")
 def mean(x):
     """Mean  """
     return x.sum() / x.shape[0]
 
 
-@njit([float64(float64,float64)], cache=True, nogil=True, target='cpu')
-def log_exp_sum2 (a, b):
-    if a >= b: return a + log1p(exp (-(a-b)))
-    else:      return b + log1p(exp (-(b-a)))
+@njit([float64(float64, float64)], cache=True, nogil=True, target="cpu")
+def log_exp_sum2(a, b):
+    if a >= b:
+        return a + log1p(exp(-(a - b)))
+    else:
+        return b + log1p(exp(-(b - a)))
     ## return max (a, b) + log1p (exp (-abs (a - b)))
 
 
-@njit('Tuple( (int32, int32, int32) )(int32[:], int32[:])', cache=True, nogil=True, target='cpu')
+@njit("Tuple( (int32, int32, int32) )(int32[:], int32[:])", cache=True, nogil=True, target="cpu")
 def _compute_overlaps(u, v):
-    a,b,c = 0,0,0
+    a, b, c = 0, 0, 0
     m = u.shape[0]
     for idx in range(m):
         a += u[idx] & v[idx]
         b += u[idx] & ~v[idx]
         c += ~u[idx] & v[idx]
     return a, b, c
- 
- 
-@njit(float32(int32[:], int32[:]), cache=True, nogil=True, target='cpu')
+
+
+@njit(float32(int32[:], int32[:]), cache=True, nogil=True, target="cpu")
 def distance_jaccard2(u, v):
     a, b, c = _compute_overlaps(u, v)
     return 1.0 - (a / float(a + b + c))
 
-'''
+
+"""
 @njit([float32(int32[:], int32[:]), float32(float32[:], float32[:]), float64(float64[:], float64[:])  ],  cache=True, nogil=True, target='cpu')
 def distance_jaccard(u, v):
     a = 0;    b = 0;    c = 0
@@ -271,24 +293,25 @@ def distance_jaccard(u, v):
         b += u[idx] & ~v[idx]
         c += ~u[idx] & v[idx] 
     return 1.0 - (a / float(a + b + c))
-'''
+"""
 
-@njit(float32[:,:](int32[:,:]),  cache=True, nogil=True, target='cpu' )
+
+@njit(float32[:, :](int32[:, :]), cache=True, nogil=True, target="cpu")
 def distance_jaccard_X(X):
- n= X.shape[0]    
- dist= np.zeros((n,n), dtype=np.float32)
- for i in range(0,n):
-    for j in range(i+1,n):
-      dist[i,j]=  distance_jaccard(X[i,:], X[j,:])
-      dist[j,i]=  dist[i,j]
- return dist
- 
-     
+    n = X.shape[0]
+    dist = np.zeros((n, n), dtype=np.float32)
+    for i in range(0, n):
+        for j in range(i + 1, n):
+            dist[i, j] = distance_jaccard(X[i, :], X[j, :])
+            dist[j, i] = dist[i, j]
+    return dist
+
+
 # x= np.ones(1000); y= np.zeros(1000)
 # %timeit jaccard(x, y)
 
 
-@njit('float64(float64[:], float64[:])', cache=True, nogil=True, target='cpu')
+@njit("float64(float64[:], float64[:])", cache=True, nogil=True, target="cpu")
 def cosine(u, v):
     m = u.shape[0]
     udotv = 0
@@ -297,27 +320,28 @@ def cosine(u, v):
     for i in range(m):
         if (np.isnan(u[i])) or (np.isnan(v[i])):
             continue
-             
+
         udotv += u[i] * v[i]
         u_norm += u[i] * u[i]
         v_norm += v[i] * v[i]
- 
+
     u_norm = np.sqrt(u_norm)
     v_norm = np.sqrt(v_norm)
-     
+
     if (u_norm == 0) or (v_norm == 0):
         ratio = 1.0
     else:
         ratio = udotv / (u_norm * v_norm)
     return ratio
-    
+
+
 # %timeit cosine(x, y)
 
 # bsk= np.array(bsk, dtype=np.float64)
 # %timeit mean(bsk)
 
 
-@njit( cache=True, nogil=True, target='cpu')
+@njit(cache=True, nogil=True, target="cpu")
 def rmse(y, yhat):
     """ Calculate and return Root Mean Squared Error (RMSE)
     Returns: float: Root Mean Squared Error
@@ -325,7 +349,7 @@ def rmse(y, yhat):
     return ((y - yhat) ** 2).mean() ** 0.5
 
 
-@njit(cache=True, nogil=True, target='cpu')
+@njit(cache=True, nogil=True, target="cpu")
 def cross(vec1, vec2):
     """ Calculate the dot product of two 3d vectors. """
     a1, a2, a3 = double(vec1[0]), double(vec1[1]), double(vec1[2])
@@ -337,18 +361,13 @@ def cross(vec1, vec2):
     return result
 
 
-@njit(cache=True, nogil=True, target='cpu')
+@njit(cache=True, nogil=True, target="cpu")
 def norm(vec):
     """ Calculate the norm of a 3d vector. """
-    return sqrt(vec[0]*vec[0] + vec[1]**2 + vec[2]**2)
+    return sqrt(vec[0] * vec[0] + vec[1] ** 2 + vec[2] ** 2)
 
 
-
-
-
-
-
-'''
+"""
 ################################# Paralell Code / Cuda acceleration  ###################################################
 from numba import vectorize, guvectorize
 from numba import jit, njit,  autojit, int32, float32, float64, int64, double
@@ -429,11 +448,11 @@ Installing AoT compiled modules with setup.py
 %load ../ppe_compile_module/setup.py
 
 
-'''
+"""
 
 
 ###################################  JIT Class ######################################################################
-'''
+"""
 @njit
 def test():
     return np.zeros(10, dtype=np.int32)
@@ -506,10 +525,9 @@ def func1(A, B):
 
     return X
 
-'''
+"""
 
 ###################################################################################################
-
 
 
 '''
@@ -574,4 +592,3 @@ def ex1(a, b):
 
 
 '''
-

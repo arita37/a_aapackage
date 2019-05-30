@@ -17,7 +17,7 @@ import os
 
 
 def build_dataset(words, n_words, atleast=1):
-    count = [['PAD', 0], ['GO', 1], ['EOS', 2], ['UNK', 3]]
+    count = [["PAD", 0], ["GO", 1], ["EOS", 2], ["UNK", 3]]
     counter = collections.Counter(words).most_common(n_words)
     counter = [i for i in counter if i[1] >= atleast]
     count.extend(counter)
@@ -39,72 +39,83 @@ def build_dataset(words, n_words, atleast=1):
 # In[3]:
 
 
-with open('english-train', 'r') as fopen:
-    text_from = fopen.read().lower().split('\n')[:-1]
-with open('vietnam-train', 'r') as fopen:
-    text_to = fopen.read().lower().split('\n')[:-1]
-print('len from: %d, len to: %d'%(len(text_from), len(text_to)))
+with open("english-train", "r") as fopen:
+    text_from = fopen.read().lower().split("\n")[:-1]
+with open("vietnam-train", "r") as fopen:
+    text_to = fopen.read().lower().split("\n")[:-1]
+print("len from: %d, len to: %d" % (len(text_from), len(text_to)))
 
 
 # In[4]:
 
 
-concat_from = ' '.join(text_from).split()
+concat_from = " ".join(text_from).split()
 vocabulary_size_from = len(list(set(concat_from)))
-data_from, count_from, dictionary_from, rev_dictionary_from = build_dataset(concat_from, vocabulary_size_from)
-print('vocab from size: %d'%(vocabulary_size_from))
-print('Most common words', count_from[4:10])
-print('Sample data', data_from[:10], [rev_dictionary_from[i] for i in data_from[:10]])
+data_from, count_from, dictionary_from, rev_dictionary_from = build_dataset(
+    concat_from, vocabulary_size_from
+)
+print("vocab from size: %d" % (vocabulary_size_from))
+print("Most common words", count_from[4:10])
+print("Sample data", data_from[:10], [rev_dictionary_from[i] for i in data_from[:10]])
 
 
 # In[5]:
 
 
-concat_to = ' '.join(text_to).split()
+concat_to = " ".join(text_to).split()
 vocabulary_size_to = len(list(set(concat_to)))
 data_to, count_to, dictionary_to, rev_dictionary_to = build_dataset(concat_to, vocabulary_size_to)
-print('vocab to size: %d'%(vocabulary_size_to))
-print('Most common words', count_to[4:10])
-print('Sample data', data_to[:10], [rev_dictionary_to[i] for i in data_to[:10]])
+print("vocab to size: %d" % (vocabulary_size_to))
+print("Most common words", count_to[4:10])
+print("Sample data", data_to[:10], [rev_dictionary_to[i] for i in data_to[:10]])
 
 
 # In[6]:
 
 
-GO = dictionary_from['GO']
-PAD = dictionary_from['PAD']
-EOS = dictionary_from['EOS']
-UNK = dictionary_from['UNK']
+GO = dictionary_from["GO"]
+PAD = dictionary_from["PAD"]
+EOS = dictionary_from["EOS"]
+UNK = dictionary_from["UNK"]
 
 
 # In[7]:
 
 
 for i in range(len(text_to)):
-    text_to[i] += ' EOS'
+    text_to[i] += " EOS"
 
 
 # In[8]:
 
 
 class Chatbot:
-    def __init__(self, size_layer, num_layers, embedded_size, 
-                 from_dict_size, to_dict_size, learning_rate, 
-                 batch_size, dropout = 0.5):
-        
+    def __init__(
+        self,
+        size_layer,
+        num_layers,
+        embedded_size,
+        from_dict_size,
+        to_dict_size,
+        learning_rate,
+        batch_size,
+        dropout=0.5,
+    ):
         def lstm_cell(reuse=False):
-            return tf.nn.rnn_cell.LSTMCell(size_layer, initializer=tf.orthogonal_initializer(),
-                                           reuse=reuse)
-        
+            return tf.nn.rnn_cell.LSTMCell(
+                size_layer, initializer=tf.orthogonal_initializer(), reuse=reuse
+            )
+
         def attention(encoder_out, seq_len, reuse=False):
-            attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(num_units = size_layer, 
-                                                                    memory = encoder_out,
-                                                                    memory_sequence_length = seq_len)
+            attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
+                num_units=size_layer, memory=encoder_out, memory_sequence_length=seq_len
+            )
             return tf.contrib.seq2seq.AttentionWrapper(
-            cell = tf.nn.rnn_cell.MultiRNNCell([lstm_cell(reuse) for _ in range(num_layers)]), 
-                attention_mechanism = attention_mechanism,
-                attention_layer_size = size_layer)
-        
+                cell=tf.nn.rnn_cell.MultiRNNCell([lstm_cell(reuse) for _ in range(num_layers)]),
+                attention_mechanism=attention_mechanism,
+                attention_layer_size=size_layer,
+            )
+
         self.X = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.int32, [None, None])
         self.X_seq_len = tf.count_nonzero(self.X, 1, dtype=tf.int32)
@@ -114,10 +125,12 @@ class Chatbot:
         encoder_embeddings = tf.Variable(tf.random_uniform([from_dict_size, embedded_size], -1, 1))
         encoder_embedded = tf.nn.embedding_lookup(encoder_embeddings, self.X)
         encoder_cells = tf.nn.rnn_cell.MultiRNNCell([lstm_cell() for _ in range(num_layers)])
-        self.encoder_out, self.encoder_state = tf.nn.dynamic_rnn(cell = encoder_cells, 
-                                                                 inputs = encoder_embedded, 
-                                                                 sequence_length = self.X_seq_len,
-                                                                 dtype = tf.float32)
+        self.encoder_out, self.encoder_state = tf.nn.dynamic_rnn(
+            cell=encoder_cells,
+            inputs=encoder_embedded,
+            sequence_length=self.X_seq_len,
+            dtype=tf.float32,
+        )
         main = tf.strided_slice(self.Y, [0, 0], [batch_size, -1], [1, 1])
         decoder_input = tf.concat([tf.fill([batch_size, 1], GO), main], 1)
         # decoder
@@ -125,39 +138,49 @@ class Chatbot:
         decoder_cell = attention(self.encoder_out, self.X_seq_len)
         dense_layer = tf.layers.Dense(to_dict_size)
         training_helper = tf.contrib.seq2seq.TrainingHelper(
-                inputs = tf.nn.embedding_lookup(decoder_embeddings, decoder_input),
-                sequence_length = self.Y_seq_len,
-                time_major = False)
+            inputs=tf.nn.embedding_lookup(decoder_embeddings, decoder_input),
+            sequence_length=self.Y_seq_len,
+            time_major=False,
+        )
         training_decoder = tf.contrib.seq2seq.BasicDecoder(
-                cell = decoder_cell,
-                helper = training_helper,
-                initial_state = decoder_cell.zero_state(batch_size, tf.float32).clone(cell_state=self.encoder_state),
-                output_layer = dense_layer)
+            cell=decoder_cell,
+            helper=training_helper,
+            initial_state=decoder_cell.zero_state(batch_size, tf.float32).clone(
+                cell_state=self.encoder_state
+            ),
+            output_layer=dense_layer,
+        )
         training_decoder_output, _, _ = tf.contrib.seq2seq.dynamic_decode(
-                decoder = training_decoder,
-                impute_finished = True,
-                maximum_iterations = tf.reduce_max(self.Y_seq_len))
+            decoder=training_decoder,
+            impute_finished=True,
+            maximum_iterations=tf.reduce_max(self.Y_seq_len),
+        )
         predicting_helper = tf.contrib.seq2seq.GreedyEmbeddingHelper(
-                embedding = decoder_embeddings,
-                start_tokens = tf.tile(tf.constant([GO], dtype=tf.int32), [batch_size]),
-                end_token = EOS)
+            embedding=decoder_embeddings,
+            start_tokens=tf.tile(tf.constant([GO], dtype=tf.int32), [batch_size]),
+            end_token=EOS,
+        )
         predicting_decoder = tf.contrib.seq2seq.BasicDecoder(
-                cell = decoder_cell,
-                helper = predicting_helper,
-                initial_state = decoder_cell.zero_state(batch_size, tf.float32).clone(cell_state=self.encoder_state),
-                output_layer = dense_layer)
+            cell=decoder_cell,
+            helper=predicting_helper,
+            initial_state=decoder_cell.zero_state(batch_size, tf.float32).clone(
+                cell_state=self.encoder_state
+            ),
+            output_layer=dense_layer,
+        )
         predicting_decoder_output, _, _ = tf.contrib.seq2seq.dynamic_decode(
-                decoder = predicting_decoder,
-                impute_finished = True,
-                maximum_iterations = 2 * tf.reduce_max(self.X_seq_len))
+            decoder=predicting_decoder,
+            impute_finished=True,
+            maximum_iterations=2 * tf.reduce_max(self.X_seq_len),
+        )
         self.training_logits = training_decoder_output.rnn_output
         self.predicting_ids = predicting_decoder_output.sample_id
         masks = tf.sequence_mask(self.Y_seq_len, tf.reduce_max(self.Y_seq_len), dtype=tf.float32)
-        self.cost = tf.contrib.seq2seq.sequence_loss(logits = self.training_logits,
-                                                     targets = self.Y,
-                                                     weights = masks)
+        self.cost = tf.contrib.seq2seq.sequence_loss(
+            logits=self.training_logits, targets=self.Y, weights=masks
+        )
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
-        y_t = tf.argmax(self.training_logits,axis=2)
+        y_t = tf.argmax(self.training_logits, axis=2)
         y_t = tf.cast(y_t, tf.int32)
         self.prediction = tf.boolean_mask(y_t, masks)
         mask_label = tf.boolean_mask(self.Y, masks)
@@ -182,8 +205,15 @@ epoch = 20
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
-model = Chatbot(size_layer, num_layers, embedded_size, len(dictionary_from), 
-                len(dictionary_to), learning_rate,batch_size)
+model = Chatbot(
+    size_layer,
+    num_layers,
+    embedded_size,
+    len(dictionary_from),
+    len(dictionary_to),
+    learning_rate,
+    batch_size,
+)
 sess.run(tf.global_variables_initializer())
 
 
@@ -195,7 +225,7 @@ def str_idx(corpus, dic):
     for i in corpus:
         ints = []
         for k in i.split():
-            ints.append(dic.get(k,UNK))
+            ints.append(dic.get(k, UNK))
         X.append(ints)
     return X
 
@@ -226,26 +256,34 @@ def pad_sentence_batch(sentence_batch, pad_int):
 for i in range(epoch):
     total_loss, total_accuracy = 0, 0
     for k in range(0, len(text_to), batch_size):
-        index = min(k+batch_size, len(text_to))
-        batch_x, seq_x = pad_sentence_batch(X[k: index], PAD)
-        batch_y, seq_y = pad_sentence_batch(Y[k: index ], PAD)
-        predicted, accuracy,loss, _ = sess.run([model.predicting_ids, 
-                                                model.accuracy, model.cost, model.optimizer], 
-                                      feed_dict={model.X:batch_x,
-                                                model.Y:batch_y})
+        index = min(k + batch_size, len(text_to))
+        batch_x, seq_x = pad_sentence_batch(X[k:index], PAD)
+        batch_y, seq_y = pad_sentence_batch(Y[k:index], PAD)
+        predicted, accuracy, loss, _ = sess.run(
+            [model.predicting_ids, model.accuracy, model.cost, model.optimizer],
+            feed_dict={model.X: batch_x, model.Y: batch_y},
+        )
         total_loss += loss
         total_accuracy += accuracy
-    total_loss /= (len(text_to) / batch_size)
-    total_accuracy /= (len(text_to) / batch_size)
-    print('epoch: %d, avg loss: %f, avg accuracy: %f'%(i+1, total_loss, total_accuracy))
+    total_loss /= len(text_to) / batch_size
+    total_accuracy /= len(text_to) / batch_size
+    print("epoch: %d, avg loss: %f, avg accuracy: %f" % (i + 1, total_loss, total_accuracy))
 
 
 # In[15]:
 
 
 for i in range(len(batch_x)):
-    print('row %d'%(i+1))
-    print('QUESTION:',' '.join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0,1,2,3]]))
-    print('REAL ANSWER:',' '.join([rev_dictionary_to[n] for n in batch_y[i] if n not in[0,1,2,3]]))
-    print('PREDICTED ANSWER:',' '.join([rev_dictionary_to[n] for n in predicted[i] if n not in[0,1,2,3]]),'\n')
-
+    print("row %d" % (i + 1))
+    print(
+        "QUESTION:", " ".join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0, 1, 2, 3]])
+    )
+    print(
+        "REAL ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in batch_y[i] if n not in [0, 1, 2, 3]]),
+    )
+    print(
+        "PREDICTED ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in predicted[i] if n not in [0, 1, 2, 3]]),
+        "\n",
+    )

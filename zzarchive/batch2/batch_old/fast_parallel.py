@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-#utilities for  Paralell and ( Fast Computation)
-import  numpy as np, math as mm,  numba, numexpr as ne
-from numba import jit, njit,  autojit, int32, float32, float64, int64, double
+# utilities for  Paralell and ( Fast Computation)
+import numpy as np, math as mm, numba, numexpr as ne
+from numba import jit, njit, autojit, int32, float32, float64, int64, double
 from math import exp, sqrt, cos, sin, log1p
 
 import ipyparallel as ipp
@@ -9,12 +9,11 @@ import ipyparallel as ipp
 from ipyparallel import Client
 
 
-
-
 from ipyparallel import error, AsyncHubResult, DirectView as dv, Reference
+
 ##################################################################################################
 ######################### Usage of IPyrallel #####################################################
-'''
+"""
 import IPython,os,sys
 DIRCWD=  'D:/_devs/Python01/project27/'
 os.chdir('D:/_devs/Python01/project27/'); sys.path.append('D:/_devs/Python01/project27/aapackage/')
@@ -61,34 +60,35 @@ print('Worker_id', list_client.ids)
 lview = list_client.load_balanced_view()
 list_client[:].apply_sync(lambda : "Hello, World")
 
-'''
+"""
 
 ####################################  Parellel run of task  ##################################################################################################
-'''  http://ipyparallel.readthedocs.io/en/latest/task.html?highlight=tasks
+"""  http://ipyparallel.readthedocs.io/en/latest/task.html?highlight=tasks
 Using IPyparalell :
   Can include Ipython run, work, Don't use Main memory
   Scheduler is busy waiting task is finished, need to Launch in Sub-Process
   No task failure handle
 
-'''
+"""
 
 
 def task_summary(tasks):
-  print('\n--------------- Summary ------------------------')
-  for k, t in enumerate(tasks) :
-    if t.ready() :
-       print(('Task '+str(k)+' : ', t.get(), 'Wall_Time:', t.wall_time, ))
+    print("\n--------------- Summary ------------------------")
+    for k, t in enumerate(tasks):
+        if t.ready():
+            print(("Task " + str(k) + " : ", t.get(), "Wall_Time:", t.wall_time))
 
 
 def task_progress(tasks):
-  ''' Monitor progress '''
-  ss=0.0;  ss0= -0.1
-  while ss < 0.9999999 :
-    ss= np.mean([task.ready() for task in tasks])
-    if ss!= ss0 :
-      print(("Tasks completion: {0}%".format(100 * ss)))
-      ss0= ss
-  print("Tasks Finished")
+    """ Monitor progress """
+    ss = 0.0
+    ss0 = -0.1
+    while ss < 0.9999999:
+        ss = np.mean([task.ready() for task in tasks])
+        if ss != ss0:
+            print(("Tasks completion: {0}%".format(100 * ss)))
+            ss0 = ss
+    print("Tasks Finished")
 
 
 def task_find_best(tasks, n_top=5):
@@ -97,34 +97,41 @@ def task_find_best(tasks, n_top=5):
     return sorted(scores, reverse=True)[:n_top]
 
 
-#Define Task Process Job  ----------------------------------------------------------------
-def task_parallel_job_01(name, param, datadict) :
-   ''' Sample task run in Parallel '''
-   import os, sys
-   p= param
-   dirpackage,dircwd, diroutput, dirscript= p['packagedir'],  p['cwdir'], p['outputdir'], p['dirscript']
-   os.chdir(dircwd); sys.path.append(dirpackage)
-   from . import util
+# Define Task Process Job  ----------------------------------------------------------------
+def task_parallel_job_01(name, param, datadict):
+    """ Sample task run in Parallel """
+    import os, sys
 
-   #Load Dictionnary in memory
-   # for k, v in datadict[0].items():  setattr(sys.modules['__main__'], k, v)
+    p = param
+    dirpackage, dircwd, diroutput, dirscript = (
+        p["packagedir"],
+        p["cwdir"],
+        p["outputdir"],
+        p["dirscript"],
+    )
+    os.chdir(dircwd)
+    sys.path.append(dirpackage)
+    from . import util
 
-   #Computation using same variable name than datadict ------------------------------
-   id1= param['id']
-   # time.sleep(np.random.randint(1,2))
+    # Load Dictionnary in memory
+    # for k, v in datadict[0].items():  setattr(sys.modules['__main__'], k, v)
 
-   # util.a_run_ipython("run -i " + dircwd + dirpackage )  # 'aapackage/allmodule.py'
+    # Computation using same variable name than datadict ------------------------------
+    id1 = param["id"]
+    # time.sleep(np.random.randint(1,2))
 
-   util.a_run_ipython("run -i " + dircwd + dirscript ) # '/sk_cluster/script/run_elvis_send_email_task_noemail.ipy'
+    # util.a_run_ipython("run -i " + dircwd + dirpackage )  # 'aapackage/allmodule.py'
+
+    util.a_run_ipython(
+        "run -i " + dircwd + dirscript
+    )  # '/sk_cluster/script/run_elvis_send_email_task_noemail.ipy'
+
+    # ---------------------------------------------------------------------------------
+    res = name + "__" + str(id1) + "__" + dircwd
+    return res
 
 
-   #---------------------------------------------------------------------------------
-   res= name+'__'+ str(id1) + '__' + dircwd
-   return res
-
-
-
-'''
+"""
 Enable Cluster
 conda install -c conda-forge notebook ipyparallel
 If you are using conda but not the conda-forge packages (e.g. Anaconda), or you otherwise don't see the IPython Clusters tab, you can still run the command above to enable the extension:
@@ -135,10 +142,10 @@ Or disable it with:
 ipcluster nbextension disable
 
 
-'''
+"""
 
 
-'''
+"""
 import IPython,os,sys
 DIRCWD=  'D:/_devs/Python01/project27/'
 os.chdir('D:/_devs/Python01/project27/'); sys.path.append('D:/_devs/Python01/project27/aapackage/')
@@ -209,10 +216,10 @@ for k, t in enumerate(tasks) :
 
 
 
-'''
+"""
 
 
-'''  GOOD TUTORIAL
+"""  GOOD TUTORIAL
 http://people.duke.edu/~ccc14/sta-663-2016/19C_IPyParallel.html
 
 #Synchronous Job
@@ -234,11 +241,10 @@ sns.kdeplot(x);
 
 
 
-'''
+"""
 
 
-
-'''
+"""
 # Working with compiled code on Workers
 
 Using numba.jit is straightforward.
@@ -258,14 +264,14 @@ def f_numba(x):
 In [55]:
 dv.map(f_numba, np.random.random((6, 4)))
 
-'''
+"""
 
 
 ##################################################################################################
 ##################################################################################################
 
 
-'''
+"""
 ########################## IPYparalell and with Numba            #######################################################
 https://github.com/barbagroup/numba_tutorial_scipy2016/blob/master/notebooks/10.optional.Numba.and.ipyparallel.ipynb
 # Add the dv.parallel decorator to enable it in parallel. (We're also enabling blocking here, for simplicity)
@@ -304,10 +310,10 @@ axes[2].imshow(im_par_numba, cmap=cm.viridis)
 https://github.com/mmckerns/tuthpc
 
 
-'''
+"""
 
 
-'''
+"""
 #------  High Speed Computation utilities   ----------------------------------------------------------------------------
 # https://bitbucket.org/arita237/fast_utilities/overview
 
@@ -341,7 +347,7 @@ dt = np.dtype('i4')   # 32-bit signed integer
 dt = np.dtype('f8')   # 64-bit floating-point number
 np.dtype('c16')  # 128-bit complex floating-point number
 np.dtype('a25')  # 25-character string
-'''
+"""
 
 '''
 ###################################  Statistical #######################################################################
@@ -475,9 +481,7 @@ def normalize(vec):
 '''
 
 
-
-
-'''
+"""
 ########################## IPYparalell and with Numba            #######################################################
 https://github.com/barbagroup/numba_tutorial_scipy2016/blob/master/notebooks/10.optional.Numba.and.ipyparallel.ipynb
 # Add the dv.parallel decorator to enable it in parallel. (We're also enabling blocking here, for simplicity)
@@ -563,11 +567,11 @@ Installing AoT compiled modules with setup.py
 %load ../ppe_compile_module/setup.py
 
 
-'''
+"""
 
 
 ###################################  JIT Class ######################################################################
-'''
+"""
 #benchmark Test  ----------------------------------------------------------------------------------------------------
 import numpy as np
 X = np.random.random((100000, 2))
@@ -672,10 +676,10 @@ Can have Same speed than C  / C++
 
 
 
-'''
+"""
 
 
-'''
+"""
 @njit
 def test():
     return np.zeros(10, dtype=np.int32)
@@ -748,10 +752,9 @@ def func1(A, B):
 
     return X
 
-'''
+"""
 
 ###################################################################################################
-
 
 
 '''
@@ -827,83 +830,18 @@ def ex1(a, b):
 
 
 ############################################################################
-#---------------------             --------------------
-
-
-
-
-
+# ---------------------             --------------------
 
 
 ############################################################################
 
 
-
-
-
-
-
-
-
-
-
 ############################################################################
-#---------------------             --------------------
-
-
+# ---------------------             --------------------
 
 
 ############################################################################
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ############################################################################
-#---------------------             --------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ---------------------             --------------------

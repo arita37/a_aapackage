@@ -14,38 +14,37 @@ import random
 # In[2]:
 
 
-trainset = sklearn.datasets.load_files(container_path = 'data', encoding = 'UTF-8')
-trainset.data, trainset.target = separate_dataset(trainset,1.0)
-print (trainset.target_names)
-print (len(trainset.data))
-print (len(trainset.target))
+trainset = sklearn.datasets.load_files(container_path="data", encoding="UTF-8")
+trainset.data, trainset.target = separate_dataset(trainset, 1.0)
+print(trainset.target_names)
+print(len(trainset.data))
+print(len(trainset.target))
 
 
 # In[3]:
 
 
-train_X, test_X, train_Y, test_Y = train_test_split(trainset.data, trainset.target,
-                                                    test_size = 0.2)
+train_X, test_X, train_Y, test_Y = train_test_split(trainset.data, trainset.target, test_size=0.2)
 
 
 # In[4]:
 
 
-concat = ' '.join(trainset.data).split()
+concat = " ".join(trainset.data).split()
 vocabulary_size = len(list(set(concat)))
 data, count, dictionary, rev_dictionary = build_dataset(concat, vocabulary_size)
-print('vocab from size: %d'%(vocabulary_size))
-print('Most common words', count[4:10])
-print('Sample data', data[:10], [rev_dictionary[i] for i in data[:10]])
+print("vocab from size: %d" % (vocabulary_size))
+print("Most common words", count[4:10])
+print("Sample data", data[:10], [rev_dictionary[i] for i in data[:10]])
 
 
 # In[5]:
 
 
-GO = dictionary['GO']
-PAD = dictionary['PAD']
-EOS = dictionary['EOS']
-UNK = dictionary['UNK']
+GO = dictionary["GO"]
+PAD = dictionary["PAD"]
+EOS = dictionary["EOS"]
+UNK = dictionary["UNK"]
 
 
 # In[6]:
@@ -136,25 +135,31 @@ def batch_all_triplet_loss(labels, embeddings, margin, squared=False):
 
 
 class Model:
-    def __init__(self, size_layer, num_layers, embedded_size,
-                 dict_size, dimension_output):
-        
+    def __init__(self, size_layer, num_layers, embedded_size, dict_size, dimension_output):
         def cells(reuse=False):
-            return tf.nn.rnn_cell.LSTMCell(size_layer,initializer=tf.orthogonal_initializer(),reuse=reuse)
-        
-        def rnn(embedded,reuse=False):
-            with tf.variable_scope('model', reuse=reuse):
+            return tf.nn.rnn_cell.LSTMCell(
+                size_layer, initializer=tf.orthogonal_initializer(), reuse=reuse
+            )
+
+        def rnn(embedded, reuse=False):
+            with tf.variable_scope("model", reuse=reuse):
                 rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)])
-                outputs, _ = tf.nn.dynamic_rnn(rnn_cells, embedded, dtype = tf.float32)
-                W = tf.get_variable('w',shape=(size_layer, dimension_output),initializer=tf.orthogonal_initializer())
-                b = tf.get_variable('b',shape=(dimension_output),initializer=tf.zeros_initializer())
+                outputs, _ = tf.nn.dynamic_rnn(rnn_cells, embedded, dtype=tf.float32)
+                W = tf.get_variable(
+                    "w",
+                    shape=(size_layer, dimension_output),
+                    initializer=tf.orthogonal_initializer(),
+                )
+                b = tf.get_variable(
+                    "b", shape=(dimension_output), initializer=tf.zeros_initializer()
+                )
                 return tf.matmul(outputs[:, -1], W) + b
-              
+
         self.X = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.int32, [None])
         embeddings = tf.Variable(tf.random_uniform([dict_size, embedded_size], -1, 1))
         embedded = tf.nn.embedding_lookup(embeddings, self.X)
-        self.logits = rnn(embedded,False)
+        self.logits = rnn(embedded, False)
         self.cost, fraction = batch_all_triplet_loss(self.Y, self.logits, margin=0.5, squared=False)
         self.optimizer = tf.train.AdamOptimizer(1e-3).minimize(self.cost)
 
@@ -175,15 +180,15 @@ batch_size = 64
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
-model = Model(size_layer,num_layers,embedded_size,len(dictionary),dimension_output)
+model = Model(size_layer, num_layers, embedded_size, len(dictionary), dimension_output)
 sess.run(tf.global_variables_initializer())
 
 
 # In[10]:
 
 
-train_X = str_idx(train_X,dictionary,maxlen)
-test_X = str_idx(test_X,dictionary,maxlen)
+train_X = str_idx(train_X, dictionary, maxlen)
+test_X = str_idx(test_X, dictionary, maxlen)
 
 
 # In[11]:
@@ -191,20 +196,22 @@ test_X = str_idx(test_X,dictionary,maxlen)
 
 for i in range(10):
     total_loss = 0
-    for index in range(0,len(train_X),batch_size):
-        batch_x = train_X[index:min(index+batch_size,len(train_X))]
-        batch_y = train_Y[index:min(index+batch_size,len(train_X))]
-        loss, _ = sess.run([model.cost,model.optimizer],feed_dict={model.X:batch_x,model.Y:batch_y})
+    for index in range(0, len(train_X), batch_size):
+        batch_x = train_X[index : min(index + batch_size, len(train_X))]
+        batch_y = train_Y[index : min(index + batch_size, len(train_X))]
+        loss, _ = sess.run(
+            [model.cost, model.optimizer], feed_dict={model.X: batch_x, model.Y: batch_y}
+        )
         total_loss += loss
     total_loss /= len(train_X)
-    print('epoch: %d, avg cost: %f'%(i+1,total_loss))
+    print("epoch: %d, avg cost: %f" % (i + 1, total_loss))
 
 
 # In[12]:
 
 
-logits_train = sess.run(model.logits,feed_dict={model.X:train_X})
-logits_test = sess.run(model.logits,feed_dict={model.X:test_X})
+logits_train = sess.run(model.logits, feed_dict={model.X: train_X})
+logits_test = sess.run(model.logits, feed_dict={model.X: test_X})
 logits_test.shape
 
 
@@ -213,6 +220,7 @@ logits_test.shape
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set()
 from matplotlib import offsetbox
 
@@ -220,45 +228,41 @@ from matplotlib import offsetbox
 # In[14]:
 
 
-ax_min = np.min(logits_test,0)
-ax_max = np.max(logits_test,0)
-ax_dist_sq = np.sum((ax_max-ax_min)**2)
-plt.figure(figsize=(8,8))
+ax_min = np.min(logits_test, 0)
+ax_max = np.max(logits_test, 0)
+ax_dist_sq = np.sum((ax_max - ax_min) ** 2)
+plt.figure(figsize=(8, 8))
 ax = plt.subplot(111)
-shown_images = np.array([[1., 1.]])
-colors = ['b','r']
+shown_images = np.array([[1.0, 1.0]])
+colors = ["b", "r"]
 for i in range(logits_test.shape[0]):
-    dist = np.sum((logits_test[i] - shown_images)**2, 1)
-    if np.min(dist) < 3e-4*ax_dist_sq:
+    dist = np.sum((logits_test[i] - shown_images) ** 2, 1)
+    if np.min(dist) < 3e-4 * ax_dist_sq:
         continue
     shown_images = np.r_[shown_images, [logits_test[i]]]
-    plt.scatter(logits_test[i,0],logits_test[i,1],c=colors[test_Y[i]])
-plt.legend(['negative','positive'])
+    plt.scatter(logits_test[i, 0], logits_test[i, 1], c=colors[test_Y[i]])
+plt.legend(["negative", "positive"])
 plt.show()
 
 
 # In[15]:
 
 
-ax_min = np.min(logits_train,0)
-ax_max = np.max(logits_train,0)
-ax_dist_sq = np.sum((ax_max-ax_min)**2)
-plt.figure(figsize=(8,8))
+ax_min = np.min(logits_train, 0)
+ax_max = np.max(logits_train, 0)
+ax_dist_sq = np.sum((ax_max - ax_min) ** 2)
+plt.figure(figsize=(8, 8))
 ax = plt.subplot(111)
-shown_images = np.array([[1., 1.]])
-colors = ['b','r']
+shown_images = np.array([[1.0, 1.0]])
+colors = ["b", "r"]
 for i in range(logits_train.shape[0]):
-    dist = np.sum((logits_train[i] - shown_images)**2, 1)
-    if np.min(dist) < 3e-4*ax_dist_sq:
+    dist = np.sum((logits_train[i] - shown_images) ** 2, 1)
+    if np.min(dist) < 3e-4 * ax_dist_sq:
         continue
     shown_images = np.r_[shown_images, [logits_train[i]]]
-    plt.scatter(logits_train[i,0],logits_train[i,1],c=colors[train_Y[i]])
-plt.legend(['negative','positive'])
+    plt.scatter(logits_train[i, 0], logits_train[i, 1], c=colors[train_Y[i]])
+plt.legend(["negative", "positive"])
 plt.show()
 
 
 # In[ ]:
-
-
-
-

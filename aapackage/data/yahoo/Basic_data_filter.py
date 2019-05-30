@@ -45,34 +45,40 @@ import os, sys, re, time, datetime
 import pandas
 from DictParser.Dict_create_fr_text import DictParser
 
+
 class InfoBasicFilter(object):
     """ Basic info filter by getting the curr stocks information for filtering.
 
     """
+
     def __init__(self, fname):
         """ Pass in the basic stock info for the analysis.
 
         """
         ## file path
         self.data_fname = fname
-        self.criteria_type = '' # determine the type of criteria to use
-        self.criteria_folder_path = r'C:\pythonuserfiles\yahoo_finance_data_extract\criteria'
+        self.criteria_type = ""  # determine the type of criteria to use
+        self.criteria_folder_path = r"C:\pythonuserfiles\yahoo_finance_data_extract\criteria"
 
         ## Load all the different criteria found in the self.criteria_folder_path.
         self.load_criteria_type_dict()
 
         ## output -- will be catered according to the input criteria type
-        self.modified_raw_file_path = r'C:\data\stockpick'
-        self.modified_fname = r''
-        
+        self.modified_raw_file_path = r"C:\data\stockpick"
+        self.modified_fname = r""
+
         ## print options
-        self.print_qty_left_aft_screen = 1 # if 1 will print the qty left after screening each fitler
+        self.print_qty_left_aft_screen = (
+            1
+        )  # if 1 will print the qty left after screening each fitler
 
         ## parameters -- create dataframe object
         self.data_df = pandas.read_csv(self.data_fname)
 
         ## options
-        self.use_subset_criteria_list = 0 # if 1, will not run all the criteria found in path. Will get from self.sub_set_criteria_list
+        self.use_subset_criteria_list = (
+            0
+        )  # if 1, will not run all the criteria found in path. Will get from self.sub_set_criteria_list
         self.subset_criteria_list = []
 
     def set_criteria_filepath(self, filepath):
@@ -81,15 +87,19 @@ class InfoBasicFilter(object):
             Args:
                 filepath (str): path that store all the criteria.txt. 
         """
-        self.criteria_folder_path =  filepath
+        self.criteria_folder_path = filepath
 
     def load_criteria_type_dict(self):
         """ Create a dict of all the criteria type based on all the files in the folder.
             The dict key will be the file name.
             The folder path will based on the self.criteria_folder_path.
         """
-        mypath  = self.criteria_folder_path
-        self.criteria_type_path_dict = {os.path.splitext(f)[0]: os.path.join(mypath,f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath,f)) }
+        mypath = self.criteria_folder_path
+        self.criteria_type_path_dict = {
+            os.path.splitext(f)[0]: os.path.join(mypath, f)
+            for f in os.listdir(mypath)
+            if os.path.isfile(os.path.join(mypath, f))
+        }
 
     def set_subset_criteria_list(self, subset_list):
         """ Set the subset_criteria_list.
@@ -107,7 +117,7 @@ class InfoBasicFilter(object):
                 criteria_type (str): type of critiera.
                 criteria_list (additional args): separate list of critieral for printing.
         """
-        print("Current Screen criteria: ", criteria_type, ' ', ','.join(criteria_list))
+        print("Current Screen criteria: ", criteria_type, " ", ",".join(criteria_list))
 
     def __print_modified_df_qty(self):
         """ Print the modified df qty.
@@ -126,29 +136,30 @@ class InfoBasicFilter(object):
         """
 
         print("List of filter for the criteria: ", self.criteria_type)
-        print('-'*40)
-        for n in ['greater', 'less','compare']:
-            if n not in self.criteria_dict: continue #continue if criteria not found
-            
-            sub_criteria_dict = self.criteria_dict[n]
-            if n == 'greater':
-                for sub_n in list(sub_criteria_dict.keys()):
-                    print(sub_n, ' > ', sub_criteria_dict[sub_n][0])
+        print("-" * 40)
+        for n in ["greater", "less", "compare"]:
+            if n not in self.criteria_dict:
+                continue  # continue if criteria not found
 
-            if n == 'less':
+            sub_criteria_dict = self.criteria_dict[n]
+            if n == "greater":
                 for sub_n in list(sub_criteria_dict.keys()):
-                    print(sub_n, ' < ', sub_criteria_dict[sub_n][0])
-                
-            if n == 'compare':
+                    print(sub_n, " > ", sub_criteria_dict[sub_n][0])
+
+            if n == "less":
                 for sub_n in list(sub_criteria_dict.keys()):
-                    param_list =  sub_criteria_dict[sub_n]
+                    print(sub_n, " < ", sub_criteria_dict[sub_n][0])
+
+            if n == "compare":
+                for sub_n in list(sub_criteria_dict.keys()):
+                    param_list = sub_criteria_dict[sub_n]
                     if not len(param_list) == 4:
-                        print('Something wrong with compare criteria: ', param_list)
+                        print("Something wrong with compare criteria: ", param_list)
                         continue
                     print(param_list[0], param_list[2], param_list[1], param_list[3])
-                    
+
         print()
-        
+
     def set_criteria_type(self, criteria_type):
         """ Set the criteria type. Criteria type must be one of the keys in the self.criteria_type_path_dict.
             Use to select the different criteria file.
@@ -156,7 +167,7 @@ class InfoBasicFilter(object):
                 criteria_type (str): criteria type
         """
         assert criteria_type in list(self.criteria_type_path_dict.keys())
-        self.criteria_type =  criteria_type
+        self.criteria_type = criteria_type
 
     def print_all_availiable_criteria(self):
         """ Print all the criteria that is avaliable for filter.
@@ -176,7 +187,7 @@ class InfoBasicFilter(object):
         self.criteria_dict = self.dictparser.dict_of_dict_obj
         self.modified_df = self.data_df
         ## fill the nan value
-        self.modified_df.fillna(0, inplace =True)
+        self.modified_df.fillna(0, inplace=True)
 
         self.set_output_file()
 
@@ -184,8 +195,10 @@ class InfoBasicFilter(object):
         """ Set the output file according to the critiera type chosen.
 
         """
-        self.modified_fname = os.path.join(self.modified_raw_file_path, self.criteria_type + '_data.csv')
-        
+        self.modified_fname = os.path.join(
+            self.modified_raw_file_path, self.criteria_type + "_data.csv"
+        )
+
     def process_criteria(self):
         """ Process the different criteria generated.
             Present only have more and less
@@ -197,25 +210,30 @@ class InfoBasicFilter(object):
         greater_dict = dict()
         less_dict = dict()
         compare_dict = dict()
-        print('Processing each filter...')
-        print('-'*40)
+        print("Processing each filter...")
+        print("-" * 40)
 
-        if 'greater' in self.criteria_dict: greater_dict =  self.criteria_dict['greater']
-        if 'less' in self.criteria_dict: less_dict =  self.criteria_dict['less']
-        if 'compare' in self.criteria_dict: compare_dict =  self.criteria_dict['compare']
+        if "greater" in self.criteria_dict:
+            greater_dict = self.criteria_dict["greater"]
+        if "less" in self.criteria_dict:
+            less_dict = self.criteria_dict["less"]
+        if "compare" in self.criteria_dict:
+            compare_dict = self.criteria_dict["compare"]
 
         for n in list(greater_dict.keys()):
-            if not n in self.modified_df.columns: continue #continue if criteria not found
+            if not n in self.modified_df.columns:
+                continue  # continue if criteria not found
             self.modified_df = self.modified_df[self.modified_df[n] > float(greater_dict[n][0])]
             if self.print_qty_left_aft_screen:
-                self.__print_criteria_info('Greater', n)
+                self.__print_criteria_info("Greater", n)
                 self.__print_modified_df_qty()
-                
+
         for n in list(less_dict.keys()):
-            if not n in self.modified_df.columns: continue #continue if criteria not found
+            if not n in self.modified_df.columns:
+                continue  # continue if criteria not found
             self.modified_df = self.modified_df[self.modified_df[n] < float(less_dict[n][0])]
             if self.print_qty_left_aft_screen:
-                self.__print_criteria_info('Less',n)
+                self.__print_criteria_info("Less", n)
                 self.__print_modified_df_qty()
 
         for n in list(compare_dict.keys()):
@@ -224,27 +242,33 @@ class InfoBasicFilter(object):
             compare_type = compare_dict[n][2]
             compare_value = float(compare_dict[n][3])
 
-            if not first_item in self.modified_df.columns: continue #continue if criteria not found
-            if not sec_item in self.modified_df.columns: continue #continue if criteria not found
+            if not first_item in self.modified_df.columns:
+                continue  # continue if criteria not found
+            if not sec_item in self.modified_df.columns:
+                continue  # continue if criteria not found
 
-            if compare_type == 'greater':
-                self.modified_df = self.modified_df[(self.modified_df[first_item] - self.modified_df[sec_item])> compare_value]
-            elif compare_type == 'less':
-                self.modified_df = self.modified_df[(self.modified_df[first_item] - self.modified_df[sec_item])< compare_value]
+            if compare_type == "greater":
+                self.modified_df = self.modified_df[
+                    (self.modified_df[first_item] - self.modified_df[sec_item]) > compare_value
+                ]
+            elif compare_type == "less":
+                self.modified_df = self.modified_df[
+                    (self.modified_df[first_item] - self.modified_df[sec_item]) < compare_value
+                ]
 
             if self.print_qty_left_aft_screen:
-                self.__print_criteria_info('Compare',first_item, sec_item)
+                self.__print_criteria_info("Compare", first_item, sec_item)
                 self.__print_modified_df_qty()
 
-        print('END')
-        print('\nSnapshot of final df ...')
+        print("END")
+        print("\nSnapshot of final df ...")
         self.__print_snapshot_of_modified_df()
 
     def send_modified_to_file(self):
         """ Save the modified df to csv.
 
         """
-        self.modified_df.to_csv(self.modified_fname, index = False)
+        self.modified_df.to_csv(self.modified_fname, index=False)
 
     def loop_criteria(self):
         """ Loop all the criteria file (note have to reset the modified df)
@@ -256,34 +280,34 @@ class InfoBasicFilter(object):
                 if not n in sub_set_criteria_list:
                     continue
             self.set_criteria_type(n)
-            self.get_all_criteria_fr_file() #thsi is the problem
+            self.get_all_criteria_fr_file()  # thsi is the problem
             self.print_full_filter_on_criteria_type()
             self.process_criteria()
             self.send_modified_to_file()
 
-if __name__ == '__main__':
-    #create a gui file
-    choice =3
+
+if __name__ == "__main__":
+    # create a gui file
+    choice = 3
 
     print()
-    if choice ==1:
+    if choice == 1:
         print()
-        ss =  InfoBasicFilter(r'c:\data\full_aug30.csv')
-        ss.set_criteria_type('potential')
+        ss = InfoBasicFilter(r"c:\data\full_aug30.csv")
+        ss.set_criteria_type("potential")
         ss.get_all_criteria_fr_file()
         ss.process_criteria()
         ss.send_modified_to_file()
 
-    if choice ==2:
-        ss =  InfoBasicFilter(r'c:\data\full_oct02.csv')
-        ss.set_criteria_type('potential')
+    if choice == 2:
+        ss = InfoBasicFilter(r"c:\data\full_oct02.csv")
+        ss.set_criteria_type("potential")
         ss.get_all_criteria_fr_file()
         ss.print_full_filter_on_criteria_type()
         ss.process_criteria()
-        #ss.modified_df.to_csv('c:\data\potential_low_PE.csv', index = False)
-        #print ss.modified_df
+        # ss.modified_df.to_csv('c:\data\potential_low_PE.csv', index = False)
+        # print ss.modified_df
 
-    if choice ==3:
-        ss =  InfoBasicFilter(r'C:\data\compile_stockdata\full_20150424.csv')
+    if choice == 3:
+        ss = InfoBasicFilter(r"C:\data\compile_stockdata\full_20150424.csv")
         ss.loop_criteria()
-

@@ -1,63 +1,63 @@
 # -*- coding: utf-8 -*-
 import sys, os
-DIR1= os.getcwd()  #DIRCWD= 'D:/_devs/Python01/project27/'
-DIR_package= os.getcwd()+'/aapackage/aws/'
-os.chdir(DIR1); sys.path.append(DIR1+'/aapackage')
+
+DIR1 = os.getcwd()  # DIRCWD= 'D:/_devs/Python01/project27/'
+DIR_package = os.getcwd() + "/aapackage/aws/"
+os.chdir(DIR1)
+sys.path.append(DIR1 + "/aapackage")
 
 from time import sleep
-import configparser,  util
+import configparser, util
 from celery import Celery
+
 ######################  Initialization    #######################################################
-config= configparser.ConfigParser()
-config.read(DIR_package+'config.cfg')
+config = configparser.ConfigParser()
+config.read(DIR_package + "config.cfg")
 
-DBNAME= DIR_package+'task_scheduler.db'
-BROKER= config.get('CELERY', 'BROKER')  #'amqp://localhost//'
+DBNAME = DIR_package + "task_scheduler.db"
+BROKER = config.get("CELERY", "BROKER")  #'amqp://localhost//'
 
-WORKER_DIR='/home/'  #Main Folder in Worker
-S3_DIR='/zdisk/tasks/'  #Main Folder in Worker
+WORKER_DIR = "/home/"  # Main Folder in Worker
+S3_DIR = "/zdisk/tasks/"  # Main Folder in Worker
 
 
-#-------- Module containing List of task: task01.py in folder Package ----------------------------
-app = Celery('tasks_folder', broker=BROKER)
-app.conf.update( BROKER_HEARTBEAT = 10, CELERY_ACKS_LATE = True,
+# -------- Module containing List of task: task01.py in folder Package ----------------------------
+app = Celery("tasks_folder", broker=BROKER)
+app.conf.update(
+    BROKER_HEARTBEAT=10,
+    CELERY_ACKS_LATE=True,
     # CELERY_RESULT_BACKEND=
     # CELERY_RESULT_DBURI=
-    CELERYD_PREFETCH_MULTIPLIER = 1,
-    CELERY_TRACK_STARTED = True, )
+    CELERYD_PREFETCH_MULTIPLIER=1,
+    CELERY_TRACK_STARTED=True,
+)
 
-#------  List of Pre-Defined Tasks ---------------------------------------------------------------
+# ------  List of Pre-Defined Tasks ---------------------------------------------------------------
 @app_task
-def t_runscript_file(tid, script_folder, script_file, pars) :
+def t_runscript_file(tid, script_folder, script_file, pars):
 
-  #Create Folder Locally for Task01
+    # Create Folder Locally for Task01
 
+    # Download folder from S3
 
-  #Download folder from S3
+    # Execute Script
 
+    # Save State to S3
 
-  #Execute Script
-
-
-  #Save State to S3
-
-  return state_path
-
+    return state_path
 
 
 @app_task
-def t_runscript_string(tid, script_folder, script_code, pars) :
-  return tid
-
-
+def t_runscript_string(tid, script_folder, script_code, pars):
+    return tid
 
 
 @app_task
-def t_runscript_parallel(tid, script_folder, script_file, pars) :
-  return tid
+def t_runscript_parallel(tid, script_folder, script_file, pars):
+    return tid
 
 
-'''
+"""
 app = Celery('tasks_folder', backend='amqp', broker='amqp://guest@my.server.com//')
 
 CELERY_ACCEPT_CONTENT: ['msgpack']
@@ -117,35 +117,31 @@ broker='amqp://<user>:<password>@<ip>/<vhost>')
 def add(x, y):
 return x + y
 
-'''
-
-
-
+"""
 
 
 ####################### SEND TASK #############################################################
-#4) Module Launcher of tasks_folder -------------------------------------------------
-from . import tasklist     #File containing all the tasks_folder
+# 4) Module Launcher of tasks_folder -------------------------------------------------
+from . import tasklist  # File containing all the tasks_folder
 
-task_list=[]
-for i in range(0, 2) :
-  task_list.append(tasklist.t_run_filescript.delay(5))
-  # task_module.task_function.delay(arg1, arg2, arg3)
+task_list = []
+for i in range(0, 2):
+    task_list.append(tasklist.t_run_filescript.delay(5))
+    # task_module.task_function.delay(arg1, arg2, arg3)
 
-#All the tasks_folder will be sent right away To Rabbit Broker  and back result in task_list
-len(task_list)   #Nb of tasks_folder being done
+# All the tasks_folder will be sent right away To Rabbit Broker  and back result in task_list
+len(task_list)  # Nb of tasks_folder being done
 
-t= task_list[0]
+t = task_list[0]
 t.ready()
 
 
-
 #################### REMOTE MACHINE ########################################################
-#3) Launch remote worker with Name_of_Module ----------------------------------------
- # File task01 must be in the worker folder
- # celery worker  -A tasklist - -loglevel=info       #Launch Task file in remotev
+# 3) Launch remote worker with Name_of_Module ----------------------------------------
+# File task01 must be in the worker folder
+# celery worker  -A tasklist - -loglevel=info       #Launch Task file in remotev
 
-'''
+"""
 On Machine B:
 Install Celery.
 Copy remote.py file from machine A to this machine.
@@ -155,10 +151,10 @@ As soon as you launch the worker, you will receive the tasks you queued up and g
 
 task01 must be accessed on remote engine and on local server, as well as the code source.
 
-'''
+"""
 
 
-'''
+"""
 software -> celery:3.1.25 (Cipater) kombu:3.0.37 py:2.7.5
             billiard:3.3.0.23 py-amqp:1.4.9
 platform -> system:Linux arch:64bit, ELF imp:CPython
@@ -185,14 +181,4 @@ CELERY_EVENT_SERIALIZER: 'msgpack'
 CELERYD_PREFETCH_MULTIPLIER: 1
 CELERY_RESULT_SERIALIZER: 'msgpack'
 BROKER_HEARTBEAT_CHECKRATE: 5
-'''
-
-
-
-
-
-
-
-
-
-
+"""

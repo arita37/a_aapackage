@@ -3,13 +3,27 @@
 import datetime
 
 
-
 from numpy import asarray, ceil
 import pandas
 import rpy2.robjects as robjects
 
-def stl(data, ns, np=None, nt=None, nl=None, isdeg=0, itdeg=1, ildeg=1,
-        nsjump=None, ntjump=None, nljump=None, ni=2, no=0, fulloutput=False):
+
+def stl(
+    data,
+    ns,
+    np=None,
+    nt=None,
+    nl=None,
+    isdeg=0,
+    itdeg=1,
+    ildeg=1,
+    nsjump=None,
+    ntjump=None,
+    nljump=None,
+    ni=2,
+    no=0,
+    fulloutput=False,
+):
     """
     Seasonal-Trend decomposition procedure based on LOESS
     data : pandas.Series
@@ -82,25 +96,26 @@ def stl(data, ns, np=None, nt=None, nl=None, isdeg=0, itdeg=1, ildeg=1,
     _data = data.copy()
     _data = _data.dropna()
     # TODO: account for non-monthly series
-    _idx = pandas.DateRange(start=_data.index[0], end=_data.index[-1],
-                            offset=pandas.datetools.MonthBegin())
+    _idx = pandas.DateRange(
+        start=_data.index[0], end=_data.index[-1], offset=pandas.datetools.MonthBegin()
+    )
     data = pandas.Series(index=_idx)
     data[_data.index] = _data
 
     # zoo package contains na.approx
     zoo_ = robjects.packages.importr("zoo")
 
-    ts_ = robjects.r['ts']
-    stl_ = robjects.r['stl']
-    naaction_ = robjects.r['na.approx']
+    ts_ = robjects.r["ts"]
+    stl_ = robjects.r["stl"]
+    naaction_ = robjects.r["na.approx"]
 
     # find out the period of the time series
     if np is None:
         np = 12
         # TODO: find out the offset of the Series, and set np accordingly
-        #if isinstance(data.index.offset, pandas.core.datetools.MonthEnd):
+        # if isinstance(data.index.offset, pandas.core.datetools.MonthEnd):
         #    np = 12
-        #else:
+        # else:
         #    raise NotImplementedError()
     # fill default values
     if nt is None:
@@ -110,11 +125,11 @@ def stl(data, ns, np=None, nt=None, nl=None, isdeg=0, itdeg=1, ildeg=1,
     if nl is None:
         nl = np if np % 2 is 1 else np + 1
     if nsjump is None:
-        nsjump = ceil(ns / 10.)
+        nsjump = ceil(ns / 10.0)
     if ntjump is None:
-        ntjump = ceil(nt / 10.)
+        ntjump = ceil(nt / 10.0)
     if nljump is None:
-        nljump = ceil(nl / 10.)
+        nljump = ceil(nl / 10.0)
 
     # convert data to R object
     if np is 12:
@@ -124,47 +139,54 @@ def stl(data, ns, np=None, nt=None, nl=None, isdeg=0, itdeg=1, ildeg=1,
     if nt is None:
         nt = robjects.rinterface.R_NilValue
 
-    result = stl_(ts, ns, isdeg, nt, itdeg, nl, ildeg, nsjump, ntjump, nljump,
-                  False, ni, no, naaction_)
+    result = stl_(
+        ts, ns, isdeg, nt, itdeg, nl, ildeg, nsjump, ntjump, nljump, False, ni, no, naaction_
+    )
 
     res_ts = asarray(result[0])
     try:
-        res_ts = pandas.DataFrame({"seasonal" : pandas.Series(res_ts[:,0],
-                                                           index=data.index),
-                                   "trend" : pandas.Series(res_ts[:,1],
-                                                           index=data.index),
-                                   "remainder" : pandas.Series(res_ts[:,2],
-                                                           index=data.index)})
+        res_ts = pandas.DataFrame(
+            {
+                "seasonal": pandas.Series(res_ts[:, 0], index=data.index),
+                "trend": pandas.Series(res_ts[:, 1], index=data.index),
+                "remainder": pandas.Series(res_ts[:, 2], index=data.index),
+            }
+        )
     except:
         return res_ts, data
         raise
-#        res_ts = pandas.DataFrame({"seasonal" : pandas.Series(index=data.index),
-#                                   "trend" : pandas.Series(index=data.index),
-#                                   "remainder" : pandas.Series(index=data.index)})
+    #        res_ts = pandas.DataFrame({"seasonal" : pandas.Series(index=data.index),
+    #                                   "trend" : pandas.Series(index=data.index),
+    #                                   "remainder" : pandas.Series(index=data.index)})
 
     if fulloutput:
-        return {"time.series" : res_ts,
-                "weights" : result[1],
-                "call" : result[2],
-                "win" : result[3],
-                "deg" : result[4],
-                "jump" : result[5],
-                "ni" : result[6],
-                "no" : result[7]}
+        return {
+            "time.series": res_ts,
+            "weights": result[1],
+            "call": result[2],
+            "win": result[3],
+            "deg": result[4],
+            "jump": result[5],
+            "ni": result[6],
+            "no": result[7],
+        }
     else:
         return res_ts
 
 
 if __name__ == "__main__":
-    data = np.arange(85.) / 12.
-    data = np.sin(data * (2*np.pi))
-    data += np.arange(85.) / 12. * .5
-    data += .1 * np.random.randn(85)
-    idx = pandas.DateRange(start=datetime.datetime(1999,1,1), end=datetime.datetime(2006,2,1), offset=pandas.datetools.MonthEnd())
+    data = np.arange(85.0) / 12.0
+    data = np.sin(data * (2 * np.pi))
+    data += np.arange(85.0) / 12.0 * 0.5
+    data += 0.1 * np.random.randn(85)
+    idx = pandas.DateRange(
+        start=datetime.datetime(1999, 1, 1),
+        end=datetime.datetime(2006, 2, 1),
+        offset=pandas.datetools.MonthEnd(),
+    )
     data = pandas.Series(data, index=idx)
 
     res = stl(data, 7, nt=11)
-
 
     '''
     """

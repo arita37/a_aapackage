@@ -1,54 +1,38 @@
 # -*- coding: utf-8 -*-
-from __future__ import division; from __future__ import print_function
-import os, sys; from attrdict import AttrDict as dict2
+from __future__ import division
+from __future__ import print_function
+import os, sys
+from attrdict import AttrDict as dict2
+
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
 # DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+os.chdir(DIRCWD)
+sys.path.append(DIRCWD + "/aapackage")
 
 import numpy as np, pandas as pd, scipy as sci
 
 
+try:
+    import util
 
-try :
- import util; print(util)
- util.a_info_system()
- util.isanaconda()
- util.date_allinfo()
+    print(util)
+    util.a_info_system()
+    util.isanaconda()
+    util.date_allinfo()
 
- vv  =   np.random.rand(1,10)
- mm  =   np.random.rand(100,5)
+    vv = np.random.rand(1, 10)
+    mm = np.random.rand(100, 5)
 
+    # util.pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
 
- # util.pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
-
-
- print(util.np_sort(vv))
-
+    print(util.np_sort(vv))
 
 
+except Exception as e:
+    print(e)
 
 
-
-
-
-
-
-
-
-
-except Exception as e: print(e)
-
-
-
-
-
-
-
-
-
-
-
-'''
+"""
 import tensorflow as tf, numpy as np, pandas as pd, sys, os, argparse, arrow; from tabulate import tabulate
 import util_min, util_ml as util_ml
 
@@ -56,13 +40,11 @@ import util_min, util_ml as util_ml
 
 
 import util
-'''
-
-
+"""
 
 
 ############### util    ####################################################################
-'''
+"""
 Regression test : generate meta data of function
 
 package_name, 
@@ -82,31 +64,4 @@ arg_comment,
 
 from . import util
 
-'''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+"""

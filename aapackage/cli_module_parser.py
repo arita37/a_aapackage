@@ -1,4 +1,3 @@
-
 """This Python code parser fetches variable information from the given source
 
 The source may be given either as a .py filepath or as a directory path
@@ -66,6 +65,7 @@ def analyzeSource(source):
 
 class ASTAnalyzer(ast.NodeVisitor):
     """Visits nodes in a Python AST and collects information on variables"""
+
     LOCAL = "local"
     GLOBAL = "global"
     FORCE_GLOBAL = "force_global"
@@ -82,7 +82,11 @@ class ASTAnalyzer(ast.NodeVisitor):
       {(ast.stmt function_or_class,
         str variable): bool is_local, ...}
     """
-        label_to_bool = {self.__class__.LOCAL: True, self.__class__.GLOBAL: False, self.__class__.FORCE_GLOBAL: False}
+        label_to_bool = {
+            self.__class__.LOCAL: True,
+            self.__class__.GLOBAL: False,
+            self.__class__.FORCE_GLOBAL: False,
+        }
 
         return {k: label_to_bool[v] for (k, v) in self.variables.items()}
 
@@ -153,16 +157,15 @@ class ASTAnalyzer(ast.NodeVisitor):
         self._handleVariable(node)
 
 
-
-
-
 def usage(message):
     """Prints the usage description"""
     print(message)
-    print(f"""
+    print(
+        f"""
 Usage:
 {sys.argv[0]} filepath|directory_path
-""")
+"""
+    )
 
 
 def main():
@@ -268,16 +271,14 @@ def writeCSV(variables, file_handle=sys.stdout):
     file_handle.write("filepath,function_or_class_name,variable_name,is_local\n")
 
     for filepath, function_or_class, variable_name, is_local in variables:
-        function_or_class_name = (function_or_class.name if function_or_class is not None else '(global)')
+        function_or_class_name = (
+            function_or_class.name if function_or_class is not None else "(global)"
+        )
 
-        file_handle.write("%s,%s,%s,%s\n" % (filepath, function_or_class_name, variable_name, is_local))
-
+        file_handle.write(
+            "%s,%s,%s,%s\n" % (filepath, function_or_class_name, variable_name, is_local)
+        )
 
 
 if __name__ == "__main__":
-   main()
-
-
-
-
-
+    main()

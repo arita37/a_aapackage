@@ -14,31 +14,27 @@ import os
 # In[2]:
 
 
-prefix = 'https://tspace.library.utoronto.ca'
-save_dir = './data/'
+prefix = "https://tspace.library.utoronto.ca"
+save_dir = "./data/"
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
-base_url = 'https://tspace.library.utoronto.ca/handle/1807/24'
-urls = [base_url+str(i) for i in range(488, 502)]
+base_url = "https://tspace.library.utoronto.ca/handle/1807/24"
+urls = [base_url + str(i) for i in range(488, 502)]
 for url in urls:
-    soup = BeautifulSoup(urlopen(url).read(), 'html5lib')
-    targets = soup.findAll('a', href=re.compile(r'/bitstream/.*.wav'))
-        
-    for a in tqdm(targets, total=len(targets), ncols=70):
-        link = a['href']
+    soup = BeautifulSoup(urlopen(url).read(), "html5lib")
+    targets = soup.findAll("a", href=re.compile(r"/bitstream/.*.wav"))
 
-        audio_save_loc = save_dir + link.split('/')[-1]
+    for a in tqdm(targets, total=len(targets), ncols=70):
+        link = a["href"]
+
+        audio_save_loc = save_dir + link.split("/")[-1]
         if os.path.isfile(audio_save_loc):
             print("File Already Exists")
-        urlretrieve(prefix+a['href'], audio_save_loc)
+        urlretrieve(prefix + a["href"], audio_save_loc)
 
-        with open(audio_save_loc.replace('.wav', '.txt'), 'w') as f:
-            f.write('say the word ' + link.split('_')[-2])
+        with open(audio_save_loc.replace(".wav", ".txt"), "w") as f:
+            f.write("say the word " + link.split("_")[-2])
 
 
 # In[ ]:
-
-
-
-

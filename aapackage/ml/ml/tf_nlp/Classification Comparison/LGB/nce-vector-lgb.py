@@ -7,20 +7,36 @@
 import tensorflow as tf
 import numpy as np
 
+
 class Model_vec:
-    
-    def __init__(self, bow_shape, batch_size, dimension_size, learning_rate, vocabulary_size, boundary):
+    def __init__(
+        self, bow_shape, batch_size, dimension_size, learning_rate, vocabulary_size, boundary
+    ):
         self.X = tf.placeholder(tf.float32, shape=[batch_size, bow_shape])
         self.Y = tf.placeholder(tf.int32, shape=[batch_size, 1])
-        embeddings = tf.Variable(tf.random_uniform([bow_shape, dimension_size], boundary[0], boundary[1]))
+        embeddings = tf.Variable(
+            tf.random_uniform([bow_shape, dimension_size], boundary[0], boundary[1])
+        )
         embeddings = tf.matmul(self.X, embeddings)
-        nce_weights = tf.Variable(tf.truncated_normal([vocabulary_size, dimension_size], stddev = 1.0 / np.sqrt(dimension_size)))
+        nce_weights = tf.Variable(
+            tf.truncated_normal(
+                [vocabulary_size, dimension_size], stddev=1.0 / np.sqrt(dimension_size)
+            )
+        )
         nce_biases = tf.Variable(tf.zeros([vocabulary_size]))
-        self.loss = tf.reduce_mean(tf.nn.nce_loss(weights = nce_weights, biases = nce_biases, labels = self.Y,
-                                                  inputs = embeddings, num_sampled = batch_size, num_classes = vocabulary_size))
+        self.loss = tf.reduce_mean(
+            tf.nn.nce_loss(
+                weights=nce_weights,
+                biases=nce_biases,
+                labels=self.Y,
+                inputs=embeddings,
+                num_sampled=batch_size,
+                num_classes=vocabulary_size,
+            )
+        )
 
         self.optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss)
-        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims = True))
+        norm = tf.sqrt(tf.reduce_sum(tf.square(embeddings), 1, keep_dims=True))
         self.normalized_embeddings = embeddings / norm
 
 
@@ -47,12 +63,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 # clear string
 def clearstring(string):
-    string = re.sub('[^A-Za-z ]+', '', string)
-    string = string.split(' ')
+    string = re.sub("[^A-Za-z ]+", "", string)
+    string = string.split(" ")
     string = filter(None, string)
     string = [y.strip() for y in string]
-    string = ' '.join(string)
+    string = " ".join(string)
     return string.lower()
+
 
 # because of sklean.datasets read a document as a single element
 # so we want to split based on new line
@@ -60,7 +77,7 @@ def separate_dataset(trainset):
     datastring = []
     datatarget = []
     for i in range(len(trainset.data)):
-        data_ = trainset.data[i].split('\n')
+        data_ = trainset.data[i].split("\n")
         # python3, if python2, just remove list()
         data_ = list(filter(None, data_))
         for n in range(len(data_)):
@@ -75,17 +92,18 @@ def separate_dataset(trainset):
 
 
 # you can change any encoding type
-trainset = sklearn.datasets.load_files(container_path = 'data', encoding = 'UTF-8')
+trainset = sklearn.datasets.load_files(container_path="data", encoding="UTF-8")
 trainset.data, trainset.target = separate_dataset(trainset)
-print (trainset.target_names)
-print (len(trainset.data))
-print (len(trainset.target))
+print(trainset.target_names)
+print(len(trainset.data))
+print(len(trainset.target))
 
 
 # In[6]:
 
 
 import random
+
 combined = list(zip(trainset.data, trainset.target))
 random.shuffle(combined)
 
@@ -114,10 +132,15 @@ sess.run(tf.global_variables_initializer())
 for i in range(epoch):
     total_loss = 0
     for k in range(0, (out.shape[0] // batch_size) * batch_size, batch_size):
-        loss, _ = sess.run([model.loss, model.optimizer], feed_dict = {model.X: out[k: k + batch_size, :].todense(),
-                                                                       model.Y: label_Y[k: k + batch_size, :]})
+        loss, _ = sess.run(
+            [model.loss, model.optimizer],
+            feed_dict={
+                model.X: out[k : k + batch_size, :].todense(),
+                model.Y: label_Y[k : k + batch_size, :],
+            },
+        )
     total_loss += loss
-    print('epoch: ', i, 'avg loss: ', total_loss / (out.shape[0] // batch_size))
+    print("epoch: ", i, "avg loss: ", total_loss / (out.shape[0] // batch_size))
 
 
 # In[11]:
@@ -130,7 +153,9 @@ vectorized = np.zeros(((out.shape[0] // batch_size) * batch_size, dimension_size
 
 
 for k in range(0, (out.shape[0] // batch_size) * batch_size, batch_size):
-    vectorized[k: k + batch_size, :] = sess.run(model.normalized_embeddings, feed_dict = {model.X: out[k: k + batch_size, :].todense()})
+    vectorized[k : k + batch_size, :] = sess.run(
+        model.normalized_embeddings, feed_dict={model.X: out[k : k + batch_size, :].todense()}
+    )
 
 
 # In[30]:
@@ -138,13 +163,16 @@ for k in range(0, (out.shape[0] // batch_size) * batch_size, batch_size):
 
 from sklearn.manifold import TSNE
 from sklearn.cross_validation import train_test_split
-_, vect_temp, _, Y_temp = train_test_split(vectorized, trainset.target[:vectorized.shape[0]], test_size = 0.005)
+
+_, vect_temp, _, Y_temp = train_test_split(
+    vectorized, trainset.target[: vectorized.shape[0]], test_size=0.005
+)
 
 
 # In[31]:
 
 
-embed_2d = TSNE(n_components = 2).fit_transform(vect_temp)
+embed_2d = TSNE(n_components=2).fit_transform(vect_temp)
 
 
 # In[32]:
@@ -152,12 +180,18 @@ embed_2d = TSNE(n_components = 2).fit_transform(vect_temp)
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set()
 plt.figure(figsize=(10, 10))
-colors = sns.color_palette(n_colors = len(trainset.target_names))
+colors = sns.color_palette(n_colors=len(trainset.target_names))
 y_train_reshape = np.array(Y_temp)
 for no, _ in enumerate(np.unique(y_train_reshape)):
-    plt.scatter(embed_2d[y_train_reshape == no, 0], embed_2d[y_train_reshape == no, 1], c = colors[no], label = trainset.target_names[no])
+    plt.scatter(
+        embed_2d[y_train_reshape == no, 0],
+        embed_2d[y_train_reshape == no, 1],
+        c=colors[no],
+        label=trainset.target_names[no],
+    )
 plt.legend()
 plt.show()
 
@@ -166,51 +200,58 @@ plt.show()
 
 
 import pickle
-with open('vector.p', 'wb') as fopen:
+
+with open("vector.p", "wb") as fopen:
     pickle.dump(vectorized, fopen)
-with open('label-y.p', 'wb') as fopen:
-    pickle.dump(trainset.target[:vectorized.shape[0]], fopen)
+with open("label-y.p", "wb") as fopen:
+    pickle.dump(trainset.target[: vectorized.shape[0]], fopen)
 
 
 # In[35]:
 
 
-train_X, test_X, train_Y, test_Y = train_test_split(vectorized, trainset.target[:vectorized.shape[0]], test_size = 0.2)
+train_X, test_X, train_Y, test_Y = train_test_split(
+    vectorized, trainset.target[: vectorized.shape[0]], test_size=0.2
+)
 
 
 # In[36]:
 
 
 import lightgbm as lgb
+
 params_lgd = {
-    'boosting_type': 'dart',
-    'objective': 'multiclass',
-    'colsample_bytree': 0.4,
-    'subsample': 0.8,
-    'learning_rate': 0.1,
-    'silent': False,
-    'n_estimators': 10000,
-    'reg_lambda': 0.0005,
-    'device':'gpu'
-    }
+    "boosting_type": "dart",
+    "objective": "multiclass",
+    "colsample_bytree": 0.4,
+    "subsample": 0.8,
+    "learning_rate": 0.1,
+    "silent": False,
+    "n_estimators": 10000,
+    "reg_lambda": 0.0005,
+    "device": "gpu",
+}
 clf = lgb.LGBMClassifier(**params_lgd)
-clf.fit(train_X,train_Y, eval_set=[(train_X,train_Y), (test_X,test_Y)], 
-        eval_metric='logloss', early_stopping_rounds=20, verbose=True)
+clf.fit(
+    train_X,
+    train_Y,
+    eval_set=[(train_X, train_Y), (test_X, test_Y)],
+    eval_metric="logloss",
+    early_stopping_rounds=20,
+    verbose=True,
+)
 
 
 # In[37]:
 
 
 from sklearn import metrics
+
 predicted = clf.predict(test_X)
-print('accuracy validation set: ', np.mean(predicted == test_Y))
+print("accuracy validation set: ", np.mean(predicted == test_Y))
 
 # print scores
-print(metrics.classification_report(test_Y, predicted, target_names = trainset.target_names))
+print(metrics.classification_report(test_Y, predicted, target_names=trainset.target_names))
 
 
 # In[ ]:
-
-
-
-

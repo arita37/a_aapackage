@@ -27,10 +27,7 @@ from aapackage.batch import util_cpu
 from aapackage import util_log
 
 
-
 ################### Variables #########################################
-
-
 
 
 ######### Logging ####################################################
@@ -38,15 +35,15 @@ global logger
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
-logger = util_log.logger_setup(__name__,
-                               log_file= None,
-                               formatter= util_log.FORMATTER_4)
+logger = util_log.logger_setup(__name__, log_file=None, formatter=util_log.FORMATTER_4)
+
+
 def log(*argv):
-    logger.info( ",".join( [  str(x) for x in argv  ]  ))
+    logger.info(",".join([str(x) for x in argv]))
+
 
 # log("Ok, test_log")
 #####################################################################
-
 
 
 ######################################################################
@@ -55,13 +52,13 @@ def os_python_path():
 
 
 def os_folder_rename(old_folder, new_folder):
-    try :
-       if os.path.isdir(new_folder):
-          new_folder = new_folder + str(random.randint(100, 999))
-       os.rename(old_folder, new_folder)
-       return new_folder
-    except Exception as e :
-       return old_folder    
+    try:
+        if os.path.isdir(new_folder):
+            new_folder = new_folder + str(random.randint(100, 999))
+        os.rename(old_folder, new_folder)
+        return new_folder
+    except Exception as e:
+        return old_folder
 
 
 def os_folder_create(folder):
@@ -70,75 +67,75 @@ def os_folder_create(folder):
 
 
 def os_cmd_generate(task_folder, os_python_path=None):
-  """
+    """
    params.toml check
    otherwise default config is/main.py with current interpreter.
      main.sh 
      main.py
      
   """
-  main_file =   os.path.join( task_folder ,  "main.sh" ) 
-  if os.path.isfile( main_file) :
-      cmd = [ main_file] 
-      return cmd
+    main_file = os.path.join(task_folder, "main.sh")
+    if os.path.isfile(main_file):
+        cmd = [main_file]
+        return cmd
 
-  main_file =   os.path.join( task_folder ,  "main.py" ) 
-  if os.path.isfile( main_file) :
-      os_python_path = sys.executable if os_python_path is None else os_python_path
-      cmd = [os_python_path, main_file]  
-      return cmd
+    main_file = os.path.join(task_folder, "main.py")
+    if os.path.isfile(main_file):
+        os_python_path = sys.executable if os_python_path is None else os_python_path
+        cmd = [os_python_path, main_file]
+        return cmd
 
-      
 
-def os_wait_policy(waitsleep= 15, cpu_max=95, mem_max=90.0 ):
+def os_wait_policy(waitsleep=15, cpu_max=95, mem_max=90.0):
     """
       Wait when CPU/Mem  usage is too high 
     
     """
     from aapackage.batch import util_cpu
-    cpu_pct, mem_pct =  util_cpu.ps_get_computer_resources_usage()
-    while cpu_pct > cpu_max or mem_pct > mem_max :
+
+    cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
+    while cpu_pct > cpu_max or mem_pct > mem_max:
         log("cpu,mem usage", cpu_pct, mem_pct)
         cpu_pct, mem_pct = util_cpu.ps_get_computer_resources_usage()
-        time.sleep( waitsleep)
+        time.sleep(waitsleep)
 
 
-
-def batch_run_infolder(task_folders, suffix="_qstart", main_file_run="main.py", waitime=7, 
-                       os_python_path=None, log_file=None):
+def batch_run_infolder(
+    task_folders,
+    suffix="_qstart",
+    main_file_run="main.py",
+    waitime=7,
+    os_python_path=None,
+    log_file=None,
+):
     sub_process_list = []
     global logger
 
-    if ".py" in main_file_run :
+    if ".py" in main_file_run:
         ispython = 1
 
-    if os_python_path is None : 
+    if os_python_path is None:
         os_python_path = sys.executable
 
-    if log_file is not None :
-        logger = util_log.logger_setup(__name__,
-                                       log_file = log_file,
-                                       formatter= util_log.FORMATTER_4)
+    if log_file is not None:
+        logger = util_log.logger_setup(__name__, log_file=log_file, formatter=util_log.FORMATTER_4)
 
     for folder_i in task_folders:
         foldername = folder_i + suffix
-        foldername = os_folder_rename(old_folder= folder_i, new_folder= foldername)
+        foldername = os_folder_rename(old_folder=folder_i, new_folder=foldername)
 
         # main_file = os.path.join(foldername,  main_file_run )
         # cmd = [os_python_path, main_file]  if ispython else [ main_file]
         cmd = os_cmd_generate(foldername, os_python_path)
 
-
-        os_wait_policy(waitsleep= 15 )
+        os_wait_policy(waitsleep=15)
         ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         sub_process_list.append(ps.pid)
 
-        log("Sub-process, " , ps.pid, cmd)
-        time.sleep( waitime )
+        log("Sub-process, ", ps.pid, cmd)
+        time.sleep(waitime)
 
     return sub_process_list
-
-
 
 
 def batch_parallel_subprocess(hyperparam_file, subprocess_script, os_python_path=None, waitime=5):
@@ -152,31 +149,28 @@ def batch_parallel_subprocess(hyperparam_file, subprocess_script, os_python_path
 
     """
     hyper_parameter = pd.read_csv(hyperparam_file)
-    PYTHON_PATH     = sys.executable if os_python_path is None else os_python_path
-    ispython        = 1 if ".py" in subprocess_script else 0
+    PYTHON_PATH = sys.executable if os_python_path is None else os_python_path
+    ispython = 1 if ".py" in subprocess_script else 0
 
-        
     # Start process launch
     subprocess_list = []
-    for ii in range(0, len(hyper_parameter) ):
-        if ispython :
-          cmd = [PYTHON_PATH, subprocess_script, "--hyperparam_ii=%d" % ii]
-        else :
-          cmd = [subprocess_script,  ii]
+    for ii in range(0, len(hyper_parameter)):
+        if ispython:
+            cmd = [PYTHON_PATH, subprocess_script, "--hyperparam_ii=%d" % ii]
+        else:
+            cmd = [subprocess_script, ii]
 
-
-        ps = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
+        ps = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False)
         log("Subprocess started ", ps.pid)
-        subprocess_list.append( ps.pid )
+        subprocess_list.append(ps.pid)
         time.sleep(waitime)
         # util_cpu.ps_wait_ressourcefree(cpu_max=90, mem_max=90, waitsec=15)
 
     # util_cpu.ps_wait_process_completion(subprocess_list)
 
 
-
-def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam) :
-  """
+def batch_generate_hyperparameters(hyperparam_dict, outfile_hyperparam):
+    """
      {  "param1" : {"min": 10  , "max": 200 , "type": int,    "nmax": 10, "method": "random"  },
         "param2" : {"min": 10  , "max": 50 , "type": float,  "nmax": 10  }, "method": "linear"
      }
@@ -194,31 +188,20 @@ https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSe
 
 
   """
-  # df not defined , DataFrame has no "extend" method
-  ##init columns
+    # df not defined , DataFrame has no "extend" method
+    ##init columns
 
-  df = pd.DataFrame( { k for k in hyperparam_dict.keys()  }   )
+    df = pd.DataFrame({k for k in hyperparam_dict.keys()})
 
-  for  key, d in hyperparam_dict.items():
-       df[key] = 0
+    for key, d in hyperparam_dict.items():
+        df[key] = 0
 
-       vv = np.arange( d["min"], d["max"], d["nmax"])
+        vv = np.arange(d["min"], d["max"], d["nmax"])
 
+        # df = df.extend(  len(vv) )
 
-       #df = df.extend(  len(vv) )
-
-  #df.to_csv( file_hyper )
-  return 1
-
-
-
-
-
-
-
-
-
-
+    # df.to_csv( file_hyper )
+    return 1
 
 
 """
@@ -248,7 +231,6 @@ dc = "eqdc10"
 """
 
 
-
 """
 def batch_execute_parallel(HyperParametersFile,
                            subprocess_script, batch_log_file ="batch_logfile.txt",
@@ -275,22 +257,15 @@ def batch_execute_parallel(HyperParametersFile,
 """
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     ################## Initialization #########################################
-    log(' Log check')
-
+    log(" Log check")
 
     ############## RUN Monitor ################################################
     # monitor()
 
 
-
-
-
-
-'''
+"""
 def checkAdditionalFiles(WorkingFolder, AdditionalFiles):
     if not AdditionalFiles:
         return []
@@ -316,12 +291,7 @@ def os_create_folder(WorkingFolder, folderName):
 
 
 
-'''
-
-
-
-
-
+"""
 
 
 """
@@ -347,7 +317,6 @@ util.os_print_tofile('\n\n'+title1, batch_out_log)
 """
 
 
-
 """
 if util.os_file_exist(batch_out_data):
     aux3_cols, aafolio_storage = util.py_load_obj(
@@ -358,7 +327,6 @@ else:
 
 
 """
-
 
 
 """
@@ -384,17 +352,3 @@ else:
                 shutil.copy(os.path.join(WorkingFolder, File),
                             os.path.join(TaskFolder, File))
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
-

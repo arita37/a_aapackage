@@ -4,268 +4,296 @@
 #  getmodule_doc("jedi")
 
 
-#---------------------------------------------------------------------------------
-import inspect;import os, sys; global file1, dirdoc1;   INDENT=0
-file1= r"D:\_devs\Python01\printdoc.txt"
-dirdoc1= r'D:\_devs\Python01'
+# ---------------------------------------------------------------------------------
+import inspect
+import os, sys
+
+global file1, dirdoc1
+INDENT = 0
+file1 = r"D:\_devs\Python01\printdoc.txt"
+dirdoc1 = r"D:\_devs\Python01"
 
 
-def wi(*args):  #Print with indentation
-   aux=''
-   if INDENT: aux= str(' '*INDENT)
-   for arg in args: 
-       dx= str(arg).replace("'", "");
-       dx= dx.replace("[","");   dx= dx.replace("]","")
-       aux= aux + dx  + "\n"
-       
-   printinfile(aux, file1)
+def wi(*args):  # Print with indentation
+    aux = ""
+    if INDENT:
+        aux = str(" " * INDENT)
+    for arg in args:
+        dx = str(arg).replace("'", "")
+        dx = dx.replace("[", "")
+        dx = dx.replace("]", "")
+        aux = aux + dx + "\n"
+
+    printinfile(aux, file1)
 
 
 def printinfile(vv, file2):  # print vv
- with open(file2, "a") as text_file:    text_file.write(vv)   
-    
+    with open(file2, "a") as text_file:
+        text_file.write(vv)
+
 
 def wi2(*args):
-   if INDENT: print(' '*INDENT, end=' ')
-   for arg in args: print(arg, end=' ')
-   #print
+    if INDENT:
+        print(" " * INDENT, end=" ")
+    for arg in args:
+        print(arg, end=" ")
+    # print
 
-def indent():     global INDENT; INDENT += 4
-def dedent():      global INDENT; INDENT -= 4
+
+def indent():
+    global INDENT
+    INDENT += 4
 
 
-#----Describe a builtin function-----------------------------------------------------
+def dedent():
+    global INDENT
+    INDENT -= 4
+
+
+# ----Describe a builtin function-----------------------------------------------------
 def describe_builtin(obj):
-   wi('+Built-in Function: %s' % obj.__name__)
-# Built-in functions cannot be inspected by inspect.getargspec.  parse the __doc__ attribute of the function.
-   docstr = obj.__doc__ ;   args = ''
-   if docstr:
-      items = docstr.split('\n')
-      if items:
-         func_descr = items[0]
-         s = func_descr.replace(obj.__name__,'')
-         idx1 = s.find('(')
-         idx2 = s.find(')',idx1)
-         if idx1 != -1 and idx2 != -1 and (idx2>idx1+1):
-            args = s[idx1+1:idx2]
-            wi('\t-Method Arguments:', args)
+    wi("+Built-in Function: %s" % obj.__name__)
+    # Built-in functions cannot be inspected by inspect.getargspec.  parse the __doc__ attribute of the function.
+    docstr = obj.__doc__
+    args = ""
+    if docstr:
+        items = docstr.split("\n")
+        if items:
+            func_descr = items[0]
+            s = func_descr.replace(obj.__name__, "")
+            idx1 = s.find("(")
+            idx2 = s.find(")", idx1)
+            if idx1 != -1 and idx2 != -1 and (idx2 > idx1 + 1):
+                args = s[idx1 + 1 : idx2]
+                wi("\t-Method Arguments:", args)
 
-   if args=='':  wi('\t-Method Arguments: None')
-   #print
+    if args == "":
+        wi("\t-Method Arguments: None")
+    # print
 
 
-# Describe the function  passed as argument. method the 2n argument will be passed as True 
+# Describe the function  passed as argument. method the 2n argument will be passed as True
 def describe_func(obj, method=False):
-   try: arginfo = inspect.getargspec(obj)
-   except TypeError:
-       return
-   args = arginfo[0];   argsvar = arginfo[1]
+    try:
+        arginfo = inspect.getargspec(obj)
+    except TypeError:
+        return
+    args = arginfo[0]
+    argsvar = arginfo[1]
 
-   if args:
-       if method: wi('  +  '+obj.__name__ +'('+ str(args) +')' )
-       else:    wi('  +Func: '+obj.__name__ +'('+ str(args) +')' ) 
-#       if args[0] == 'self':  wi('Instance method' );    args.pop(0)
-       if arginfo[3]:
-           dl = len(arginfo[3]);   al = len(args)
-           defargs = args[al-dl:al]
-           ax= str(list(zip(defargs, arginfo[3])))
-           wi('\t  	  Default_Args:'+ax)
+    if args:
+        if method:
+            wi("  +  " + obj.__name__ + "(" + str(args) + ")")
+        else:
+            wi("  +Func: " + obj.__name__ + "(" + str(args) + ")")
+        #       if args[0] == 'self':  wi('Instance method' );    args.pop(0)
+        if arginfo[3]:
+            dl = len(arginfo[3])
+            al = len(args)
+            defargs = args[al - dl : al]
+            ax = str(list(zip(defargs, arginfo[3])))
+            wi("\t  	  Default_Args:" + ax)
 
-   if arginfo[1]:  wi('\t   Positional_Args: ' + str( arginfo[1]))
-   if arginfo[2]:  wi('\t   Keyword_Args: ' + str(arginfo[2]))
-   # print
+    if arginfo[1]:
+        wi("\t   Positional_Args: " + str(arginfo[1]))
+    if arginfo[2]:
+        wi("\t   Keyword_Args: " + str(arginfo[2]))
+    # print
 
 
-
-#Describe class object passed as argument,including its methods 
+# Describe class object passed as argument,including its methods
 def describe_klass(obj):
-   wi('\n   +Class: %s' % obj.__name__)
-   indent();   count = 0
-   for name in obj.__dict__:
-       try:
-         item = getattr(obj, name)
-         if inspect.ismethod(item): count += 1;describe_func(item, True)
-       except TypeError:
-           print('error')
-           return
-   if count==0:  wi('(No members)')
-   dedent();   # print
+    wi("\n   +Class: %s" % obj.__name__)
+    indent()
+    count = 0
+    for name in obj.__dict__:
+        try:
+            item = getattr(obj, name)
+            if inspect.ismethod(item):
+                count += 1
+                describe_func(item, True)
+        except TypeError:
+            print("error")
+            return
+    if count == 0:
+        wi("(No members)")
+    dedent()
+    # print
 
 
-
-#Describe the module object passed as argument classes and functions 
+# Describe the module object passed as argument classes and functions
 def describe(module):
-   wi('\n \n[Module: %s]-------------------------------------------------' % module.__name__)
-   indent();   count = 0   
-   for name in dir(module):
-       obj = getattr(module, name)
-       if inspect.isclass(obj): 
-           count += 1; 
-           try :  describe_klass(obj)
-           except :
-               # print 'error';
-               return None
-       elif (inspect.ismethod(obj) or inspect.isfunction(obj)):   count +=1 ; describe_func(obj)
-       elif inspect.isbuiltin(obj):   count += 1; describe_builtin(obj)
+    wi("\n \n[Module: %s]-------------------------------------------------" % module.__name__)
+    indent()
+    count = 0
+    for name in dir(module):
+        obj = getattr(module, name)
+        if inspect.isclass(obj):
+            count += 1
+            try:
+                describe_klass(obj)
+            except:
+                # print 'error';
+                return None
+        elif inspect.ismethod(obj) or inspect.isfunction(obj):
+            count += 1
+            describe_func(obj)
+        elif inspect.isbuiltin(obj):
+            count += 1
+            describe_builtin(obj)
 
-   if count==0: wi('(No members)')
-   dedent()
+    if count == 0:
+        wi("(No members)")
+    dedent()
 
 
+# ----Print in 1 Line + Documentation of the function----------------------------------
 
-
-#----Print in 1 Line + Documentation of the function----------------------------------
 
 def describe_builtin2(obj, name1):
-   wi(name1+'.'+obj.__name__)
-# Built-in functions cannot be inspected by inspect.getargspec.  parse the __doc__ attribute of the function.
-   docstr = obj.__doc__ ;   args = ''
-   if docstr:
-      items = docstr.split('\n')
-      if items:
-         func_descr = items[0]
-         s = func_descr.replace(obj.__name__,'')
-         idx1 = s.find('(');  idx2 = s.find(')',idx1)
-         if idx1 != -1 and idx2 != -1 and (idx2>idx1+1):
-            args = s[idx1+1:idx2]
-            wi('(', args)
+    wi(name1 + "." + obj.__name__)
+    # Built-in functions cannot be inspected by inspect.getargspec.  parse the __doc__ attribute of the function.
+    docstr = obj.__doc__
+    args = ""
+    if docstr:
+        items = docstr.split("\n")
+        if items:
+            func_descr = items[0]
+            s = func_descr.replace(obj.__name__, "")
+            idx1 = s.find("(")
+            idx2 = s.find(")", idx1)
+            if idx1 != -1 and idx2 != -1 and (idx2 > idx1 + 1):
+                args = s[idx1 + 1 : idx2]
+                wi("(", args)
+
+
 #   if args=='':  wi('()')
-   # print
+# print
 
-#No doc priniting
-def describe_func2(obj, method=False, name1=''):
-   try:  arginfo = inspect.getargspec(obj)
-   except :
-      # print ;
-      return
-   args = arginfo[0];   argsvar = arginfo[1]
-   if args: wi( name1+'.'+obj.__name__ +'('+ str(args) +') ' )
-
-
-
-#Doc Printing
-def describe_func3(obj, method=False, name1=''):
-   try:  arginfo = inspect.getargspec(obj)
-   except :
-      # print ;
-      return None
-   args = arginfo[0];   argsvar = arginfo[1]
-   if args:
-       aux= name1+'.'+obj.__name__ +'('+ str(args) +')  \n' + str(inspect.getdoc(obj))
-       aux= aux.replace('\n', '\n       ') 
-       aux= aux.rstrip()
-       aux= aux + ' \n'
-       wi( aux)
+# No doc priniting
+def describe_func2(obj, method=False, name1=""):
+    try:
+        arginfo = inspect.getargspec(obj)
+    except:
+        # print ;
+        return
+    args = arginfo[0]
+    argsvar = arginfo[1]
+    if args:
+        wi(name1 + "." + obj.__name__ + "(" + str(args) + ") ")
 
 
-def describe_klass2(obj, name1=''): 
-   for name in obj.__dict__:
-       try:
-         item = getattr(obj, name)
-         if inspect.ismethod(item):  describe_func2(item, True, name1+'.'+obj.__name__)
-       except :
-           # print;
-           return None
-   # print
+# Doc Printing
+def describe_func3(obj, method=False, name1=""):
+    try:
+        arginfo = inspect.getargspec(obj)
+    except:
+        # print ;
+        return None
+    args = arginfo[0]
+    argsvar = arginfo[1]
+    if args:
+        aux = name1 + "." + obj.__name__ + "(" + str(args) + ")  \n" + str(inspect.getdoc(obj))
+        aux = aux.replace("\n", "\n       ")
+        aux = aux.rstrip()
+        aux = aux + " \n"
+        wi(aux)
+
+
+def describe_klass2(obj, name1=""):
+    for name in obj.__dict__:
+        try:
+            item = getattr(obj, name)
+            if inspect.ismethod(item):
+                describe_func2(item, True, name1 + "." + obj.__name__)
+        except:
+            # print;
+            return None
+    # print
 
 
 def describe2(module, type1=0):
-   wi('\n \n ')   
-   for name in dir(module):
-       obj = getattr(module, name)
-       if inspect.isclass(obj): 
-           try :  describe_klass2(obj, module.__name__)
-           except :  print('error');  return
-       elif (inspect.ismethod(obj) or inspect.isfunction(obj)): 
-         if type1==0:         describe_func2(obj, False,  module.__name__)
-         elif type1==1:       describe_func3(obj, False,  module.__name__) 
-       elif inspect.isbuiltin(obj):  describe_builtin2(obj, module.__name__)
+    wi("\n \n ")
+    for name in dir(module):
+        obj = getattr(module, name)
+        if inspect.isclass(obj):
+            try:
+                describe_klass2(obj, module.__name__)
+            except:
+                print("error")
+                return
+        elif inspect.ismethod(obj) or inspect.isfunction(obj):
+            if type1 == 0:
+                describe_func2(obj, False, module.__name__)
+            elif type1 == 1:
+                describe_func3(obj, False, module.__name__)
+        elif inspect.isbuiltin(obj):
+            describe_builtin2(obj, module.__name__)
 
 
-
-
-'''  get info 
+"""  get info 
 inspect.getdoc. 
 remove space
 'test string \n'.rstrip('\n')
-'''
+"""
 
 
 ####################################################################################
-#-------------------Parse the module recursively------------------------------------------------
-def getmodule_doc(module_string='', file2=''):
- import importlib;  import pkgutil;  global INDENT, file1
- module1= module_string
- package= importlib.import_module(module1);
- 
- if file2== '': file1= dirdoc1 + '\\'+ module1 + '_doc.txt'
- else: file1= file2
+# -------------------Parse the module recursively------------------------------------------------
+def getmodule_doc(module_string="", file2=""):
+    import importlib
+    import pkgutil
 
-#Get list of sub-module
- vv= []; INDENT =0
- for importer, modname, ispkg in  pkgutil.walk_packages(path=package.__path__, 
-                                                      prefix=package.__name__+'.',
-                                                      onerror=lambda x: None):
-     vv.append(modname)                                                   
-     wi(str(modname))
- 
- for submodule1 in vv:    # 1 Line Doc for each function
-    try:
-      mod2 = importlib.import_module(submodule1);     INDENT=0
-      describe2(mod2)
-    except : print(sys.exc_info())
+    global INDENT, file1
+    module1 = module_string
+    package = importlib.import_module(module1)
 
- for submodule1 in vv:   # Function + Doc
-    try:
-      mod2 = importlib.import_module(submodule1,1);     INDENT=0
-      describe2(mod2, 1)
-    except : print(sys.exc_info())
-        
- wi('\n \n \n \n -----------------------------------------------------------------------------')
- for submodule1 in vv:   #Tree Base Documentation
-    try:
-      mod2 = importlib.import_module(submodule1);     INDENT=0
-      describe(mod2)
-    except :  print(sys.exc_info())
+    if file2 == "":
+        file1 = dirdoc1 + "\\" + module1 + "_doc.txt"
+    else:
+        file1 = file2
 
- print(('Document generated in '+  file1))
+    # Get list of sub-module
+    vv = []
+    INDENT = 0
+    for importer, modname, ispkg in pkgutil.walk_packages(
+        path=package.__path__, prefix=package.__name__ + ".", onerror=lambda x: None
+    ):
+        vv.append(modname)
+        wi(str(modname))
+
+    for submodule1 in vv:  # 1 Line Doc for each function
+        try:
+            mod2 = importlib.import_module(submodule1)
+            INDENT = 0
+            describe2(mod2)
+        except:
+            print(sys.exc_info())
+
+    for submodule1 in vv:  # Function + Doc
+        try:
+            mod2 = importlib.import_module(submodule1, 1)
+            INDENT = 0
+            describe2(mod2, 1)
+        except:
+            print(sys.exc_info())
+
+    wi("\n \n \n \n -----------------------------------------------------------------------------")
+    for submodule1 in vv:  # Tree Base Documentation
+        try:
+            mod2 = importlib.import_module(submodule1)
+            INDENT = 0
+            describe(mod2)
+        except:
+            print(sys.exc_info())
+
+    print(("Document generated in " + file1))
 
 
-
-#----------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------
 #  getmodule_doc("pyfolio", file1)
 
 # getmodule_doc("jedi")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 '''
@@ -1538,6 +1566,3 @@ jedi.api
   
   
  '''
-  
-  
-  

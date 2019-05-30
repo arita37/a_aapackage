@@ -64,54 +64,59 @@ class YComDataExtr(YFinanceDataExtr):
         Get the corresponding url based on the YQL generated SQL.
         Retrieval in the form of json format. 
     """
+
     def __init__(self):
 
-        #super(YComDataExtr, self).__init__()
-
+        # super(YComDataExtr, self).__init__()
 
         """ Dict for different different data url"""
         ## the dict will contain the (start url, end url str, json results tag)
         ## may be able to further simplify due to similarity in the url
         self.datatype_url_dict = {
-                                    'keystats': ('https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.keystats%20WHERE%20symbol%20in%20(',
-                                                 ')&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=',
-                                                 'stats'
-                                                 ),
-                                    'CompanyInfo':('https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.stocks%20WHERE%20symbol%20in%20(',
-                                                   ')&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=',
-                                                   'stock'
-                                                    ),
-                                    }
-            
+            "keystats": (
+                "https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.keystats%20WHERE%20symbol%20in%20(",
+                ")&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=",
+                "stats",
+            ),
+            "CompanyInfo": (
+                "https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.stocks%20WHERE%20symbol%20in%20(",
+                ")&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=",
+                "stock",
+            ),
+        }
 
         """ List of url parameters -- for url formation """
         # URL forming for YQL details --> make this to common form for all typs
-        self.com_data_start_url = ''
-        self.com_data_stock_portion_url = '' #stock must be in "stock1","stock2"
-        self.com_data_stock_portion_additional_url = ''# for adding additonal str to the stock url.
-        self.com_data_end_url = ''
-        self.com_data_full_url = ''
-        self.json_result_tag = ''
+        self.com_data_start_url = ""
+        self.com_data_stock_portion_url = ""  # stock must be in "stock1","stock2"
+        self.com_data_stock_portion_additional_url = (
+            ""
+        )  # for adding additonal str to the stock url.
+        self.com_data_end_url = ""
+        self.com_data_full_url = ""
+        self.json_result_tag = ""
 
         ## Below function for the hist data pulling using the YQL.
         ## This is not combined with the datatype_url_dict as the retrieval mode do not required grouping.
-        self.hist_data_start_url = 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20in%20('
-        self.hist_data_num_day_fr_current = 5 # number of days to get prior to current date.
-        self.hist_data_end_url = '' # to obtain after setting the date interval
+        self.hist_data_start_url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%20in%20("
+        self.hist_data_num_day_fr_current = 5  # number of days to get prior to current date.
+        self.hist_data_end_url = ""  # to obtain after setting the date interval
 
         ## temp function
-        self.datatype_to_pull = 'keystats' # for use in conjunction with the dict for pulling
+        self.datatype_to_pull = "keystats"  # for use in conjunction with the dict for pulling
 
         ## printing options
         self.__print_url = 0
 
         ## Save json file
-        self.saved_json_file = r'c:\data\temptryyql.json'
+        self.saved_json_file = r"c:\data\temptryyql.json"
 
         ## Temp Results storage
-        self.datatype_com_data_allstock_list = list() # list of dict where each dict is company info for each stock
+        self.datatype_com_data_allstock_list = (
+            list()
+        )  # list of dict where each dict is company info for each stock
         self.datatype_com_data_allstock_df = object()
-        
+
         ## full result storage
         self.com_data_allstock_df = object()
 
@@ -148,7 +153,7 @@ class YComDataExtr(YFinanceDataExtr):
                 append_str (str): additional str to append to stock symbol.
         """
         self.com_data_stock_portion_additional_url = append_str
-        
+
     def form_url_str(self):
         """ Form the url str necessary to get the .csv file
             May need to segregate into the various types.
@@ -156,18 +161,24 @@ class YComDataExtr(YFinanceDataExtr):
                 type (str): Retrieval type.
         """
         self.form_com_data_stock_url_str()
-            
-        self.com_data_full_url = self.com_data_start_url + self.com_data_stock_portion_url +\
-                                   self.com_data_end_url
+
+        self.com_data_full_url = (
+            self.com_data_start_url + self.com_data_stock_portion_url + self.com_data_end_url
+        )
 
     def form_com_data_stock_url_str(self):
         """ Form the list of stock portion for the cur quotes url.
         """
-        self.com_data_stock_portion_url = ''
+        self.com_data_stock_portion_url = ""
         for n in self.target_stocks:
-            self.com_data_stock_portion_url = self.com_data_stock_portion_url +'%22' + n +\
-                                                self.com_data_stock_portion_additional_url  + '%22%2C'
-            
+            self.com_data_stock_portion_url = (
+                self.com_data_stock_portion_url
+                + "%22"
+                + n
+                + self.com_data_stock_portion_additional_url
+                + "%22%2C"
+            )
+
         self.com_data_stock_portion_url = self.com_data_stock_portion_url[:-3]
 
     def get_com_data(self):
@@ -175,7 +186,8 @@ class YComDataExtr(YFinanceDataExtr):
             Formed the url, download the csv, put in the header. Have a dataframe object.
         """
         self.form_url_str()
-        if self.__print_url: print(self.com_data_full_url)
+        if self.__print_url:
+            print(self.com_data_full_url)
         self.download_json()
         self.get_datalist_fr_json()
 
@@ -185,11 +197,11 @@ class YComDataExtr(YFinanceDataExtr):
         """
         full_list = self.replace_special_characters_in_list(self.full_stocklist_to_retrieve)
         chunk_of_list = self.break_list_to_sub_list(self.full_stocklist_to_retrieve)
-        
+
         self.temp_full_data_df = None
         for n in chunk_of_list:
             # print the progress
-            sys.stdout.write('.')
+            sys.stdout.write(".")
 
             # set the small chunk of list
             self.set_target_stocks_list(n)
@@ -197,9 +209,9 @@ class YComDataExtr(YFinanceDataExtr):
 
         # convert to dataframe
         self.datatype_com_data_allstock_df = pandas.DataFrame(self.datatype_com_data_allstock_list)
-        self.datatype_com_data_allstock_df.rename(columns ={'symbol':'SYMBOL'}, inplace=True)
-        
-        print('Done\n')
+        self.datatype_com_data_allstock_df.rename(columns={"symbol": "SYMBOL"}, inplace=True)
+
+        print("Done\n")
 
     def download_json(self):
         """ Download the json file from the self.com_data_full_url.
@@ -209,12 +221,12 @@ class YComDataExtr(YFinanceDataExtr):
         """
         cache.clear()
         url = URL(self.com_data_full_url)
-        f = open(self.saved_json_file, 'wb') # save as test.gif
+        f = open(self.saved_json_file, "wb")  # save as test.gif
         try:
-            str = url.download(timeout = 50)
+            str = url.download(timeout=50)
         except:
-            str = ''
-        f.write(str) #increse the time out time for this
+            str = ""
+        f.write(str)  # increse the time out time for this
         f.close()
 
     def get_datalist_fr_json(self):
@@ -223,28 +235,31 @@ class YComDataExtr(YFinanceDataExtr):
             Will keep appending without any reset.
         """
         try:
-            raw_data  = json.load(open(self.saved_json_file, 'r'))
+            raw_data = json.load(open(self.saved_json_file, "r"))
         except:
             return
-        if raw_data == '': return # for situation where there is no data
-        for indivdual_set in  raw_data['query']['results'][self.json_result_tag]:
+        if raw_data == "":
+            return  # for situation where there is no data
+        for indivdual_set in raw_data["query"]["results"][self.json_result_tag]:
             temp_dict_data = {}
             if type(indivdual_set) == str:
-                #for single data
-                continue # temp do not use
+                # for single data
+                continue  # temp do not use
             for parameters in list(indivdual_set.keys()):
                 if type(indivdual_set[parameters]) == str or type(indivdual_set[parameters]) == str:
                     try:
-                        temp_dict_data[parameters] = indivdual_set[parameters]#for symbol
+                        temp_dict_data[parameters] = indivdual_set[parameters]  # for symbol
                     except:
-                        print('not working', parameters)
+                        print("not working", parameters)
                 elif type(indivdual_set[parameters]) == dict:
-                    if 'content' in indivdual_set[parameters]:
-                        temp_dict_data[parameters] = indivdual_set[parameters]['content']
+                    if "content" in indivdual_set[parameters]:
+                        temp_dict_data[parameters] = indivdual_set[parameters]["content"]
                 # special handling for getting trailing dividend, which is a list
-                elif parameters == 'TrailingAnnualDividendYield':
-                    temp_dict_data['TRAILINGANNUALDIVIDENDYIELD'] = indivdual_set[parameters][0]
-                    temp_dict_data['TRAILINGANNUALDIVIDENDYIELDINPERCENT'] = indivdual_set[parameters][1]
+                elif parameters == "TrailingAnnualDividendYield":
+                    temp_dict_data["TRAILINGANNUALDIVIDENDYIELD"] = indivdual_set[parameters][0]
+                    temp_dict_data["TRAILINGANNUALDIVIDENDYIELDINPERCENT"] = indivdual_set[
+                        parameters
+                    ][1]
 
             ## append to list
             self.datatype_com_data_allstock_list.append(temp_dict_data)
@@ -262,37 +277,48 @@ class YComDataExtr(YFinanceDataExtr):
             All datatype processed from the self.datatype_url_dict
         """
         self.com_data_allstock_df = pandas.DataFrame()
-        
+
         for datatype in list(self.datatype_url_dict.keys()):
             print("Processing datatype: ", datatype)
             ## reset all temp storage
-            self.datatype_com_data_allstock_list =[]
+            self.datatype_com_data_allstock_list = []
             self.datatype_com_data_allstock_df = object()
 
             ## run the query for particular datatype
             self.retrieve_datatype_results(datatype)
-    
+
             ## join the tables
             if len(self.com_data_allstock_df) == 0:
                 self.com_data_allstock_df = self.datatype_com_data_allstock_df.copy(True)
             else:
-                self.com_data_allstock_df = pandas.merge(self.com_data_allstock_df,self.datatype_com_data_allstock_df, on= 'SYMBOL' )
+                self.com_data_allstock_df = pandas.merge(
+                    self.com_data_allstock_df, self.datatype_com_data_allstock_df, on="SYMBOL"
+                )
 
         ## Remove percentage from columns
         try:
             self.rm_percent_symbol_fr_cols()
         except:
-            print('some columns are missing for stripping percentage')
-                
+            print("some columns are missing for stripping percentage")
+
     def rm_percent_symbol_fr_cols(self):
         """ Remove the % symbol from those columns that have this symbol.
             Convert the columns to float for later easy filtering.
             Set to self.temp_full_data_df
         """
-        col_with_percent = ['OperatingMargin','ProfitMargin', 'QtrlyEarningsGrowth', 'QtrlyRevenueGrowth',
-                            'ReturnonAssets','ReturnonEquity','TRAILINGANNUALDIVIDENDYIELDINPERCENT']
+        col_with_percent = [
+            "OperatingMargin",
+            "ProfitMargin",
+            "QtrlyEarningsGrowth",
+            "QtrlyRevenueGrowth",
+            "ReturnonAssets",
+            "ReturnonEquity",
+            "TRAILINGANNUALDIVIDENDYIELDINPERCENT",
+        ]
         for col in col_with_percent:
-            self.com_data_allstock_df[col] = self.com_data_allstock_df[col].map(lambda x: float(str(x).rstrip('%').replace(',','')))
+            self.com_data_allstock_df[col] = self.com_data_allstock_df[col].map(
+                lambda x: float(str(x).rstrip("%").replace(",", ""))
+            )
 
     def get_batch_hist_data(self):
         """ Get hist data using the YQL.
@@ -303,7 +329,7 @@ class YComDataExtr(YFinanceDataExtr):
         self.set_hist_data_end_url()
         self.com_data_start_url = self.hist_data_start_url
         self.com_data_end_url = self.hist_data_end_url
-        self.json_result_tag = 'quote'
+        self.json_result_tag = "quote"
         self.get_com_data()
 
     def get_all_hist_data(self):
@@ -314,11 +340,11 @@ class YComDataExtr(YFinanceDataExtr):
 
         full_list = self.replace_special_characters_in_list(self.full_stocklist_to_retrieve)
         chunk_of_list = self.break_list_to_sub_list(self.full_stocklist_to_retrieve)
-        
+
         self.temp_full_data_df = None
         for n in chunk_of_list:
             # print the progress
-            sys.stdout.write('.')
+            sys.stdout.write(".")
 
             # set the small chunk of list
             self.set_target_stocks_list(n)
@@ -326,12 +352,16 @@ class YComDataExtr(YFinanceDataExtr):
 
         # convert to dataframe
         self.datatype_com_data_allstock_df = pandas.DataFrame(self.datatype_com_data_allstock_list)
-        self.datatype_com_data_allstock_df.rename(columns ={'symbol':'SYMBOL','Adj_Close':'Adj Close'}, inplace=True)
+        self.datatype_com_data_allstock_df.rename(
+            columns={"symbol": "SYMBOL", "Adj_Close": "Adj Close"}, inplace=True
+        )
 
         # Add in year
-        self.datatype_com_data_allstock_df['Year'] = self.datatype_com_data_allstock_df['Date'].map(lambda x: x[:4])
-        
-        print('Done\n')
+        self.datatype_com_data_allstock_df["Year"] = self.datatype_com_data_allstock_df["Date"].map(
+            lambda x: x[:4]
+        )
+
+        print("Done\n")
 
     def set_hist_data_num_day_fr_current(self, num_days):
         """ Set the num of days from current date to get the historical price data.
@@ -341,7 +371,7 @@ class YComDataExtr(YFinanceDataExtr):
         """
         self.hist_data_num_day_fr_current = num_days
 
-    def convert_date_to_str(self, offset_to_current = 0):
+    def convert_date_to_str(self, offset_to_current=0):
         """ Function mainly for the hist data where it is required to specify a date range.
             Default return current date. (offset_to_current = 0)
             Kwargs:
@@ -350,43 +380,54 @@ class YComDataExtr(YFinanceDataExtr):
                 (str): yyyy-mm-dd format
         
         """
-        last_eff_date_list = list((datetime.date.today() - datetime.timedelta(offset_to_current)).timetuple()[0:3])
+        last_eff_date_list = list(
+            (datetime.date.today() - datetime.timedelta(offset_to_current)).timetuple()[0:3]
+        )
 
         if len(str(last_eff_date_list[1])) == 1:
-            last_eff_date_list[1] = '0' + str(last_eff_date_list[1])
-    
-        return str(last_eff_date_list[0]) + '-' + last_eff_date_list[1] + '-' + str(last_eff_date_list[2])
+            last_eff_date_list[1] = "0" + str(last_eff_date_list[1])
+
+        return (
+            str(last_eff_date_list[0])
+            + "-"
+            + last_eff_date_list[1]
+            + "-"
+            + str(last_eff_date_list[2])
+        )
 
     def set_hist_data_end_url(self):
         """ Set the hist data end url (based on YQL) by the date interval.
             Set to self.hist_data_end_url.
         """
-        self.hist_data_end_url = ')%20and%20startDate%20%3D%20%22' +\
-                                 self.convert_date_to_str(self.hist_data_num_day_fr_current) + \
-                                '%22%20and%20endDate%20%3D%20%22' + self.convert_date_to_str(0) + \
-                                '%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
+        self.hist_data_end_url = (
+            ")%20and%20startDate%20%3D%20%22"
+            + self.convert_date_to_str(self.hist_data_num_day_fr_current)
+            + "%22%20and%20endDate%20%3D%20%22"
+            + self.convert_date_to_str(0)
+            + "%22&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback="
+        )
 
     def retrieve_company_symbol(self):
         """ Retrieve the list of company symbol """
-        self.set_stock_sym_append_str('')
-        self.set_stock_retrieval_type('all') #'all', watcher
+        self.set_stock_sym_append_str("")
+        self.set_stock_retrieval_type("all")  #'all', watcher
         self.load_stock_symbol_fr_file()
 
 
-if __name__ == '__main__':
-    
+if __name__ == "__main__":
+
     print("start processing")
-    
-    choice = 3       
+
+    choice = 3
 
     if choice == 1:
         """try the download format of  YQL"""
-        url_address = 'https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.keystats%20WHERE%20symbol%3D%27BN4.SI%27&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
-        savefile = r'c:\data\temptryyql.json'
+        url_address = "https://query.yahooapis.com/v1/public/yql?q=SELECT%20*%20FROM%20yahoo.finance.keystats%20WHERE%20symbol%3D%27BN4.SI%27&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback="
+        savefile = r"c:\data\temptryyql.json"
 
         cache.clear()
         url = URL(url_address)
-        f = open(savefile, 'wb') # save as test.gif
+        f = open(savefile, "wb")  # save as test.gif
         f.write(url.download())
         f.close()
 
@@ -394,65 +435,60 @@ if __name__ == '__main__':
         """ Handling Json file
             how to include the multiple keys per --> use  w['query']['results']['stats'].keys()
         """
-       
-        savefile = r'c:\data\temptryyql.json'
-        w  = json.load(open(r'c:\data\temptryyql.json', 'r'))
+
+        savefile = r"c:\data\temptryyql.json"
+        w = json.load(open(r"c:\data\temptryyql.json", "r"))
         com_data_stock_list = list()
-        for indivdual_set in  w['query']['results']['stats']:
+        for indivdual_set in w["query"]["results"]["stats"]:
             temp_dict_data = {}
             if type(indivdual_set) == str:
-                #for single data
-                continue # temp do not use
+                # for single data
+                continue  # temp do not use
             for parameters in list(indivdual_set.keys()):
                 if type(indivdual_set[parameters]) == str:
-                    temp_dict_data[parameters] = indivdual_set[parameters]#for symbol
+                    temp_dict_data[parameters] = indivdual_set[parameters]  # for symbol
                 elif type(indivdual_set[parameters]) == dict:
-                    if 'content' in indivdual_set[parameters]:
-                        temp_dict_data[parameters] = indivdual_set[parameters]['content']
+                    if "content" in indivdual_set[parameters]:
+                        temp_dict_data[parameters] = indivdual_set[parameters]["content"]
 
             ## append to list
             com_data_stock_list.append(temp_dict_data)
 
-    if choice ==3:
+    if choice == 3:
         """ test the class """
-##        file = r'c:\data\full_Feb08.csv'
-##        full_stock_data_df = pandas.read_csv(file)
+        ##        file = r'c:\data\full_Feb08.csv'
+        ##        full_stock_data_df = pandas.read_csv(file)
 
         w = YComDataExtr()
-        #w.set_full_stocklist_to_retrieve(list(full_stock_data_df['SYMBOL']))
-        w.set_full_stocklist_to_retrieve(['J69U.SI','BN4.SI'])
-##        w.retrieve_company_symbol()
-##        chunk_of_list = w.break_list_to_sub_list(w.full_stocklist_to_retrieve)
-##        w.full_stocklist_to_retrieve  = chunk_of_list[0][:3]
+        # w.set_full_stocklist_to_retrieve(list(full_stock_data_df['SYMBOL']))
+        w.set_full_stocklist_to_retrieve(["J69U.SI", "BN4.SI"])
+        ##        w.retrieve_company_symbol()
+        ##        chunk_of_list = w.break_list_to_sub_list(w.full_stocklist_to_retrieve)
+        ##        w.full_stocklist_to_retrieve  = chunk_of_list[0][:3]
         w.retrieve_all_results()
-         
+
         print(w.com_data_allstock_df)
         ##
         ##full_stock_data_df = pandas.merge(full_stock_data_df, w.com_data_allstock_df, on= 'SYMBOL')
 
-        #full_stock_data_df.to_csv(file, index = False)
+        # full_stock_data_df.to_csv(file, index = False)
 
-    if choice ==4:
-        file = r'c:\data\temp\temp_stockdata.csv'
+    if choice == 4:
+        file = r"c:\data\temp\temp_stockdata.csv"
         full_stock_data_df = pandas.read_csv(file)
-        
-    if choice ==5:
+
+    if choice == 5:
         """ test the class
             run the data in batch.
             how to store the data -> store as dataframe but do not group.
             
         """
-        file = r'c:\data\full_Apr15.csv'
+        file = r"c:\data\full_Apr15.csv"
         full_stock_data_df = pandas.read_csv(file)
 
         w = YComDataExtr()
-        w.set_full_stocklist_to_retrieve(list(full_stock_data_df['SYMBOL'])[:10])
+        w.set_full_stocklist_to_retrieve(list(full_stock_data_df["SYMBOL"])[:10])
         w.get_all_hist_data()
         print(w.datatype_com_data_allstock_df.head())
 
         # should add the year column
-
-
-
-
-                

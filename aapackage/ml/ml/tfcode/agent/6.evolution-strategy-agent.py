@@ -10,6 +10,7 @@ import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random
+
 sns.set()
 
 
@@ -23,10 +24,10 @@ import types
 def get_imports():
     for name, val in globals().items():
         if isinstance(val, types.ModuleType):
-            name = val.__name__.split('.')[0]
+            name = val.__name__.split(".")[0]
         elif isinstance(val, type):
-            name = val.__module__.split('.')[0]
-        poorly_named_packages = {'PIL': 'Pillow', 'sklearn': 'scikit-learn'}
+            name = val.__module__.split(".")[0]
+        poorly_named_packages = {"PIL": "Pillow", "sklearn": "scikit-learn"}
         if name in poorly_named_packages.keys():
             name = poorly_named_packages[name]
         yield name
@@ -35,24 +36,21 @@ def get_imports():
 imports = list(set(get_imports()))
 requirements = []
 for m in pkg_resources.working_set:
-    if m.project_name in imports and m.project_name != 'pip':
+    if m.project_name in imports and m.project_name != "pip":
         requirements.append((m.project_name, m.version))
 
 for r in requirements:
-    print('{}=={}'.format(*r))
+    print("{}=={}".format(*r))
 
 
 # In[3]:
 
 
-df = pd.read_csv('../dataset/GOOG-year.csv')
+df = pd.read_csv("../dataset/GOOG-year.csv")
 df.head()
 
 
 # In[ ]:
-
-
-
 
 
 # In[4]:
@@ -62,9 +60,7 @@ class Deep_Evolution_Strategy:
 
     inputs = None
 
-    def __init__(
-        self, weights, reward_function, population_size, sigma, learning_rate
-    ):
+    def __init__(self, weights, reward_function, population_size, sigma, learning_rate):
         self.weights = weights
         self.reward_function = reward_function
         self.population_size = population_size
@@ -81,7 +77,7 @@ class Deep_Evolution_Strategy:
     def get_weights(self):
         return self.weights
 
-    def train(self, epoch = 100, print_every = 1):
+    def train(self, epoch=100, print_every=1):
         lasttime = time.time()
         for i in range(epoch):
             population = []
@@ -92,9 +88,7 @@ class Deep_Evolution_Strategy:
                     x.append(np.random.randn(*w.shape))
                 population.append(x)
             for k in range(self.population_size):
-                weights_population = self._get_weight_from_population(
-                    self.weights, population[k]
-                )
+                weights_population = self._get_weight_from_population(self.weights, population[k])
                 rewards[k] = self.reward_function(weights_population)
             rewards = (rewards - np.mean(rewards)) / np.std(rewards)
             for index, w in enumerate(self.weights):
@@ -106,11 +100,8 @@ class Deep_Evolution_Strategy:
                     * np.dot(A.T, rewards).T
                 )
             if (i + 1) % print_every == 0:
-                print(
-                    'iter %d. reward: %f'
-                    % (i + 1, self.reward_function(self.weights))
-                )
-        print('time taken to train:', time.time() - lasttime, 'seconds')
+                print("iter %d. reward: %f" % (i + 1, self.reward_function(self.weights)))
+        print("time taken to train:", time.time() - lasttime, "seconds")
 
 
 class Model:
@@ -160,7 +151,7 @@ class Agent:
     def act(self, sequence):
         decision = self.model.predict(np.array(sequence))
         return np.argmax(decision[0])
-    
+
     def get_state(self, t):
         window_size = self.window_size + 1
         d = t - window_size + 1
@@ -180,11 +171,11 @@ class Agent:
         for t in range(0, len(self.trend) - 1, self.skip):
             action = self.act(state)
             next_state = self.get_state(t + 1)
-            
+
             if action == 1 and starting_money >= self.trend[t]:
                 inventory.append(self.trend[t])
                 starting_money -= close[t]
-                
+
             elif action == 2 and len(inventory):
                 bought_price = inventory.pop(0)
                 starting_money += self.trend[t]
@@ -193,7 +184,7 @@ class Agent:
         return ((starting_money - initial_money) / initial_money) * 100
 
     def fit(self, iterations, checkpoint):
-        self.es.train(iterations, print_every = checkpoint)
+        self.es.train(iterations, print_every=checkpoint)
 
     def buy(self):
         initial_money = self.initial_money
@@ -205,13 +196,16 @@ class Agent:
         for t in range(0, len(self.trend) - 1, self.skip):
             action = self.act(state)
             next_state = self.get_state(t + 1)
-            
+
             if action == 1 and initial_money >= self.trend[t]:
                 inventory.append(self.trend[t])
                 initial_money -= self.trend[t]
                 states_buy.append(t)
-                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
-            
+                print(
+                    "day %d: buy 1 unit at price %f, total balance %f"
+                    % (t, self.trend[t], initial_money)
+                )
+
             elif action == 2 and len(inventory):
                 bought_price = inventory.pop(0)
                 initial_money += self.trend[t]
@@ -221,7 +215,7 @@ class Agent:
                 except:
                     invest = 0
                 print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
+                    "day %d, sell 1 unit at price %f, investment %f %%, total balance %f,"
                     % (t, close[t], invest, initial_money)
                 )
             state = next_state
@@ -239,13 +233,11 @@ window_size = 30
 skip = 1
 initial_money = 10000
 
-model = Model(input_size = window_size, layer_size = 500, output_size = 3)
-agent = Agent(model = model, 
-              window_size = window_size,
-              trend = close,
-              skip = skip,
-              initial_money = initial_money)
-agent.fit(iterations = 500, checkpoint = 10)
+model = Model(input_size=window_size, layer_size=500, output_size=3)
+agent = Agent(
+    model=model, window_size=window_size, trend=close, skip=skip, initial_money=initial_money
+)
+agent.fit(iterations=500, checkpoint=10)
 
 
 # In[8]:
@@ -257,17 +249,13 @@ states_buy, states_sell, total_gains, invest = agent.buy()
 # In[9]:
 
 
-fig = plt.figure(figsize = (15,5))
-plt.plot(close, color='r', lw=2.)
-plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
-plt.plot(close, 'v', markersize=10, color='k', label = 'selling signal', markevery = states_sell)
-plt.title('total gains %f, total investment %f%%'%(total_gains, invest))
+fig = plt.figure(figsize=(15, 5))
+plt.plot(close, color="r", lw=2.0)
+plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
+plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
+plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
 plt.legend()
 plt.show()
 
 
 # In[ ]:
-
-
-
-

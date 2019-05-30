@@ -1,7 +1,4 @@
-
-
 class StochasticProcess(object):
-
     @classmethod
     def random(cls):
         return cls()
@@ -13,12 +10,12 @@ class StochasticProcess(object):
         :return list(StochasticProcess):
         """
         if self._diffusion_driver is None:
-            return self,
+            return (self,)
         if isinstance(self._diffusion_driver, list):
             return tuple(self._diffusion_driver)
         if isinstance(self._diffusion_driver, tuple):
             return self._diffusion_driver
-        return self._diffusion_driver,  # return as a tuple
+        return (self._diffusion_driver,)  # return as a tuple
 
     def __init__(self, start):
         self.start = start
@@ -28,7 +25,7 @@ class StochasticProcess(object):
         return len(self.diffusion_driver)
 
     def __str__(self):
-        return self.__class__.__name__ + '()'
+        return self.__class__.__name__ + "()"
 
     def evolve(self, x, s, e, q):
         """
@@ -62,19 +59,18 @@ class MultivariateStochasticProcess(StochasticProcess):
     pass
 
 
-
 class WienerProcess(StochasticProcess):
     """
     class implementing general Gauss process between grid dates
     """
 
-    def __init__(self, mu=0., sigma=1., start=0.):
+    def __init__(self, mu=0.0, sigma=1.0, start=0.0):
         super(WienerProcess, self).__init__(start)
         self._mu = mu
         self._sigma = sigma
 
     def __str__(self):
-        return 'N(mu=%0.4f, sigma=%0.4f)' % (self._mu, self._sigma)
+        return "N(mu=%0.4f, sigma=%0.4f)" % (self._mu, self._sigma)
 
     def _drift(self, x, s, e):
         return self._mu * (e - s)
@@ -92,21 +88,20 @@ class WienerProcess(StochasticProcess):
         return self._sigma ** 2 * t
 
 
-
 class GeometricBrownianMotion(WienerProcess):
     """
     class implementing general Gauss process between grid dates
     """
 
-    def __init__(self, mu=0., sigma=1., start=1.):
+    def __init__(self, mu=0.0, sigma=1.0, start=1.0):
         super(GeometricBrownianMotion, self).__init__(mu, sigma, start)
         self._diffusion_driver = super(GeometricBrownianMotion, self).diffusion_driver
 
     def __str__(self):
-        return 'LN(mu=%0.4f, sigma=%0.4f)' % (self._mu, self._sigma)
+        return "LN(mu=%0.4f, sigma=%0.4f)" % (self._mu, self._sigma)
 
     def evolve(self, x, s, e, q):
-        return x * exp(super(GeometricBrownianMotion, self).evolve(0., s, e, q))
+        return x * exp(super(GeometricBrownianMotion, self).evolve(0.0, s, e, q))
 
     def mean(self, t):
         return self.start * exp(self._mu * t)
@@ -115,30 +110,26 @@ class GeometricBrownianMotion(WienerProcess):
         return self.start ** 2 * exp(2 * self._mu * t) * (exp(self._sigma ** 2 * t) - 1)
 
 
-
-
-
-
-
-
-
-
 class MultiGauss(Object):
     """
     class implementing multi dimensional brownian motion
     """
 
-    def __init__(self, mu=list([0.]), covar=list([[1.]]), start=list([0.])):
+    def __init__(self, mu=list([0.0]), covar=list([[1.0]]), start=list([0.0])):
         super(MultiGauss, self).__init__(start)
         self._mu = mu
         self._dim = len(start)
         self._cholesky = None if covar is None else cholesky(covar).T
-        self._variance = [1.] * self._dim if covar is None else [covar[i][i] for i in range(self._dim)]
-        self._diffusion_driver = [WienerProcess(m, sqrt(s)) for m, s in zip(self._mu, self._variance)]
+        self._variance = (
+            [1.0] * self._dim if covar is None else [covar[i][i] for i in range(self._dim)]
+        )
+        self._diffusion_driver = [
+            WienerProcess(m, sqrt(s)) for m, s in zip(self._mu, self._variance)
+        ]
 
     def __str__(self):
         cov = self._cholesky.T * self._cholesky
-        return '%d-MultiGauss(mu=%s, cov=%s)' % (len(self), str(self._mu), str(cov))
+        return "%d-MultiGauss(mu=%s, cov=%s)" % (len(self), str(self._mu), str(cov))
 
     def _drift(self, x, s, e):
         return [m * (e - s) for m in self._mu]
@@ -155,5 +146,3 @@ class MultiGauss(Object):
 
     def variance(self, t):
         return [v * t for v in self._variance]
-
-

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 hyperparams
   file_log
   file_data
@@ -7,80 +7,78 @@ hyperparams
   
 
 
-'''
+"""
 import os, sys
-if __name__ != '__main__' : sys.exit(0)
+
+if __name__ != "__main__":
+    sys.exit(0)
 
 import numpy as np
 import pandas as pd
 
 
-
-
-
 ###############################################################################
 ###############################################################################
 hyperparam_file = "hyperparams.csv"
-hh_exclude      = []
-
+hh_exclude = []
 
 
 ###############################################################################
 ###############################################################################
 def load_arguments():
-   import argparse;  ppa = argparse.ArgumentParser()       # Command Line input
-   ppa.add_argument('--ii', type=int, default= 0,  help='test / test02')
+    import argparse
 
-   arg = ppa.parse_args()
-   return arg
+    ppa = argparse.ArgumentParser()  # Command Line input
+    ppa.add_argument("--ii", type=int, default=0, help="test / test02")
 
-
-def load_data_session(file_data , method ="spyder") :
-  if method == "spyder"  :
-    from spyderlib.utils.iofuncs import load_dictionary
-    globals().update(load_dictionary(filedata)[0])
+    arg = ppa.parse_args()
+    return arg
 
 
-  if method == "shelve"  :
-    import shelve
-    "dict of var in myshelf.db"
-    with shelve.open(file_data, flag='r') as db:
-      for key in db:
-         print(key,) 
-         globals()[key] = db[key]
-       
+def load_data_session(file_data, method="spyder"):
+    if method == "spyder":
+        from spyderlib.utils.iofuncs import load_dictionary
 
-def logs(ss) :
+        globals().update(load_dictionary(filedata)[0])
+
+    if method == "shelve":
+        import shelve
+
+        "dict of var in myshelf.db"
+        with shelve.open(file_data, flag="r") as db:
+            for key in db:
+                print(key)
+                globals()[key] = db[key]
+
+
+def logs(ss):
     ss_head = []
-    ss2 = ",".join( [ str(x)  for x in ss] )
+    ss2 = ",".join([str(x) for x in ss])
     print(ss2)
-    
-    with open(logfile, "a") as f1 :
-       f1.write(ss2)
+
+    with open(logfile, "a") as f1:
+        f1.write(ss2)
 
 
-
-###############################################################################      
+###############################################################################
 ##### Hyper-params  ###########################################################
-args    = load_arguments()
-hh      = pd.read_csv( hyperparam_file ).iloc[args.ii , :]  # hyper params
+args = load_arguments()
+hh = pd.read_csv(hyperparam_file).iloc[args.ii, :]  # hyper params
 logfile = hh["file_log"]
 
-for x in hh.columns :
-    if x not in hh_exclude :
+for x in hh.columns:
+    if x not in hh_exclude:
         print(x, hh[x])
         # globals()[x] = x
 
 
 ##### Session data   ##########################################################
-load_data_session( hh["file_data"] , method = hh["file_data_method"] ) 
-
+load_data_session(hh["file_data"], method=hh["file_data_method"])
 
 
 ###############################################################################
 ##### Scripts  ################################################################
 logs("Start Script", __file__)
-
 
 
 import pygmo as pg
@@ -106,42 +104,9 @@ res = [isl.get_population().champion_f for isl in archi]
 print(res)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ###############################################################################
 ##### End Script Rnme Folder ##################################################
 #### Rename folder ################
-folder_par  =  ""  
-folder_par2 =  ""
+folder_par = ""
+folder_par2 = ""
 # os.rename( folder_par, folder_par2  )
-
-
-
-
-
-
-

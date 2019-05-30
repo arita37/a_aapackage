@@ -39,11 +39,14 @@ import pandas as pd
 import scipy as sci
 import scipy.optimize
 from bs4 import BeautifulSoup
+
 # Date Manipulation
 from dateutil import parser
+
 # noinspection PyUnresolvedReferences
 from future import standard_library
 from numba import float32, jit
+
 # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 from past.utils import old_div
 
@@ -323,15 +326,15 @@ def os_platform():
 
 def a_start_log(id1="", folder="aaserialize/log/"):
     a_run_ipython(
-        "logstart -o -r -t " +
-        folder +
-        "log" +
-        str(id1) +
-        "_" +
-        os_platform() +
-        "_" +
-        date_now() +
-        " rotate"
+        "logstart -o -r -t "
+        + folder
+        + "log"
+        + str(id1)
+        + "_"
+        + os_platform()
+        + "_"
+        + date_now()
+        + " rotate"
     )
 
 
@@ -595,7 +598,7 @@ def os_zipfile(folderin, folderzipname, iscompress=True):
 
 
 def os_zipfolder(
-        dir_tozip="/zdisks3/output", zipname="/zdisk3/output.zip", dir_prefix=True, iscompress=True
+    dir_tozip="/zdisks3/output", zipname="/zdisk3/output.zip", dir_prefix=True, iscompress=True
 ):
     """
  shutil.make_archive('/zdisks3/results/output', 'zip',
@@ -690,6 +693,7 @@ def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=
     directory that is copied.
     It returns a  list of names relative to the `src` directory that should not be copied.
    """
+
     def _default_fun_file_toignore(src, names):
         _ = src
 
@@ -901,9 +905,7 @@ def _os_file_search_fast(fname, texts=None, mode="regex/str"):
 # _os_file_search_fast(DIRCWD +"test.py", texts=[ u"from ","import "], mode="str")
 
 
-def os_file_search_content(
-        srch_pattern=None, mode="str", dir1="", file_pattern="*.*", dirlevel=1
-):
+def os_file_search_content(srch_pattern=None, mode="str", dir1="", file_pattern="*.*", dirlevel=1):
     if srch_pattern is None:
         srch_pattern = ["from ", "import "]
 
@@ -1056,7 +1058,7 @@ def os_path_norm(pth):  # Normalize path for Python directory
     if a_get_pythonversion() == 2:
         ind = pth.find(":")
         if ind > -1:
-            a, b = pth[:ind], pth[ind + 1:].encode("string-escape").replace("\\x", "/")
+            a, b = pth[:ind], pth[ind + 1 :].encode("string-escape").replace("\\x", "/")
             return "{}://{}".format(a, b.lstrip("\\//").replace("\\\\", "/"))
         else:
             return pth
@@ -1798,7 +1800,7 @@ wb.save('Scores.xlsx')
 
 
 def pd_toexcel_many(
-        outfile="file1.xlsx", df1=None, df2=None, df3=None, df4=None, df5=None, df6=None
+    outfile="file1.xlsx", df1=None, df2=None, df3=None, df4=None, df5=None, df6=None
 ):
     pd_toexcel(df1, outfile, sheet_name="df1")
     if df2 is not None:
@@ -1836,7 +1838,7 @@ def str_parse_stringcalendar(cal):
     cal4 = []
     for x in cal3:
         i0 = x.find(":")
-        cal4.append([datetime_toint(dateutil.parser.parse(x[:i0])), x[i0 + 1:]])
+        cal4.append([datetime_toint(dateutil.parser.parse(x[:i0])), x[i0 + 1 :]])
     cal4 = np.array(cal4)
     cal5 = np.array(np_sortcol(cal4, 0), dtype=str)
     for x in cal5:
@@ -2027,9 +2029,7 @@ zfill() retains any sign given (less one zero).
 
 
 # LIST UTIL / Array
-def np_minimize(
-        fun_obj, x0=None, argext=(0, 0), bounds1=None, method="Powell"
-):
+def np_minimize(fun_obj, x0=None, argext=(0, 0), bounds1=None, method="Powell"):
     if x0 is None:
         x0 = [0.0]
 
@@ -2260,7 +2260,7 @@ def np_sortcol(arr, colid, asc=1):
 
 def np_ma(vv, n):
     """Moving average """
-    return np.convolve(vv, np.ones((n,)) / n)[(n - 1):]
+    return np.convolve(vv, np.ones((n,)) / n)[(n - 1) :]
 
 
 @jit(float32[:, :](float32[:, :]))
@@ -2435,7 +2435,7 @@ def np_findlocalmax2(v, trig):
     for k in range(0, len(v2)):
         kmax = v2[k, 0]
         kmaxl = findhigher(v2[k, 1], v[:kmax][::-1])  # Find same level of max
-        kmaxr = findhigher(v2[k, 1], v[kmax + 1:])
+        kmaxr = findhigher(v2[k, 1], v[kmax + 1 :])
 
         kmaxl = 0 if kmaxl == -1 else kmax - kmaxl
         kmaxr = n if kmaxr == -1 else kmaxr + kmax
@@ -2472,7 +2472,7 @@ def np_findlocalmin2(v, trig):
             if v2[k, 1] != 0.0:
                 kmin = v2[k, 0]
                 kminl = findlower(v2[k, 1], v[:kmin][::-1])  # Find same level of min
-                kminr = findlower(v2[k, 1], v[kmin + 1:])
+                kminr = findlower(v2[k, 1], v[kmin + 1 :])
 
                 kminl = 0 if kminl == -1 else kmin - kminl
                 kminr = n if kminr == -1 else kminr + kmin
@@ -2879,7 +2879,7 @@ def pd_dtypes(df, returnasdict=0):
     )
 
 
-def pd_df_todict2(df, colkey="table", excludekey=("", ), onlyfirstelt=True):
+def pd_df_todict2(df, colkey="table", excludekey=("",), onlyfirstelt=True):
     df = df.drop_duplicates(colkey).reset_index(level=0, drop=True)
     dict0 = {}
     for i in range(0, len(df)):
@@ -2906,7 +2906,7 @@ def pd_df_todict(df, colkey="machine_code", colval="adress"):
 
 
 def pd_col_addfrom_dfmap(
-        df, dfmap, colkey, colval, df_colused, df_colnew, exceptval=-1, inplace=True
+    df, dfmap, colkey, colval, df_colused, df_colnew, exceptval=-1, inplace=True
 ):
     """ Add new columns based on df_map:  In Place Modification of df
     df:     Dataframe of transactions.
@@ -3148,12 +3148,12 @@ def pd_h5_save(df, filenameh5="E:/_data/_data_outlier.h5", key="data"):
 
 
 def pd_h5_load(
-        filenameh5="E:/_data/_data_outlier.h5",
-        table_id="data",
-        exportype="pandas",
-        rowstart=-1,
-        rowend=-1,
-        cols=(),
+    filenameh5="E:/_data/_data_outlier.h5",
+    table_id="data",
+    exportype="pandas",
+    rowstart=-1,
+    rowend=-1,
+    cols=(),
 ):
     _ = cols
 
@@ -3168,17 +3168,17 @@ def pd_h5_load(
 
 
 def pd_h5_fromcsv_tohdfs(
-        dircsv="dir1/dir2/",
-        filepattern="*.csv",
-        tofilehdfs="file1.h5",
-        tablename="df",
-        col_category=(),
-        dtype0=None,
-        encoding="utf-8",
-        chunksize=2000000,
-        mode="a",
-        form="table",
-        complib=None,
+    dircsv="dir1/dir2/",
+    filepattern="*.csv",
+    tofilehdfs="file1.h5",
+    tablename="df",
+    col_category=(),
+    dtype0=None,
+    encoding="utf-8",
+    chunksize=2000000,
+    mode="a",
+    form="table",
+    complib=None,
 ):
     _ = encoding
 
@@ -3476,7 +3476,7 @@ def date_generatedatetime(start="20100101", nbday=10, end=""):
 
 # Utilities for Numerical Calc
 def np_numexpr_vec_calc(
-        filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+    filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     r""" New= xx*xx  over very large series
  #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'):
@@ -3493,7 +3493,7 @@ def np_numexpr_vec_calc(
 
 
 def np_numexpr_tohdfs(
-        filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
+    filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
     pdframe = pd.DataFrame(pd.read_hdf(filename, "data", start=i0, stop=imax))  # from file
     del pdframe
@@ -3542,16 +3542,16 @@ def np_acf(data):
 
 # Plot Utilities
 def plot_xy(
-        xx,
-        yy,
-        zcolor=None,
-        tsize=None,
-        title1="",
-        xlabel="",
-        ylabel="",
-        figsize=(8, 6),
-        dpi=75,
-        savefile="",
+    xx,
+    yy,
+    zcolor=None,
+    tsize=None,
+    title1="",
+    xlabel="",
+    ylabel="",
+    figsize=(8, 6),
+    dpi=75,
+    savefile="",
 ):
     c = None
     # Color change
@@ -3779,11 +3779,11 @@ def ztest_processify():
 
 
 def date_getspecificdate(
-        datelist,
-        datetype1="yearend",
-        outputype1="intdate",
-        includelastdate=True,
-        includefirstdate=False,
+    datelist,
+    datetype1="yearend",
+    outputype1="intdate",
+    includelastdate=True,
+    includefirstdate=False,
 ):
     _ = includefirstdate
 
@@ -3880,15 +3880,15 @@ def py_log_write(logfile, prefix):
     print(logfile)
     datenow = arrow.utcnow().to("Japan").format("YYYYMMDDHHmm")
     unique_id = (
-            prefix + "_" + datenow + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
+        prefix + "_" + datenow + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
     )
     sys.stdout = open(logfile, "a")
     print(
-        "\n\n" +
-        unique_id +
-        " ###################### Start:" +
-        arrow.utcnow().to("Japan").format() +
-        "###########################"
+        "\n\n"
+        + unique_id
+        + " ###################### Start:"
+        + arrow.utcnow().to("Japan").format()
+        + "###########################"
     )
     sys.stdout.flush()
     print(os)
@@ -3928,11 +3928,11 @@ if __name__ == "__main__":
 
             #############################################################################
             print(
-                "\n\n" +
-                unique_id +
-                " ###################### end:" +
-                arrow.utcnow().to("japan").format() +
-                "###########################"
+                "\n\n"
+                + unique_id
+                + " ###################### end:"
+                + arrow.utcnow().to("japan").format()
+                + "###########################"
             )
             sys.stdout.flush()
         except Exception as e:

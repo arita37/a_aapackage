@@ -1,6 +1,3 @@
-
-
-
 """
 import ...
 
@@ -31,7 +28,3 @@ To install Optuna, use pip as follows:
 $ pip install optuna
 
 """
-
-
-
-

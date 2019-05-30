@@ -16,8 +16,9 @@ from tqdm import tqdm
 
 
 def process_string(string):
-    string = re.sub('[^A-Za-z0-9\-\/ ]+', ' ', string).split()
+    string = re.sub("[^A-Za-z0-9\-\/ ]+", " ", string).split()
     return [to_title(y.strip()) for y in string]
+
 
 def to_title(string):
     if string.isupper():
@@ -28,7 +29,7 @@ def to_title(string):
 # In[3]:
 
 
-with open('pos-data-v3.json','r') as fopen:
+with open("pos-data-v3.json", "r") as fopen:
     dataset = json.load(fopen)
 
 
@@ -47,12 +48,13 @@ for i in dataset:
 # In[5]:
 
 
-word2idx = {'PAD': 0,'NUM':1,'UNK':2}
-tag2idx = {'PAD': 0}
-char2idx = {'PAD': 0}
+word2idx = {"PAD": 0, "NUM": 1, "UNK": 2}
+tag2idx = {"PAD": 0}
+char2idx = {"PAD": 0}
 word_idx = 3
 tag_idx = 1
 char_idx = 1
+
 
 def parse_XY(texts, labels):
     global word2idx, tag2idx, char2idx, word_idx, tag_idx, char_idx
@@ -79,7 +81,7 @@ def parse_XY(texts, labels):
 
 
 X, Y = parse_XY(texts, labels)
-idx2word={idx: tag for tag, idx in word2idx.items()}
+idx2word = {idx: tag for tag, idx in word2idx.items()}
 idx2tag = {i: w for w, i in tag2idx.items()}
 
 
@@ -87,20 +89,24 @@ idx2tag = {i: w for w, i in tag2idx.items()}
 
 
 seq_len = 50
+
+
 def iter_seq(x):
-    return np.array([x[i: i+seq_len] for i in range(0, len(x)-seq_len, 1)])
+    return np.array([x[i : i + seq_len] for i in range(0, len(x) - seq_len, 1)])
+
 
 def to_train_seq(*args):
     return [iter_seq(x) for x in args]
 
+
 def generate_char_seq(batch):
     x = [[len(idx2word[i]) for i in k] for k in batch]
     maxlen = max([j for i in x for j in i])
-    temp = np.zeros((batch.shape[0],batch.shape[1],maxlen),dtype=np.int32)
+    temp = np.zeros((batch.shape[0], batch.shape[1], maxlen), dtype=np.int32)
     for i in range(batch.shape[0]):
         for k in range(batch.shape[1]):
-            for no, c in enumerate(idx2word[batch[i,k]]):
-                temp[i,k,-1-no] = char2idx[c]
+            for no, c in enumerate(idx2word[batch[i, k]]):
+                temp[i, k, -1 - no] = char2idx[c]
     return temp
 
 
@@ -116,15 +122,26 @@ X_seq.shape
 
 
 import json
-with open('bahdanau-pos.json','w') as fopen:
-    fopen.write(json.dumps({'idx2tag':idx2tag,'idx2word':idx2word,
-           'word2idx':word2idx,'tag2idx':tag2idx,'char2idx':char2idx}))
+
+with open("bahdanau-pos.json", "w") as fopen:
+    fopen.write(
+        json.dumps(
+            {
+                "idx2tag": idx2tag,
+                "idx2word": idx2word,
+                "word2idx": word2idx,
+                "tag2idx": tag2idx,
+                "char2idx": char2idx,
+            }
+        )
+    )
 
 
 # In[10]:
 
 
 from keras.utils import to_categorical
+
 Y_seq_3d = [to_categorical(i, num_classes=len(tag2idx)) for i in Y_seq]
 
 
@@ -132,8 +149,10 @@ Y_seq_3d = [to_categorical(i, num_classes=len(tag2idx)) for i in Y_seq]
 
 
 from sklearn.cross_validation import train_test_split
-train_X, test_X, train_Y, test_Y, train_char, test_char = train_test_split(X_seq, Y_seq_3d, X_char_seq, 
-                                                                           test_size=0.1)
+
+train_X, test_X, train_Y, test_Y, train_char, test_char = train_test_split(
+    X_seq, Y_seq_3d, X_char_seq, test_size=0.1
+)
 
 
 # In[12]:
@@ -150,82 +169,60 @@ class Model:
         hidden_size_word,
         num_layers,
     ):
-        def cells(size, reuse = False):
+        def cells(size, reuse=False):
             return tf.contrib.rnn.DropoutWrapper(
-                tf.nn.rnn_cell.LSTMCell(
-                    size,
-                    initializer = tf.orthogonal_initializer(),
-                    reuse = reuse,
-                ),
-                state_keep_prob = dropout,
-                output_keep_prob = dropout,
+                tf.nn.rnn_cell.LSTMCell(size, initializer=tf.orthogonal_initializer(), reuse=reuse),
+                state_keep_prob=dropout,
+                output_keep_prob=dropout,
             )
 
         def bahdanau(embedded, size):
             attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
-                num_units = hidden_size_word, memory = embedded
+                num_units=hidden_size_word, memory=embedded
             )
             return tf.contrib.seq2seq.AttentionWrapper(
-                cell = cells(hidden_size_word),
-                attention_mechanism = attention_mechanism,
-                attention_layer_size = hidden_size_word,
+                cell=cells(hidden_size_word),
+                attention_mechanism=attention_mechanism,
+                attention_layer_size=hidden_size_word,
             )
 
-        self.word_ids = tf.placeholder(tf.int32, shape = [None, None])
-        self.char_ids = tf.placeholder(tf.int32, shape = [None, None, None])
-        self.labels = tf.placeholder(tf.int32, shape = [None, None, None])
+        self.word_ids = tf.placeholder(tf.int32, shape=[None, None])
+        self.char_ids = tf.placeholder(tf.int32, shape=[None, None, None])
+        self.labels = tf.placeholder(tf.int32, shape=[None, None, None])
         self.maxlen = tf.shape(self.word_ids)[1]
         self.lengths = tf.count_nonzero(self.word_ids, 1)
 
         self.word_embeddings = tf.Variable(
-            tf.truncated_normal(
-                [len(word2idx), dim_word], stddev = 1.0 / np.sqrt(dim_word)
-            )
+            tf.truncated_normal([len(word2idx), dim_word], stddev=1.0 / np.sqrt(dim_word))
         )
         self.char_embeddings = tf.Variable(
-            tf.truncated_normal(
-                [len(char2idx), dim_char], stddev = 1.0 / np.sqrt(dim_char)
-            )
+            tf.truncated_normal([len(char2idx), dim_char], stddev=1.0 / np.sqrt(dim_char))
         )
 
-        word_embedded = tf.nn.embedding_lookup(
-            self.word_embeddings, self.word_ids
-        )
-        char_embedded = tf.nn.embedding_lookup(
-            self.char_embeddings, self.char_ids
-        )
+        word_embedded = tf.nn.embedding_lookup(self.word_embeddings, self.word_ids)
+        char_embedded = tf.nn.embedding_lookup(self.char_embeddings, self.char_ids)
         s = tf.shape(char_embedded)
-        char_embedded = tf.reshape(
-            char_embedded, shape = [s[0] * s[1], s[-2], dim_char]
-        )
+        char_embedded = tf.reshape(char_embedded, shape=[s[0] * s[1], s[-2], dim_char])
 
         for n in range(num_layers):
-            (out_fw, out_bw), (
-                state_fw,
-                state_bw,
-            ) = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw = cells(hidden_size_char),
-                cell_bw = cells(hidden_size_char),
-                inputs = char_embedded,
-                dtype = tf.float32,
-                scope = 'bidirectional_rnn_char_%d' % (n),
+            (out_fw, out_bw), (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+                cell_fw=cells(hidden_size_char),
+                cell_bw=cells(hidden_size_char),
+                inputs=char_embedded,
+                dtype=tf.float32,
+                scope="bidirectional_rnn_char_%d" % (n),
             )
             char_embedded = tf.concat((out_fw, out_bw), 2)
-        output = tf.reshape(
-            char_embedded[:, -1], shape = [s[0], s[1], 2 * hidden_size_char]
-        )
-        word_embedded = tf.concat([word_embedded, output], axis = -1)
+        output = tf.reshape(char_embedded[:, -1], shape=[s[0], s[1], 2 * hidden_size_char])
+        word_embedded = tf.concat([word_embedded, output], axis=-1)
 
         for n in range(num_layers):
-            (out_fw, out_bw), (
-                state_fw,
-                state_bw,
-            ) = tf.nn.bidirectional_dynamic_rnn(
-                cell_fw = bahdanau(word_embedded,hidden_size_word),
-                cell_bw = bahdanau(word_embedded,hidden_size_word),
-                inputs = word_embedded,
-                dtype = tf.float32,
-                scope = 'bidirectional_rnn_word_%d' % (n),
+            (out_fw, out_bw), (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
+                cell_fw=bahdanau(word_embedded, hidden_size_word),
+                cell_bw=bahdanau(word_embedded, hidden_size_word),
+                inputs=word_embedded,
+                dtype=tf.float32,
+                scope="bidirectional_rnn_word_%d" % (n),
             )
             word_embedded = tf.concat((out_fw, out_bw), 2)
 
@@ -235,14 +232,12 @@ class Model:
             logits, y_t, self.lengths
         )
         self.cost = tf.reduce_mean(-log_likelihood)
-        self.optimizer = tf.train.AdamOptimizer(
-            learning_rate = learning_rate
-        ).minimize(self.cost)
-        mask = tf.sequence_mask(self.lengths, maxlen = self.maxlen)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+        mask = tf.sequence_mask(self.lengths, maxlen=self.maxlen)
         self.tags_seq, tags_score = tf.contrib.crf.crf_decode(
             logits, transition_params, self.lengths
         )
-        self.tags_seq = tf.identity(self.tags_seq, name = 'logits')
+        self.tags_seq = tf.identity(self.tags_seq, name="logits")
 
         y_t = tf.cast(y_t, tf.int32)
         self.prediction = tf.boolean_mask(self.tags_seq, mask)
@@ -267,7 +262,9 @@ hidden_size_word = 64
 num_layers = 2
 batch_size = 32
 
-model = Model(dim_word,dim_char,dropout,learning_rate,hidden_size_char,hidden_size_word,num_layers)
+model = Model(
+    dim_word, dim_char, dropout, learning_rate, hidden_size_char, hidden_size_word, num_layers
+)
 sess.run(tf.global_variables_initializer())
 
 
@@ -279,54 +276,42 @@ import time
 for e in range(2):
     lasttime = time.time()
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
-    pbar = tqdm(
-        range(0, len(train_X), batch_size), desc = 'train minibatch loop'
-    )
+    pbar = tqdm(range(0, len(train_X), batch_size), desc="train minibatch loop")
     for i in pbar:
         batch_x = train_X[i : min(i + batch_size, train_X.shape[0])]
         batch_char = train_char[i : min(i + batch_size, train_X.shape[0])]
         batch_y = train_Y[i : min(i + batch_size, train_X.shape[0])]
         acc, cost, _ = sess.run(
             [model.accuracy, model.cost, model.optimizer],
-            feed_dict = {
-                model.word_ids: batch_x,
-                model.char_ids: batch_char,
-                model.labels: batch_y
-            },
+            feed_dict={model.word_ids: batch_x, model.char_ids: batch_char, model.labels: batch_y},
         )
         assert not np.isnan(cost)
         train_loss += cost
         train_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
-    
-    pbar = tqdm(
-        range(0, len(test_X), batch_size), desc = 'test minibatch loop'
-    )
+        pbar.set_postfix(cost=cost, accuracy=acc)
+
+    pbar = tqdm(range(0, len(test_X), batch_size), desc="test minibatch loop")
     for i in pbar:
         batch_x = test_X[i : min(i + batch_size, test_X.shape[0])]
         batch_char = test_char[i : min(i + batch_size, test_X.shape[0])]
         batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
         acc, cost = sess.run(
             [model.accuracy, model.cost],
-            feed_dict = {
-                model.word_ids: batch_x,
-                model.char_ids: batch_char,
-                model.labels: batch_y
-            },
+            feed_dict={model.word_ids: batch_x, model.char_ids: batch_char, model.labels: batch_y},
         )
         assert not np.isnan(cost)
         test_loss += cost
         test_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
-    
+        pbar.set_postfix(cost=cost, accuracy=acc)
+
     train_loss /= len(train_X) / batch_size
     train_acc /= len(train_X) / batch_size
     test_loss /= len(test_X) / batch_size
     test_acc /= len(test_X) / batch_size
 
-    print('time taken:', time.time() - lasttime)
+    print("time taken:", time.time() - lasttime)
     print(
-        'epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n'
+        "epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n"
         % (e, train_loss, train_acc, test_loss, test_acc)
     )
 
@@ -349,20 +334,15 @@ def pred2label(pred):
 
 real_Y, predict_Y = [], []
 
-pbar = tqdm(
-    range(0, len(test_X), batch_size), desc = 'validation minibatch loop'
-)
+pbar = tqdm(range(0, len(test_X), batch_size), desc="validation minibatch loop")
 for i in pbar:
     batch_x = test_X[i : min(i + batch_size, test_X.shape[0])]
     batch_char = test_char[i : min(i + batch_size, test_X.shape[0])]
     batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
-    predicted = pred2label(sess.run(model.tags_seq,
-            feed_dict = {
-                model.word_ids: batch_x,
-                model.char_ids: batch_char,
-            },
-    ))
-    real = pred2label(np.argmax(batch_y, axis = 2))
+    predicted = pred2label(
+        sess.run(model.tags_seq, feed_dict={model.word_ids: batch_x, model.char_ids: batch_char})
+    )
+    real = pred2label(np.argmax(batch_y, axis=2))
     predict_Y.extend(predicted)
     real_Y.extend(real)
 
@@ -371,6 +351,7 @@ for i in pbar:
 
 
 from sklearn.metrics import classification_report
+
 print(classification_report(np.array(real_Y).ravel(), np.array(predict_Y).ravel()))
 
 
@@ -378,23 +359,25 @@ print(classification_report(np.array(real_Y).ravel(), np.array(predict_Y).ravel(
 
 
 saver = tf.train.Saver(tf.trainable_variables())
-saver.save(sess, 'concat-bidirectional-bahdanau-pos/model.ckpt')
+saver.save(sess, "concat-bidirectional-bahdanau-pos/model.ckpt")
 
-strings = ','.join(
+strings = ",".join(
     [
         n.name
         for n in tf.get_default_graph().as_graph_def().node
-        if ('Variable' in n.op
-        or 'Placeholder' in n.name
-        or 'logits' in n.name
-        or 'alphas' in n.name)
-        and 'Adam' not in n.name
-        and 'beta' not in n.name
-        and 'OptimizeLoss' not in n.name
-        and 'Global_Step' not in n.name
+        if (
+            "Variable" in n.op
+            or "Placeholder" in n.name
+            or "logits" in n.name
+            or "alphas" in n.name
+        )
+        and "Adam" not in n.name
+        and "beta" not in n.name
+        and "OptimizeLoss" not in n.name
+        and "Global_Step" not in n.name
     ]
 )
-strings.split(',')
+strings.split(",")
 
 
 # In[19]:
@@ -404,32 +387,28 @@ def freeze_graph(model_dir, output_node_names):
 
     if not tf.gfile.Exists(model_dir):
         raise AssertionError(
-            "Export directory doesn't exists. Please specify an export "
-            'directory: %s' % model_dir
+            "Export directory doesn't exists. Please specify an export " "directory: %s" % model_dir
         )
 
     checkpoint = tf.train.get_checkpoint_state(model_dir)
     input_checkpoint = checkpoint.model_checkpoint_path
 
-    absolute_model_dir = '/'.join(input_checkpoint.split('/')[:-1])
-    output_graph = absolute_model_dir + '/frozen_model.pb'
+    absolute_model_dir = "/".join(input_checkpoint.split("/")[:-1])
+    output_graph = absolute_model_dir + "/frozen_model.pb"
     clear_devices = True
-    with tf.Session(graph = tf.Graph()) as sess:
-        saver = tf.train.import_meta_graph(
-            input_checkpoint + '.meta', clear_devices = clear_devices
-        )
+    with tf.Session(graph=tf.Graph()) as sess:
+        saver = tf.train.import_meta_graph(input_checkpoint + ".meta", clear_devices=clear_devices)
         saver.restore(sess, input_checkpoint)
         output_graph_def = tf.graph_util.convert_variables_to_constants(
-            sess,
-            tf.get_default_graph().as_graph_def(),
-            output_node_names.split(','),
+            sess, tf.get_default_graph().as_graph_def(), output_node_names.split(",")
         )
-        with tf.gfile.GFile(output_graph, 'wb') as f:
+        with tf.gfile.GFile(output_graph, "wb") as f:
             f.write(output_graph_def.SerializeToString())
-        print('%d ops in the final graph.' % len(output_graph_def.node))
-        
+        print("%d ops in the final graph." % len(output_graph_def.node))
+
+
 def load_graph(frozen_graph_filename):
-    with tf.gfile.GFile(frozen_graph_filename, 'rb') as f:
+    with tf.gfile.GFile(frozen_graph_filename, "rb") as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
     with tf.Graph().as_default() as graph:
@@ -440,25 +419,25 @@ def load_graph(frozen_graph_filename):
 # In[20]:
 
 
-freeze_graph('concat-bidirectional-bahdanau-pos', strings)
+freeze_graph("concat-bidirectional-bahdanau-pos", strings)
 
 
 # In[21]:
 
 
-g = load_graph('concat-bidirectional-bahdanau-pos/frozen_model.pb')
+g = load_graph("concat-bidirectional-bahdanau-pos/frozen_model.pb")
 
 
 # In[22]:
 
 
-string = 'KUALA LUMPUR: Sempena sambutan Aidilfitri minggu depan, Perdana Menteri Tun Dr Mahathir Mohamad dan Menteri Pengangkutan Anthony Loke Siew Fook menitipkan pesanan khas kepada orang ramai yang mahu pulang ke kampung halaman masing-masing. Dalam video pendek terbitan Jabatan Keselamatan Jalan Raya (JKJR) itu, Dr Mahathir menasihati mereka supaya berhenti berehat dan tidur sebentar  sekiranya mengantuk ketika memandu.'
+string = "KUALA LUMPUR: Sempena sambutan Aidilfitri minggu depan, Perdana Menteri Tun Dr Mahathir Mohamad dan Menteri Pengangkutan Anthony Loke Siew Fook menitipkan pesanan khas kepada orang ramai yang mahu pulang ke kampung halaman masing-masing. Dalam video pendek terbitan Jabatan Keselamatan Jalan Raya (JKJR) itu, Dr Mahathir menasihati mereka supaya berhenti berehat dan tidur sebentar  sekiranya mengantuk ketika memandu."
 
 
 # In[23]:
 
 
-def char_str_idx(corpus, dic, UNK = 0):
+def char_str_idx(corpus, dic, UNK=0):
     maxlen = max([len(i) for i in corpus])
     X = np.zeros((len(corpus), maxlen))
     for i in range(len(corpus)):
@@ -467,15 +446,17 @@ def char_str_idx(corpus, dic, UNK = 0):
             X[i, -1 - no] = val
     return X
 
+
 def generate_char_seq(batch, idx2word, char2idx):
     x = [[len(idx2word[i]) for i in k] for k in batch]
     maxlen = max([j for i in x for j in i])
-    temp = np.zeros((batch.shape[0], batch.shape[1], maxlen), dtype = np.int32)
+    temp = np.zeros((batch.shape[0], batch.shape[1], maxlen), dtype=np.int32)
     for i in range(batch.shape[0]):
         for k in range(batch.shape[1]):
             for no, c in enumerate(idx2word[batch[i, k]].lower()):
                 temp[i, k, -1 - no] = char2idx[c]
     return temp
+
 
 sequence = process_string(string)
 X_seq = char_str_idx([sequence], word2idx, 2)
@@ -485,22 +466,14 @@ X_char_seq = generate_char_seq(X_seq, idx2word, char2idx)
 # In[24]:
 
 
-word_ids = g.get_tensor_by_name('import/Placeholder:0')
-char_ids = g.get_tensor_by_name('import/Placeholder_1:0')
-tags_seq = g.get_tensor_by_name('import/logits:0')
-test_sess = tf.InteractiveSession(graph = g)
-predicted = test_sess.run(tags_seq,
-            feed_dict = {
-                word_ids: X_seq,
-                char_ids: X_char_seq,
-            })[0]
+word_ids = g.get_tensor_by_name("import/Placeholder:0")
+char_ids = g.get_tensor_by_name("import/Placeholder_1:0")
+tags_seq = g.get_tensor_by_name("import/logits:0")
+test_sess = tf.InteractiveSession(graph=g)
+predicted = test_sess.run(tags_seq, feed_dict={word_ids: X_seq, char_ids: X_char_seq})[0]
 
 for i in range(len(predicted)):
-    print(sequence[i],idx2tag[predicted[i]])
+    print(sequence[i], idx2tag[predicted[i]])
 
 
 # In[ ]:
-
-
-
-

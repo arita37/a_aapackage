@@ -1,6 +1,6 @@
 import os
 
-location = '/home/project/101_ObjectCategories/'
+location = "/home/project/101_ObjectCategories/"
 current_location = os.getcwd()
 picture_dimension = 28
 learning_rate = 0.01

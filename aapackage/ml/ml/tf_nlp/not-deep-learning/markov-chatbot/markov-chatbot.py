@@ -5,28 +5,30 @@
 
 
 import re
-lines = open('movie_lines.txt', encoding='utf-8', errors='ignore').read().split('\n')
-conv_lines = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
+
+lines = open("movie_lines.txt", encoding="utf-8", errors="ignore").read().split("\n")
+conv_lines = open("movie_conversations.txt", encoding="utf-8", errors="ignore").read().split("\n")
 
 id2line = {}
 for line in lines:
-    _line = line.split(' +++$+++ ')
+    _line = line.split(" +++$+++ ")
     if len(_line) == 5:
         id2line[_line[0]] = _line[4]
-        
-convs = [ ]
+
+convs = []
 for line in conv_lines[:-1]:
-    _line = line.split(' +++$+++ ')[-1][1:-1].replace("'","").replace(" ","")
-    convs.append(_line.split(','))
-    
+    _line = line.split(" +++$+++ ")[-1][1:-1].replace("'", "").replace(" ", "")
+    convs.append(_line.split(","))
+
 questions = []
 answers = []
 
 for conv in convs:
-    for i in range(len(conv)-1):
+    for i in range(len(conv) - 1):
         questions.append(id2line[conv[i]])
-        answers.append(id2line[conv[i+1]])
-        
+        answers.append(id2line[conv[i + 1]])
+
+
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"i'm", "i am", text)
@@ -49,16 +51,17 @@ def clean_text(text):
     text = re.sub(r"'bout", "about", text)
     text = re.sub(r"'til", "until", text)
     text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text)
-    return ' '.join([i.strip() for i in filter(None, text.split())])
+    return " ".join([i.strip() for i in filter(None, text.split())])
+
 
 clean_questions = []
 for question in questions:
     clean_questions.append(clean_text(question))
-    
-clean_answers = []    
+
+clean_answers = []
 for answer in answers:
     clean_answers.append(clean_text(answer))
-    
+
 min_line_length = 2
 max_line_length = 5
 short_questions_temp = []
@@ -90,15 +93,12 @@ short_answers = short_answers[:500]
 # In[20]:
 
 
-
-
-
 # In[27]:
 
 
 combined = []
 for i in range(len(short_questions)):
-    combined.append('%s %s <END>'%(short_questions[i],short_answers[i]))
+    combined.append("%s %s <END>" % (short_questions[i], short_answers[i]))
 
 
 # In[28]:
@@ -106,28 +106,33 @@ for i in range(len(short_questions)):
 
 from collections import *
 
+
 def train_chatbot(data, order=4):
     lm = defaultdict(Counter)
-    for i in range(len(data)-order):
-        history, char = data[i:i+order], data[i+order]
-        lm[' '.join(history)][char]+=1
+    for i in range(len(data) - order):
+        history, char = data[i : i + order], data[i + order]
+        lm[" ".join(history)][char] += 1
+
     def normalize(counter):
         s = float(sum(counter.values()))
-        return [(c,cnt/s) for c,cnt in counter.items()]
-    outlm = {hist:normalize(chars) for hist, chars in lm.items()}
+        return [(c, cnt / s) for c, cnt in counter.items()]
+
+    outlm = {hist: normalize(chars) for hist, chars in lm.items()}
     return outlm
 
 
 # In[29]:
 
 
-get_ipython().run_cell_magic('time', '', "lm = train_chatbot((' '.join(combined)).split(), order=1)")
+get_ipython().run_cell_magic(
+    "time", "", "lm = train_chatbot((' '.join(combined)).split(), order=1)"
+)
 
 
 # In[32]:
 
 
-lm['you']
+lm["you"]
 
 
 # In[33]:
@@ -135,26 +140,28 @@ lm['you']
 
 from random import random
 
+
 def generate_word(lm, history, order):
     history = history[-order:]
     dist = lm[history]
     x = random()
-    for c,v in dist:
+    for c, v in dist:
         x = x - v
-        if x <= 0: return c 
+        if x <= 0:
+            return c
 
 
 # In[34]:
 
 
-dist = lm['you']
+dist = lm["you"]
 
 
 # In[35]:
 
 
-for c,v in dist:
-    print(c,v)
+for c, v in dist:
+    print(c, v)
 
 
 # In[ ]:
@@ -168,4 +175,3 @@ def generate_reply(lm, order, nletters=1000):
         history = history[-order:] + c
         out.append(c)
     return "".join(out)
-

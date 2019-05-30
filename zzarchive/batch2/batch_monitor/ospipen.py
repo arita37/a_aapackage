@@ -3,9 +3,9 @@ import msvcrt
 import os
 
 from ctypes import windll, byref, wintypes, WinError, GetLastError
-from ctypes.wintypes import HANDLE, DWORD,  BOOL
+from ctypes.wintypes import HANDLE, DWORD, BOOL
 
-#LPDWORD = POINTER(DWORD)
+# LPDWORD = POINTER(DWORD)
 
 PIPE_NOWAIT = wintypes.DWORD(0x00000001)
 
@@ -21,12 +21,8 @@ def pipe_no_wait(pipefd):
 
     h = msvcrt.get_osfhandle(pipefd)
 
-    res = windll.kernel32.SetNamedPipeHandleState(h,
-                                                  byref(PIPE_NOWAIT),
-                                                  None,
-                                                  None)
+    res = windll.kernel32.SetNamedPipeHandleState(h, byref(PIPE_NOWAIT), None, None)
     if res == 0:
         print(WinError())
         return False
     return True
-

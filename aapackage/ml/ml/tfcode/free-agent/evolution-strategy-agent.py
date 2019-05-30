@@ -10,6 +10,7 @@ import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 import random
+
 sns.set()
 
 
@@ -23,10 +24,10 @@ import types
 def get_imports():
     for name, val in globals().items():
         if isinstance(val, types.ModuleType):
-            name = val.__name__.split('.')[0]
+            name = val.__name__.split(".")[0]
         elif isinstance(val, type):
-            name = val.__module__.split('.')[0]
-        poorly_named_packages = {'PIL': 'Pillow', 'sklearn': 'scikit-learn'}
+            name = val.__module__.split(".")[0]
+        poorly_named_packages = {"PIL": "Pillow", "sklearn": "scikit-learn"}
         if name in poorly_named_packages.keys():
             name = poorly_named_packages[name]
         yield name
@@ -35,11 +36,11 @@ def get_imports():
 imports = list(set(get_imports()))
 requirements = []
 for m in pkg_resources.working_set:
-    if m.project_name in imports and m.project_name != 'pip':
+    if m.project_name in imports and m.project_name != "pip":
         requirements.append((m.project_name, m.version))
 
 for r in requirements:
-    print('{}=={}'.format(*r))
+    print("{}=={}".format(*r))
 
 
 # In[3]:
@@ -59,7 +60,7 @@ def get_state(data, t, n):
 # In[6]:
 
 
-df = pd.read_csv('../dataset/TSLA.csv')
+df = pd.read_csv("../dataset/TSLA.csv")
 df.head()
 
 
@@ -79,9 +80,7 @@ class Deep_Evolution_Strategy:
 
     inputs = None
 
-    def __init__(
-        self, weights, reward_function, population_size, sigma, learning_rate
-    ):
+    def __init__(self, weights, reward_function, population_size, sigma, learning_rate):
         self.weights = weights
         self.reward_function = reward_function
         self.population_size = population_size
@@ -98,7 +97,7 @@ class Deep_Evolution_Strategy:
     def get_weights(self):
         return self.weights
 
-    def train(self, epoch = 100, print_every = 1):
+    def train(self, epoch=100, print_every=1):
         lasttime = time.time()
         for i in range(epoch):
             population = []
@@ -109,9 +108,7 @@ class Deep_Evolution_Strategy:
                     x.append(np.random.randn(*w.shape))
                 population.append(x)
             for k in range(self.population_size):
-                weights_population = self._get_weight_from_population(
-                    self.weights, population[k]
-                )
+                weights_population = self._get_weight_from_population(self.weights, population[k])
                 rewards[k] = self.reward_function(weights_population)
             rewards = (rewards - np.mean(rewards)) / np.std(rewards)
             for index, w in enumerate(self.weights):
@@ -123,11 +120,8 @@ class Deep_Evolution_Strategy:
                     * np.dot(A.T, rewards).T
                 )
             if (i + 1) % print_every == 0:
-                print(
-                    'iter %d. reward: %f'
-                    % (i + 1, self.reward_function(self.weights))
-                )
-        print('time taken to train:', time.time() - lasttime, 'seconds')
+                print("iter %d. reward: %f" % (i + 1, self.reward_function(self.weights)))
+        print("time taken to train:", time.time() - lasttime, "seconds")
 
 
 class Model:
@@ -212,7 +206,7 @@ class Agent:
         return ((initial_money - starting_money) / starting_money) * 100
 
     def fit(self, iterations, checkpoint):
-        self.es.train(iterations, print_every = checkpoint)
+        self.es.train(iterations, print_every=checkpoint)
 
     def buy(self):
         initial_money = self.initial_money
@@ -238,7 +232,7 @@ class Agent:
                 quantity += buy_units
                 states_buy.append(t)
                 print(
-                    'day %d: buy %d units at price %f, total balance %f'
+                    "day %d: buy %d units at price %f, total balance %f"
                     % (t, buy_units, total_buy, initial_money)
                 )
             elif action == 2 and len(inventory) > 0:
@@ -258,24 +252,19 @@ class Agent:
                 except:
                     invest = 0
                 print(
-                    'day %d, sell %d units at price %f, investment %f %%, total balance %f,'
+                    "day %d, sell %d units at price %f, investment %f %%, total balance %f,"
                     % (t, sell_units, total_sell, invest, initial_money)
                 )
             state = next_state
 
         invest = ((initial_money - starting_money) / starting_money) * 100
         print(
-            '\ntotal gained %f, total investment %f %%'
-            % (initial_money - starting_money, invest)
+            "\ntotal gained %f, total investment %f %%" % (initial_money - starting_money, invest)
         )
-        plt.figure(figsize = (20, 10))
-        plt.plot(close, label = 'true close', c = 'g')
-        plt.plot(
-            close, 'X', label = 'predict buy', markevery = states_buy, c = 'b'
-        )
-        plt.plot(
-            close, 'o', label = 'predict sell', markevery = states_sell, c = 'r'
-        )
+        plt.figure(figsize=(20, 10))
+        plt.plot(close, label="true close", c="g")
+        plt.plot(close, "X", label="predict buy", markevery=states_buy, c="b")
+        plt.plot(close, "o", label="predict sell", markevery=states_sell, c="r")
         plt.legend()
         plt.show()
 
@@ -295,7 +284,3 @@ agent.buy()
 
 
 # In[ ]:
-
-
-
-

@@ -80,89 +80,96 @@ from logging.handlers import TimedRotatingFileHandler
 import arrow
 
 ################### Logs #################################################################
-APP_ID  = __file__ + ',' + str(os.getpid()) + ',' + str(socket.gethostname())
-APP_ID2 = str(os.getpid()) + '_' + str(socket.gethostname())
+APP_ID = __file__ + "," + str(os.getpid()) + "," + str(socket.gethostname())
+APP_ID2 = str(os.getpid()) + "_" + str(socket.gethostname())
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
-FORMATTER_1 = logging.Formatter( "%(asctime)s,  %(name)s, %(levelname)s, %(message)s" )
-FORMATTER_2 = logging.Formatter( '%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s'   )
-FORMATTER_2 = logging.Formatter( '%(asctime)s  %(levelname)s %(message)s'   )
-FORMATTER_4 = logging.Formatter( '%(asctime)s, %(process)d, %(filename)s,    %(message)s'   )
+FORMATTER_1 = logging.Formatter("%(asctime)s,  %(name)s, %(levelname)s, %(message)s")
+FORMATTER_2 = logging.Formatter("%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s")
+FORMATTER_2 = logging.Formatter("%(asctime)s  %(levelname)s %(message)s")
+FORMATTER_4 = logging.Formatter("%(asctime)s, %(process)d, %(filename)s,    %(message)s")
 
 
-FORMATTER_5 = logging.Formatter( '%(asctime)s, %(process)d, %(pathname)s%(filename)s, %(funcName)s, %(lineno)s,  %(message)s'   )
+FORMATTER_5 = logging.Formatter(
+    "%(asctime)s, %(process)d, %(pathname)s%(filename)s, %(funcName)s, %(lineno)s,  %(message)s"
+)
 
 
-
-#LOG_FILE = "my_app.log"
+# LOG_FILE = "my_app.log"
 
 
 #########################################################################################
-def create_appid(filename ) :
-   # appid  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
-   appid  = filename + ',' + str(os.getpid())
-   return appid
+def create_appid(filename):
+    # appid  = filename + ',' + str(os.getpid()) + ',' + str( socket.gethostname() )
+    appid = filename + "," + str(os.getpid())
+    return appid
 
 
-def create_logfilename(filename ) :
-  return  filename.split("/")[-1].split(".")[0] + ".log"
+def create_logfilename(filename):
+    return filename.split("/")[-1].split(".")[0] + ".log"
 
 
-def create_uniqueid() :
-   return arrow.utcnow().to('Japan').format("_YYYYMMDDHHmmss_")  + str( random.randint(1000, 9999))
+def create_uniqueid():
+    return arrow.utcnow().to("Japan").format("_YYYYMMDDHHmmss_") + str(random.randint(1000, 9999))
 
 
 ########################################################################################
 ################### Logger #############################################################
-def logger_setup(logger_name=None, log_file=None, formatter=FORMATTER_1, isrotate=False,
-                 isconsole_output=True, logging_level=logging.DEBUG):
-   """
+def logger_setup(
+    logger_name=None,
+    log_file=None,
+    formatter=FORMATTER_1,
+    isrotate=False,
+    isconsole_output=True,
+    logging_level=logging.DEBUG,
+):
+    """
     my_logger = util_log.logger_setup("my module name", log_file="")
     APP_ID    = util_log.create_appid(__file__ )
     def log(*argv):
       my_logger.info(",".join([str(x) for x in argv]))
   
    """
-   
-   if logger_name is None :
-       logger = logging.getLogger()  # Gets the root logger
-   else :
-       logger = logging.getLogger(logger_name)
-   
-   logger.setLevel(logging_level)      # better to have too much log than not enough
-   
-   if isconsole_output :
-     logger.addHandler( logger_handler_console( formatter ) )
 
-   if log_file is not None :
-     logger.addHandler( logger_handler_file( formatter=formatter, log_file_used=log_file, isrotate=isrotate) )
+    if logger_name is None:
+        logger = logging.getLogger()  # Gets the root logger
+    else:
+        logger = logging.getLogger(logger_name)
 
-   # with this pattern, it's rarely necessary to propagate the error up to parent
-   logger.propagate = False
-   return logger
+    logger.setLevel(logging_level)  # better to have too much log than not enough
 
+    if isconsole_output:
+        logger.addHandler(logger_handler_console(formatter))
 
-def logger_handler_console(formatter=None ):
-   formatter = FORMATTER_1 if formatter is None else formatter
-   console_handler = logging.StreamHandler(sys.stdout)
-   console_handler.setFormatter( formatter )
-   return console_handler
+    if log_file is not None:
+        logger.addHandler(
+            logger_handler_file(formatter=formatter, log_file_used=log_file, isrotate=isrotate)
+        )
+
+    # with this pattern, it's rarely necessary to propagate the error up to parent
+    logger.propagate = False
+    return logger
 
 
-def logger_handler_file(isrotate=False, rotate_time='midnight', formatter=None, log_file_used=None):
-   formatter = FORMATTER_1 if formatter is None else formatter
-   log_file_used = LOG_FILE if log_file_used is None else log_file_used
-   if isrotate :
-     print("Rotate log", rotate_time)
-     fh = TimedRotatingFileHandler( log_file_used, when=rotate_time)
-     fh.setFormatter( formatter )
-     return fh
-   else :
-     fh = logging.FileHandler(log_file_used)
-     fh.setFormatter( formatter )
-     return fh
+def logger_handler_console(formatter=None):
+    formatter = FORMATTER_1 if formatter is None else formatter
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+    return console_handler
 
 
+def logger_handler_file(isrotate=False, rotate_time="midnight", formatter=None, log_file_used=None):
+    formatter = FORMATTER_1 if formatter is None else formatter
+    log_file_used = LOG_FILE if log_file_used is None else log_file_used
+    if isrotate:
+        print("Rotate log", rotate_time)
+        fh = TimedRotatingFileHandler(log_file_used, when=rotate_time)
+        fh.setFormatter(formatter)
+        return fh
+    else:
+        fh = logging.FileHandler(log_file_used)
+        fh.setFormatter(formatter)
+        return fh
 
 
 def logger_setup2(name=__name__, level=None):
@@ -177,29 +184,56 @@ def logger_setup2(name=__name__, level=None):
     return logger
 
 
-
 ##########################################################################################
 ################### Print ################################################################
-def printlog( s='', s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='',
-              app_id='', logfile=None, iswritelog=True):
+def printlog(
+    s="",
+    s1="",
+    s2="",
+    s3="",
+    s4="",
+    s5="",
+    s6="",
+    s7="",
+    s8="",
+    s9="",
+    s10="",
+    app_id="",
+    logfile=None,
+    iswritelog=True,
+):
     try:
         if app_id != "":
-            prefix = app_id + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
+            prefix = app_id + "," + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
         else:
-            prefix = APP_ID + ',' + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss,")
-        s = ','.join([prefix, str(s), str(s1), str(s2), str(s3), str(s4), str(s5),
-                      str(s6), str(s7), str(s8), str(s9), str(s10)])
+            prefix = APP_ID + "," + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
+        s = ",".join(
+            [
+                prefix,
+                str(s),
+                str(s1),
+                str(s2),
+                str(s3),
+                str(s4),
+                str(s5),
+                str(s6),
+                str(s7),
+                str(s8),
+                str(s9),
+                str(s10),
+            ]
+        )
 
         print(s)
-        if writelog :
-          writelog(s, logfile)
+        if writelog:
+            writelog(s, logfile)
     except Exception as e:
         print(e)
-        if iswritelog :
-          writelog(e, logfile)
+        if iswritelog:
+            writelog(e, logfile)
 
 
 def writelog(m="", f=None):
     f = LOG_FILE if f is None else f
-    with open(f, 'a') as _log:
+    with open(f, "a") as _log:
         _log.write(m + "\n")

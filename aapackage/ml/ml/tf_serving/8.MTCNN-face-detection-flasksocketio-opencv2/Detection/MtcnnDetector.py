@@ -2,20 +2,22 @@ import cv2
 import time
 import numpy as np
 import sys
+
 sys.path.append("../")
 from .nms import py_nms
 
+
 class MtcnnDetector(object):
-
-
-    def __init__(self,
-                 detectors,
-                 min_face_size=25,
-                 stride=2,
-                 threshold=[0.6, 0.7, 0.7],
-                 scale_factor=0.79,
-                 #scale_factor=0.709,#change
-                 slide_window=False):
+    def __init__(
+        self,
+        detectors,
+        min_face_size=25,
+        stride=2,
+        threshold=[0.6, 0.7, 0.7],
+        scale_factor=0.79,
+        # scale_factor=0.709,#change
+        slide_window=False,
+    ):
 
         self.pnet_detector = detectors[0]
         self.rnet_detector = detectors[1]
@@ -90,29 +92,34 @@ class MtcnnDetector(object):
             bbox array
         """
         stride = 2
-        #stride = 4
+        # stride = 4
         cellsize = 12
-        #cellsize = 25
+        # cellsize = 25
 
         t_index = np.where(cls_map > threshold)
 
         # find nothing
         if t_index[0].size == 0:
             return np.array([])
-        #offset
+        # offset
         dx1, dy1, dx2, dy2 = [reg[t_index[0], t_index[1], i] for i in range(4)]
 
         reg = np.array([dx1, dy1, dx2, dy2])
         score = cls_map[t_index[0], t_index[1]]
-        boundingbox = np.vstack([np.round((stride * t_index[1]) / scale),
-                                 np.round((stride * t_index[0]) / scale),
-                                 np.round((stride * t_index[1] + cellsize) / scale),
-                                 np.round((stride * t_index[0] + cellsize) / scale),
-                                 score,
-                                 reg])
+        boundingbox = np.vstack(
+            [
+                np.round((stride * t_index[1]) / scale),
+                np.round((stride * t_index[0]) / scale),
+                np.round((stride * t_index[1] + cellsize) / scale),
+                np.round((stride * t_index[0] + cellsize) / scale),
+                score,
+                reg,
+            ]
+        )
 
         return boundingbox.T
-    #pre-process images
+
+    # pre-process images
     def processed_image(self, img, scale):
         height, width, channels = img.shape
         new_height = int(height * scale)  # resized new height
@@ -200,12 +207,12 @@ class MtcnnDetector(object):
         # fcn
         all_boxes = list()
         while min(current_height, current_width) > net_size:
-            #return the result predicted by pnet
-            #cls_cls_map : H*w*2
-            #reg: H*w*4
+            # return the result predicted by pnet
+            # cls_cls_map : H*w*2
+            # reg: H*w*4
             cls_cls_map, reg = self.pnet_detector.predict(im_resized)
-            #boxes: num*9(x1,y1,x2,y2,score,x1_offset,y1_offset,x2_offset,y2_offset)
-            boxes = self.generate_bbox(cls_cls_map[:, :,1], reg, current_scale, self.thresh[0])
+            # boxes: num*9(x1,y1,x2,y2,score,x1_offset,y1_offset,x2_offset,y2_offset)
+            boxes = self.generate_bbox(cls_cls_map[:, :, 1], reg, current_scale, self.thresh[0])
 
             current_scale *= self.scale_factor
             im_resized = self.processed_image(im, current_scale)
@@ -213,7 +220,7 @@ class MtcnnDetector(object):
 
             if boxes.size == 0:
                 continue
-            keep = py_nms(boxes[:, :5], 0.5, 'Union')
+            keep = py_nms(boxes[:, :5], 0.5, "Union")
             boxes = boxes[keep]
             all_boxes.append(boxes)
 
@@ -223,7 +230,7 @@ class MtcnnDetector(object):
         all_boxes = np.vstack(all_boxes)
 
         # merge the detection from first stage
-        keep = py_nms(all_boxes[:, 0:5], 0.7, 'Union')
+        keep = py_nms(all_boxes[:, 0:5], 0.7, "Union")
         all_boxes = all_boxes[keep]
         boxes = all_boxes[:, :5]
 
@@ -231,14 +238,19 @@ class MtcnnDetector(object):
         bbh = all_boxes[:, 3] - all_boxes[:, 1] + 1
 
         # refine the boxes
-        boxes_c = np.vstack([all_boxes[:, 0] + all_boxes[:, 5] * bbw,
-                             all_boxes[:, 1] + all_boxes[:, 6] * bbh,
-                             all_boxes[:, 2] + all_boxes[:, 7] * bbw,
-                             all_boxes[:, 3] + all_boxes[:, 8] * bbh,
-                             all_boxes[:, 4]])
+        boxes_c = np.vstack(
+            [
+                all_boxes[:, 0] + all_boxes[:, 5] * bbw,
+                all_boxes[:, 1] + all_boxes[:, 6] * bbh,
+                all_boxes[:, 2] + all_boxes[:, 7] * bbw,
+                all_boxes[:, 3] + all_boxes[:, 8] * bbh,
+                all_boxes[:, 4],
+            ]
+        )
         boxes_c = boxes_c.T
 
         return boxes, boxes_c, None
+
     def detect_rnet(self, im, dets):
         """Get face candidates using rnet
 
@@ -265,27 +277,29 @@ class MtcnnDetector(object):
         cropped_ims = np.zeros((num_boxes, 24, 24, 3), dtype=np.float32)
         for i in range(num_boxes):
             tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (24, 24))-127.5) / 128
-        #cls_scores : num_data*2
-        #reg: num_data*4
-        #landmark: num_data*10
+            tmp[dy[i] : edy[i] + 1, dx[i] : edx[i] + 1, :] = im[
+                y[i] : ey[i] + 1, x[i] : ex[i] + 1, :
+            ]
+            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (24, 24)) - 127.5) / 128
+        # cls_scores : num_data*2
+        # reg: num_data*4
+        # landmark: num_data*10
         cls_scores, reg, _ = self.rnet_detector.predict(cropped_ims)
-        cls_scores = cls_scores[:,1]
+        cls_scores = cls_scores[:, 1]
         keep_inds = np.where(cls_scores > self.thresh[1])[0]
         if len(keep_inds) > 0:
             boxes = dets[keep_inds]
             boxes[:, 4] = cls_scores[keep_inds]
             reg = reg[keep_inds]
-            #landmark = landmark[keep_inds]
+            # landmark = landmark[keep_inds]
         else:
             return None, None, None
-
 
         keep = py_nms(boxes, 0.6)
         boxes = boxes[keep]
         boxes_c = self.calibrate_box(boxes, reg[keep])
-        return boxes, boxes_c,None
+        return boxes, boxes_c, None
+
     def detect_onet(self, im, dets):
         """Get face candidates using onet
 
@@ -311,15 +325,17 @@ class MtcnnDetector(object):
         cropped_ims = np.zeros((num_boxes, 48, 48, 3), dtype=np.float32)
         for i in range(num_boxes):
             tmp = np.zeros((tmph[i], tmpw[i], 3), dtype=np.uint8)
-            tmp[dy[i]:edy[i] + 1, dx[i]:edx[i] + 1, :] = im[y[i]:ey[i] + 1, x[i]:ex[i] + 1, :]
-            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (48, 48))-127.5) / 128
+            tmp[dy[i] : edy[i] + 1, dx[i] : edx[i] + 1, :] = im[
+                y[i] : ey[i] + 1, x[i] : ex[i] + 1, :
+            ]
+            cropped_ims[i, :, :, :] = (cv2.resize(tmp, (48, 48)) - 127.5) / 128
 
-        cls_scores, reg,landmark = self.onet_detector.predict(cropped_ims)
-        #prob belongs to face
-        cls_scores = cls_scores[:,1]
+        cls_scores, reg, landmark = self.onet_detector.predict(cropped_ims)
+        # prob belongs to face
+        cls_scores = cls_scores[:, 1]
         keep_inds = np.where(cls_scores > self.thresh[2])[0]
         if len(keep_inds) > 0:
-            #pickout filtered box
+            # pickout filtered box
             boxes = dets[keep_inds]
             boxes[:, 4] = cls_scores[keep_inds]
             reg = reg[keep_inds]
@@ -327,21 +343,25 @@ class MtcnnDetector(object):
         else:
             return None, None, None
 
-        #width
-        w = boxes[:,2] - boxes[:,0] + 1
-        #height
-        h = boxes[:,3] - boxes[:,1] + 1
-        landmark[:,0::2] = (np.tile(w,(5,1)) * landmark[:,0::2].T + np.tile(boxes[:,0],(5,1)) - 1).T
-        landmark[:,1::2] = (np.tile(h,(5,1)) * landmark[:,1::2].T + np.tile(boxes[:,1],(5,1)) - 1).T
+        # width
+        w = boxes[:, 2] - boxes[:, 0] + 1
+        # height
+        h = boxes[:, 3] - boxes[:, 1] + 1
+        landmark[:, 0::2] = (
+            np.tile(w, (5, 1)) * landmark[:, 0::2].T + np.tile(boxes[:, 0], (5, 1)) - 1
+        ).T
+        landmark[:, 1::2] = (
+            np.tile(h, (5, 1)) * landmark[:, 1::2].T + np.tile(boxes[:, 1], (5, 1)) - 1
+        ).T
         boxes_c = self.calibrate_box(boxes, reg)
-
 
         boxes = boxes[py_nms(boxes, 0.6, "Minimum")]
         keep = py_nms(boxes_c, 0.6, "Minimum")
         boxes_c = boxes_c[keep]
         landmark = landmark[keep]
-        return boxes, boxes_c,landmark
-    #use for video
+        return boxes, boxes_c, landmark
+
+    # use for video
     def detect(self, img):
         """Detect face over image
         """
@@ -351,9 +371,9 @@ class MtcnnDetector(object):
         # pnet
         t1 = 0
         if self.pnet_detector:
-            boxes, boxes_c,_ = self.detect_pnet(img)
+            boxes, boxes_c, _ = self.detect_pnet(img)
             if boxes_c is None:
-                return np.array([]),np.array([])
+                return np.array([]), np.array([])
 
             t1 = time.time() - t
             t = time.time()
@@ -361,9 +381,9 @@ class MtcnnDetector(object):
         # rnet
         t2 = 0
         if self.rnet_detector:
-            boxes, boxes_c,_ = self.detect_rnet(img, boxes_c)
+            boxes, boxes_c, _ = self.detect_rnet(img, boxes_c)
             if boxes_c is None:
-                return np.array([]),np.array([])
+                return np.array([]), np.array([])
 
             t2 = time.time() - t
             t = time.time()
@@ -371,22 +391,23 @@ class MtcnnDetector(object):
         # onet
         t3 = 0
         if self.onet_detector:
-            boxes, boxes_c,landmark = self.detect_onet(img, boxes_c)
+            boxes, boxes_c, landmark = self.detect_onet(img, boxes_c)
             if boxes_c is None:
-                return np.array([]),np.array([])
+                return np.array([]), np.array([])
 
             t3 = time.time() - t
             t = time.time()
 
-        return boxes_c,landmark
+        return boxes_c, landmark
+
     def detect_face(self, test_data):
-        all_boxes = []#save each image's bboxes
+        all_boxes = []  # save each image's bboxes
         landmarks = []
         batch_idx = 0
         sum_time = 0
-        #test_data is iter_
+        # test_data is iter_
         for databatch in test_data:
-            #databatch(image returned)
+            # databatch(image returned)
             if batch_idx % 100 == 0:
                 print("%d images done" % batch_idx)
             im = databatch
@@ -394,14 +415,14 @@ class MtcnnDetector(object):
             t1 = 0
             if self.pnet_detector:
                 t = time.time()
-                #ignore landmark
+                # ignore landmark
                 boxes, boxes_c, landmark = self.detect_pnet(im)
                 t1 = time.time() - t
                 sum_time += t1
                 if boxes_c is None:
                     print("boxes_c is None...")
                     all_boxes.append(np.array([]))
-                    #pay attention
+                    # pay attention
                     landmarks.append(np.array([]))
                     batch_idx += 1
                     continue
@@ -409,7 +430,7 @@ class MtcnnDetector(object):
             t2 = 0
             if self.rnet_detector:
                 t = time.time()
-                #ignore landmark
+                # ignore landmark
                 boxes, boxes_c, landmark = self.detect_rnet(im, boxes_c)
                 t2 = time.time() - t
                 sum_time += t2
@@ -431,9 +452,8 @@ class MtcnnDetector(object):
                     batch_idx += 1
                     continue
 
-
             all_boxes.append(boxes_c)
             landmarks.append(landmark)
             batch_idx += 1
-        #num_of_data*9,num_of_data*10
-        return all_boxes,landmarks
+        # num_of_data*9,num_of_data*10
+        return all_boxes, landmarks
