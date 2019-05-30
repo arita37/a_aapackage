@@ -61,9 +61,17 @@
 
 """
 
-import os, re, sys, time, datetime, copy, shutil
+import copy
+import datetime
+import os
+import re
+import shutil
+import sys
+import time
+
 import pandas
 from scipy.stats import linregress
+
 from pattern.web import URL, extension
 
 

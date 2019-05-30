@@ -4,10 +4,18 @@
 # In[1]:
 
 
-import tensorflow as tf
-import pandas as pd
-import numpy as np
+import re
+import time
 
+import numpy as np
+import pandas as pd
+from sklearn import metrics
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -34,10 +42,6 @@ for no, ln in enumerate(lang.cmn.unique()):
 # In[4]:
 
 
-import re
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 def clean_text(string):
@@ -71,7 +75,6 @@ del features
 # In[8]:
 
 
-from sklearn import metrics
 
 
 # In[9]:
@@ -124,8 +127,6 @@ sess.run(tf.global_variables_initializer())
 # In[13]:
 
 
-import time
-from tqdm import tqdm
 
 batch_size = 64
 for e in range(50):

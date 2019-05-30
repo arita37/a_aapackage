@@ -4,11 +4,17 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
+import numbers
 import time
 
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
+from tensorflow.contrib.layers import xavier_initializer
+from tensorflow.python.framework import ops, tensor_shape, tensor_util
+from tensorflow.python.ops import array_ops, math_ops, random_ops
+from utils import *
 
 # In[2]:
 
@@ -53,14 +59,6 @@ num_layers = 2
 # In[33]:
 
 
-import numbers
-from tensorflow.contrib.layers import xavier_initializer
-from tensorflow.python.framework import tensor_shape
-from tensorflow.python.framework import tensor_util
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import random_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.framework import ops
 
 
 def zoneout(x, keep_prob, noise_shape=None, seed=None, name=None):
@@ -240,8 +238,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 # In[39]:
 
 
-from tqdm import tqdm
-import time
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0
 

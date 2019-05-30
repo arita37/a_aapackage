@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
-import sys, os
+import configparser
+import os
+import sys
+from time import sleep
+
+import util
+from celery import Celery
+
+from . import tasklist  # File containing all the tasks_folder
 
 DIR1 = os.getcwd()  # DIRCWD= 'D:/_devs/Python01/project27/'
 DIR_package = os.getcwd() + "/aapackage/aws/"
 os.chdir(DIR1)
 sys.path.append(DIR1 + "/aapackage")
 
-from time import sleep
-import configparser, util
-from celery import Celery
 
 ######################  Initialization    #######################################################
 config = configparser.ConfigParser()
@@ -122,7 +127,6 @@ return x + y
 
 ####################### SEND TASK #############################################################
 # 4) Module Launcher of tasks_folder -------------------------------------------------
-from . import tasklist  # File containing all the tasks_folder
 
 task_list = []
 for i in range(0, 2):

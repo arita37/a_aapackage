@@ -1,41 +1,45 @@
 # -*- coding: utf-8 -*-
 """    Data Analysis Utilities   """
-import sys, os, numpy as np, pandas as pd, copy, scipy as sci, matplotlib.pyplot as plt, math
-import requests, re, arrow
-from tabulate import tabulate
-from datetime import datetime, timedelta
+import copy
+import itertools
+import math
+import os
+import re
+import sys
 from calendar import isleap
-from dateutil.parser import parse
-
 from collections import OrderedDict
-from attrdict import AttrDict as dict2
+from datetime import datetime, timedelta
 
-
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pylab as pl
+import requests
+import scipy as sci
+import sklearn as sk
 import statsmodels as sm
-
-import kmodes
-from kmodes.kmodes import KModes
-import pylab as pl, itertools, sklearn as sk
-
-from sklearn.decomposition import PCA
-from sklearn import linear_model, covariance, model_selection
+from dateutil.parser import parse
+from sklearn import covariance, linear_model, model_selection
+from sklearn.cluster import dbscan, k_means
+from sklearn.decomposition import PCA, pca
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.ensemble import (AdaBoostClassifier, ExtraTreesClassifier,
+                              GradientBoostingClassifier, RandomForestClassifier)
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
-from sklearn.ensemble import (
-    RandomForestClassifier,
-    AdaBoostClassifier,
-    GradientBoostingClassifier,
-    ExtraTreesClassifier,
-)
-from sklearn.metrics import confusion_matrix
-from sklearn.cluster import k_means, dbscan
-from sklearn.decomposition import pca
 
+import arrow
+import datanalysis as da
+import kmodes
+import util
+from attrdict import AttrDict as dict2
+from kmodes.kmodes import KModes
+from tabulate import tabulate
 
 #########################################################################################################
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
@@ -45,8 +49,6 @@ os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
 
-import util
-import datanalysis as da
 
 
 __path__ = DIRCWD + "/aapackage/"

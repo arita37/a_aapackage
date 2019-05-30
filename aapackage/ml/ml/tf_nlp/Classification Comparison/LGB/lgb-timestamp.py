@@ -16,15 +16,17 @@
 # In[1]:
 
 
-import numpy as np
-import sklearn.datasets
+import json
+import pickle
 import re
 import time
-import lightgbm as lgb
-import pickle
-from sklearn.cross_validation import train_test_split
-import json
 
+import numpy as np
+import sklearn.datasets
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+
+import lightgbm as lgb
 
 # In[2]:
 
@@ -138,7 +140,6 @@ clf.save_model("lgb-timestamp.model")
 # In[16]:
 
 
-from sklearn import metrics
 
 print(
     metrics.classification_report(

@@ -4,15 +4,22 @@
 # In[1]:
 
 
-import sklearn.datasets
-from sklearn.cross_validation import train_test_split
-import re
-import tensorflow as tf
-from sklearn import metrics
-import numpy as np
 import collections
-import time
 import os
+import re
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import sklearn.datasets
+from matplotlib import offsetbox
+from scipy.spatial.distance import cdist
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from MulticoreTSNE import MulticoreTSNE as TSNE
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -241,7 +248,6 @@ logits_test = sess.run(model.output_positive, feed_dict={model.POSITIVE: X})
 # In[28]:
 
 
-from scipy.spatial.distance import cdist
 
 label_test = []
 for i in range(logits_test.shape[0]):
@@ -252,17 +258,13 @@ print(metrics.classification_report(Y, label_test, target_names=dataset.target_n
 # In[30]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[32]:
 
 
-from MulticoreTSNE import MulticoreTSNE as TSNE
 
 tsne = TSNE(perplexity=200, n_jobs=4)
 manifold_emotions = tsne.fit_transform(logits_test)

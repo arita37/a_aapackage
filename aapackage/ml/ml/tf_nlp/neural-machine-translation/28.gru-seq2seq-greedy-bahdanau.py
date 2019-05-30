@@ -4,14 +4,15 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
-import re
-import time
 import collections
 import os
+import re
+import time
 
+import numpy as np
+from sklearn.utils import shuffle
+
+import tensorflow as tf
 
 # In[2]:
 

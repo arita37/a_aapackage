@@ -4,14 +4,16 @@
 # In[1]:
 
 
+import os
+import random
+import time
+
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
 import xl
 from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
-import random
-import os
-
 
 # In[2]:
 
@@ -108,8 +110,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 # In[9]:
 
 
-from tqdm import tqdm
-import time
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0
 

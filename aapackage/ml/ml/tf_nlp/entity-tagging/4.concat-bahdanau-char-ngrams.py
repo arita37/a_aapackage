@@ -4,13 +4,16 @@
 # In[1]:
 
 
-from bs4 import BeautifulSoup
-import re
-import numpy as np
-import tensorflow as tf
-from tqdm import tqdm
 import itertools
+import re
+import time
 
+import numpy as np
+from bs4 import BeautifulSoup
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -264,7 +267,6 @@ X_char_seq.shape
 # In[16]:
 
 
-from sklearn.cross_validation import train_test_split
 
 train_Y, test_Y, train_X, test_X = train_test_split(Y_seq, X_char_seq, test_size=0.2)
 
@@ -350,7 +352,6 @@ sess.run(tf.global_variables_initializer())
 # In[19]:
 
 
-import time
 
 for e in range(3):
     lasttime = time.time()

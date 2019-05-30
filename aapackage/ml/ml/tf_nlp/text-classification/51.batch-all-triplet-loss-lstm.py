@@ -4,12 +4,14 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
 import random
+import time
 
+from scipy.spatial.distance import cdist
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -218,7 +220,6 @@ logits_test.shape
 # In[14]:
 
 
-from scipy.spatial.distance import cdist
 
 label_test = []
 for i in range(logits_test.shape[0]):

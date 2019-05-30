@@ -14,13 +14,10 @@
 # ==============================================================================
 """Contains the definition for inception v1 classification network."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import tensorflow as tf
+from __future__ import absolute_import, division, print_function
 
 import inception_utils
+import tensorflow as tf
 
 slim = tf.contrib.slim
 trunc_normal = lambda stddev: tf.truncated_normal_initializer(0.0, stddev)

@@ -1,10 +1,12 @@
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
-import numpy as np
+import json
 import os
+
+import numpy as np
+
 import cv2
 import inception_v3
-import json
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 with open("real-label.json", "r") as fopen:
     labels = json.load(fopen)

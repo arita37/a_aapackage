@@ -3,10 +3,12 @@
 @Author: Louis Liang
 @time:2018/9/15 0:34
 """
+import os
+
+import numpy as np
+
 import tensorflow as tf
 import tflearn
-import numpy as np
-import os
 
 
 class PG:

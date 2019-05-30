@@ -16,17 +16,18 @@
 # In[8]:
 
 
-import lightgbm as lgb
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import TruncatedSVD
-import numpy as np
 import re
 import time
-from sklearn.cross_validation import train_test_split
+
+import numpy as np
 import sklearn.datasets
-from sklearn import pipeline
+from sklearn import metrics, pipeline
+from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import StratifiedKFold
 
+import lightgbm as lgb
 
 # In[2]:
 
@@ -118,7 +119,6 @@ print(round(time.time() - t, 3), "Seconds to train lgb")
 # In[12]:
 
 
-from sklearn import metrics
 
 print(
     metrics.classification_report(

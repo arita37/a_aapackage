@@ -4,11 +4,14 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
 import time
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -172,8 +175,6 @@ while True:
 # In[10]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 

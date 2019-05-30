@@ -1,12 +1,13 @@
 # -----Put all multi process function here-----------------------
-import scipy as sp
-import numpy as np
-import numexpr as ne
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
 from timeit import default_timer as timer
+
+import matplotlib.pyplot as plt
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sp
+from matplotlib.backends.backend_pdf import PdfPages
+from numba import boolean, float32, float64, guvectorize, int32, jit, vectorize
 
 import globalvar  # as global varaibles   global01.varname
 

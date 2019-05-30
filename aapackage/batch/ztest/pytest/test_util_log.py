@@ -1,7 +1,8 @@
+import logging
+import os
+
 import pytest
 
-import os
-import logging
 from aapackage import util_log
 
 

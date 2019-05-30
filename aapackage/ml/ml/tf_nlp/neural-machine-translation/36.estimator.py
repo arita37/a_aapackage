@@ -4,11 +4,12 @@
 # In[ ]:
 
 
-import numpy as np
-import tensorflow as tf
-from tensorflow.python.layers.core import Dense
 import collections
 
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.python.layers.core import Dense
 
 # In[ ]:
 

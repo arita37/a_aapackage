@@ -4,10 +4,21 @@
 # In[1]:
 
 
-from urllib.request import urlretrieve
-from os.path import isfile, isdir
-from tqdm import tqdm
+import collections
+import random
+import time
 import zipfile
+from os.path import isdir, isfile
+from urllib.request import urlretrieve
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from sklearn.manifold import TSNE
+from sklearn.neighbors import NearestNeighbors
+from tqdm import tqdm
+
+import tensorflow as tf
 
 dataset_folder_path = "data"
 dataset_filename = "text8.zip"
@@ -38,9 +49,6 @@ with open("data/text8") as f:
 # In[2]:
 
 
-import collections
-import numpy as np
-import random
 
 data_index = 0
 
@@ -91,7 +99,6 @@ def generate_batch_skipgram(words, batch_size, num_skips, skip_window):
 # In[3]:
 
 
-import tensorflow as tf
 
 
 class Model:
@@ -144,7 +151,6 @@ print("Vocabulary size:", len(dictionary))
 # In[6]:
 
 
-import time
 
 sess = tf.InteractiveSession()
 print("Creating Word2Vec model..")
@@ -167,9 +173,6 @@ for step in range(EPOCH):
 # In[11]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.manifold import TSNE
 
 sns.set()
 
@@ -186,7 +189,6 @@ plt.show()
 # In[8]:
 
 
-from sklearn.neighbors import NearestNeighbors
 
 neighbors = NearestNeighbors(10, metric="cosine").fit(embed_mat)
 random_selected = np.random.randint(0, len(dictionary))

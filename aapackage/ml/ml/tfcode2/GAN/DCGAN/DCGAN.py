@@ -7,14 +7,16 @@
 get_ipython().run_line_magic("matplotlib", "inline")
 
 import pickle as pkl
+from os.path import isdir, isfile
+from urllib import urlretrieve
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 # load MATLAB file
 from scipy.io import loadmat
-import tensorflow as tf
+from tqdm import tqdm
 
+import tensorflow as tf
 
 # In[2]:
 
@@ -25,9 +27,6 @@ get_ipython().system("mkdir data")
 # In[3]:
 
 
-from urllib import urlretrieve
-from os.path import isfile, isdir
-from tqdm import tqdm
 
 data_dir = "data/"
 

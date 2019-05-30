@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 # ---------Various Utilities function for Python----------------------------
-import scipy as sci
-import numpy as np
-import numexpr as ne
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from timeit import default_timer as timer
-import global01 as global01  # as global varaibles   global01.varname
-import os
-import sys
+import csv
+import datetime
 import glob
-import urllib3, shutil
-from bs4 import BeautifulSoup
+import os
+import re
+import shutil
+import sqlite3 as lite
+import sys
+import time
+from timeit import default_timer as timer
 
+import IPython
+import matplotlib.pyplot as plt
+import numba
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
+import urllib3
+from bs4 import BeautifulSoup
+from matplotlib.backends.backend_pdf import PdfPages
+from numba import boolean, float32, float64, guvectorize, int32, jit, vectorize
 from sklearn import cross_validation
 from sklearn.metrics import confusion_matrix
 
-import datetime, dill, IPython
+import dill
+import global01 as global01  # as global varaibles   global01.varname
 
 # from fastnumbers import  isreal, isfloat, isint, isintlike, fast_float
 
-import numba
-from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
 
 
-import re, sys, os, time, datetime, csv, pandas, sqlite3 as lite
 
 
 #    from yahoo_finance_historical_data_extract import YFHistDataExtr

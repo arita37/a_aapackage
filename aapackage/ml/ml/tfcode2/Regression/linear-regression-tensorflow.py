@@ -4,13 +4,14 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-from matplotlib import animation
 import matplotlib.pyplot as plt
-from IPython.display import HTML
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
+from IPython.display import HTML
+from matplotlib import animation
+
+import tensorflow as tf
 
 sns.set()
 df = pd.read_csv("poverty.csv")

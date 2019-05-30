@@ -11,17 +11,19 @@ Start on AWS the batch_daemon_launchi_cli.py
 
 
 """
+import argparse
+import logging
+# -*- coding: utf-8 -*-
 import os
 import sys
 from time import sleep
-import argparse
-import logging
 
+import numpy as np
+
+import util
 ################################################################################
-from aapackage import util_log, util_aws
+from aapackage import util_aws, util_log
 from aapackage.batch import util_batch
-
-
 
 ############### Variable definition ############################################
 FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__))
@@ -160,11 +162,8 @@ if __name__ == '__main__':
 
 
 
-# -*- coding: utf-8 -*-
-import os, sys
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
-import util, numpy as np
 execfile( DIRCWD + '/aapackage/allmodule.py')
 print 'Directory Folder', DIRCWD
 ###################################################################################################
@@ -232,8 +231,3 @@ while True :
 
 
 """
-
-
-
-
-

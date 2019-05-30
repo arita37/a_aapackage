@@ -4,11 +4,12 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from crnn_model import crnn_model
 import json
 
+import numpy as np
+
+import tensorflow as tf
+from crnn_model import crnn_model
 
 # In[2]:
 

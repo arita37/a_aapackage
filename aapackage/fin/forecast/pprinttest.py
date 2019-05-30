@@ -2,13 +2,18 @@
 """Machine Learning  -- Forecast Model    """
 # %load_ext autoreload
 # autoreload 2
-import os, sys
+import os
+import sys
+
+import numpy as np
+import pandas as pd
 
 import datanalysis
+import portfolio as pf
+import util
 
 runfile(os.getcwd() + "/aapackage/allmodule.py", wdir="D:/_devs/Python01/project27")
 
-import portfolio as pf, util, numpy as np, pandas as pd
 
 # ---------------------   Data List          --------------------------------
 # execfile('D:/_devs/Python01/aapackage/alldata.py')

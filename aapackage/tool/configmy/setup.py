@@ -1,8 +1,12 @@
 from __future__ import absolute_import
-from setuptools import setup, Command
 
-import glob, os, subprocess, sys
+import glob
+import os
 import os.path
+import subprocess
+import sys
+
+from setuptools import Command, setup
 
 global VERSION, PACKAGE
 

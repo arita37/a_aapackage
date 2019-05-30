@@ -4,8 +4,17 @@
 # In[15]:
 
 
-import tensorflow as tf
+import collections
+import os
+import random
+import re
+import time
+
 import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+import tensorflow as tf
 
 
 class Model_vec:
@@ -64,12 +73,6 @@ class Model:
 # In[2]:
 
 
-import os
-from sklearn.preprocessing import LabelEncoder
-import re
-import collections
-import random
-import time
 
 
 # In[3]:
@@ -217,7 +220,6 @@ dictionary, reverse_dictionary, vectors = generatevector(
 # In[17]:
 
 
-from sklearn.cross_validation import train_test_split
 
 train_X, test_X, train_Y, test_Y = train_test_split(data[:, 0], data[:, 1], test_size=0.25)
 

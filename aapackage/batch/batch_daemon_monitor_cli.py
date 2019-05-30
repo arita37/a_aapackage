@@ -18,20 +18,18 @@ Folder suffix rules :
  
  
 """
-import os, sys
 import argparse
 import logging
+import os
+import sys
 from time import sleep
 
-
-import arrow
 import psutil
 
+import arrow
 ####################################################################################################
 from aapackage import util_log
-from aapackage.batch import util_batch
-from aapackage.batch import util_cpu
-
+from aapackage.batch import util_batch, util_cpu
 
 ############### Variable definition ################################################################
 # MONITOR_LOG_FILE = MONITOR_LOG_FOLDER + "/" + "batch_monitor_" + arrow.utcnow().to('Japan').format("YYYYMMDD_HHmmss") + ".log"

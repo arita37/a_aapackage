@@ -1,15 +1,32 @@
 # coding=utf-8
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import ast
+import builtins
+import glob
+import inspect
+import math
+import operator
+import os
+import os.path as op
+import platform
+import re
+import sys
+from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
-import builtins, operator, inspect, future
+from subprocess import call
 
+import future
+import past
+import six
+from six.moves import input
 
-import regex, past, ast, re, math, os, sys, glob, platform
-from collections import OrderedDict
+import regex
 from attrdict import AttrDict as dict2
+from configmy.codesource import ztest
+from configmy.configmy import ztest
+from github3 import login
 
 DIRCWD = os.getcwd()
 print(DIRCWD)
@@ -38,11 +55,6 @@ Modified in hard  pypi Version number
 """
 
 #####################################################################################################
-import os, sys, re, six
-import os.path as op
-from subprocess import call
-from six.moves import input
-from github3 import login
 
 
 def os_cmd(cmd, system=False):
@@ -83,12 +95,10 @@ def pypi_upload():
 version_new = pypi_update_version("VERSION", "setup.py")
 
 
-from configmy.configmy import ztest
 
 ztest()
 
 
-from configmy.codesource import ztest
 
 ztest()
 

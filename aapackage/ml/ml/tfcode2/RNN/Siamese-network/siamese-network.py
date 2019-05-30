@@ -4,12 +4,14 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
 import random
+import time
 
+from scipy.spatial.distance import cdist
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -146,7 +148,6 @@ for i in range(50):
 # In[11]:
 
 
-from scipy.spatial.distance import cdist
 
 batch_x = str_idx(train_X_1, dictionary, maxlen)
 batch_y = str_idx(test_X, dictionary, maxlen)

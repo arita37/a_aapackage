@@ -4,13 +4,14 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from scipy import misc
 import random
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy import misc
+
+import tensorflow as tf
 
 # In[2]:
 

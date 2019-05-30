@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 # utilities for Fast Computation
-import numpy as np, math as mm, numba, numexpr as ne
-from numba import jit, njit, autojit, int32, int64, float32, float64, double
-from math import exp, sqrt, cos, sin, log1p
+import math as mm
+from math import cos, exp, log1p, sin, sqrt
+
+import numba
+import numexpr as ne
+import numpy as np
+from numba import autojit, double, float32, float64, int32, int64, jit, njit
 
 
 """

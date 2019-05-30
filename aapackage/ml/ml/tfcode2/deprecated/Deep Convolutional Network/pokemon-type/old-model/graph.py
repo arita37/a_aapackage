@@ -1,12 +1,13 @@
+import csv
+
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+from scipy import misc
 
 sns.set(style="whitegrid", palette="muted")
-import numpy as np
-import matplotlib.gridspec as gridspec
-import csv
-import pandas as pd
-from scipy import misc
 
 
 def generategraph(x, accuracy, lost):

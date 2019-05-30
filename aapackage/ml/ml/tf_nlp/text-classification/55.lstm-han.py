@@ -4,11 +4,14 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
 import time
 
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -110,7 +113,6 @@ sess.run(tf.global_variables_initializer())
 # In[9]:
 
 
-from tqdm import tqdm
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 5, 0, 0, 0
 while True:
@@ -182,7 +184,6 @@ for i in pbar:
 # In[13]:
 
 
-from sklearn import metrics
 
 print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))
 

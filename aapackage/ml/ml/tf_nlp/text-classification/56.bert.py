@@ -4,13 +4,17 @@
 # In[1]:
 
 
+import os
+import time
+
+import numpy as np
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
 import bert_model as modeling
 import tensorflow as tf
-import os
-import numpy as np
 from utils import *
-from sklearn.cross_validation import train_test_split
-
 
 # In[2]:
 
@@ -180,8 +184,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 # In[11]:
 
 
-from tqdm import tqdm
-import time
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 5, 0, 0, 0
 
@@ -283,7 +285,6 @@ for i in pbar:
 # In[13]:
 
 
-from sklearn import metrics
 
 print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))
 

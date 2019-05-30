@@ -4,8 +4,21 @@
 # In[1]:
 
 
-import tensorflow as tf
+import pickle
+import random
+import re
+
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+import sklearn.datasets
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.manifold import TSNE
+
+import lightgbm as lgb
+import tensorflow as tf
 
 
 class Model_vec:
@@ -53,9 +66,6 @@ epoch = 10
 # In[3]:
 
 
-import sklearn.datasets
-import re
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 # In[4]:
@@ -102,7 +112,6 @@ print(len(trainset.target))
 # In[6]:
 
 
-import random
 
 combined = list(zip(trainset.data, trainset.target))
 random.shuffle(combined)
@@ -161,8 +170,6 @@ for k in range(0, (out.shape[0] // batch_size) * batch_size, batch_size):
 # In[30]:
 
 
-from sklearn.manifold import TSNE
-from sklearn.cross_validation import train_test_split
 
 _, vect_temp, _, Y_temp = train_test_split(
     vectorized, trainset.target[: vectorized.shape[0]], test_size=0.005
@@ -178,8 +185,6 @@ embed_2d = TSNE(n_components=2).fit_transform(vect_temp)
 # In[32]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 plt.figure(figsize=(10, 10))
@@ -199,7 +204,6 @@ plt.show()
 # In[34]:
 
 
-import pickle
 
 with open("vector.p", "wb") as fopen:
     pickle.dump(vectorized, fopen)
@@ -218,7 +222,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(
 # In[36]:
 
 
-import lightgbm as lgb
 
 params_lgd = {
     "boosting_type": "dart",
@@ -245,7 +248,6 @@ clf.fit(
 # In[37]:
 
 
-from sklearn import metrics
 
 predicted = clf.predict(test_X)
 print("accuracy validation set: ", np.mean(predicted == test_Y))

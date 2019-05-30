@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
-from __future__ import print_function
-import os, sys
+from __future__ import division, print_function
+
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import scipy as sci
+
 from attrdict import AttrDict as dict2
 
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
@@ -9,7 +15,6 @@ from attrdict import AttrDict as dict2
 os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
-import numpy as np, pandas as pd, scipy as sci
 
 
 try:

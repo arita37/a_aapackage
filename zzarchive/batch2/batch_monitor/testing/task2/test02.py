@@ -8,7 +8,11 @@ ARRAY=[ [1, 2, 3, 4], [2, 3, 4, 5] ]
 #DATA_NSPLIT=   [  1, 3, 4 ]
 #END_HEADER_SCRIPT ######################################################################################
 """
-import time, sys, os, arrow
+import os
+import sys
+import time
+
+import arrow
 
 
 def now_str():

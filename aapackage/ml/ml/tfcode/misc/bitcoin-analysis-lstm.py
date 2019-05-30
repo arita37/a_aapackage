@@ -4,12 +4,15 @@
 # In[1]:
 
 
-import tensorflow as tf
+from datetime import datetime, timedelta
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
+
+import tensorflow as tf
 
 sns.set()
 
@@ -89,7 +92,6 @@ plt.show()
 # In[11]:
 
 
-from sklearn.preprocessing import MinMaxScaler
 
 minmax = MinMaxScaler().fit(df[["Polarity", "Sensitivity", "Close_Price"]])
 scaled = minmax.transform(df[["Polarity", "Sensitivity", "Close_Price"]])

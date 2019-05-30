@@ -9,19 +9,21 @@ python main.py  --hyperparam      --subprocess_script sub
 
 
 """
-import os, sys, socket
-import numpy as np, pandas as pd
-import random
-import toml
-import time
-import logging
-import psutil
-import arrow
 import errno
+import logging
+import os
+import random
+import socket
+import sys
+import time
 
+import numpy as np
+import pandas as pd
+import psutil
+import toml
 
+import arrow
 from aapackage import util_log
-
 
 ###########################################################################################
 OUTFOLDER = (

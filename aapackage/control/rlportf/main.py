@@ -9,20 +9,22 @@
 
 
 """
-from argparse import ArgumentParser
+import datetime
 import json
-import pandas as pd
-import numpy as np
 import math
+import os
+from argparse import ArgumentParser
 from decimal import Decimal
-import matplotlib.pyplot as plt
 
-plt.style.use("ggplot")
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
 from agents.ornstein_uhlenbeck import OrnsteinUhlenbeckActionNoise
 from agents.pg import PG
-import datetime
-import os
-import seaborn as sns
+
+plt.style.use("ggplot")
 
 sns.set_style("darkgrid")
 

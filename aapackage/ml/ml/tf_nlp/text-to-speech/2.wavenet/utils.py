@@ -1,13 +1,15 @@
-import numpy as np
-import librosa
 import copy
+import os
+import re
+import unicodedata
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 from scipy import signal
 from scipy.io import wavfile
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import unicodedata
-import re
+
+import librosa
 
 # P: Padding
 # E: End of Sentence

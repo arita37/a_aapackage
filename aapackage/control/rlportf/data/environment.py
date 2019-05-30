@@ -4,12 +4,13 @@ Created on Mon Jul 30 05:41:28 2018
 
 @author: Administrator
 """
+import random
+import time
+from datetime import datetime
+from math import log
+
 import numpy as np
 import pandas as pd
-from math import log
-from datetime import datetime
-import time
-import random
 
 eps = 10e-8
 

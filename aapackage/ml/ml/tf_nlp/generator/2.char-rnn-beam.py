@@ -4,9 +4,12 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
+import time
 
+import numpy as np
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -145,8 +148,6 @@ sess.run(tf.global_variables_initializer())
 # In[8]:
 
 
-from tqdm import tqdm
-import time
 
 for e in range(10):
     lasttime = time.time()

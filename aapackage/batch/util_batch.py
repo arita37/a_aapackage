@@ -7,25 +7,23 @@ Batch utils
 
 
 """
-import os
-import shutil
-import sys
-import random
-import subprocess
-import time
 import logging
+import os
+import random
+import shutil
+import subprocess
+import sys
+import time
 
-
+import numpy as np
+import pandas as pd
 import psutil
 import toml
-import pandas as pd, numpy as np
+
 import arrow
-
-
+from aapackage import util_log
 #######################################################################
 from aapackage.batch import util_cpu
-from aapackage import util_log
-
 
 ################### Variables #########################################
 

@@ -1,9 +1,9 @@
 """
   Script to test conda installation of deep learning packages
 """
-import sys
-import os
 import importlib
+import os
+import sys
 
 
 def test_imports():

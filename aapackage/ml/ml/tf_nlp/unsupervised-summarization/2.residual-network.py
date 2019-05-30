@@ -4,13 +4,17 @@
 # In[1]:
 
 
-import tensorflow as tf
-import re
 import collections
-from tqdm import tqdm
 import random
-import numpy as np
+import re
 
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import pairwise_distances_argmin_min
+from sklearn.utils import shuffle
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -94,7 +98,6 @@ vocabulary_size
 # In[6]:
 
 
-from sklearn.utils import shuffle
 
 stride = 1
 t_range = int((len(contents) - 3) / stride + 1)
@@ -246,8 +249,6 @@ encoded, attention = sess.run(
 # In[12]:
 
 
-from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise_distances_argmin_min
 
 n_clusters = 10
 kmeans = KMeans(n_clusters=n_clusters, random_state=0)

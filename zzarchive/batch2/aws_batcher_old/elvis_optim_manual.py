@@ -4,14 +4,19 @@ New Strategy December 2016 with
 XLE, XLF, Cash, ZIV (Vol Index)  Rates Adjustment.
 
 '''
+import os
+
+import numpy as np
+
+import portfolio as pf
 #-------------------- Load  module -------------------------------------------------- 
 #  %load_ext autoreload
 #  %autoreload 2
-import PyGMO as pyg,  portfolio as pf, util, os, numpy as np
-
-
+import PyGMO as pyg
+import util
 #-------------------- Load Data -----------------------------------------------------
 from spyderlib.utils.iofuncs import load_dictionary
+
 # DIRCWD= os.getcwd()
 # fpath= DIRCWD+'/AIPORTFOLIO/research/Strat_elvis_newprod_dec2016/close_15assets_2012_dec216.spydata'
 fpath= filedata
@@ -213,12 +218,3 @@ util.os_print_tofile( txt, batch_out_log)
 
 
 ####################################################################################
-
-
-
-
-
-
-
-
-

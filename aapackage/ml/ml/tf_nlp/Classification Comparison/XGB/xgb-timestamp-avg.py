@@ -16,15 +16,17 @@
 # In[1]:
 
 
-import numpy as np
-import sklearn.datasets
+import json
+import pickle
 import re
 import time
-import xgboost as xgb
-import pickle
-from sklearn.cross_validation import train_test_split
-import json
 
+import numpy as np
+import sklearn.datasets
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+
+import xgboost as xgb
 
 # In[2]:
 
@@ -168,7 +170,6 @@ np.mean(test_Y == np.argmax(bst.predict(xgb.DMatrix(test_X)), axis=1))
 # In[14]:
 
 
-from sklearn import metrics
 
 print(
     metrics.classification_report(

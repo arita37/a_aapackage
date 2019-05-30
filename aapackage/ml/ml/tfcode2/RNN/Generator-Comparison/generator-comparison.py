@@ -4,14 +4,16 @@
 # In[1]:
 
 
-import numpy as np
-from matplotlib import animation
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
 import random
 import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 from IPython.display import HTML
+from matplotlib import animation
+
+import tensorflow as tf
 
 sns.set()
 

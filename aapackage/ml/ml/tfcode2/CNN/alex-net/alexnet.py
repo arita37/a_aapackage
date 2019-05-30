@@ -4,7 +4,17 @@
 # In[1]:
 
 
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy.misc import imresize
+from sklearn.cross_validation import train_test_split
+
+import _pickle as cPickle
 import tensorflow as tf
+from train import train
 
 
 class Alexnet:
@@ -57,13 +67,6 @@ class Alexnet:
 # In[2]:
 
 
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-import _pickle as cPickle
-from scipy.misc import imresize
-from sklearn.cross_validation import train_test_split
-from train import train
 
 
 def unpickle(file):
@@ -107,8 +110,6 @@ RESULTS = train(
 # In[13]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 plt.figure(figsize=(15, 5))

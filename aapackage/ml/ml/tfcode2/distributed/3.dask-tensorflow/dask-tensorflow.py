@@ -4,16 +4,19 @@
 # In[1]:
 
 
+import math
+import tempfile
+import time
+from queue import Empty
+
 import dask.array as da
-from dask import delayed
-from dask_tensorflow import start_tensorflow
-from distributed import Client, progress
 import dask.dataframe as dd
 import matplotlib.pyplot as plt
-
-import dask.array as da
 from dask import delayed
+from distributed import Client, progress
+from distributed.worker_client import get_worker
 
+from dask_tensorflow import start_tensorflow
 
 # In[2]:
 
@@ -73,7 +76,6 @@ batches = client.compute(batches)
 # In[7]:
 
 
-from dask_tensorflow import start_tensorflow
 
 tf_spec, dask_spec = start_tensorflow(client, ps=1, worker=2, scorer=1)
 
@@ -87,10 +89,6 @@ dask_spec
 # In[9]:
 
 
-import math
-import tempfile
-import time
-from queue import Empty
 
 IMAGE_PIXELS = 28
 hidden_units = 100
@@ -294,7 +292,6 @@ dask_spec
 # In[16]:
 
 
-from distributed.worker_client import get_worker
 
 
 def transfer_dask_to_tensorflow(batch):

@@ -8,14 +8,16 @@ hyperparams
 
 
 """
-import os, sys
+import os
+import sys
+
 import pandas as pd
-import arrow
 import toml
 
+import arrow
+import pygmo as pg
 from aapackage import util_log
-from utils import OUTFOLDER, load_data_session, save_results, os_folder_create, os_chdir
-
+from utils import OUTFOLDER, load_data_session, os_chdir, os_folder_create, save_results
 
 ##### Logs     ##########################################################################
 print(os.getcwd())
@@ -61,7 +63,6 @@ load_data_session(arg_dict.get("file_data"), method=arg_dict.get("file_data_meth
 ##### Scripts  ################################################################
 log("Start Script", __file__)
 
-import pygmo as pg
 
 # 1 - Instantiate a pygmo problem constructing it from a UDP
 # (user defined problem).

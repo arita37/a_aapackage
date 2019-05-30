@@ -4,17 +4,18 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import time
-import os
-import re
 import collections
-import random
+import os
 import pickle
-from sklearn.preprocessing import LabelEncoder
-from sklearn.cross_validation import train_test_split
+import random
+import re
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+import tensorflow as tf
 
 # In[2]:
 

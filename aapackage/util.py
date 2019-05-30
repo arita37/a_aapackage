@@ -8,21 +8,16 @@
 """
 from __future__ import division, print_function
 
-import glob
-
-import arrow
 import copy
 import datetime
-import dill
 import errno
 import fnmatch
 import gc
+import glob
 import importlib
 import operator
 import os
 import pickle
-import pip
-import psutil
 import re
 import shutil
 import subprocess
@@ -30,25 +25,26 @@ import sys
 import time
 import zipfile
 
-import matplotlib.pyplot as plt
-
 import IPython
+import matplotlib.pyplot as plt
 import numexpr as ne
 import numpy as np
 import pandas as pd
+import pip
+import psutil
 import scipy as sci
 import scipy.optimize
 from bs4 import BeautifulSoup
-
 # Date Manipulation
 from dateutil import parser
-
 # noinspection PyUnresolvedReferences
 from future import standard_library
 from numba import float32, jit
-
 # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 from past.utils import old_div
+
+import arrow
+import dill
 
 standard_library.install_aliases()
 

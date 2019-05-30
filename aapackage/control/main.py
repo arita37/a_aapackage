@@ -6,16 +6,15 @@ The main file to run BSDE solver to solve parabolic partial differential equatio
 import json
 import logging
 import os
+
 import numpy as np
+
 import tensorflow as tf
-
-
 ####################################################################################################
 ####################################################################################################
 from config import get_config
 from equation import get_equation
 from solver import FeedForwardModel
-
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")

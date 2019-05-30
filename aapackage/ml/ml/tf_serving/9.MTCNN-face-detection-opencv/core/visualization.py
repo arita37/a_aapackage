@@ -1,11 +1,14 @@
-import cv2
 import random
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+
 import matplotlib.cm as mpcm
-import tensorflow as tf
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import misc
+
+import cv2
+import tensorflow as tf
+
 
 # =========================================================================== #
 # Some colormaps.

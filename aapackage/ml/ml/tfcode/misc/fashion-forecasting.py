@@ -4,12 +4,14 @@
 # In[1]:
 
 
-import tensorflow as tf
+from datetime import datetime, timedelta
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from datetime import datetime
-from datetime import timedelta
+import seaborn as sns
 
+import tensorflow as tf
 
 # In[2]:
 
@@ -158,8 +160,6 @@ index
 # In[12]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 

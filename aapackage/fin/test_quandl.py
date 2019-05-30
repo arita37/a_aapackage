@@ -5,11 +5,12 @@ Quandl Data calculation
 %load_ext autoreload
 %autoreload 2
 
-import util
-import Quandl as quandl
 import copy
 
+import numpy as np
 
+import Quandl as quandl
+import util
 
 '''
 util.aa_getmodule_doc('Quandl')
@@ -24,7 +25,6 @@ l1= []
 data = quandl.get("EUREKA/481")
 
 
-import numpy as np
 np.
 
 srch1= quandl.search("EUREKAHEDGE", )
@@ -627,26 +627,3 @@ Monthly, since 2000
 Eurekahedge Event Driven Fund of Funds Index
 Eurekahedge Event Driven Fund of Funds Index. Eurekahedge is the world's largest independent data provider and research house dedicated to the collation development and continuous improvement of alternative investment data.
 CODE: EUREKA/259
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

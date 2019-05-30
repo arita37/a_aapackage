@@ -4,11 +4,13 @@
 # In[1]:
 
 
-import tensorflow as tf
 import os
-from utils import *
+
+from scipy.io.wavfile import write
 from tqdm import tqdm
 
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -244,7 +246,6 @@ audio = spectrogram2wav(mags[0])
 # In[10]:
 
 
-from scipy.io.wavfile import write
 
 print("saving: %s" % (raw_texts[0]))
 write(os.path.join("test.wav"), sample_rate, audio)

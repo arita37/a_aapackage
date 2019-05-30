@@ -11,12 +11,12 @@ Folders :
 
 
 """
-import os, sys
+import os
+import sys
 from time import sleep
 
 ####################################################################################################
-from task_config import task_name, taskout_local, taskout_s3_root, os_copy_local_to_s3
-
+from task_config import os_copy_local_to_s3, task_name, taskout_local, taskout_s3_root
 
 ####################################################################################################
 out_file = taskout_local + "myoutput.txt"

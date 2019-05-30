@@ -4,13 +4,13 @@
 # In[1]:
 
 
+import numpy as np
 import pandas as pd
-import tensorflow as tf
-from bayes_opt import BayesianOptimization
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder
-import numpy as np
 
+import tensorflow as tf
+from bayes_opt import BayesianOptimization
 
 # You can install Bayesian Optimization by,
 # ```bash

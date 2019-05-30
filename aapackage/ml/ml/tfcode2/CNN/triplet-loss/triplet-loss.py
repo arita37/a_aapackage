@@ -4,10 +4,15 @@
 # In[1]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
-import numpy as np
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from matplotlib import offsetbox
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -169,11 +174,8 @@ embed = model.output_positive.eval({model.POSITIVE: test_X})
 # In[11]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[12]:

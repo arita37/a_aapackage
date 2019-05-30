@@ -4,14 +4,15 @@
 # In[1]:
 
 
-import numpy as np
 import os
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from scipy.misc import imresize
-import cv2
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.misc import imresize
+
+import cv2
+import tensorflow as tf
 
 # In[2]:
 

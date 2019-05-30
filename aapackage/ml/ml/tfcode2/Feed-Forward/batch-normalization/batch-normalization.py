@@ -4,10 +4,12 @@
 # In[1]:
 
 
-import tensorflow as tf
-import tqdm
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import tqdm
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 get_ipython().run_line_magic("matplotlib", "inline")
 
@@ -15,7 +17,6 @@ get_ipython().run_line_magic("matplotlib", "inline")
 # In[2]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("/home/project/imagerecognition", one_hot=True)
 

@@ -9,28 +9,25 @@ Maintain same level of processors over time.
 
 """
 import argparse
-import re
 import copy
 import csv
 import logging
 import os
+import platform
 import random
+import re
 import shlex
 import subprocess
 import sys
-
-
-from time import sleep, time
-from datetime import datetime
 import time
-import platform
 from collections import namedtuple
+from datetime import datetime
+from time import sleep, time
 
 # non-stdlib imports
 import psutil
+
 import arrow
-
-
 from aapackage import util_log
 
 ############# Root folder #####################################################

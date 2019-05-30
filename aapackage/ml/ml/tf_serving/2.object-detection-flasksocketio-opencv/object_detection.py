@@ -1,9 +1,11 @@
-import tensorflow as tf
+import os
+
 import numpy as np
+from scipy.misc import imread, imsave
+
+import tensorflow as tf
 from utils import label_map_util
 from utils import visualization_utils as vis_util
-from scipy.misc import imread, imsave
-import os
 
 MODEL_NAME = "ssd_mobilenet"
 PATH_TO_CKPT = os.path.join(MODEL_NAME, "frozen_inference_graph.pb")

@@ -4,10 +4,11 @@
 # In[1]:
 
 
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+from scipy.stats import gamma, norm, skewnorm
 
 sns.set()
 
@@ -63,7 +64,6 @@ plt.show()
 # In[7]:
 
 
-from scipy.stats import skewnorm, norm, gamma
 
 
 # In[8]:

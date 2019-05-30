@@ -12,12 +12,16 @@ get_ipython().system("pip3 install bayesian-optimization==0.6 --user")
 # In[2]:
 
 
+import random
+import time
+import types
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import time
-import matplotlib.pyplot as plt
+import pkg_resources
 import seaborn as sns
-import random
+
 from bayes_opt import BayesianOptimization
 
 sns.set()
@@ -26,8 +30,6 @@ sns.set()
 # In[3]:
 
 
-import pkg_resources
-import types
 
 
 def get_imports():

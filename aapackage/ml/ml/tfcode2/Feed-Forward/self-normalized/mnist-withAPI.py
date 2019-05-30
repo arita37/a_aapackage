@@ -4,11 +4,14 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
 import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 sns.set()
 
@@ -16,7 +19,6 @@ sns.set()
 # In[2]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("", validation_size=0)
 

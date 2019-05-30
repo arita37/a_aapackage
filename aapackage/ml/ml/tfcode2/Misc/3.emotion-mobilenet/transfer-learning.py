@@ -4,13 +4,18 @@
 # In[1]:
 
 
+import os
+from random import shuffle
+
+import numpy as np
+from scipy.misc import imread, imresize
+from sklearn import metrics
+from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
+
+import mobilenet_v2
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import numpy as np
-import os
-from scipy.misc import imread, imresize
-from random import shuffle
-from sklearn.preprocessing import LabelEncoder
 
 tf.__version__
 
@@ -53,7 +58,6 @@ img_lists = [data_location + i for i in img_lists]
 # In[5]:
 
 
-import mobilenet_v2
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
@@ -98,7 +102,6 @@ saver.save(sess, "new/emotion-checkpoint-mobilenet.ckpt")
 # In[6]:
 
 
-from tqdm import tqdm
 
 batching = (len(img_lists) // batch_size) * batch_size
 for i in range(epoch):
@@ -163,7 +166,6 @@ for k in tqdm(range(0, batching, batch_size), desc="minibatch loop"):
 # In[23]:
 
 
-from sklearn import metrics
 
 print(metrics.classification_report(img_Y[:batching], results, target_names=np.unique(img_labels)))
 

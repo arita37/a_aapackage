@@ -2,9 +2,9 @@
 
 import datetime
 
-
-from numpy import asarray, ceil
 import pandas
+from numpy import asarray, ceil
+
 import rpy2.robjects as robjects
 
 

@@ -6,23 +6,26 @@ os.ENVIRON["BOTO_CONFIG"] =  C:/Users/asus1\.aws1.credentials
 # AWS_SECRET,AWS_KEY= boto.config
 exec (open("D:/_devs/keypair/aws_access.py").read(), globals())
 """
-from __future__ import division
-from __future__ import print_function
+from __future__ import division, print_function
+
+import csv
+###############################################################################
+import os
+import sys
+from pprint import pprint
+from time import sleep
+
+import boto
+import boto.ec2
+from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from future import standard_library
+
+from attrdict import AttrDict as dict2
 
 standard_library.install_aliases()
 
-###############################################################################
-import os, sys
 
-import boto
-from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
-import boto.ec2
 
-from time import sleep
-from attrdict import AttrDict as dict2
-from pprint import pprint
-import csv
 
 # from aapackage import util
 

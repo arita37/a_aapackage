@@ -4,12 +4,16 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
 import random
+import time
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib import offsetbox
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -218,11 +222,8 @@ logits_test.shape
 # In[13]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[14]:

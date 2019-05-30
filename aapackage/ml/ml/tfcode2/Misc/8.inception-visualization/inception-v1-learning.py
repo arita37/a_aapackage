@@ -4,14 +4,17 @@
 # In[1]:
 
 
+import json
+import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.misc import imread
+
+import cv2
+import inception_v1
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import numpy as np
-import os
-from scipy.misc import imread
-import inception_v1
-import json
-
 
 # In[2]:
 
@@ -68,7 +71,6 @@ Conv2d_1a_7x7.shape
 # In[8]:
 
 
-import matplotlib.pyplot as plt
 
 plt.imshow(Conv2d_1a_7x7[:, :, 0], cmap="viridis")
 plt.show()
@@ -201,7 +203,6 @@ plt.show()
 # In[16]:
 
 
-import cv2
 
 heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
 heatmap = np.uint8(255 * heatmap)

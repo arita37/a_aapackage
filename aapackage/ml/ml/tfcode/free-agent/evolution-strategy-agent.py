@@ -4,12 +4,15 @@
 # In[1]:
 
 
+import random
+import time
+import types
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import time
-import matplotlib.pyplot as plt
+import pkg_resources
 import seaborn as sns
-import random
 
 sns.set()
 
@@ -17,8 +20,6 @@ sns.set()
 # In[2]:
 
 
-import pkg_resources
-import types
 
 
 def get_imports():

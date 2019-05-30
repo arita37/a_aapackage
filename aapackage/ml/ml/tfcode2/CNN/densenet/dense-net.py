@@ -4,11 +4,15 @@
 # In[1]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
-import numpy as np
 import os
 
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.contrib.framework import arg_scope
+from tensorflow.contrib.layers import batch_norm, flatten
+from tensorflow.examples.tutorials.mnist import input_data
+from tflearn.layers.conv import global_avg_pool
 
 # In[2]:
 
@@ -19,9 +23,6 @@ mnist = input_data.read_data_sets("", one_hot=True)
 # In[3]:
 
 
-from tflearn.layers.conv import global_avg_pool
-from tensorflow.contrib.layers import batch_norm, flatten
-from tensorflow.contrib.framework import arg_scope
 
 
 # In[4]:

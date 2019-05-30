@@ -5,9 +5,10 @@
 
 
 import cPickle
-import tensorflow as tf
+
 import numpy as np
 
+import tensorflow as tf
 
 # In[2]:
 

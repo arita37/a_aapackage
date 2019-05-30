@@ -1,5 +1,6 @@
-import task_parallel as tpar
 import os
+
+import task_parallel as tpar
 
 # todo_folder= "c:/My_todoFolder/"
 todo_folder = "testing" + os.sep

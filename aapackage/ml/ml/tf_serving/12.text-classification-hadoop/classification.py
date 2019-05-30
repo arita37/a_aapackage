@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
-import tensorflow as tf
-import numpy as np
 import json
 import sys
+
+import numpy as np
+
+import tensorflow as tf
 
 
 def load_graph(frozen_graph_filename):

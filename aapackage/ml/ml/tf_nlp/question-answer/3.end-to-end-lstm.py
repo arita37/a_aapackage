@@ -4,10 +4,11 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
 from copy import deepcopy
 
+import numpy as np
+
+import tensorflow as tf
 
 # In[2]:
 

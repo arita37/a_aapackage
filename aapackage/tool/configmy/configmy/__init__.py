@@ -23,28 +23,17 @@ __author__ = "Kevin"
 
 
 from . import configmy
+from .codesource import (module_doc_write, module_signature_compare, module_signature_get,
+                         module_signature_write, module_unitest_write)
+from .configmy import (conda_env_export, conda_env_list, conda_env_readyaml, conda_install,
+                       conda_path_get, conda_uninstall, get, get_config_from_environ,
+                       get_environ_details, set, zdoc, ztest)
 
 __all__ = ["get", "set", "get_environ_details", "zdoc", "ztest"]
 
 
-from .configmy import (
-    conda_install,
-    conda_env_export,
-    conda_env_list,
-    conda_env_readyaml,
-    conda_path_get,
-    conda_uninstall,
-)
-from .configmy import get, set, get_config_from_environ, get_environ_details, zdoc, ztest
 
 
-from .codesource import (
-    module_doc_write,
-    module_signature_get,
-    module_signature_compare,
-    module_signature_write,
-    module_unitest_write,
-)
 
 
 """

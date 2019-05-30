@@ -1,10 +1,13 @@
-import cv2
-import time
-import numpy as np
 import sys
+import time
+
+import numpy as np
+
+import cv2
+
+from .nms import py_nms
 
 sys.path.append("../")
-from .nms import py_nms
 
 
 class MtcnnDetector(object):

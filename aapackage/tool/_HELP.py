@@ -153,9 +153,25 @@ df = pd.DataFrame(list(a_dictionary.items()), columns = ['column1', 'column2'])
 
 #-------------------------------- SQL ALCHEMY --------------------------------------------------------------------------
 
+import subprocess
+import subprocess.call
+import sys
+import urllib
 #Schema creation in SQL Alchemy
 from datetime import datetime
-from sqlalchemy import DateTime
+
+import pandas as pd
+import pyodbc
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+#Create Automap
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Session
+
+import "pull"]
+import ["git"
+from win32com.client.gencache import EnsureDispatch
+
 users = Table('users', metadata,
  Column('user_id', Integer(), primary_key=True),
  Column('username', String(15), nullable=False, unique=True),
@@ -194,11 +210,6 @@ objects with optional information about the engine and the connection.
 
 
 
-import urllib
-import pyodbc
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-import pandas as pd
 
 params = urllib.quote_plus('DRIVER={SQL Server};SERVER=<nameofserver>;DATABASE=<nameofdb>;UID=<userid>;PWD=<pwd>')
 engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
@@ -237,11 +248,8 @@ using with the ORM so far, we’re going to use the automap_base. Let’s start 
 a Base object to work with, as shown in Example 10-
 
 
-#Create Automap
-from sqlalchemy.ext.automap import automap_base
 Base = automap_base()
 
-from sqlalchemy import create_engine
 engine = create_engine('sqlite:///Chinook_Sqlite.sqlite')
 
 #Mapping the whole database
@@ -253,7 +261,6 @@ Artist = Base.classes.Artist
 Album = Base.classes.Album
 
 
-from sqlalchemy.orm import Session
 session = Session(engine)
 for artist in session.query(Artist).limit(10):
 print(artist.ArtistId, artist.Name)
@@ -320,7 +327,6 @@ PYLEARN:
 !pip install https://github.com/lisa-lab/pylearn2/zipball/master
 
 GIT in Command Line:
-import subprocess subprocess.call(["git", "pull"])
 subprocess.call(["make"])
 subprocess.call(["make", "test"])
 
@@ -356,7 +362,6 @@ os.getcwd()   #current folder
 
 
 
-from win32com.client.gencache import EnsureDispatch
 
 for w in EnsureDispatch("Shell.Application").Windows():
     print(w.LocationName + "=" + w.LocationURL)
@@ -366,7 +371,6 @@ We can place additional strings after the Python file
 and access those command line arguments in our Python program.
  Here is a simple program that demonstrates reading arguments from the command line:
 
-import sys
 print 'Count:', len(sys.argv)
 print 'Type:', type(sys.argv)
 for arg in sys.argv:
@@ -899,10 +903,3 @@ def fun_python(a):
  for i in xrange(0, 100000):
     a += i + b
  #print a
-
-
-
-
-
-
-

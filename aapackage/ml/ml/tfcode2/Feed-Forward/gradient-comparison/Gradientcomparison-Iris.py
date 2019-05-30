@@ -4,17 +4,17 @@
 # In[1]:
 
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.preprocessing import LabelEncoder
-from sklearn.cross_validation import train_test_split
-import tensorflow as tf
-from matplotlib import animation
-import matplotlib.pyplot as plt
-from IPython.display import HTML
 import seaborn as sns
+from IPython.display import HTML
+from matplotlib import animation
+from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+
+import tensorflow as tf
 
 sns.set()
 

@@ -1,20 +1,44 @@
 # -*- coding: utf-8 -*-
 # utilities for portfolio data management
-import calendar, copy, re, sys, os
+import calendar
+import copy
+import csv
+import datetime
+import math
+import operator
+import os
+import re
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+# -----Multivariate regression ---------------------------------------------
+import warnings
 from calendar import isleap
-from dateutil import parser
 from datetime import datetime, timedelta
-from tabulate import tabulate
 
 import matplotlib.pyplot as plt
+import numba
+import numpy as np
+import pandas as pd
+import requests
+# --------------------Import Quotes Google  ------------------------------------------
+import requests.packages.urllib3
+import scipy as sci
+import sklearn as sk
+#################### Finviz  ###############################################################
+from bs4 import BeautifulSoup
+from dateutil import parser, tz
 from matplotlib.finance import quotes_historical_yahoo_ochl
-
-import numba, numpy as np, pandas as pd, scipy as sci, sklearn as sk, math
-from numba import jit, int32, float32, float64, int64
+from numba import float32, float64, int32, int64, jit
+# --------------------Calculate Rank Table    ---------------------------------------
+from scipy.stats import norm
 
 # import datanalysis
 import util
 from fin import technical_indicator as ta
+from fin.alldata import *
+from tabulate import tabulate
 
 #####################################################################################
 
@@ -23,11 +47,6 @@ os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
 
-############## Data List #######################################################################
-# runfile('D:/_devs/Python01/aapackage/alldata.py', wdir='D:/_devs/Python01/project27')
-#  Get the list of Tickers
-# exec(compile(open(DIRCWD+'/aapackage/alldata.py').read(), DIRCWD+'/aapackage/alldata.py', 'exec'))
-from fin.alldata import *
 
 
 def data_jpsector():
@@ -537,7 +556,6 @@ def date_align(quotes, dateref=None, datestart=19550101, type1="close"):
 # return dateref, datei
 
 
-import operator
 
 
 def min_withposition(values):
@@ -1073,8 +1091,6 @@ def rolling_cointegration(x, y):
 # ---------------------------------------------------------------------------
 
 
-# -----Multivariate regression ---------------------------------------------
-import warnings
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -4306,8 +4322,6 @@ http://quanttech.co/2015/06/23/quickly-run-up-microservices-for-your-trading-app
 
 # --------------------Statistical Analysis of Time Series-----------------------------
 
-# --------------------Calculate Rank Table    ---------------------------------------
-from scipy.stats import norm
 
 
 def np_countretsign(x):
@@ -5078,11 +5092,8 @@ def imp_yahoo_periodic_figure(soup, yahoo_figure):
 # print(imp_yahoo_periodic(imp_yahoo_financials_url("AAPL", "is"), "Income Tax Expense"))
 
 
-# --------------------Import Quotes Google  ------------------------------------------
-import requests.packages.urllib3
 
 requests.packages.urllib3.disable_warnings()
-import urllib.request, urllib.parse, urllib.error, os
 
 dirstockcsv = "E:\_data\stock\csv"
 
@@ -5457,7 +5468,6 @@ def imp_csv_getname(name1, date1, inter, tframe):
     return file1
 
 
-from dateutil import tz
 
 
 def imp_csv_toext(
@@ -6349,9 +6359,6 @@ def monitor_addrecommend(string1, dbname="stock_recommend"):
     return stock_recommend
 
 
-#################### Finviz  ###############################################################
-from bs4 import BeautifulSoup
-import csv, datetime, requests
 
 
 def imp_finviz():

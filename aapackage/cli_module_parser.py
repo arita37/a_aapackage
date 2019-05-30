@@ -42,7 +42,8 @@ src/file_finder.py,_walk,f,True
 """
 
 import ast
-import os, sys
+import os
+import sys
 
 
 def analyzeSource(source):

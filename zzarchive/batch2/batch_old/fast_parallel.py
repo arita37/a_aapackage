@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 # utilities for  Paralell and ( Fast Computation)
-import numpy as np, math as mm, numba, numexpr as ne
-from numba import jit, njit, autojit, int32, float32, float64, int64, double
-from math import exp, sqrt, cos, sin, log1p
+import math as mm
+from math import cos, exp, log1p, sin, sqrt
+
+import numba
+import numexpr as ne
+import numpy as np
+from numba import autojit, double, float32, float64, int32, int64, jit, njit
 
 import ipyparallel as ipp
+from ipyparallel import AsyncHubResult, Client
+from ipyparallel import DirectView as dv
+from ipyparallel import Reference, error
 
-from ipyparallel import Client
-
-
-from ipyparallel import error, AsyncHubResult, DirectView as dv, Reference
 
 ##################################################################################################
 ######################### Usage of IPyrallel #####################################################

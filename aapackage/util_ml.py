@@ -1,11 +1,17 @@
-import argparse, os, sys
-from time import time
-import tensorflow as tf
-import codecs, collections, pickle, numpy as np
-
+import argparse
+import codecs
+import collections
 ###########################################################################################################
-import os, sys
+import os
+import pickle
+import sys
+from time import time
 
+import numpy as np
+
+import arrow
+import tensorflow as tf
+import util
 
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
 # DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
@@ -338,7 +344,6 @@ os_print_tofile("myfile.txt")
 
 ########################################################################################################
 ############################ UNIT TEST #################################################################
-import argparse, arrow, util
 
 ppa = argparse.ArgumentParser()  # Command Line input
 ppa.add_argument("--do", type=str, default="action", help="test / test02")

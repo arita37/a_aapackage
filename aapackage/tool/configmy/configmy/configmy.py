@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import ast
+import builtins
+import glob
+import inspect
+import operator
+import os
+import platform
+import re
+import sys
+from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
-import builtins, operator, inspect, future
+
+import future
+import past
+
+import arrow
+import regex
+from attrdict import AttrDict as dict2
 
 ####################################################################################################
 
-import regex, past, ast, re, os, sys, glob, platform, arrow
-from collections import OrderedDict
-from attrdict import AttrDict as dict2
 
 
 ####################################################################################################

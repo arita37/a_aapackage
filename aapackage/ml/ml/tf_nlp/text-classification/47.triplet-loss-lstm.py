@@ -4,12 +4,18 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
-import random
 import os
+import random
+import time
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib import offsetbox
+from scipy.spatial.distance import cdist
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from utils import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -194,7 +200,6 @@ logits_test.shape
 # In[24]:
 
 
-from scipy.spatial.distance import cdist
 
 label_test = []
 for i in range(logits_test.shape[0]):
@@ -209,11 +214,8 @@ print(metrics.classification_report(test_Y, label_test, target_names=trainset.ta
 # In[15]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[30]:

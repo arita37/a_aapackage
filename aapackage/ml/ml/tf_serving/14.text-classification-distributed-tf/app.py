@@ -1,7 +1,10 @@
-import tensorflow as tf
 import json
-import numpy as np
 import os
+
+import numpy as np
+from flask import Flask, request
+
+import tensorflow as tf
 
 with open("dictionary-test.json", "r") as fopen:
     dic = json.load(fopen)
@@ -47,7 +50,6 @@ label = ["negative", "positive"]
 UNK = 3
 maxlen = 50
 
-from flask import Flask, request
 
 app = Flask(__name__)
 

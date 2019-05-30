@@ -1,8 +1,9 @@
-import speech_recognition as sr
 import base64
-from socketIO_client import SocketIO, BaseNamespace
-from threading import Thread, ThreadError
 import time
+from threading import Thread, ThreadError
+
+import speech_recognition as sr
+from socketIO_client import BaseNamespace, SocketIO
 
 socketIO = SocketIO("localhost", 5000)
 live_namespace = socketIO.define(BaseNamespace, "/live")

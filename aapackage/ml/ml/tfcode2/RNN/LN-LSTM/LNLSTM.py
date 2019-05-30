@@ -4,14 +4,15 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
 import copy
-import time
-from sklearn.cross_validation import train_test_split
 import os
 import pickle
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
 
 # In[2]:
 

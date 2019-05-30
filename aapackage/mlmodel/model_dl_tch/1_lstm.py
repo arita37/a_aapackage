@@ -1,10 +1,11 @@
 # coding: utf-8
-import torch as tch
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
-from datetime import timedelta
+
+import torch as tch
 
 
 class Model:

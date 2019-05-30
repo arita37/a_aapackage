@@ -18,34 +18,16 @@ import os
 import pydoc
 import re
 import sys
-from builtins import (
-    ascii,
-    bytes,
-    chr,
-    dict,
-    filter,
-    hex,
-    input,
-    int,
-    map,
-    next,
-    oct,
-    open,
-    pow,
-    range,
-    round,
-    str,
-    super,
-    zip,
-)
+from builtins import (ascii, bytes, chr, dict, filter, hex, input, int, map,
+                      next, oct, open, pow, range, round, str, super, zip)
 from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
 
-import pandas as pd
-
 import future
+import pandas as pd
 import past
+
 import regex
 
 ####################################################################################################

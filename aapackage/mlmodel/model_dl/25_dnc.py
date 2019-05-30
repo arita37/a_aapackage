@@ -4,21 +4,23 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
-from datetime import timedelta
 import copy
+import inspect
+import os
+import sys
+from datetime import datetime, timedelta
 
-import os, sys, inspect
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
+
+import tensorflow as tf
+from dnc import DNC
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 sys.path.insert(0, current_dir)
-from dnc import DNC
 
 sns.set()
 

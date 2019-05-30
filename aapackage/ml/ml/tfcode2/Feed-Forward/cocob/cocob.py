@@ -6,15 +6,15 @@
 
 import os
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.framework import ops
-from tensorflow.python.framework import constant_op
-from tensorflow.python.training import optimizer
-import tensorflow as tf
 import numpy as np
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.python.framework import constant_op, ops
+from tensorflow.python.ops import control_flow_ops, math_ops, state_ops
+from tensorflow.python.training import optimizer
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 
 # In[2]:
@@ -87,7 +87,6 @@ class COCOB(optimizer.Optimizer):
 # In[3]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("", validation_size=0)
 

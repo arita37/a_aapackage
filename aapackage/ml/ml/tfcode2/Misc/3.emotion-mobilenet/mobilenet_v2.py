@@ -20,14 +20,11 @@ The base model gives 72.2% accuracy on ImageNet, with 300MMadds,
 3.4 M parameters.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import copy
 
 import tensorflow as tf
-
 from nets.mobilenet import conv_blocks as ops
 from nets.mobilenet import mobilenet as lib
 

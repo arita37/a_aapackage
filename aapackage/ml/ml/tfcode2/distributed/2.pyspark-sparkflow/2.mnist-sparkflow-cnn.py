@@ -10,9 +10,19 @@ get_ipython().system("pip3 install tqdm requests dill")
 # In[2]:
 
 
+import os
+
 import requests
 from tqdm import tqdm
-import os
+
+import tensorflow as tf
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.ml.feature import OneHotEncoder, VectorAssembler
+from pyspark.ml.pipeline import Pipeline
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import rand
+from sparkflow.graph_utils import build_adam_config, build_graph
+from sparkflow.tensorflow_async import SparkAsyncDL
 
 
 def download_from_url(url, dst):
@@ -49,13 +59,6 @@ download_from_url(
 # In[4]:
 
 
-from sparkflow.graph_utils import build_graph
-from sparkflow.tensorflow_async import SparkAsyncDL
-import tensorflow as tf
-from pyspark.ml.feature import VectorAssembler, OneHotEncoder
-from pyspark.ml.pipeline import Pipeline
-from sparkflow.graph_utils import build_adam_config
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 
 def cnn_model():
@@ -76,8 +79,6 @@ def cnn_model():
 # In[5]:
 
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import rand
 
 sparkSession = SparkSession.builder.appName("csv").getOrCreate()
 

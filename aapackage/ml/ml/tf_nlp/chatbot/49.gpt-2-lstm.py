@@ -4,15 +4,17 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
-import re
-import time
 import collections
 import os
-import gpt_2
+import re
+import time
 
+import numpy as np
+from sklearn.utils import shuffle
+
+import gpt_2
+import tensorflow as tf
+from tensorflow.contrib.training import HParams
 
 # In[2]:
 
@@ -210,7 +212,6 @@ maxlen_answer = max([len(y) for y in Y]) * 2
 # In[11]:
 
 
-from tensorflow.contrib.training import HParams
 
 params = HParams(n_vocab=len(dictionary_from), n_ctx=512, n_embd=256, n_head=8, n_layer=8)
 batch_size = 16

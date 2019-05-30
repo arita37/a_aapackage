@@ -4,10 +4,12 @@ Created on Mon Aug  6 08:59:35 2018
 
 @author: Administrator
 """
-import tensorflow as tf
-from collections import deque
-import numpy as np
 import random
+from collections import deque
+
+import numpy as np
+
+import tensorflow as tf
 
 tf_summaries_list = []
 

@@ -14,16 +14,16 @@
 # limitations under the License.
 """The main BERT model and related functions."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
 import copy
 import json
 import math
 import re
+
 import six
+
 import tensorflow as tf
 
 

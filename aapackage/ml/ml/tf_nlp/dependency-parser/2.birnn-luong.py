@@ -4,10 +4,13 @@
 # In[1]:
 
 
-import tensorflow as tf
-from tqdm import tqdm
-import numpy as np
+import time
 
+import numpy as np
+from tqdm import tqdm
+
+import tensorflow as tf
+from keras.preprocessing.sequence import pad_sequences
 
 # In[2]:
 
@@ -70,7 +73,6 @@ sentences_test, words_test, depends_test, labels_test = process_corpus(corpus_te
 # In[4]:
 
 
-from keras.preprocessing.sequence import pad_sequences
 
 
 # In[5]:
@@ -258,7 +260,6 @@ sess.run(tf.global_variables_initializer())
 # In[11]:
 
 
-import time
 
 for e in range(20):
     lasttime = time.time()

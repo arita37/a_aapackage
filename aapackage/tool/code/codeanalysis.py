@@ -6,7 +6,8 @@
 
 # ---------------------------------------------------------------------------------
 import inspect
-import os, sys
+import os
+import sys
 
 global file1, dirdoc1
 INDENT = 0

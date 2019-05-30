@@ -1,20 +1,33 @@
 # coding=utf-8
 from __future__ import division
-from future import standard_library
 
-standard_library.install_aliases()
-from builtins import next
-from builtins import map
-from builtins import zip
-from builtins import str
-from builtins import range
+# ---------Various Utilities function for Python--------------------------------------
+# if sys.platform.find('win') > -1 :
+#  from guidata import qthelpers  #Otherwise Erro with Spyder Save
+import datetime
+#####################################################################################################
+import os
+import shutil
+import sys
+import time
+from builtins import map, next, object, range, str, zip
+
+import IPython
+import numpy as np
+import pandas as pd
+import scipy as sci
+import urllib3
+from bs4 import BeautifulSoup
+from future import standard_library
 from past.builtins import basestring
 from past.utils import old_div
-from builtins import object
 
-#####################################################################################################
-import os, sys
+import arrow
+import util as util
 from attrdict import AttrDict as dict2
+
+standard_library.install_aliases()
+
 
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
 # DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
@@ -28,15 +41,8 @@ os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
 
-# ---------Various Utilities function for Python--------------------------------------
-# if sys.platform.find('win') > -1 :
-#  from guidata import qthelpers  #Otherwise Erro with Spyder Save
-import datetime, time, arrow, shutil, IPython
-import numpy as np, pandas as pd, scipy as sci, urllib3
-from bs4 import BeautifulSoup
 
 
-import util as util
 
 
 # __path__= DIRCWD +'/aapackage/'

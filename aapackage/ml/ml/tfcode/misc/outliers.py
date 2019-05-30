@@ -6,8 +6,15 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
+from sklearn.cluster import KMeans
+from sklearn.covariance import EllipticEnvelope
+from sklearn.decomposition import PCA
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import OneClassSVM
 
 sns.set()
 
@@ -144,7 +151,6 @@ plt.show()
 # In[11]:
 
 
-from sklearn.cluster import KMeans
 
 n_cluster = range(1, 20)
 data = df_crosscorrelated.iloc[:, 1:].dropna().values
@@ -162,7 +168,6 @@ plt.show()
 # In[12]:
 
 
-from mpl_toolkits.mplot3d import Axes3D
 
 X = df_crosscorrelated[["Close", "ma14", "ma25"]].dropna()
 X = X.reset_index(drop=True)
@@ -184,8 +189,6 @@ plt.show()
 # In[13]:
 
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
 X_std = StandardScaler().fit_transform(X)
@@ -307,7 +310,6 @@ plt.show()
 # In[61]:
 
 
-from sklearn.ensemble import IsolationForest
 
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
 np_scaled = StandardScaler().fit_transform(X)
@@ -347,7 +349,6 @@ plt.show()
 # In[65]:
 
 
-from sklearn.svm import OneClassSVM
 
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
 np_scaled = StandardScaler().fit_transform(X)
@@ -386,7 +387,6 @@ plt.show()
 # In[70]:
 
 
-from sklearn.covariance import EllipticEnvelope
 
 envelope = EllipticEnvelope(contamination=outliers_fraction)
 X = df_crosscorrelated.iloc[:, 1:].dropna().values

@@ -2,9 +2,20 @@
 """
 Project : Dataset and Code Manager into centralized framework.
 """
-import blaze as bz, pandas as pd, numpy as np, copy
-import re, sys, os, time, datetime, csv, sqlalchemy as sql
+import copy
+import csv
+import datetime
+import os
+import re
+import sys
+import time
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import sqlalchemy as sql
+
+import blaze as bz
 import util
 
 

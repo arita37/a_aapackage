@@ -4,16 +4,18 @@
 # In[6]:
 
 
-import tensorflow as tf
-import numpy as np
-import os
-from sklearn.preprocessing import LabelEncoder
-import re
 import collections
-import random
+import os
 import pickle
+import random
+import re
 import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -43,7 +45,6 @@ label = np.unique(df[:, 1])
 # In[4]:
 
 
-from sklearn.cross_validation import train_test_split
 
 train_X, test_X, train_Y, test_Y = train_test_split(df[:, 0], df[:, 1], test_size=0.2)
 

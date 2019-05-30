@@ -21,8 +21,12 @@ vocab = "ES abcdefghijklmnopqrstuvwxyz'"
 char2idx = {char: idx for idx, char in enumerate(vocab)}
 idx2char = {idx: char for idx, char in enumerate(vocab)}
 
-import re
 import os
+import re
+
+import numpy as np
+
+import librosa
 
 
 def text2idx(text):
@@ -31,8 +35,6 @@ def text2idx(text):
     return text, converted
 
 
-import librosa
-import numpy as np
 
 
 def get_spectrogram(fpath):

@@ -1,10 +1,11 @@
-from Detection.MtcnnDetector import MtcnnDetector
+import time
+
+import cv2
+import visualization_utils
 from Detection.detector import Detector
 from Detection.fcn_detector import FcnDetector
-from train_models.mtcnn_model import P_Net, R_Net, O_Net
-import visualization_utils
-import cv2
-import time
+from Detection.MtcnnDetector import MtcnnDetector
+from train_models.mtcnn_model import O_Net, P_Net, R_Net
 
 thresh = [0.7, 0.1, 0.1]
 min_face_size = 24

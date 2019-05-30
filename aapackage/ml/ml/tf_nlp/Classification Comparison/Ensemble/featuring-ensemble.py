@@ -4,18 +4,25 @@
 # In[1]:
 
 
+import os
+import random
+import re
+import string
+
+import matplotlib.pyplot as plt
+import nltk
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import psutil
 import seaborn as sns
-import nltk
+import sklearn.datasets
 from nltk.corpus import stopwords
-import string
-import xgboost as xgb
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import TruncatedSVD
 from sklearn import ensemble, metrics, model_selection, naive_bayes
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
 import spacy
+import xgboost as xgb
 
 color = sns.color_palette()
 
@@ -29,8 +36,6 @@ nlp = spacy.load("en_core_web_sm")
 # In[2]:
 
 
-import sklearn.datasets
-import re
 
 
 def clearstring(string):
@@ -59,7 +64,6 @@ def separate_dataset(trainset):
 # In[3]:
 
 
-import random
 
 trainset = sklearn.datasets.load_files(container_path="data", encoding="UTF-8")
 trainset.data, trainset.target = separate_dataset(trainset)
@@ -127,7 +131,6 @@ feature_clf.fit(
 # In[7]:
 
 
-from sklearn import metrics
 
 predicted = feature_clf.predict(test_X)
 print("accuracy validation set: ", np.mean(predicted == test_Y))
@@ -307,8 +310,6 @@ plt.show()
 # In[39]:
 
 
-import os
-import psutil
 
 process = psutil.Process(os.getpid())
 "this notebook use: " + str(process.memory_info()[0] / float(2 ** 20)) + " MB"

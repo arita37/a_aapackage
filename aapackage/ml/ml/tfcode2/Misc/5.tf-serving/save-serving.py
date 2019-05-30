@@ -4,12 +4,16 @@
 # In[1]:
 
 
+import os
 import time
-import numpy as np
-import matplotlib.pyplot as plt
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import tensorflow as tf
+from grpc.beta import implementations
+from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow_serving.apis import predict_pb2, prediction_service_pb2
 
 # In[2]:
 
@@ -101,7 +105,6 @@ export_model_dir = "./serving/versions"
 # In[8]:
 
 
-import os
 
 export_path_base = export_model_dir
 export_path = os.path.join(
@@ -136,9 +139,6 @@ builder.save(as_text=True)
 # In[9]:
 
 
-from grpc.beta import implementations
-from tensorflow_serving.apis import predict_pb2
-from tensorflow_serving.apis import prediction_service_pb2
 
 
 # In[13]:

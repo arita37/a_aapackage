@@ -4,12 +4,12 @@
 # In[12]:
 
 
-import numpy as np
-from scipy.linalg import svd, inv
-from sklearn.feature_extraction.text import TfidfVectorizer
-from operator import itemgetter
 import re
+from operator import itemgetter
 
+import numpy as np
+from scipy.linalg import inv, svd
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 # In[14]:
 

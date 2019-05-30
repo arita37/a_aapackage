@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-import sys, os
+import configparser
+import os
+import socket
+import subprocess
+import sys
+from time import sleep
+
+import boto
+import pandas as pd
+from boto.ec2.connection import EC2Connection
+
+import util
+from monitor_task import monitor
 
 DIR1 = os.getcwd()
 DIR_package = os.getcwd() + "/aapackage/aws/"
-from boto.ec2.connection import EC2Connection
-from time import sleep
-import subprocess, configparser, socket, boto, pandas as pd
-import util
 
 
-from monitor_task import monitor
 
 
 ############################################################################################################

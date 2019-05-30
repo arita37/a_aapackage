@@ -1,40 +1,46 @@
 # -*- coding: utf-8 -*-
 """Automatic release tools."""
 
-from __future__ import division
-from __future__ import print_function
-from future import standard_library
+from __future__ import division, print_function
 
-standard_library.install_aliases()
-from builtins import next
-from builtins import map
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.builtins import basestring
-from past.utils import old_div
-from builtins import object
-
-import os, sys
-
-
-import datetime, time, arrow, shutil, IPython, gc, copy
-import matplotlib.pyplot as plt
-import numexpr as ne, numpy as np, pandas as pd, scipy as sci
-import urllib3
-from bs4 import BeautifulSoup
-
+import copy
+import datetime
+import gc
+#####################################################################################################
+import os
 import os.path as op
 import re
+import shutil
+import sys
+import time
+from builtins import map, next, object, range, str, zip
 from subprocess import call
 
+import IPython
+import matplotlib.pyplot as plt
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
 import six
+import urllib3
+from bs4 import BeautifulSoup
+from future import standard_library
+from past.builtins import basestring
+from past.utils import old_div
 from six.moves import input
+
+import arrow
 from github3 import login
 
+standard_library.install_aliases()
 
-#####################################################################################################
-import os, sys
+
+
+
+
+
+
 
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
 # DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/', 'lin-travis': '/home/ubuntu/project27/'}[CFG['plat']]

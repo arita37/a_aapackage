@@ -4,11 +4,11 @@
 # In[6]:
 
 
-import numpy as np
 import os
-import re
 import pickle
+import re
 
+import numpy as np
 
 # In[7]:
 

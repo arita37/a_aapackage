@@ -4,15 +4,20 @@
 # In[1]:
 
 
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.utils.validation import check_X_y, check_is_fitted
-from sklearn.linear_model import LogisticRegression
+import re
+
+import numpy as np
+import sklearn.datasets
 from scipy import sparse
-from sklearn.cross_validation import train_test_split
-from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn import metrics
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.cross_validation import train_test_split
+from sklearn.feature_extraction.text import (CountVectorizer, HashingVectorizer,
+                                             TfidfTransformer, TfidfVectorizer)
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.validation import check_is_fitted, check_X_y
 
 
 class NB_SVM(BaseEstimator, ClassifierMixin):
@@ -48,9 +53,6 @@ class NB_SVM(BaseEstimator, ClassifierMixin):
 # In[2]:
 
 
-import sklearn.datasets
-import re
-import numpy as np
 
 
 # In[3]:
@@ -92,9 +94,6 @@ print(len(trainset.target))
 # In[12]:
 
 
-from sklearn.model_selection import StratifiedKFold
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score
 
 cv = StratifiedKFold(n_splits=10, shuffle=True)
 X_raw, y_raw = np.array(trainset.data), np.array(trainset.target)

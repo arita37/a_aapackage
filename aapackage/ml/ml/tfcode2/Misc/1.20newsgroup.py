@@ -4,14 +4,15 @@
 # In[1]:
 
 
-from sklearn.datasets import fetch_20newsgroups
-import re
-import tensorflow as tf
-from sklearn import metrics
-import numpy as np
 import collections
+import re
 import time
 
+import numpy as np
+from sklearn import metrics
+from sklearn.datasets import fetch_20newsgroups
+
+import tensorflow as tf
 
 # In[2]:
 

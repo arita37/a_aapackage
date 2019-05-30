@@ -29,15 +29,20 @@ iibatch=1
 
 '''
 
+import os
+
+import numpy as np
+
+import portfolio as pf
 #-------------------- Load  module --------------------------------------------------
 #  %load_ext autoreload
 #  %autoreload 2
-import PyGMO as pyg,  portfolio as pf, util, os, numpy as np
-
-
-util.os_print_tofile( '\n'+util.date_nowtime() +'\n' , batch_out_log)
+import PyGMO as pyg
+import util
 #-------------------- Load Data -----------------------------------------------------
 from spyderlib.utils.iofuncs import load_dictionary
+
+util.os_print_tofile( '\n'+util.date_nowtime() +'\n' , batch_out_log)
 fpath= filedata
 globals().update(load_dictionary(fpath)[0])
 
@@ -242,12 +247,3 @@ util.os_print_tofile( txt, batch_out_log)
 
 
 ####################################################################################
-
-
-
-
-
-
-
-
-

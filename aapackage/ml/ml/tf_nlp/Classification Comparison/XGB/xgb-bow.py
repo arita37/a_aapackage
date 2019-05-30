@@ -8,15 +8,16 @@
 # In[1]:
 
 
-from sklearn import metrics
+import re
+
 import numpy as np
 import sklearn.datasets
-import re
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import SGDClassifier
-from sklearn.cross_validation import train_test_split
-import xgboost as xgb
 
+import xgboost as xgb
 
 # In[2]:
 
@@ -116,7 +117,6 @@ clf.fit(
 # In[13]:
 
 
-from sklearn import metrics
 
 predicted = clf.predict(test_X)
 print("accuracy validation set: ", np.mean(predicted == test_Y))

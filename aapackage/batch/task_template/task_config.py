@@ -11,10 +11,10 @@ Folders :
 
 
 """
-import os, sys
-from time import sleep
+import os
 import random
-
+import sys
+from time import sleep
 
 HOME_DIR = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
 

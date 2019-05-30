@@ -1,11 +1,13 @@
 import os
 import pickle
-import tensorflow as tf
 import time
-import model
+
 import numpy as np
 from flask import Flask, render_template, request
 from werkzeug import secure_filename
+
+import model
+import tensorflow as tf
 from flask_cors import CORS
 
 app = Flask(__name__)

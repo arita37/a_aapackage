@@ -4,12 +4,12 @@
 # In[1]:
 
 
-from bs4 import BeautifulSoup
-from urllib.request import urlopen, urlretrieve
-from tqdm import tqdm
-import re
 import os
+import re
+from urllib.request import urlopen, urlretrieve
 
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 # In[2]:
 

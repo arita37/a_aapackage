@@ -39,9 +39,16 @@
                 
 """
 
-import os, re, sys, time, datetime, copy
+import copy
+import datetime
+import os
+import re
+import sys
+import time
+
 import pandas
-from pattern.web import URL, extension, cache
+
+from pattern.web import URL, cache, extension
 
 
 class YFinanceDataExtr(object):

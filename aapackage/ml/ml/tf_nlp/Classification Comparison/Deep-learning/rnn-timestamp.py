@@ -4,16 +4,18 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import sklearn.datasets
+import json
+import os
+import pickle
 import re
 import time
-import pickle
+
+import numpy as np
+import sklearn.datasets
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
-import json
 
+import tensorflow as tf
 
 # In[2]:
 
@@ -125,7 +127,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(data_X, trainset_data.target
 # In[9]:
 
 
-import os
 
 tf.reset_default_graph()
 model = Model(3, 128, 1, len(trainset_data.target_names), 0.0001)

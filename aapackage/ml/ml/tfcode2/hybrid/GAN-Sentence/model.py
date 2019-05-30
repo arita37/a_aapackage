@@ -1,6 +1,7 @@
-import tensorflow as tf
 import numpy as np
+
 import parse
+import tensorflow as tf
 
 
 def lstm_cell(size_layer, state_is_tuple=True):

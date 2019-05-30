@@ -4,17 +4,19 @@
 # In[1]:
 
 
-import numpy as np
-import sklearn.datasets
+import json
+import os
+import pickle
 import re
 import time
-import tensorflow as tf
-from bayes_opt import BayesianOptimization
-import pickle
+
+import numpy as np
+import sklearn.datasets
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
-import json
 
+import tensorflow as tf
+from bayes_opt import BayesianOptimization
 
 # In[2]:
 
@@ -205,7 +207,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(data_X, trainset_data.target
 # In[17]:
 
 
-import os
 
 tf.reset_default_graph()
 model = neuralnet(50, 2, 32)

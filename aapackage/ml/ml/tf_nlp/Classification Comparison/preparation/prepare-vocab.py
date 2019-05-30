@@ -4,12 +4,12 @@
 # In[7]:
 
 
-import re
-import pickle
 import collections
-import numpy as np
 import os
+import pickle
+import re
 
+import numpy as np
 
 # In[11]:
 

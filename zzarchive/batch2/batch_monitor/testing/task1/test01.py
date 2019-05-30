@@ -10,7 +10,11 @@ ARRAY=[ [1, 2, 3, 4], [2, 3, 4, 5] ]
 """
 
 
-import time, sys, os, arrow
+import os
+import sys
+import time
+
+import arrow
 
 
 def now_str():

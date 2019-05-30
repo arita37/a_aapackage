@@ -1,11 +1,11 @@
-import sys, os
+import os
+import sys
 
-
+from aapackage import util, util_aws
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage'
 
-from aapackage import util, util_aws
 
 
 
@@ -60,12 +60,3 @@ def batch_monitor_pid() :
 
 
   """
-
-
-
-
-
-
-
-
-

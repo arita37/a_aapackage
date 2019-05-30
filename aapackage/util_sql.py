@@ -1,22 +1,29 @@
 # coding=utf-8
 from __future__ import division
-from future import standard_library
 
-standard_library.install_aliases()
-from builtins import next
-from builtins import map
-from builtins import zip
-from builtins import str
-from builtins import range
+import datetime
+###############################################################################
+import os
+import shutil
+import sys
+import time
+from builtins import map, next, object, range, str, zip
+
+import matplotlib.pyplot as plt
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
+import sqlalchemy as sql
+from future import standard_library
 from past.builtins import basestring
 from past.utils import old_div
-from builtins import object
 
-###############################################################################
-import os, sys
-import datetime, time, arrow, shutil
-import matplotlib.pyplot as plt
-import numexpr as ne, numpy as np, pandas as pd, scipy as sci
+import arrow
+import util as util
+
+standard_library.install_aliases()
+
 
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +34,6 @@ sys.path.append(DIRCWD + "/aapackage")
 # if sys.platform.find('win') > -1 :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
 
-import util as util
 
 ###############################################################################
 
@@ -70,7 +76,6 @@ df.withColumn("p", concat($"p1", $"p2"))
 from sqlalchemy import create_engine
 engine = create_engine("postgresql://u:p@host/database")
 """
-import sqlalchemy as sql
 
 
 def sql_create_dbengine(type1="", dbname="", login="", password="", url="localhost", port=5432):

@@ -1,5 +1,6 @@
-import tensorflow as tf
 import numpy as np
+
+import tensorflow as tf
 
 # I strictly followed the DCGAN paper
 # D(x)

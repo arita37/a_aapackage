@@ -10,18 +10,23 @@ VERSION = "0.0.1.1"
 import argparse
 import copy
 import csv
+# stdlib imports
 import logging
 import os
+import platform
 import random
 import shlex
 import subprocess
 import sys
+import time
+from collections import namedtuple
+from datetime import datetime
 from time import sleep, time
 
-import arrow
+# non-stdlib imports
 import psutil
 
-
+import arrow
 import util_log
 
 
@@ -354,17 +359,7 @@ def monitor_maintain():
 ############ AZURE NODE #################################################################
 """TVM stats"""
 
-# stdlib imports
-import logging
-from datetime import datetime
-import os
-import time
-import platform
-from collections import namedtuple
-import sys
 
-# non-stdlib imports
-import psutil
 
 # from applicationinsights import TelemetryClient
 

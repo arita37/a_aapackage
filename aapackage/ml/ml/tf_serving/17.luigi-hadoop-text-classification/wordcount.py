@@ -4,11 +4,12 @@
 # In[4]:
 
 
-import luigi
 import json
-import numpy as np
 import time
 
+import numpy as np
+
+import luigi
 
 # In[5]:
 

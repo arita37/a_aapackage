@@ -2,7 +2,12 @@
 """Portfolio Simulation details / simulation """
 # %load_ext autoreload
 # %autoreload 2
-import os, sys
+import os
+import sys
+
+import numpy as np
+
+import util
 
 DIRCWD = (
     "D:/_devs/Python01/project27/"
@@ -16,7 +21,6 @@ sys.path.append(DIRCWD + "/aapackage")
 sys.path.append(DIRCWD + "/linux/aapackage")
 print("Directory Folder" % DIRCWD)
 
-import util, numpy as np
 
 execfile(DIRCWD + "/aapackage/allmodule.py")
 ##############################################################################################

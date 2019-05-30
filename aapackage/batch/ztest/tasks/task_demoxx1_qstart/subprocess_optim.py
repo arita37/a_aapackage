@@ -8,14 +8,18 @@ loads the file "parameters.toml", located at its same folder.
 
 
 """
-import os, sys
+import os
+import sys
+
 import pandas as pd
-import arrow
 import toml
+#########################################################################################
+######## Custom Code ####################################################################
+from scipy import optimize
 
+import arrow
 from aapackage import util_log
-from utils import OUTFOLDER, load_data_session, save_results, os_folder_create, os_chdir
-
+from utils import OUTFOLDER, load_data_session, os_chdir, os_folder_create, save_results
 
 ##### Logs     ##########################################################################
 print(os.getcwd())
@@ -42,9 +46,6 @@ def load_arguments():
     return options
 
 
-#########################################################################################
-######## Custom Code ####################################################################
-from scipy import optimize
 
 
 def optimizerFunction(x):

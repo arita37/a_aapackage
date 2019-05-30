@@ -4,16 +4,17 @@
 # In[1]:
 
 
-import tensorflow as tf
-from matplotlib import animation
-import numpy as np
+from datetime import datetime, timedelta
+
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from IPython.display import HTML
+from matplotlib import animation
 from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
-from datetime import timedelta
+
+import tensorflow as tf
 
 sns.set()
 

@@ -6,7 +6,9 @@ tr: Trigger
 t
 risk0: previous Risk Level
 """
-import portfolio as pf, numpy as np
+import numpy as np
+
+import portfolio as pf
 
 
 def mapping_calc_risk_elvis_v03(ss, tr, t, riskout):

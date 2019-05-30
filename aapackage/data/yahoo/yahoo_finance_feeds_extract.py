@@ -49,10 +49,18 @@
                 
 """
 
-import os, re, sys, time, datetime, copy, calendar
+import calendar
+import copy
+import datetime
+import os
+import re
+import sys
+import time
+
 import pandas
-from pattern.web import URL, extension, cache, plaintext
+
 import feedparser
+from pattern.web import URL, cache, extension, plaintext
 
 
 class YFinanceFeedsExtr(object):

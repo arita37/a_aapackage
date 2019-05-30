@@ -1,8 +1,10 @@
 import os
+
 from flask import Flask, jsonify, request
 from werkzeug import secure_filename
-from celery import Celery
+
 import luigi
+from celery import Celery
 from function import Save_to_Elastic, classify_sentiment
 
 app = Flask(__name__)

@@ -4,10 +4,16 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
+import collections
 import os
 
+import numpy as np
+from scipy.spatial.distance import cdist
+from sklearn.neighbors import NearestNeighbors
+from tqdm import tqdm
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -22,7 +28,6 @@ print(len(trainset.target))
 # In[3]:
 
 
-import collections
 
 
 def build_dataset(words, n_words, atleast=1):
@@ -58,7 +63,6 @@ len(dictionary)
 # In[6]:
 
 
-import numpy as np
 
 
 class Vocabulary:
@@ -300,7 +304,6 @@ bi = BidirectionalLMDataset(trainset.data, uni)
 # In[10]:
 
 
-import tensorflow as tf
 
 
 # In[11]:
@@ -723,7 +726,6 @@ sess.run(tf.global_variables_initializer())
 # In[14]:
 
 
-from tqdm import tqdm
 
 
 def _get_feed_dict_from_X(X, model, char_inputs, bidirectional):
@@ -816,8 +818,6 @@ word_embed = model.softmax_W.eval()
 # In[18]:
 
 
-from scipy.spatial.distance import cdist
-from sklearn.neighbors import NearestNeighbors
 
 
 # In[19]:

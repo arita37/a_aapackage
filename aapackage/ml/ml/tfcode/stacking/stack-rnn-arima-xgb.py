@@ -4,19 +4,24 @@
 # In[1]:
 
 
-import tensorflow as tf
-from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from sklearn.metrics import mean_squared_error
-import xgboost as xgb
-import numpy as np
+from datetime import datetime, timedelta
+from itertools import product
+
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
+import statsmodels.api as sm
+from scipy import stats
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import KFold, cross_val_score, train_test_split
+from sklearn.preprocessing import MinMaxScaler
+
 import autoencoder
 import model
-from datetime import datetime
-from datetime import timedelta
+import tensorflow as tf
+import xgboost as xgb
+from xgboost import plot_importance
 
 sns.set()
 
@@ -143,9 +148,6 @@ print(
 # In[12]:
 
 
-import statsmodels.api as sm
-from itertools import product
-from scipy import stats
 
 Qs = range(0, 1)
 qs = range(0, 2)
@@ -276,7 +278,6 @@ plt.show()
 # In[26]:
 
 
-from xgboost import plot_importance
 
 plot_importance(clf)
 plt.show()

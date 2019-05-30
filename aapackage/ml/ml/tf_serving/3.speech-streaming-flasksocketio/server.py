@@ -1,12 +1,15 @@
-from flask import Flask, Response
-from flask_socketio import SocketIO, send, emit
-from os.path import dirname, abspath
-from queue import Queue
 import base64
-import numpy as np
+import random
+import re
 import time
+from os.path import abspath, dirname
+from queue import Queue
+
+import numpy as np
+from flask import Flask, Response
+
 import speech_recognition as sr
-import re, random
+from flask_socketio import SocketIO, emit, send
 
 d = dirname(dirname(abspath(__file__)))
 app = Flask(__name__)

@@ -1,8 +1,19 @@
 """
     Input Historical prices to SQLite Database.
 """
-import re, sys, os, time, datetime, csv, pandas as pd, numpy as np, sqlalchemy as sql
-import portfolio as pf, util
+import csv
+import datetime
+import os
+import re
+import sys
+import time
+
+import numpy as np
+import pandas as pd
+import sqlalchemy as sql
+
+import portfolio as pf
+import util
 
 
 class dailyDataStore(object):

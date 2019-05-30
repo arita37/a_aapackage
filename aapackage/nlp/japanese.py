@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 # --------- NLP Processing, need Python 3  and Java JPype  ----------------------------
-import IPython, datetime, os, sys
-import numpy as np, pandas as pd, scipy as sci
-import shutil, urllib3
-from bs4 import BeautifulSoup
-
-
+import datetime
+import os
 ################################################################################
 # -------- Japanese Utilitie--------------------------------------------------------
 import re
+import shutil
+import sys
+
+import IPython
+import numpy as np
+import pandas as pd
+import scipy as sci
+import urllib3
+from bs4 import BeautifulSoup
 
 # Regular expression unicode blocks collected from
 # http://www.localizingjapan.com/blog/2012/01/20/regular-expressions-for-japanese-text/

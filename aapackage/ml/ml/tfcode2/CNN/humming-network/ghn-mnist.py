@@ -4,15 +4,16 @@
 # In[5]:
 
 
-import numpy as np
-import tensorflow as tf
 import functools
 
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 # In[3]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
 
 mnist = input_data.read_data_sets("", validation_size=0)
 

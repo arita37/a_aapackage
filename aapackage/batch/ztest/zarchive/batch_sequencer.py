@@ -38,18 +38,18 @@ batch_sequencer.py :
 
 """
 
-import numpy as np
-import os
-import shutil
-import sys
-import random
-import psutil
-
-import toml
-import subprocess
 import argparse
-import pandas as pd
+import os
+import random
+import shutil
+import subprocess
+import sys
 import time
+
+import numpy as np
+import pandas as pd
+import psutil
+import toml
 
 ################### Argument catching #########################################
 print("Start Args")

@@ -4,11 +4,15 @@
 # In[1]:
 
 
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
-import numpy as np
 import os
 
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from matplotlib import offsetbox
+
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 # In[2]:
 
@@ -268,11 +272,8 @@ embed = model.embedded.eval({model.X: test_X})
 # In[10]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[11]:

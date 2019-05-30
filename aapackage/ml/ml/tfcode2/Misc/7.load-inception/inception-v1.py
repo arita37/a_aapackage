@@ -4,13 +4,15 @@
 # In[1]:
 
 
+import json
+import os
+
+import numpy as np
+from scipy.misc import imread, imresize
+
+import inception_v1
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import numpy as np
-import os
-from scipy.misc import imread, imresize
-import inception_v1
-import json
 
 # just remove line below if want to use GPU
 # os.environ['CUDA_VISIBLE_DEVICES'] = ''

@@ -67,15 +67,14 @@ anaconda3/envs/py36c/bin/pip
 
 
 """
+import glob
+import os
+import re
+from importlib import import_module
+
 # from aapackage.mlmodel import util
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from importlib import import_module
-import glob
-import os
-
-import re
-import os
 
 
 def get_recursive_files(folderPath, ext):

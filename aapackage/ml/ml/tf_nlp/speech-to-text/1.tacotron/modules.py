@@ -1,5 +1,5 @@
-from setting import embed_size
 import tensorflow as tf
+from setting import embed_size
 
 
 def embed(inputs, vocab_size, dimension, scope="embedding", reuse=None):

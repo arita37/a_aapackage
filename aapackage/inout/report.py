@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 '''    Data Analysis Utilities   '''
-import sys, os
-import numpy as np, pandas as pd, copy, scipy as sci, matplotlib.pyplot as plt, math as mth
-import requests, re;
-from bs4 import BeautifulSoup
-
-from tabulate import tabulate;
-from datetime import datetime;
-from datetime import timedelta;
+import copy
+import itertools
+import math as mth
+import os
+import re
+import sys
 from calendar import isleap
+from collections import OrderedDict
+from datetime import datetime, timedelta
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pylab as pl
+import requests
+import scipy as sci
+from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
-import pylab as pl, itertools
-
-from collections import OrderedDict
-
-import fast, util
-
-
-
+import fast
+import util
+from tabulate import tabulate
 
 ######################  DASHBOARD #################################################
 '''
@@ -115,4 +118,3 @@ def xl_create_pdf() :
    # Render our file and create the PDF using our css style file
    html_out=template.render(template_vars)
    HTML(string=html_out).write_pdf(args.outfile.name, stylesheets=["style.css"])
-

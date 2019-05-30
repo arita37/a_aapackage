@@ -4,12 +4,15 @@
 # In[1]:
 
 
-import librosa
 import os
-import tensorflow as tf
+import random
+import time
+
 import numpy as np
 from tqdm import tqdm
 
+import librosa
+import tensorflow as tf
 
 # In[2]:
 
@@ -121,7 +124,6 @@ sess.run(tf.global_variables_initializer())
 # In[8]:
 
 
-import time
 
 batch_size = 32
 
@@ -140,7 +142,6 @@ for e in range(50):
 # In[22]:
 
 
-import random
 
 random_index = random.randint(0, len(targets) - 1)
 batch_x = inputs[random_index : random_index + 1]

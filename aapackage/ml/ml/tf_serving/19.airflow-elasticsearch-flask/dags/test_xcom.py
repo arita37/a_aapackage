@@ -1,7 +1,8 @@
+import logging
 from datetime import datetime, timedelta
+
 from airflow.models import DAG
 from airflow.operators.python_operator import PythonOperator
-import logging
 
 DAG = DAG(dag_id="simple_xcom", start_date=datetime(2017, 10, 26), schedule_interval=None)
 

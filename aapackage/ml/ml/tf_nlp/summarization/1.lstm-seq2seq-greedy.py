@@ -4,12 +4,18 @@
 # In[1]:
 
 
-import json
-import numpy as np
-import tensorflow as tf
 import collections
-from sklearn.cross_validation import train_test_split
+import json
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.utils import shuffle
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -24,8 +30,6 @@ with open("headlines.json", "r") as fopen:
 # In[3]:
 
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
 
 
 def topic_modelling(string, n=500):
@@ -260,9 +264,6 @@ def pad_sentence_batch(sentence_batch, pad_int, maxlen):
 # In[18]:
 
 
-from tqdm import tqdm
-from sklearn.utils import shuffle
-import time
 
 for EPOCH in range(10):
     lasttime = time.time()

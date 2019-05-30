@@ -4,27 +4,24 @@
 # In[1]:
 
 
-import sklearn.datasets
-import re
-import numpy as np
-import nltk
-import pandas as pd
+import itertools
 import pickle
 import re
-import seaborn as sns
+
 import matplotlib.pyplot as plt
-from nltk.util import skipgrams
-from nltk.stem.porter import PorterStemmer
+import nltk
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import sklearn.datasets
 from nltk.corpus import stopwords
-import itertools
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import confusion_matrix
+from nltk.stem.porter import PorterStemmer
+from nltk.util import skipgrams
+from scipy.sparse import hstack
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from sklearn.svm import LinearSVC
-from sklearn.metrics import accuracy_score
-from scipy.sparse import hstack
-
 
 # In[2]:
 

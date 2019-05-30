@@ -1,13 +1,14 @@
-import theano
-import theano.tensor as T
 import linecache
 import math
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import mean_squared_error
-import numpy
 import os
-from time import gmtime, strftime
 import pickle
+from time import gmtime, strftime
+
+import numpy
+from sklearn.metrics import mean_squared_error, roc_auc_score
+
+import theano
+import theano.tensor as T
 
 rng = numpy.random
 rng.seed(1234)

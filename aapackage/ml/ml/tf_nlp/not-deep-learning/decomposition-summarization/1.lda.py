@@ -4,12 +4,12 @@
 # In[36]:
 
 
+import re
+from operator import itemgetter
+
 import numpy as np
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
-from operator import itemgetter
-import re
-
 
 # In[18]:
 

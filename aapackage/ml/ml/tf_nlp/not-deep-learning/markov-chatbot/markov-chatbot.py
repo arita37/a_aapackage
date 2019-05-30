@@ -5,6 +5,8 @@
 
 
 import re
+from collections import *
+from random import random
 
 lines = open("movie_lines.txt", encoding="utf-8", errors="ignore").read().split("\n")
 conv_lines = open("movie_conversations.txt", encoding="utf-8", errors="ignore").read().split("\n")
@@ -104,7 +106,6 @@ for i in range(len(short_questions)):
 # In[28]:
 
 
-from collections import *
 
 
 def train_chatbot(data, order=4):
@@ -138,7 +139,6 @@ lm["you"]
 # In[33]:
 
 
-from random import random
 
 
 def generate_word(lm, history, order):

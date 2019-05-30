@@ -1,6 +1,8 @@
-import tqdm
 import os
+
 import numpy as np
+import tqdm
+
 from utils import load_file, path
 
 if not os.path.exists("mel"):

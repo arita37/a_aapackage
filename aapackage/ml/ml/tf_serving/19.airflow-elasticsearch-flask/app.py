@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, jsonify, render_template, request
+
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
 

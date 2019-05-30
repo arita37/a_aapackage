@@ -3,12 +3,14 @@
 # In[1]:
 
 
-import tensorflow as tf
-from setting import text2idx, get_cached, batch_size, n_mels, reduction_factor, idx2char
-from tqdm import tqdm
-import numpy as np
 import os
 
+import numpy as np
+from tqdm import tqdm
+
+import tensorflow as tf
+from model import Model
+from setting import batch_size, get_cached, idx2char, n_mels, reduction_factor, text2idx
 
 # In[2]:
 
@@ -38,7 +40,6 @@ def dynamic_batching(paths):
 # In[4]:
 
 
-from model import Model
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()

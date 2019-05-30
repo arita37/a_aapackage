@@ -295,7 +295,7 @@ def export_tocsv(l1):
 
 #####################################################################################
 ####################  Pqttern Detection in Past dta #################################
-from numba import jit, int32, float32
+from numba import float32, int32, jit
 
 
 @jit

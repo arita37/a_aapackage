@@ -1,13 +1,15 @@
-from flask import Flask, request
-from werkzeug import secure_filename
-import tensorflow.contrib.slim as slim
-import tensorflow as tf
-import inception_v1
-import json
-import numpy as np
-from PIL import Image
 import io
+import json
 import os
+
+import numpy as np
+from flask import Flask, request
+from PIL import Image
+from werkzeug import secure_filename
+
+import inception_v1
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 app = Flask(__name__)
 with open("real-label.json", "r") as fopen:

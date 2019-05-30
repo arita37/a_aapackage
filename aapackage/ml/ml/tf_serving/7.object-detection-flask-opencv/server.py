@@ -1,5 +1,7 @@
 from importlib import import_module
-from flask import Flask, render_template, Response
+
+from flask import Flask, Response, render_template
+
 from opencv import Camera
 
 app = Flask(__name__)

@@ -1,10 +1,11 @@
-import tensorflow as tf
-import numpy as np
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
-import luigi
-import re
 import json
+import re
+
+import numpy as np
+
+import luigi
+import tensorflow as tf
+from elasticsearch import Elasticsearch, helpers
 
 
 def clearstring(string):

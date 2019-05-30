@@ -4,9 +4,20 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
+import collections
+import itertools
 import os
+import re
+
+import numpy as np
+from scipy.spatial.distance import cdist
+from sklearn.neighbors import NearestNeighbors
+from sklearn.utils import shuffle
+from tqdm import tqdm
+
+import tensorflow as tf
+from unidecode import unidecode
+from utils import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -24,15 +35,6 @@ print(len(trainset.target))
 # In[3]:
 
 
-import collections
-from unidecode import unidecode
-import re
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
-from scipy.spatial.distance import cdist
-from tqdm import tqdm
-import itertools
 
 
 def _pad_sequence(
@@ -317,7 +319,6 @@ outside_array
 # In[64]:
 
 
-from sklearn.neighbors import NearestNeighbors
 
 
 # In[65]:

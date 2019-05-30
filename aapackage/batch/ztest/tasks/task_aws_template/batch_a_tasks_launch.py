@@ -2,8 +2,12 @@
 """Portfolio Simulation details / simulation """
 # %load_ext autoreload
 # %autoreload 2
-import os, sys
-import util, numpy as np
+import os
+import sys
+
+import numpy as np
+
+import util
 
 ##############################################################################################
 

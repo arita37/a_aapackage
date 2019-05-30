@@ -4,11 +4,15 @@
 # In[1]:
 
 
+import random
+from collections import deque
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import seaborn as sns
+
+import tensorflow as tf
 
 sns.set()
 
@@ -23,8 +27,6 @@ df.head()
 # In[3]:
 
 
-from collections import deque
-import random
 
 
 class Agent:

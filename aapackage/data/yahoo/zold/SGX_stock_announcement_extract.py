@@ -41,14 +41,21 @@
 
 """
 
-import os, re, sys, time, datetime, copy, calendar
+import calendar
+import copy
+import datetime
 import difflib
-import simplejson as json
-import pandas
-from pattern.web import URL, extension, cache, plaintext, Newsfeed
-from xls_table_extract_module import XlsExtractor
+import os
+import re
+import sys
+import time
 
+import pandas
+import simplejson as json
+
+from pattern.web import URL, Newsfeed, cache, extension, plaintext
 from pyPushBullet.pushbullet import PushBullet
+from xls_table_extract_module import XlsExtractor
 
 
 class WebJsonRetrieval(object):

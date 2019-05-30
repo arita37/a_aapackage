@@ -4,13 +4,17 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
-import random
 import os
+import random
+import time
 
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from tqdm import tqdm
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 
@@ -38,7 +42,6 @@ def convert_sparse_matrix_to_sparse_tensor(X, limit=5):
 # In[5]:
 
 
-from sklearn.feature_extraction.text import CountVectorizer
 
 bow_chars = CountVectorizer(ngram_range=(3, 5), analyzer="char_wb", max_features=300000).fit(
     trainset.data
@@ -90,8 +93,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 # In[10]:
 
 
-from tqdm import tqdm
-import time
 
 batch_size = 32
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0
@@ -177,7 +178,6 @@ for i in pbar:
 # In[12]:
 
 
-from sklearn import metrics
 
 print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))
 

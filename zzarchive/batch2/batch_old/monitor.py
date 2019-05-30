@@ -17,14 +17,21 @@ print "script: sys.argv[0] is", repr(sys.argv[0])
 print "script: __file__ is", repr(__file__)
 """
 
-import sys, os
+import configparser
+import os
+import socket
+import subprocess
+import sys
+from time import sleep
+
+import boto
+import pandas as pd
+from boto.ec2.connection import EC2Connection
+
+import util
 
 DIR1 = os.getcwd()
 DIR_package = os.getcwd() + "/aapackage/aws/"
-from boto.ec2.connection import EC2Connection
-from time import sleep
-import subprocess, configparser, socket, boto, pandas as pd
-import util
 
 ######################  Initialization    #######################################################
 INSTANCE_TYPE = [

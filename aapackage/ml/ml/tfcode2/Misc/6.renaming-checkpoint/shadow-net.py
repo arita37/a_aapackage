@@ -4,11 +4,13 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from crnn_model import crnn_model
 import json
 
+import numpy as np
+
+import cv2
+import tensorflow as tf
+from crnn_model import crnn_model
 
 # In[2]:
 
@@ -53,7 +55,6 @@ saver.restore(sess, "rename-checkpoint2/model.ckpt")
 # In[5]:
 
 
-import cv2
 
 image = cv2.imread("back-car.jpeg", cv2.IMREAD_COLOR)
 

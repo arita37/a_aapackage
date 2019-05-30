@@ -4,15 +4,20 @@
 # In[1]:
 
 
-import sklearn.datasets
-from sklearn.cross_validation import train_test_split
-import re
-import tensorflow as tf
-from sklearn import metrics
-import numpy as np
 import collections
+import re
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import sklearn.datasets
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import *
+
+import tensorflow as tf
+from MulticoreTSNE import MulticoreTSNE as TSNE
 
 # In[2]:
 
@@ -323,7 +328,6 @@ doc_vectors.shape
 # In[65]:
 
 
-from MulticoreTSNE import MulticoreTSNE as TSNE
 
 tsne = TSNE(perplexity=200, n_jobs=4)
 doc_tsne = tsne.fit_transform(doc_vectors.astype("float64"))
@@ -332,8 +336,6 @@ doc_tsne = tsne.fit_transform(doc_vectors.astype("float64"))
 # In[38]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 unique_ids = np.unique(newsgroups_train.target)
@@ -358,7 +360,6 @@ plt.show()
 # In[67]:
 
 
-from sklearn.decomposition import *
 
 pca = PCA(n_components=2)
 svd = TruncatedSVD(n_components=2)

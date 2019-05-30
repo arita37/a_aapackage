@@ -5,14 +5,14 @@
 
 
 import os
+import threading
+from queue import Queue
 
+import requests
 
 # In[2]:
 
 
-from queue import Queue
-import threading
-import requests
 
 
 def run_parallel_in_threads(target, args_list):

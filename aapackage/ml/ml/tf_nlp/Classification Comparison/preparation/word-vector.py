@@ -4,16 +4,16 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import time
-import os
-from sklearn.preprocessing import LabelEncoder
-import re
 import collections
+import os
 import random
+import re
 import time
 
+import numpy as np
+from sklearn.preprocessing import LabelEncoder
+
+import tensorflow as tf
 
 # In[2]:
 

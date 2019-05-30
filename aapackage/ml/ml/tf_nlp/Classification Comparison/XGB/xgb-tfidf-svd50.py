@@ -16,16 +16,18 @@
 # In[1]:
 
 
-import xgboost as xgb
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.decomposition import TruncatedSVD
-import numpy as np
+import json
 import re
-from sklearn.cross_validation import train_test_split
+
+import numpy as np
 import sklearn.datasets
-from sklearn import pipeline
+from sklearn import metrics, pipeline
+from sklearn.cross_validation import train_test_split
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.model_selection import StratifiedKFold
 
+import xgboost as xgb
 
 # In[2]:
 
@@ -136,7 +138,6 @@ np.mean(
 # In[10]:
 
 
-from sklearn import metrics
 
 print(
     metrics.classification_report(
@@ -153,7 +154,6 @@ print(
 clf.save_model("xgb-tfidf-svd50.model")
 bst = xgb.Booster(params_xgd)
 bst.load_model("xgb-tfidf-svd50.model")
-import json
 
 with open("xgb-tfidf-svd50-param", "w") as fopen:
     fopen.write(json.dumps(params_xgd))

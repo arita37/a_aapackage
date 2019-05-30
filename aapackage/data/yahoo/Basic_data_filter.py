@@ -41,8 +41,14 @@
         develop subset criteria list
 
 """
-import os, sys, re, time, datetime
+import datetime
+import os
+import re
+import sys
+import time
+
 import pandas
+
 from DictParser.Dict_create_fr_text import DictParser
 
 

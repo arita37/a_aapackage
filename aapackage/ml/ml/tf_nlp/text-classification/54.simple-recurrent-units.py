@@ -4,13 +4,16 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
-import random
 import os
+import random
+import time
 
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from tensorflow.contrib.rnn.python.ops import core_rnn_cell
+from tensorflow.python.ops.rnn_cell import RNNCell
+from utils import *
 
 # In[2]:
 
@@ -55,8 +58,6 @@ UNK = dictionary["UNK"]
 # In[6]:
 
 
-from tensorflow.python.ops.rnn_cell import RNNCell
-from tensorflow.contrib.rnn.python.ops import core_rnn_cell
 
 
 def linear(args, output_size, bias, bias_start=0.0, scope=None):

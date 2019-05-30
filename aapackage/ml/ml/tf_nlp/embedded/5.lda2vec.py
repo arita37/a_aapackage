@@ -4,11 +4,20 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
+import random
 from collections import Counter
-from sklearn.feature_extraction.text import CountVectorizer
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.spatial.distance import cdist
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils import shuffle
+
+import tensorflow as tf
+from MulticoreTSNE import MulticoreTSNE as TSNE
+from utils import *
 
 # In[2]:
 
@@ -152,8 +161,6 @@ class LDA2VEC:
 # In[5]:
 
 
-import random
-from sklearn.utils import shuffle
 
 
 def skipgrams(
@@ -277,8 +284,6 @@ doc_embed.shape, topic_embed.shape, word_embed.shape
 # In[11]:
 
 
-from scipy.spatial.distance import cdist
-from sklearn.neighbors import NearestNeighbors
 
 
 # In[12]:
@@ -305,7 +310,6 @@ for no, topic in enumerate(components):
 # In[27]:
 
 
-from MulticoreTSNE import MulticoreTSNE as TSNE
 
 
 # In[32]:
@@ -318,8 +322,6 @@ X = tsne.fit_transform(doc_embed.astype("float64"))
 # In[29]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
 
@@ -327,7 +329,6 @@ sns.set()
 # In[30]:
 
 
-from sklearn.preprocessing import LabelEncoder
 
 unique_label = np.unique(trainset.target)
 encoded = LabelEncoder().fit_transform(trainset.target)

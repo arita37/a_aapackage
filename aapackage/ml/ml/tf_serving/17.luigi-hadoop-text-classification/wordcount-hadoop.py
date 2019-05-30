@@ -4,13 +4,14 @@
 # In[1]:
 
 
+import json
+import time
+
+import numpy as np
+
 import luigi
 import luigi.contrib.hadoop
 import luigi.contrib.hdfs
-import json
-import numpy as np
-import time
-
 
 # In[2]:
 

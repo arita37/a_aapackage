@@ -1,11 +1,13 @@
-import cv2
 import base64
-from socketIO_client import SocketIO, BaseNamespace
-import numpy as np
-from PIL import Image
-from threading import Thread, ThreadError
 import io
 import time
+from threading import Thread, ThreadError
+
+import numpy as np
+from PIL import Image
+
+import cv2
+from socketIO_client import BaseNamespace, SocketIO
 
 img_np = None
 socketIO = SocketIO("http://192.168.0.1", 8020)

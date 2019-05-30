@@ -1,6 +1,8 @@
 import pickle
+
 import numpy as np
-from pyaudi import gdual_double, tanh, exp, log
+
+from pyaudi import exp, gdual_double, log, tanh
 
 
 class Controller:

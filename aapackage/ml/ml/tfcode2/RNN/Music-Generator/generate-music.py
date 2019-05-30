@@ -5,13 +5,15 @@
 
 
 import glob
-from music21 import converter, instrument, note, chord, stream
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import tensorflow as tf
 import random
 import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+import tensorflow as tf
+from music21 import chord, converter, instrument, note, stream
 
 sns.set()
 

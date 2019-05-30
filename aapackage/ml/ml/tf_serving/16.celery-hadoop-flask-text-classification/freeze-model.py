@@ -4,16 +4,18 @@
 # In[1]:
 
 
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import sklearn.datasets
-import numpy as np
+import collections
+import json
 import os
 import re
-import collections
-from sklearn import metrics
 import time
 
+import numpy as np
+import sklearn.datasets
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -258,7 +260,6 @@ freeze_graph("model-test", strings)
 # In[14]:
 
 
-import json
 
 with open("dictionary-test.json", "w") as fopen:
     fopen.write(json.dumps(dictionary))

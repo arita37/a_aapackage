@@ -1,7 +1,9 @@
-import tqdm
 import os
+
 import numpy as np
-from setting import path, load_file
+import tqdm
+
+from setting import load_file, path
 
 if not os.path.exists("spectrogram"):
     os.mkdir("spectrogram")

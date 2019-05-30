@@ -1,13 +1,16 @@
-import tensorflow as tf
-import numpy as np
-import model
-import utils
-import graph
-from scipy import misc
 import os
 import time
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import numpy as np
+from scipy import misc
 from sklearn.model_selection import train_test_split
+
+import graph
+import model
+import tensorflow as tf
+import utils
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 current_location = os.getcwd()
 learning_rate = 0.001

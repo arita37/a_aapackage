@@ -4,14 +4,15 @@
 # In[1]:
 
 
-import numpy as np
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
-import time
-from tqdm import tqdm
 import random
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
+from utils import *
 
 # In[2]:
 

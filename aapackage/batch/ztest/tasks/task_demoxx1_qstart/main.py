@@ -6,29 +6,27 @@ python main.py  --hyperparam      --subprocess_script sub
 
 """
 
-import os, sys, socket
-import shutil
+import argparse
+import logging
+import os
 import random
+import shutil
+import socket
+import subprocess
+import sys
+import time
 from functools import partial
 
-import subprocess
-import argparse
-import time
-import logging
-
-
-import toml
+import numpy as np
+import pandas as pd
 import psutil
+import toml
+
 import arrow
-import numpy as np, pandas as pd
-
-
 ################### Generic ###############################################################
 from aapackage import util_log
 from aapackage.batch import util_batch
-
-from utils import OUTFOLDER, os_getparent, os_folder_create
-
+from utils import OUTFOLDER, os_folder_create, os_getparent
 
 ###########################################################################################
 CUR_FOLDER = os.path.dirname(os.path.abspath(__file__))

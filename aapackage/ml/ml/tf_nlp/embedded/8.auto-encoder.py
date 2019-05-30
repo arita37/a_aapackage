@@ -4,15 +4,21 @@
 # In[1]:
 
 
-import sklearn.datasets
-from sklearn.cross_validation import train_test_split
-import re
-import tensorflow as tf
-from sklearn import metrics
-import numpy as np
 import collections
-import time
 import os
+import re
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import sklearn.datasets
+from matplotlib import offsetbox
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from sklearn.manifold import TSNE
+
+import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
@@ -221,7 +227,6 @@ logits_test
 # In[12]:
 
 
-from sklearn.manifold import TSNE
 
 manifold_polarity = TSNE(n_components=2).fit_transform(logits_test)
 
@@ -229,11 +234,8 @@ manifold_polarity = TSNE(n_components=2).fit_transform(logits_test)
 # In[13]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[14]:

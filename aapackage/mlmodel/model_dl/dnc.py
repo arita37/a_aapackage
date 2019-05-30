@@ -18,16 +18,15 @@ These modules create a DNC core. They take input, pass parameters to the memory
 access module, and integrate the output of memory to form an output.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import collections
+
 import numpy as np
-import sonnet as snt
-import tensorflow as tf
 
 import access
+import sonnet as snt
+import tensorflow as tf
 
 DNCState = collections.namedtuple("DNCState", ("access_output", "access_state", "controller_state"))
 

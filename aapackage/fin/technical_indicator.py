@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 ######################Technical Indicator ###########################################
-import pandas as pd, numpy as np, datetime, calendar, scipy as sci
+import calendar
+import datetime
+import operator
 from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import scipy as sci
 
 
 def np_find(item, vec):
@@ -12,7 +18,6 @@ def np_find(item, vec):
     return -1
 
 
-import operator
 
 
 def np_find_minpos(values):

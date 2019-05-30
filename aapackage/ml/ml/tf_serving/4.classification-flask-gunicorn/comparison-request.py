@@ -5,9 +5,13 @@
 
 
 import os
-import tensorflow as tf
-import model
+import threading
+from queue import Queue
 
+import requests
+
+import model
+import tensorflow as tf
 
 # In[4]:
 
@@ -34,9 +38,6 @@ get_ipython().run_cell_magic(
 # In[9]:
 
 
-from queue import Queue
-import threading
-import requests
 
 
 def run_parallel_in_threads(target, args_list):

@@ -1,7 +1,8 @@
 # coding:utf-8
+import numpy as np
+
 import tensorflow as tf
 from tensorflow.contrib import slim
-import numpy as np
 
 num_keep_radio = 0.7
 # define prelu

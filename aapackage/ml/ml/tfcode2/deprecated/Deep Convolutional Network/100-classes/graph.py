@@ -1,11 +1,13 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(style = "whitegrid", palette = "muted")
-import numpy as np
-import matplotlib.gridspec as gridspec
 import csv
+
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from scipy import misc
+
+sns.set(style = "whitegrid", palette = "muted")
 
 def generategraph(x, accuracy, lost):
     
@@ -58,5 +60,3 @@ def generateoutput(image, output, label, title, i):
     plt.savefig('probs' + str(i) + '.png')
     plt.savefig('probs' + str(i) + '.pdf')
     plt.cla()
-    
-    

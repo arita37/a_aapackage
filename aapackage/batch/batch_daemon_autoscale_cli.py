@@ -29,28 +29,24 @@ Auto-Scale :
     Common Drive is Task Folders: /home/ubuntu/zs3drive/tasks/
     Out for tasks : /home/ubuntu/zs3drive/tasks_out/
 """
+import argparse
+import copy
 #################################################################################
 import json
-import re
-import os
-import sys
-from time import sleep
-import argparse
 import logging
+import os
+import re
 import subprocess
-import copy
-
+import sys
+import warnings
+from time import sleep
 
 import paramiko
-
-################################################################################
-from aapackage.util_log import logger_setup
+from aapackage import util_log
 from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
-from aapackage import util_log
-
-
-import warnings
+################################################################################
+from aapackage.util_log import logger_setup
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 

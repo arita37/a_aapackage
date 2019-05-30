@@ -16,9 +16,15 @@ Question:
     web output might not be in order???
 
 """
-import re, sys, os, time, string
+import os
+import re
+import string
+import sys
+import time
+
 import pandas
-from pattern.web import URL, DOM, plaintext
+
+from pattern.web import DOM, URL, plaintext
 
 
 class AllSymExtr(object):

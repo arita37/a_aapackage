@@ -32,9 +32,16 @@ DEBUG:
     check on OP0 error getting
 
 """
-import os, re, sys, time, datetime, copy
+import copy
+import datetime
+import os
+import re
+import sys
+import time
+
 import pandas
-from pattern.web import URL, DOM, plaintext, extension
+
+from pattern.web import DOM, URL, extension, plaintext
 
 
 class YFinanceDirectScrape(object):

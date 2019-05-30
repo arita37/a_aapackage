@@ -4,16 +4,19 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-import model
 import time
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.ensemble import *
+from sklearn.preprocessing import MinMaxScaler
+
+import model
+import tensorflow as tf
+import xgboost as xgb
 
 sns.set()
 
@@ -102,7 +105,6 @@ thought_vector.shape
 # In[7]:
 
 
-from sklearn.ensemble import *
 
 ada = AdaBoostRegressor(n_estimators=500, learning_rate=0.1)
 bagging = BaggingRegressor(n_estimators=500)
@@ -189,7 +191,6 @@ plt.show()
 # In[16]:
 
 
-import xgboost as xgb
 
 params_xgd = {
     "max_depth": 7,

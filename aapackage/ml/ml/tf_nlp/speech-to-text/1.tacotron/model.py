@@ -1,24 +1,8 @@
-from setting import (
-    embed_size,
-    char2idx,
-    learning_rate,
-    encoder_num_banks,
-    n_mels,
-    reduction_factor,
-    num_highway_blocks,
-)
-from modules import (
-    conv1d,
-    normalize_in,
-    highwaynet,
-    gru,
-    attention_decoder,
-    prenet,
-    embed,
-    shift_by_one,
-    conv1d_banks,
-)
 import tensorflow as tf
+from modules import (attention_decoder, conv1d, conv1d_banks, embed, gru,
+                     highwaynet, normalize_in, prenet, shift_by_one)
+from setting import (char2idx, embed_size, encoder_num_banks, learning_rate,
+                     n_mels, num_highway_blocks, reduction_factor)
 
 
 def encode(inputs, is_training=True, scope="encoder", reuse=None):

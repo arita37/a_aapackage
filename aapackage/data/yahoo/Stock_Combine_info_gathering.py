@@ -33,14 +33,15 @@ import os
 import time
 
 import pandas
+
+from data.hist_data_storage import FinanceDataStore
 from SGX_stock_announcement_extract import SGXDataExtract
 
 from .Basic_data_filter import InfoBasicFilter
 from .Stock_tech_analysis import TechAnalysisAdd
-from .Yahoo_finance_YQL_company_data import YComDataExtr
-from data.hist_data_storage import FinanceDataStore
 from .yahoo_finance_data_extract import YFinanceDataExtr
 from .yahoo_finance_historical_data_extract import YFHistDataExtr
+from .Yahoo_finance_YQL_company_data import YComDataExtr
 
 
 def set_last_desired_date(num_days=0):

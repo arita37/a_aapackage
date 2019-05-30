@@ -4,13 +4,16 @@
 # In[10]:
 
 
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
-import numpy as np
+import json
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 import cv2
 import inception_v3
-import json
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 # just remove line below if want to use GPU
 # os.environ['CUDA_VISIBLE_DEVICES'] = ''
@@ -35,7 +38,6 @@ image.shape
 # In[16]:
 
 
-import matplotlib.pyplot as plt
 
 plt.imshow(image)
 plt.show()

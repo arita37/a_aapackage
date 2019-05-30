@@ -4,9 +4,20 @@
 # In[2]:
 
 
-import pandas as pd
+from datetime import date
+
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from matplotlib.dates import date2num
+from matplotlib.finance import candlestick_ohlc
+from sklearn import linear_model
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import acf, adfuller, pacf
 
 get_ipython().run_line_magic("matplotlib", "inline")
 plt.style.use("ggplot")
@@ -34,12 +45,6 @@ tesla_2011.head()
 # In[5]:
 
 
-import matplotlib.ticker as mticker
-from matplotlib.finance import candlestick_ohlc
-from datetime import date
-from matplotlib.dates import date2num
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticker
 
 df_cp = tesla.copy()
 df_cp.Date = date2num(pd.to_datetime(tesla.Date).dt.to_pydatetime())
@@ -163,7 +168,6 @@ tesla.plot(kind="line", x="Date", y=["Close", "Closemean"])
 # In[21]:
 
 
-from sklearn import linear_model
 
 x = np.arange(tesla.shape[0]).reshape((-1, 1))
 y = tesla.Close.values.reshape((-1, 1))
@@ -205,9 +209,6 @@ tesla.tail()
 # In[26]:
 
 
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from statsmodels.tsa.stattools import adfuller
 
 
 # In[27]:
@@ -377,7 +378,6 @@ adf(ts)
 # In[68]:
 
 
-from statsmodels.tsa.seasonal import seasonal_decompose
 
 tesla.index = tesla.index.to_datetime()
 
@@ -405,7 +405,6 @@ ts_diff.dropna(inplace=True)
 # In[83]:
 
 
-from statsmodels.tsa.stattools import acf, pacf
 
 lag_acf = acf(ts_diff, nlags=20)
 

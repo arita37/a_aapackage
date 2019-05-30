@@ -8,13 +8,17 @@ hyperparams
 
 
 """
-import os, sys
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+
+import pygmo as pg
 
 if __name__ != "__main__":
     sys.exit(0)
 
-import numpy as np
-import pandas as pd
 
 
 ###############################################################################
@@ -81,7 +85,6 @@ load_data_session(hh["file_data"], method=hh["file_data_method"])
 logs("Start Script", __file__)
 
 
-import pygmo as pg
 
 # 1 - Instantiate a pygmo problem constructing it from a UDP
 # (user defined problem).

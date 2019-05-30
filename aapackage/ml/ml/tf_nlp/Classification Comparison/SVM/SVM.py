@@ -8,16 +8,14 @@
 # In[1]:
 
 
-from sklearn import metrics
+import re
+
 import numpy as np
 import sklearn.datasets
-import re
-from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.linear_model import SGDClassifier
+from sklearn import metrics
 from sklearn.cross_validation import train_test_split
-
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer, TfidfTransformer
+from sklearn.linear_model import SGDClassifier
 
 # Define some functions to help us on preprocessing
 

@@ -4,8 +4,11 @@
 # In[2]:
 
 
-import numpy as np
+import time
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
 
 sns.set()
@@ -79,7 +82,6 @@ plt.show()
 # In[29]:
 
 
-import pandas as pd
 
 google = pd.read_csv("/Users/huseinzolkepli/Desktop/GOOG.csv")
 google.head()
@@ -248,7 +250,6 @@ for t in range(0, len_close, skip):
 # In[77]:
 
 
-import time
 
 
 class Agent:

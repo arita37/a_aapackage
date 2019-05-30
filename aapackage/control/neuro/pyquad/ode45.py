@@ -1,6 +1,6 @@
 import numpy as np
-import progressbar
 
+import progressbar
 
 # Cash Karp parameters: http://www.aip.de/groups/soe/local/numres/bookcpdf/c16-2.pdf
 a2, a3, a4, a5, a6 = 1.0 / 5.0, 3.0 / 10.0, 3.0 / 5.0, 1.0, 7.0 / 8.0

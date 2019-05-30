@@ -1,6 +1,8 @@
-import tensorflow as tf
-import numpy as np
 import time
+
+import numpy as np
+
+import tensorflow as tf
 
 
 def reducedimension(input_, dimension=2, learning_rate=0.01, hidden_layer=256, epoch=20):

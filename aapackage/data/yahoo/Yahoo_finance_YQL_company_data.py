@@ -51,10 +51,16 @@
 
 """
 
-import os, sys, re, datetime
+import datetime
+import os
+import re
+import sys
+
 import pandas
-from pattern.web import URL, extension, cache
 import simplejson as json
+
+from pattern.web import URL, cache, extension
+
 from .yahoo_finance_data_extract import YFinanceDataExtr
 
 

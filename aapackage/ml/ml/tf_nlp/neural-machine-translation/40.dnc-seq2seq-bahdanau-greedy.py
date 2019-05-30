@@ -10,15 +10,16 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
-import re
-import time
 import collections
 import os
-from dnc import DNC
+import re
+import time
 
+import numpy as np
+from sklearn.utils import shuffle
+
+import tensorflow as tf
+from dnc import DNC
 
 # In[2]:
 

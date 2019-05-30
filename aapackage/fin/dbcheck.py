@@ -2,11 +2,21 @@
 """database check """
 %load_ext autoreload
 %autoreload 2
-import portfolio as pf, util
-import numpy as np,  pandas as pd, copy, numexpr as ne, scipy as sci, matplotlib.pyplot as plt
+import copy
+import datetime
+from datetime import datetime
+
+import matplotlib.pyplot as plt
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
 import sklearn as sk
-from sklearn import linear_model; from sklearn import covariance
-import datetime; from datetime import datetime
+from sklearn import covariance, linear_model
+
+import portfolio as pf
+import util
+
 #------------------------------------------------------------------------------------
 
 
@@ -219,33 +229,3 @@ dateref2= [util.datenumpy_todatetime(t) for t in dateref2  ]
 
 #####################################################################################
 #---------------------             --------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

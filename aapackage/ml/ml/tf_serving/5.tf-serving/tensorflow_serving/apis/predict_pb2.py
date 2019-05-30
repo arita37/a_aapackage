@@ -3,22 +3,23 @@
 
 import sys
 
-_b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
+
+from tensorflow.core.framework import \
+    tensor_pb2 as tensorflow_dot_core_dot_framework_dot_tensor__pb2
+from tensorflow_serving.apis import model_pb2 as tensorflow__serving_dot_apis_dot_model__pb2
+
+_b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
 
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-from tensorflow.core.framework import (
-    tensor_pb2 as tensorflow_dot_core_dot_framework_dot_tensor__pb2,
-)
-from tensorflow_serving.apis import model_pb2 as tensorflow__serving_dot_apis_dot_model__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(

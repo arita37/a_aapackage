@@ -19,8 +19,20 @@
 # In[1]:
 
 
-import requests
+from itertools import product
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
+import seaborn as sns
+import statsmodels.api as sm
+from scipy.stats import pearsonr, spearmanr
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from sklearn.preprocessing import MinMaxScaler
+
+import tensorflow as tf
 
 # ## Data gathering
 #
@@ -87,9 +99,6 @@ len(timestamp), len(selling)
 # In[6]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-import numpy as np
 
 sns.set()
 
@@ -124,7 +133,6 @@ plt.show()
 # In[9]:
 
 
-import pandas as pd
 
 df = pd.DataFrame({"timestamp": timestamp, "selling": selling})
 df.head()
@@ -316,7 +324,6 @@ plt.show()
 # In[21]:
 
 
-from sklearn.linear_model import LinearRegression
 
 
 # In[22]:
@@ -388,9 +395,6 @@ plt.show()
 # In[26]:
 
 
-import statsmodels.api as sm
-from sklearn.preprocessing import MinMaxScaler
-from itertools import product
 
 Qs = range(0, 2)
 qs = range(0, 2)
@@ -458,7 +462,6 @@ plt.show()
 # In[30]:
 
 
-import tensorflow as tf
 
 
 # In[31]:
@@ -608,8 +611,6 @@ plt.show()
 # In[39]:
 
 
-from sklearn.metrics import r2_score
-from scipy.stats import pearsonr, spearmanr
 
 
 # Accuracy based on correlation coefficient, **higher is better!**

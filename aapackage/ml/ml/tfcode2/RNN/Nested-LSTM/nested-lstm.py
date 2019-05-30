@@ -4,11 +4,16 @@
 # In[1]:
 
 
-from utils import *
-import tensorflow as tf
-from sklearn.cross_validation import train_test_split
 import time
 
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from tensorflow.python.framework import constant_op, dtypes
+from tensorflow.python.layers import base as base_layer
+from tensorflow.python.ops import array_ops, init_ops, math_ops, nn_ops, rnn_cell_impl
+from tensorflow.python.platform import tf_logging as logging
+from utils import *
 
 # In[2]:
 
@@ -53,15 +58,6 @@ UNK = dictionary["UNK"]
 # In[6]:
 
 
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.ops import rnn_cell_impl
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn_ops
-from tensorflow.python.platform import tf_logging as logging
-from tensorflow.python.layers import base as base_layer
 
 _BIAS_VARIABLE_NAME = "bias"
 _WEIGHTS_VARIABLE_NAME = "kernel"

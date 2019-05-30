@@ -4,10 +4,14 @@
 
 
 #####################################################################################################
-import os, sys
-import numpy as np, pandas as pd, scipy as sci
-import arrow
+import os
+import sys
 
+import numpy as np
+import pandas as pd
+import scipy as sci
+
+import arrow
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(DIRCWD)

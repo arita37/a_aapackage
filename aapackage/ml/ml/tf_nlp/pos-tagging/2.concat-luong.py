@@ -6,11 +6,16 @@
 
 import json
 import re
+import time
+
 import numpy as np
-import tensorflow as tf
+from sklearn.cross_validation import train_test_split
+from sklearn.metrics import classification_report
 from sklearn.model_selection import KFold
 from tqdm import tqdm
 
+import tensorflow as tf
+from keras.utils import to_categorical
 
 # In[2]:
 
@@ -121,7 +126,6 @@ X_seq.shape
 # In[9]:
 
 
-import json
 
 with open("luong-pos.json", "w") as fopen:
     fopen.write(
@@ -140,7 +144,6 @@ with open("luong-pos.json", "w") as fopen:
 # In[10]:
 
 
-from keras.utils import to_categorical
 
 Y_seq_3d = [to_categorical(i, num_classes=len(tag2idx)) for i in Y_seq]
 
@@ -148,7 +151,6 @@ Y_seq_3d = [to_categorical(i, num_classes=len(tag2idx)) for i in Y_seq]
 # In[11]:
 
 
-from sklearn.cross_validation import train_test_split
 
 train_X, test_X, train_Y, test_Y, train_char, test_char = train_test_split(
     X_seq, Y_seq_3d, X_char_seq, test_size=0.1
@@ -271,7 +273,6 @@ sess.run(tf.global_variables_initializer())
 # In[14]:
 
 
-import time
 
 for e in range(2):
     lasttime = time.time()
@@ -350,7 +351,6 @@ for i in pbar:
 # In[17]:
 
 
-from sklearn.metrics import classification_report
 
 print(classification_report(np.array(real_Y).ravel(), np.array(predict_Y).ravel()))
 

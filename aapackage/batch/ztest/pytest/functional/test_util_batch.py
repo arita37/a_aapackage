@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+
 from aapackage.batch import util_batch
 
 

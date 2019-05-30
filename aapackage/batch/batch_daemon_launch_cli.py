@@ -19,20 +19,18 @@ batch_daemon_launch_cli.py --param_file zs3drive/config_batch.toml --param_mode 
 cp zs3drive/tasks/ztask_test1_ignore   zs3drive/tasks/task_test1 --recursive
 rm zs3drive/tasks/ztask_test1_ignore  --recursive
 """
+import argparse
+import json
+import logging
 import os
+import subprocess
 import sys
 import time
 from time import sleep
-import argparse
-import logging
-import json
-import subprocess
 
 ################################################################################
 from aapackage import util_log
-from aapackage.batch import util_batch
-from aapackage.batch import util_cpu
-
+from aapackage.batch import util_batch, util_cpu
 
 ############### logger #########################################################
 # DIR_PATH = os.path.dirname(os.path.realpath(__file__))

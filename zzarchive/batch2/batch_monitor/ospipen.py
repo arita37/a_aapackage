@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import msvcrt
 import os
-
-from ctypes import windll, byref, wintypes, WinError, GetLastError
-from ctypes.wintypes import HANDLE, DWORD, BOOL
+from ctypes import GetLastError, WinError, byref, windll, wintypes
+from ctypes.wintypes import BOOL, DWORD, HANDLE
 
 # LPDWORD = POINTER(DWORD)
 

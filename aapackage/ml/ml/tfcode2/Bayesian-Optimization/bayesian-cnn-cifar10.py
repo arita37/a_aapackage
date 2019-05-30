@@ -6,13 +6,14 @@
 # In[1]:
 
 
-import pandas as pd
-import tensorflow as tf
-from bayes_opt import BayesianOptimization
-from sklearn.cross_validation import train_test_split
-import numpy as np
 import cPickle
 
+import numpy as np
+import pandas as pd
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
+from bayes_opt import BayesianOptimization
 
 # In[2]:
 

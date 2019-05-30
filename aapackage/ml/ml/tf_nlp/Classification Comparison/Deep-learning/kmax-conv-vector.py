@@ -4,15 +4,17 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import time
-import os
-import re
 import collections
-import random
+import os
 import pickle
+import random
+import re
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -38,7 +40,6 @@ with open("dataset-dictionary.p", "rb") as fopen:
 
 
 label = np.unique(df[:, 1])
-from sklearn.cross_validation import train_test_split
 
 train_X, test_X, train_Y, test_Y = train_test_split(df[:, 0], df[:, 1].astype("int"), test_size=0.2)
 

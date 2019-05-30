@@ -5,10 +5,10 @@
 
 
 import numpy as np
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
-from tensorflow.python import debug as tf_debug
 
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+from tensorflow.python import debug as tf_debug
 
 # In[2]:
 

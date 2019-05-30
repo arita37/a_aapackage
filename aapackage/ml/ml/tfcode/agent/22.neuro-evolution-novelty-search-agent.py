@@ -4,12 +4,13 @@
 # In[1]:
 
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from sklearn.neighbors import NearestNeighbors
 import seaborn as sns
+from sklearn.neighbors import NearestNeighbors
+
+import tensorflow as tf
 
 sns.set()
 

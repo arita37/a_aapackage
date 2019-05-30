@@ -4,11 +4,15 @@
 # In[1]:
 
 
-import numpy as np
 import collections
 import random
-import tensorflow as tf
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -165,7 +169,6 @@ sess.run(tf.global_variables_initializer())
 # In[9]:
 
 
-from sklearn.cross_validation import train_test_split
 
 vectors_left = str_idx(X1_text, dictionary, maxlen)
 vectors_right = str_idx(X2_text, dictionary, maxlen)
@@ -177,8 +180,6 @@ train_X_left, test_X_left, train_X_right, test_X_right, train_Y, test_Y = train_
 # In[10]:
 
 
-from tqdm import tqdm
-import time
 
 for EPOCH in range(5):
     lasttime = time.time()

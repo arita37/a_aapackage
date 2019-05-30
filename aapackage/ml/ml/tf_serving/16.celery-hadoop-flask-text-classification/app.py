@@ -1,16 +1,18 @@
-from celery import Celery
+import json
+import logging
+import os
+import random
+import shlex
+import string
+import subprocess
+import sys
+import time
+
+import numpy as np
 from flask import Flask, request
 from werkzeug import secure_filename
-import numpy as np
-import subprocess
-import shlex
-import json
-import os
-import logging
-import sys
-import random
-import time
-import string
+
+from celery import Celery
 
 logging.basicConfig(level=logging.DEBUG)
 

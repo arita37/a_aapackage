@@ -1,5 +1,6 @@
-import tensorflow as tf
 import numpy as np
+
+import tensorflow as tf
 
 cluster = tf.train.ClusterSpec({"worker": ["192.168.0.101:2222", "192.168.0.104:2223"]})
 

@@ -4,15 +4,17 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-from matplotlib import animation
-import matplotlib.pyplot as plt
-from IPython.display import HTML
-import seaborn as sns
-import pandas as pd
 from itertools import combinations_with_replacement
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from IPython.display import HTML
+from matplotlib import animation
 from sklearn.preprocessing import MinMaxScaler
+
+import tensorflow as tf
 
 sns.set()
 df = pd.read_csv("TempLinkoping2016.csv")

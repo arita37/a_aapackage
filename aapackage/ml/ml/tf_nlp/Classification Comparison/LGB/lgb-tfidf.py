@@ -4,15 +4,16 @@
 # In[1]:
 
 
-from sklearn import metrics
+import re
+
 import numpy as np
 import sklearn.datasets
-import re
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import SGDClassifier
-from sklearn.cross_validation import train_test_split
-import lightgbm as lgb
 
+import lightgbm as lgb
 
 # In[2]:
 
@@ -108,7 +109,6 @@ clf.fit(
 # In[12]:
 
 
-from sklearn import metrics
 
 predicted = clf.predict(test_X)
 print("accuracy validation set: ", np.mean(predicted == test_Y))

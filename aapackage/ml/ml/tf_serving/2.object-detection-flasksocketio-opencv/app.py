@@ -1,13 +1,15 @@
-from flask import Flask, Response
-from flask_socketio import SocketIO, send, emit
-from os.path import dirname, abspath
-from queue import Queue
 import base64
-import cv2
-import numpy as np
-from PIL import Image
 import io
 import time
+from os.path import abspath, dirname
+from queue import Queue
+
+import numpy as np
+from flask import Flask, Response
+from PIL import Image
+
+import cv2
+from flask_socketio import SocketIO, emit, send
 from object_detection import detect_object
 
 d = dirname(dirname(abspath(__file__)))

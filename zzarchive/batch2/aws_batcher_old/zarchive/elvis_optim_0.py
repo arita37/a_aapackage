@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 '''Portfolio Simulation details / simulation '''
-import os, sys
+import os
+import sys
+
+import IPython
+
+import portfolio as pf
+#-------------------- Load  module -------------------------------------------------- 
+import PyGMO as pyg
+import util
+#-------------------- Load Data -----------------------------------------------------
+from spyderlib.utils.iofuncs import load_dictionary
+
 dir1= os.getcwd()
 sys.path.append(dir1+'/aapackage');  sys.path.append(dir1+'/linux/aapackage')
 
-import  IPython, util
 util.a_run_ipython("load_ext autoreload"); util.a_run_ipython("autoreload 2")
 # util.a_run_ipython('logstart -o -r -t aaserialize/log/log_'+util.date_now()+' rotate')
 
 
-import sys, os, util
 sys.path.append(dir1+'/aapackage');  sys.path.append(dir1+'/linux/aapackage')
 if sys.platform.find('win') > -1 :  
    util.a_run_ipython("run " + dir1 + '/aapackage/allmodule.py')
@@ -17,12 +26,8 @@ else :
    util.a_run_ipython("run /media/sf_project27/aapackage/allmodule.py")
    
    
-#-------------------- Load  module -------------------------------------------------- 
-import PyGMO as pyg,  portfolio as pf
 
 
-#-------------------- Load Data -----------------------------------------------------
-from spyderlib.utils.iofuncs import load_dictionary
 dir1= os.getcwd()
 fpath= dir1+'/AIPORTFOLIO/research/Strat_elvis_new_strart/elvis_2_11asset_3xbond_2007_oct2016_v2.spydata'
 globals().update(load_dictionary(fpath)[0])
@@ -225,9 +230,3 @@ util.print_tofile( '\n\n' + txt, 'linux/output_result.txt')
 
 
 ####################################################################################
-
-
-
-
-
-

@@ -1,14 +1,15 @@
-import tensorflow as tf
 import json
-from elasticsearch import Elasticsearch
-from elasticsearch import helpers
+import logging
+import os
 import re
-import numpy as np
 from datetime import datetime, timedelta
+
+import numpy as np
+
+import tensorflow as tf
 from airflow.models import DAG
 from airflow.operators.python_operator import PythonOperator
-import os
-import logging
+from elasticsearch import Elasticsearch, helpers
 
 DAG = DAG(dag_id="sentiment_to_elastic", start_date=datetime.now(), schedule_interval=None)
 

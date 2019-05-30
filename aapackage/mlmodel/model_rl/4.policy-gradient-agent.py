@@ -4,11 +4,12 @@
 # In[1]:
 
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import seaborn as sns
+
+import tensorflow as tf
 
 sns.set()
 

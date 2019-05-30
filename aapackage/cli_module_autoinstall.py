@@ -19,17 +19,16 @@ conda install ipykernel
 
 """
 
-import sys, os
+import ast
 import glob
+import os
 import shutil
-
 # from IPython.nbformat import current as nbformat
 # from IPython.nbconvert import PythonExporter
 # import nbformat
 # from nbconvert import PythonExporter
 import subprocess
-import ast
-
+import sys
 # from tqdm import tqdm
 from time import sleep
 

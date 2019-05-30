@@ -65,6 +65,7 @@ import matplotlib.pyplot as plt
 import pandas
 
 from data.hist_data_storage import FinanceDataStore
+
 from .yahoo_finance_historical_data_extract import YFHistDataExtr
 
 try:

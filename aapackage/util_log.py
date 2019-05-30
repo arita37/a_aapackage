@@ -69,12 +69,12 @@ Since you said you wanted to send log messages from all your submodules to the s
 
 
 """
-import os
-import sys
-import socket
-import time
-import random
 import logging
+import os
+import random
+import socket
+import sys
+import time
 from logging.handlers import TimedRotatingFileHandler
 
 import arrow

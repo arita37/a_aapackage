@@ -1,15 +1,17 @@
 #  3) myscript_optim.py  ii  hyperparam_file
 
-import sys, os
+import os
+import sys
+
+import numpy as np
+
+import pygmo as pyg
 
 ### relative path
 DIRCWD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 
-from aapackage.batch.batch_monitor as optim ### Layer above pygmo to abstract under functional form.
-import pygmo as pyg
-import numpy as np
 
 
 
@@ -37,7 +39,3 @@ args.parse()
    res = optim1.optimize()
    vv  = res.dump()
    util.logs( vv , type="csv")
-
-
-
-

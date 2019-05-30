@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
+import json
+import time
+
+import numpy as np
+
 import luigi
-import tensorflow as tf
 import luigi.contrib.hadoop
 import luigi.contrib.hdfs
-import json
-import numpy as np
-import time
+import tensorflow as tf
 
 
 class Split_text(luigi.Task):

@@ -4,10 +4,13 @@
 # In[1]:
 
 
+import matplotlib.pyplot as plt
 import numpy as np
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
+import seaborn as sns
+from matplotlib import offsetbox
 
+import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
 
 # In[2]:
 
@@ -100,11 +103,8 @@ for i in range(EPOCH):
 # In[6]:
 
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 sns.set()
-from matplotlib import offsetbox
 
 
 # In[7]:

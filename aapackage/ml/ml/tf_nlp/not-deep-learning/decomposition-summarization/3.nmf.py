@@ -4,12 +4,12 @@
 # In[1]:
 
 
+import re
+from operator import itemgetter
+
 import numpy as np
 from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import TfidfVectorizer
-from operator import itemgetter
-import re
-
 
 # In[2]:
 

@@ -4,17 +4,18 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
+import collections
+import itertools
+import os
 import re
 import time
-import collections
-import os
-import itertools
-from dnc import DNC
-from sklearn.cross_validation import train_test_split
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.utils import shuffle
+
+import tensorflow as tf
+from dnc import DNC
 
 # In[2]:
 

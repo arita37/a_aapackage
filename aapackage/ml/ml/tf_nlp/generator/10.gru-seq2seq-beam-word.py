@@ -4,14 +4,16 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
+import collections
 import random
 import time
-import collections
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 from tqdm import tqdm
+
+import tensorflow as tf
 
 sns.set()
 

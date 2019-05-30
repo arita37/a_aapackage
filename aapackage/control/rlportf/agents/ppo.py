@@ -3,13 +3,15 @@ A simple version of Proximal Policy Optimization (PPO) using single thread.
 
 """
 
-import tensorflow as tf
-import numpy as np
 import json
-import time
 import math
-import pandas as pd
+import time
 from argparse import ArgumentParser
+
+import numpy as np
+import pandas as pd
+
+import tensorflow as tf
 
 EP_MAX = 1000
 EP_LEN = 200
