@@ -57,7 +57,7 @@ class Agent:
     def predict(self, inputs):
         return self.sess.run(self.logits, feed_dict={self.X: inputs})
 
-    def get_state(self, t):
+    def get_state(self, t, reward_state=None):
         window_size = self.window_size + 1
         d = t - window_size + 1
         block = self.trend[d : t + 1] if d >= 0 else -d * [self.trend[0]] + self.trend[0 : t + 1]
@@ -99,10 +99,11 @@ class Agent:
             dict_res = do_action(state, action, result_list)  # dict_res
             result_list.append(dict_res)
 
-            next_state = self.get_state(t + 1)
+            next_state = self.get_state(t + 1, dict_res["reward_state"])
             state = next_state
 
         return result_list
+
 
     def buy(self, initial_money):
         starting_money = initial_money
