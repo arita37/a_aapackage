@@ -10,8 +10,6 @@ cd /home/ubuntu/aagit/aapackage/aapackage/
 python cli_module_autoinstall.py  --folder_input  /home/ubuntu/aagit/aapackage/aapackage/batch
 
 
-
-
 Using python in the PATH !!!
 
 ### tobe visible in jputer
