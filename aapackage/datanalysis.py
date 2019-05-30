@@ -1,5 +1,13 @@
 # -*- coding: utf-8 -*-
 """    Data Analysis Utilities   """
+# type of data
+"""
+df : dataframe
+Xmat :  Numpy Matrix values
+Ytarget : Value to be predicted, Class
+col: column,    row: row
+
+"""
 import copy
 import itertools
 import math
@@ -45,26 +53,19 @@ from tabulate import tabulate
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 # import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
 DIRCWD = "./"
-os.chdir(DIRCWD)
-sys.path.append(DIRCWD + "/aapackage")
+#os.chdir(DIRCWD)
+#sys.path.append(DIRCWD + "/aapackage")
 
 
 
 
-__path__ = DIRCWD + "/aapackage/"
+#__path__ = DIRCWD + "/aapackage/"
 __version__ = "1.0.0"
 __file__ = "datanalysis.py"
 
 
 ############# CONSTANT   ###############################################################################
-# type of data
-"""
-df : dataframe
-Xmat :  Numpy Matrix values
-Ytarget : Value to be predicted, Class
-col: column,    row: row
 
-"""
 
 
 ############# Pandas Processing   ######################################################################
