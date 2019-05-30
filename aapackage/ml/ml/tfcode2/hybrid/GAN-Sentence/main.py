@@ -1,10 +1,12 @@
-from model import *
-import parse
-import tensorflow as tf
-import numpy as np
 import os
 import random
 import time
+
+import numpy as np
+
+import parse
+import tensorflow as tf
+from model import *
 
 data, vocab = parse.get_vocab('essay')
 onehot = parse.embed_to_onehot(data, vocab)

@@ -3,7 +3,8 @@
 
 
 #------------------Python 2.7 ------------------------------------------
-from xlwings import Workbook, Range, xlsub, xlfunc, xlarg
+from xlwings import Range, Workbook, xlarg, xlfunc, xlsub
+
 
 @xlsub
 def get_workbook_name():
@@ -42,31 +43,3 @@ def matrix_mult(x, y):
 @xlarg('y', 'nparray', ndim=2)
 def npdot(x,y)
  return np.dot(x,y)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

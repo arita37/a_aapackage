@@ -1,10 +1,11 @@
-import paramiko
-import sys
-import os
-import zipfile
-import pysftp as sftp
 import datetime
- 
+import os
+import sys
+import zipfile
+
+import paramiko
+import pysftp as sftp
+
 ##getting current time
 
 now = datetime.datetime.now()
@@ -104,13 +105,3 @@ upload_file(dest_local_path,temp_remote_location,remote_host,remote_user,remote_
 print("Unzipping the Folder from  " + temp_remote_location + " to " + final_remote_location_unzip)
 
 unzip_folder_Remote(temp_remote_location,final_remote_location_unzip,remote_host,remote_user,remote_password)
-
-
-
-
-
-
-
-      
-
-

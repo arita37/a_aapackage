@@ -1,43 +1,38 @@
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 with open("README.txt", "r") as fh:
     long_description = fh.read()
 
 
 ### Packages
-packages = ['aapackage'] + ['aapackage.' + p for p in find_packages('aapackage')]
+packages = ["aapackage"] + ["aapackage." + p for p in find_packages("aapackage")]
 
 
 ### CLI Scripts
-scripts  = [ "aapackage/batch/batch_daemon_launch_cli.py", 
-             "aapackage/batch/batch_daemon_monitor_cli.py",
-             "aapackage/batch/batch_daemon_autoscale_cli.py",
-             
-             "aapackage/cli_module_autoinstall.py",  #
-             "aapackage/cli_module_analysis.py",     #
-             "aapackage/cli_convert_ipny.py"         #  ipny to py scrips
-            ]
+scripts = [
+    "aapackage/batch/batch_daemon_launch_cli.py",
+    "aapackage/batch/batch_daemon_monitor_cli.py",
+    "aapackage/batch/batch_daemon_autoscale_cli.py",
+    "aapackage/cli_module_autoinstall.py",  #
+    "aapackage/cli_module_analysis.py",  #
+    "aapackage/cli_convert_ipny.py",  #  ipny to py scrips
+]
 
 
-version = '0.1.0'
+version = "0.1.0"
 
 
-setup(name='aapackage',
-      version=version,
-      description='Tools for Python',
-   uthor='KN',
-      author_email='brookm291@gmail.com',
-      url='https://github.com/arita37/a_aapackage',
-      install_requires=['numpy'],
-      packages=packages,
-      scripts=scripts
-      )
-
-
-
-
-
+setup(
+    name="aapackage",
+    version=version,
+    description="Tools for Python",
+    uthor="KN",
+    author_email="brookm291@gmail.com",
+    url="https://github.com/arita37/a_aapackage",
+    install_requires=["numpy"],
+    packages=packages,
+    scripts=scripts,
+)
 
 
 ################################################################################
@@ -93,6 +88,3 @@ setup(
 
 
 """
-
-
-

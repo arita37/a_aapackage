@@ -1,9 +1,11 @@
-import numpy as np
-from scipy import misc
-import matplotlib.pyplot as plt
-import seaborn as sns
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+from scipy import misc
 from sklearn.preprocessing import LabelEncoder
+
 sns.set(style = "whitegrid", palette = "muted")
 
 def get_dataset(location, dimension, visualize = False):

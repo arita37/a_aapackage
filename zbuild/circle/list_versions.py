@@ -6,6 +6,7 @@ from __future__ import print_function
 import json
 import re
 import sys
+from distutils.version import LooseVersion
 
 try:
     from urllib.request import urlopen
@@ -13,7 +14,6 @@ except ImportError:
     # Python 2
     from urllib import urlopen
 
-from distutils.version import LooseVersion
 
 
 def json_urlread(url):

@@ -31,7 +31,7 @@ class HJBConfig(Config):
     lr_boundaries = [400]
     num_iterations = 2000
     lr_values = list(np.array([1e-2, 1e-2]))
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [0, 1]
 
 
@@ -42,7 +42,7 @@ class PricingOptionConfig(Config):
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     num_iterations = 4000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [15, 18]
 
 
@@ -53,7 +53,7 @@ class PricingDefaultRiskConfig(Config):
     lr_values = list(np.array([8e-3, 8e-3]))
     lr_boundaries = [3000]
     num_iterations = 6000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [40, 50]
 
 
@@ -64,7 +64,7 @@ class BurgesTypeConfig(Config):
     lr_values = list(np.array([1e-2, 1e-3, 1e-4]))
     lr_boundaries = [15000, 25000]
     num_iterations = 30000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [2, 4]
 
 
@@ -75,7 +75,7 @@ class QuadraticGradientsConfig(Config):
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     num_iterations = 4000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [2, 4]
 
 
@@ -86,11 +86,11 @@ class ReactionDiffusionConfig(Config):
     lr_values = list(np.array([1e-2, 1e-2, 1e-2]))
     lr_boundaries = [8000, 16000]
     num_iterations = 24000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
 
 
 def get_config(name):
     try:
-        return globals()[name+'Config']
+        return globals()[name + "Config"]
     except KeyError:
         raise KeyError("Config for the required problem not found.")

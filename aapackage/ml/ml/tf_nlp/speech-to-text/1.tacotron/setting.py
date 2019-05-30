@@ -1,4 +1,4 @@
-path = '../data/'
+path = "../data/"
 max_len = 100
 sampling_rate = 22050
 n_fft = 2048
@@ -21,35 +21,35 @@ vocab = "ES abcdefghijklmnopqrstuvwxyz'"
 char2idx = {char: idx for idx, char in enumerate(vocab)}
 idx2char = {idx: char for idx, char in enumerate(vocab)}
 
-import re
 import os
+import re
+
+import numpy as np
+
+import librosa
 
 
 def text2idx(text):
-    text = re.sub(r'[^a-z ]', '', text.lower()).strip() + 'S'
+    text = re.sub(r"[^a-z ]", "", text.lower()).strip() + "S"
     converted = [char2idx[char] for char in text]
     return text, converted
 
 
-import librosa
-import numpy as np
 
 
 def get_spectrogram(fpath):
-    y, sr = librosa.load(fpath, sr = sampling_rate)
-    D = librosa.stft(
-        y = y, n_fft = n_fft, hop_length = hop_length, win_length = win_length
-    )
+    y, sr = librosa.load(fpath, sr=sampling_rate)
+    D = librosa.stft(y=y, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
     magnitude = np.abs(D)
     power = magnitude ** 2
-    S = librosa.feature.melspectrogram(S = power, n_mels = n_mels)
+    S = librosa.feature.melspectrogram(S=power, n_mels=n_mels)
     return np.transpose(S.astype(np.float32))
 
 
 def reduce_frames(x, r_factor):
     T, C = x.shape
     num_paddings = reduction_factor - (T % r_factor) if T % r_factor != 0 else 0
-    padded = np.pad(x, [[0, num_paddings], [0, 0]], 'constant')
+    padded = np.pad(x, [[0, num_paddings], [0, 0]], "constant")
     return np.reshape(padded, (-1, C * r_factor))
 
 
@@ -66,5 +66,5 @@ def load_file(path):
 
 
 def get_cached(path):
-    spectrogram = 'spectrogram/' + path + '.npy'
+    spectrogram = "spectrogram/" + path + ".npy"
     return np.load(spectrogram)

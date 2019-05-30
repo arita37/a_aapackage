@@ -1,17 +1,29 @@
 # -*- coding: utf-8 -*-
 %load_ext autoreload
 %autoreload
-import os, sys
+import ConfigParser
+import os
+import socket
+import subprocess
+import sys
+from subprocess import call
+from time import sleep
+
+import boto
+import numpy as np
+import pandas as pd
+from boto.ec2.connection import EC2Connection
+
+import datanalysis as da
+import portfolio as pf
+import util
+
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage');  sys.path.append(DIRCWD + '/linux/aapackage')
 execfile( DIRCWD + '/aapackage/allmodule.py')
-import util,  portfolio as pf, numpy as np, datanalysis as da
 #####################################################################################
 
 DIR_package= DIRCWD+'/aapackage/aws/'
-from boto.ec2.connection import EC2Connection
-from time import sleep
-import subprocess, ConfigParser,  socket,  boto, pandas as pd
 
 ######################  Initialization    #######################################################
 INSTANCE_TYPE= ['t1.micro', 'm1.small', 'm1.medium', 'm1.large', 'm1.xlarge', 'm3.medium', 'm3.large', 'm3.xlarge', 'm3.2xlarge', 'c1.medium', 'c1.xlarge', 'm2.xlarge', 'm2.2xlarge', 'm2.4xlarge', 'cr1.8xlarge', 'hi1.4xlarge', 'hs1.8xlarge', 'cc1.4xlarge', 'cg1.4xlarge', 'cc2.8xlarge', 'g2.2xlarge', 'c3.large', 'c3.xlarge', 'c3.2xlarge', 'c3.4xlarge', 'c3.8xlarge', 'c4.large', 'c4.xlarge', 'c4.2xlarge', 'c4.4xlarge', 'c4.8xlarge', 'i2.xlarge', 'i2.2xlarge', 'i2.4xlarge', 'i2.8xlarge', 't2.micro', 't2.small', 't2.medium']
@@ -349,7 +361,6 @@ while True:
 
 '''
 
-from subprocess import call
 with open('directory_of_logfile/logfile.txt', 'w') as f:
    call(['python', 'directory_of_called_python_file/called_python_file.py'], stdout=f)
 
@@ -919,5 +930,3 @@ python main.py stop
 Terminating i-0a1b1930 ... done.
 
 '''
-
-

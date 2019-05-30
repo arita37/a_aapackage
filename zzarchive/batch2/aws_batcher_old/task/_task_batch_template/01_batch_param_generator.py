@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+import sys
+
+import numpy as np
+
+import util
+#-------------------- Get Close Price -------------------------------------------
+from spyderlib.utils.iofuncs import load_dictionary
+
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
-import util, numpy as np
 execfile( DIRCWD + '/aapackage/allmodule.py')
 print 'Directory Folder', DIRCWD
 #######################################################################################
@@ -14,8 +21,6 @@ DIRBATCH_local=  DIRCWD+"/linux/batch/task/" +task1_name +'/'
 
 
 
-#-------------------- Get Close Price -------------------------------------------
-from spyderlib.utils.iofuncs import load_dictionary
 fpath= DIRBATCH_local +'close_28assets_2012_jan2017.spydata'
 globals().update(load_dictionary(fpath)[0])
 for i,x in enumerate(sym) : print i,x
@@ -315,34 +320,3 @@ If no CPU available, one process wont be launched
 
 
 '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

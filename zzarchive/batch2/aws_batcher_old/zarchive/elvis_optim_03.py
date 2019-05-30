@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 #-------------------- Load  module -------------------------------------------------- 
-import PyGMO as pyg,  portfolio as pf
-
-
+import portfolio as pf
+import PyGMO as pyg
 #-------------------- Load Data -----------------------------------------------------
 from spyderlib.utils.iofuncs import load_dictionary
+
 dir1= os.getcwd()
 fpath= dir1+'/AIPORTFOLIO/research/Strat_Elvis_17asset/etf_data_17assets_2007_20161028.spydata'
 globals().update(load_dictionary(fpath)[0])
@@ -176,9 +176,3 @@ util.print_tofile( txt, 'linux/output_result.txt')
 
 
 ####################################################################################
-
-
-
-
-
-

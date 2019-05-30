@@ -4,9 +4,12 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
+import time
 
+import numpy as np
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -16,9 +19,9 @@ def parse_text(file_path):
         text = f.read()
 
     char2idx = {c: i + 3 for i, c in enumerate(set(text))}
-    char2idx['<pad>'] = 0
-    char2idx['<start>'] = 1
-    char2idx['<end>'] = 2
+    char2idx["<pad>"] = 0
+    char2idx["<start>"] = 1
+    char2idx["<end>"] = 2
 
     vector = np.array([char2idx[char] for char in list(text)])
     return vector, char2idx
@@ -27,7 +30,7 @@ def parse_text(file_path):
 # In[3]:
 
 
-vector, char2idx = parse_text('shakespeare.txt')
+vector, char2idx = parse_text("shakespeare.txt")
 idx2char = {i: c for c, i in char2idx.items()}
 
 
@@ -48,9 +51,7 @@ skip = 20
 
 def cell_fn():
     return tf.nn.rnn_cell.ResidualWrapper(
-        tf.nn.rnn_cell.GRUCell(
-            hidden_dim, kernel_initializer = tf.orthogonal_initializer()
-        )
+        tf.nn.rnn_cell.GRUCell(hidden_dim, kernel_initializer=tf.orthogonal_initializer())
     )
 
 
@@ -70,57 +71,49 @@ class Model:
         self.X = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.int32, [None, None])
         self.batch_size = tf.shape(self.X)[0]
-        encoder_embeddings = tf.Variable(
-            tf.random_uniform([vocab_size, hidden_dim], -1, 1)
-        )
+        encoder_embeddings = tf.Variable(tf.random_uniform([vocab_size, hidden_dim], -1, 1))
         cells = multi_cell_fn()
         helper = tf.contrib.seq2seq.TrainingHelper(
-            inputs = tf.nn.embedding_lookup(encoder_embeddings, self.X),
-            sequence_length = tf.count_nonzero(self.X, 1, dtype = tf.int32),
+            inputs=tf.nn.embedding_lookup(encoder_embeddings, self.X),
+            sequence_length=tf.count_nonzero(self.X, 1, dtype=tf.int32),
         )
         dense_layer = tf.layers.Dense(vocab_size)
         decoder = tf.contrib.seq2seq.BasicDecoder(
-            cell = cells,
-            helper = helper,
-            initial_state = cells.zero_state(self.batch_size, tf.float32),
-            output_layer = dense_layer,
+            cell=cells,
+            helper=helper,
+            initial_state=cells.zero_state(self.batch_size, tf.float32),
+            output_layer=dense_layer,
         )
 
-        decoder_output, _, _ = tf.contrib.seq2seq.dynamic_decode(
-            decoder = decoder
-        )
+        decoder_output, _, _ = tf.contrib.seq2seq.dynamic_decode(decoder=decoder)
         self.logits = decoder_output.rnn_output
 
         decoder = tf.contrib.seq2seq.BeamSearchDecoder(
-            cell = cells,
-            embedding = encoder_embeddings,
-            start_tokens = tf.tile(
-                tf.constant([char2idx['<start>']], dtype = tf.int32), [1]
-            ),
-            end_token = char2idx['<end>'],
-            initial_state = tf.contrib.seq2seq.tile_batch(
+            cell=cells,
+            embedding=encoder_embeddings,
+            start_tokens=tf.tile(tf.constant([char2idx["<start>"]], dtype=tf.int32), [1]),
+            end_token=char2idx["<end>"],
+            initial_state=tf.contrib.seq2seq.tile_batch(
                 cells.zero_state(1, tf.float32), beam_width
             ),
-            beam_width = beam_width,
-            output_layer = dense_layer,
+            beam_width=beam_width,
+            output_layer=dense_layer,
         )
 
         decoder_out, _, _ = tf.contrib.seq2seq.dynamic_decode(
-            decoder = decoder, maximum_iterations = seq_len
+            decoder=decoder, maximum_iterations=seq_len
         )
 
         self.predict = decoder_out.predicted_ids[:, :, 0]
 
         self.cost = tf.reduce_mean(
             tf.contrib.seq2seq.sequence_loss(
-                logits = self.logits,
-                targets = self.Y,
-                weights = tf.to_float(tf.ones_like(self.Y)),
+                logits=self.logits, targets=self.Y, weights=tf.to_float(tf.ones_like(self.Y))
             )
         )
-        self.global_step = tf.Variable(0, trainable = False)
+        self.global_step = tf.Variable(0, trainable=False)
         self.optimizer = tf.train.AdamOptimizer().apply_gradients(
-            clip_grads(self.cost), global_step = self.global_step
+            clip_grads(self.cost), global_step=self.global_step
         )
 
 
@@ -128,12 +121,12 @@ class Model:
 
 
 def start_sentence(x):
-    _x = np.full([x.shape[0], 1], char2idx['<start>'])
+    _x = np.full([x.shape[0], 1], char2idx["<start>"])
     return np.concatenate([_x, x], 1)
 
 
 def end_sentence(x):
-    _x = np.full([x.shape[0], 1], char2idx['<end>'])
+    _x = np.full([x.shape[0], 1], char2idx["<end>"])
     return np.concatenate([x, _x], 1)
 
 
@@ -155,32 +148,25 @@ sess.run(tf.global_variables_initializer())
 # In[8]:
 
 
-from tqdm import tqdm
-import time
 
 for e in range(10):
     lasttime = time.time()
     train_loss, test_loss = 0, 0
-    pbar = tqdm(range(0, len(X), batch_size), desc = 'train minibatch loop')
+    pbar = tqdm(range(0, len(X), batch_size), desc="train minibatch loop")
     for i in pbar:
         batch_x = X[i : min(i + batch_size, len(X))]
         batch_y = end_sentence(batch_x)
         batch_x = start_sentence(batch_x)
         loss, _ = sess.run(
-            [model.cost, model.optimizer],
-            feed_dict = {model.X: batch_x, model.Y: batch_y},
+            [model.cost, model.optimizer], feed_dict={model.X: batch_x, model.Y: batch_y}
         )
         assert not np.isnan(loss)
         train_loss += loss
-        pbar.set_postfix(cost = loss)
+        pbar.set_postfix(cost=loss)
 
     batch_x = start_sentence(X[:batch_size])
-    ints = sess.run(model.predict, feed_dict = {model.X: batch_x})[0]
-    print('\n' + ''.join([idx2char[i] for i in ints]) + '\n')
+    ints = sess.run(model.predict, feed_dict={model.X: batch_x})[0]
+    print("\n" + "".join([idx2char[i] for i in ints]) + "\n")
 
 
 # In[ ]:
-
-
-
-

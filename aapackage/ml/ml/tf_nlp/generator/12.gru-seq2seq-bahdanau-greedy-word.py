@@ -4,14 +4,17 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
+import collections
 import random
 import time
-import collections
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 from tqdm import tqdm
+
+import tensorflow as tf
+
 sns.set()
 
 
@@ -19,7 +22,7 @@ sns.set()
 
 
 def build_dataset(words, n_words, atleast=1):
-    count = [['PAD', 0], ['GO', 1], ['EOS', 2], ['UNK', 3]]
+    count = [["PAD", 0], ["GO", 1], ["EOS", 2], ["UNK", 3]]
     counter = collections.Counter(words).most_common(n_words)
     counter = [i for i in counter if i[1] >= atleast]
     count.extend(counter)
@@ -41,7 +44,7 @@ def build_dataset(words, n_words, atleast=1):
 # In[3]:
 
 
-with open('shakespeare.txt') as fopen:
+with open("shakespeare.txt") as fopen:
     shakespeare = fopen.read().split()
 
 
@@ -55,92 +58,109 @@ data, count, dictionary, rev_dictionary = build_dataset(shakespeare, vocabulary_
 # In[5]:
 
 
-GO = dictionary['GO']
-PAD = dictionary['PAD']
-EOS = dictionary['EOS']
-UNK = dictionary['UNK']
+GO = dictionary["GO"]
+PAD = dictionary["PAD"]
+EOS = dictionary["EOS"]
+UNK = dictionary["UNK"]
 
 
 # In[6]:
 
 
 class Generator:
-    def __init__(self, size_layer, num_layers, embedded_size,
-                 from_dict_size, to_dict_size, learning_rate, batch_size):
-        
+    def __init__(
+        self,
+        size_layer,
+        num_layers,
+        embedded_size,
+        from_dict_size,
+        to_dict_size,
+        learning_rate,
+        batch_size,
+    ):
         def cells(reuse=False):
-            return tf.nn.rnn_cell.GRUCell(size_layer,reuse=reuse)
-        
+            return tf.nn.rnn_cell.GRUCell(size_layer, reuse=reuse)
+
         self.X = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.int32, [None, None])
         self.X_seq_len = tf.count_nonzero(self.X, 1, dtype=tf.int32)
         self.Y_seq_len = tf.count_nonzero(self.Y, 1, dtype=tf.int32)
         batch_size = tf.shape(self.X)[0]
-        
+
         encoder_embedding = tf.Variable(tf.random_uniform([from_dict_size, embedded_size], -1, 1))
         decoder_embedding = tf.Variable(tf.random_uniform([to_dict_size, embedded_size], -1, 1))
         self.cells = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)])
-        self.encoder_state = self.cells.zero_state(
-            dtype = tf.float32, batch_size = tf.shape(self.X)[0]
-        )
-        
+        self.encoder_state = self.cells.zero_state(dtype=tf.float32, batch_size=tf.shape(self.X)[0])
+
         encoder_out, encoder_state = tf.nn.dynamic_rnn(
-            cell = self.cells, 
-            inputs = tf.nn.embedding_lookup(encoder_embedding, self.X),
-            sequence_length = self.X_seq_len,
-            initial_state = self.encoder_state,
-            dtype = tf.float32)
-        
+            cell=self.cells,
+            inputs=tf.nn.embedding_lookup(encoder_embedding, self.X),
+            sequence_length=self.X_seq_len,
+            initial_state=self.encoder_state,
+            dtype=tf.float32,
+        )
+
         main = tf.strided_slice(self.Y, [0, 0], [batch_size, -1], [1, 1])
         decoder_input = tf.concat([tf.fill([batch_size, 1], GO), main], 1)
         dense = tf.layers.Dense(to_dict_size)
-        attention_mechanism = tf.contrib.seq2seq.LuongAttention(num_units = size_layer, 
-                                                                    memory = encoder_out,
-                                                                    memory_sequence_length = self.X_seq_len)
-        
+        attention_mechanism = tf.contrib.seq2seq.LuongAttention(
+            num_units=size_layer, memory=encoder_out, memory_sequence_length=self.X_seq_len
+        )
+
         decoder_cells = tf.contrib.seq2seq.AttentionWrapper(
-            cell = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)]), 
-                attention_mechanism = attention_mechanism,
-                attention_layer_size = size_layer)
-        
+            cell=tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)]),
+            attention_mechanism=attention_mechanism,
+            attention_layer_size=size_layer,
+        )
+
         training_helper = tf.contrib.seq2seq.TrainingHelper(
-                inputs = tf.nn.embedding_lookup(decoder_embedding, decoder_input),
-                sequence_length = self.Y_seq_len,
-                time_major = False)
+            inputs=tf.nn.embedding_lookup(decoder_embedding, decoder_input),
+            sequence_length=self.Y_seq_len,
+            time_major=False,
+        )
         training_decoder = tf.contrib.seq2seq.BasicDecoder(
-                cell = decoder_cells,
-                helper = training_helper,
-                initial_state = decoder_cells.zero_state(batch_size, tf.float32).clone(cell_state=encoder_state),
-                output_layer = dense)
+            cell=decoder_cells,
+            helper=training_helper,
+            initial_state=decoder_cells.zero_state(batch_size, tf.float32).clone(
+                cell_state=encoder_state
+            ),
+            output_layer=dense,
+        )
         training_decoder_output, self.training_state, _ = tf.contrib.seq2seq.dynamic_decode(
-                decoder = training_decoder,
-                impute_finished = True,
-                maximum_iterations = tf.reduce_max(self.Y_seq_len))
+            decoder=training_decoder,
+            impute_finished=True,
+            maximum_iterations=tf.reduce_max(self.Y_seq_len),
+        )
         self.training_logits = training_decoder_output.rnn_output
-        
+
         predicting_helper = tf.contrib.seq2seq.GreedyEmbeddingHelper(
-                embedding = decoder_embedding,
-                start_tokens = tf.tile(tf.constant([GO], dtype=tf.int32), [batch_size]),
-                end_token = EOS)
+            embedding=decoder_embedding,
+            start_tokens=tf.tile(tf.constant([GO], dtype=tf.int32), [batch_size]),
+            end_token=EOS,
+        )
         predicting_decoder = tf.contrib.seq2seq.BasicDecoder(
-                cell = decoder_cells,
-                helper = predicting_helper,
-                initial_state = decoder_cells.zero_state(batch_size, tf.float32).clone(cell_state=encoder_state),
-                output_layer = dense)
+            cell=decoder_cells,
+            helper=predicting_helper,
+            initial_state=decoder_cells.zero_state(batch_size, tf.float32).clone(
+                cell_state=encoder_state
+            ),
+            output_layer=dense,
+        )
         predicting_decoder_output, self.predict_state, _ = tf.contrib.seq2seq.dynamic_decode(
-                decoder = predicting_decoder,
-                impute_finished = True,
-                maximum_iterations = tf.reduce_max(self.X_seq_len))
+            decoder=predicting_decoder,
+            impute_finished=True,
+            maximum_iterations=tf.reduce_max(self.X_seq_len),
+        )
         self.predicting_ids = predicting_decoder_output.sample_id
         print(self.training_state, self.predict_state)
-        
+
         masks = tf.sequence_mask(self.Y_seq_len, tf.reduce_max(self.Y_seq_len), dtype=tf.float32)
-        self.cost = tf.contrib.seq2seq.sequence_loss(logits = self.training_logits,
-                                                     targets = self.Y,
-                                                     weights = masks)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.cost)
-        
-        y_t = tf.argmax(self.training_logits,axis=2)
+        self.cost = tf.contrib.seq2seq.sequence_loss(
+            logits=self.training_logits, targets=self.Y, weights=masks
+        )
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+
+        y_t = tf.argmax(self.training_logits, axis=2)
         y_t = tf.cast(y_t, tf.int32)
         self.prediction = tf.boolean_mask(y_t, masks)
         mask_label = tf.boolean_mask(self.Y, masks)
@@ -166,8 +186,9 @@ possible_batch_id = range(len(data) - sequence_length - 1)
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
-model = Generator(size_layer, num_layers, size_layer, len(dictionary), 
-                len(dictionary), learning_rate,batch_size)
+model = Generator(
+    size_layer, num_layers, size_layer, len(dictionary), len(dictionary), learning_rate, batch_size
+)
 sess.run(tf.global_variables_initializer())
 
 
@@ -176,20 +197,21 @@ sess.run(tf.global_variables_initializer())
 
 def train_random_batch():
     LOST, ACCURACY = [], []
-    pbar = tqdm(range(epoch), desc = 'epoch')
+    pbar = tqdm(range(epoch), desc="epoch")
     batch_id = random.sample(possible_batch_id, batch_size)
     batch_x = np.zeros((batch_size, sequence_length))
     batch_y = np.zeros((batch_size, sequence_length + 1))
     for n in range(sequence_length):
         id1 = [data[k + n] for k in batch_id]
         id2 = [data[k + n + 1] for k in batch_id]
-        batch_x[:,n] = id1
-        batch_y[:,n] = id2
-    batch_y[:,-1] = [EOS] * batch_size
-    initial_state, _ = sess.run([model.predict_state, model.optimizer], feed_dict = {model.X: batch_x,
-                                                                                    model.Y: batch_y})
+        batch_x[:, n] = id1
+        batch_y[:, n] = id2
+    batch_y[:, -1] = [EOS] * batch_size
+    initial_state, _ = sess.run(
+        [model.predict_state, model.optimizer], feed_dict={model.X: batch_x, model.Y: batch_y}
+    )
     initial_state = initial_state.cell_state
-    
+
     for i in pbar:
         batch_x = np.zeros((batch_size, sequence_length))
         batch_y = np.zeros((batch_size, sequence_length + 1))
@@ -197,17 +219,17 @@ def train_random_batch():
         for n in range(sequence_length):
             id1 = [data[k + n] for k in batch_id]
             id2 = [data[k + n + 1] for k in batch_id]
-            batch_x[:,n] = id1
-            batch_y[:,n] = id2
-        batch_y[:,-1] = [EOS] * batch_size
-        accuracy, _, loss, initial_state = sess.run([model.accuracy, model.optimizer, 
-                                                     model.cost, model.predict_state], 
-                                       feed_dict = {model.X: batch_x, 
-                                                    model.Y: batch_y,
-                                                    model.encoder_state: initial_state})
+            batch_x[:, n] = id1
+            batch_y[:, n] = id2
+        batch_y[:, -1] = [EOS] * batch_size
+        accuracy, _, loss, initial_state = sess.run(
+            [model.accuracy, model.optimizer, model.cost, model.predict_state],
+            feed_dict={model.X: batch_x, model.Y: batch_y, model.encoder_state: initial_state},
+        )
         initial_state = initial_state.cell_state
-        ACCURACY.append(accuracy); LOST.append(loss)
-        pbar.set_postfix(cost = loss, accuracy = accuracy)
+        ACCURACY.append(accuracy)
+        LOST.append(loss)
+        pbar.set_postfix(cost=loss, accuracy=accuracy)
     return LOST, ACCURACY
 
 
@@ -220,16 +242,16 @@ LOST, ACCURACY = train_random_batch()
 # In[11]:
 
 
-plt.figure(figsize = (15, 5))
+plt.figure(figsize=(15, 5))
 plt.subplot(1, 2, 1)
 EPOCH = np.arange(len(LOST))
 plt.plot(EPOCH, LOST)
-plt.xlabel('epoch')
-plt.ylabel('loss')
+plt.xlabel("epoch")
+plt.ylabel("loss")
 plt.subplot(1, 2, 2)
 plt.plot(EPOCH, ACCURACY)
-plt.xlabel('epoch')
-plt.ylabel('accuracy')
+plt.xlabel("epoch")
+plt.ylabel("accuracy")
 plt.show()
 
 
@@ -238,20 +260,22 @@ plt.show()
 
 def generate_based_sequence(length_sentence):
     index = np.random.randint(0, len(data) - sequence_length - 1)
-    x = np.array([data[index:index + sequence_length]])
-    initial_state, ids = sess.run([model.predict_state,model.predicting_ids], 
-                                  feed_dict = {model.X: x})
+    x = np.array([data[index : index + sequence_length]])
+    initial_state, ids = sess.run(
+        [model.predict_state, model.predicting_ids], feed_dict={model.X: x}
+    )
     initial_state = initial_state.cell_state
     ids = ids[0].tolist()
-    
+
     while len(ids) < length_sentence:
-        initial_state, ids_ = sess.run([model.predict_state,model.predicting_ids], 
-                                      feed_dict = {model.X: [ids[-sequence_length:]],
-                                                  model.encoder_state: initial_state})
+        initial_state, ids_ = sess.run(
+            [model.predict_state, model.predicting_ids],
+            feed_dict={model.X: [ids[-sequence_length:]], model.encoder_state: initial_state},
+        )
         initial_state = initial_state.cell_state
         ids.extend(ids_[0].tolist())
 
-    return ''.join([rev_dictionary[i] for i in ids])
+    return "".join([rev_dictionary[i] for i in ids])
 
 
 # In[13]:
@@ -261,7 +285,3 @@ print(generate_based_sequence(1000))
 
 
 # In[ ]:
-
-
-
-

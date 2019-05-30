@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-'''Portfolio Simulation details / simulation '''
+"""Portfolio Simulation details / simulation """
 # %load_ext autoreload
 # %autoreload 2
-import os, sys
-import util,  numpy as np
+import os
+import sys
+
+import numpy as np
+
+import util
+
 ##############################################################################################
 
 
-
 #### run in AWS servers
-
 
 
 # for foldername in working_dir_folder :
@@ -20,61 +23,6 @@ import util,  numpy as np
 #
 #        startime = now()
 #        subprocess( working_dir + foldername + / + "main.py" , starttime)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 """
@@ -147,9 +95,7 @@ for ii in xrange(itask0-itask0, itask1-itask0):
 """
 
 
-
-
-'''  Manual test
+"""  Manual test
   ii= 2; kkk=1
   params_dict= dict(input_params_list[ii,1])
   globals().update(params_dict)
@@ -158,14 +104,12 @@ for ii in xrange(itask0-itask0, itask1-itask0):
   for kkk in xrange(0, krepeat) : # Random Start loop
       execfile(batch_script)
 
-'''
-
-
+"""
 
 
 #####################################################################################
 
-''' Create Storage file :
+""" Create Storage file :
 np.concatenate((    ))
 
 aafolioref= aafolio_storage[0,:].reshape(1,20)
@@ -174,20 +118,20 @@ util.py_save_obj( (aux3_cols, aafolioref) ,  'aafolio_storage_ref' )
 aux3_cols, aafolio_storage=  util.py_load_obj( dir_batch_main+  '/batch_20161228_96627894/aafolio_storage_20161227',
                                                    isabsolutpath=1 )
 
-'''
+"""
 
 #####################################################################################
 
-'''
+"""
 for arg in sys.argv:
     print arg
 Each command-line argument passed to the program will be in sys.argv, which is just a list. Here you are printing each argument on a separate line.
 Example 10.21. The contents of sys.argv
 [you@localhost py]$ python argecho.py             1
 argecho.py
-'''
+"""
 
-'''
+"""
 import argparse
 parser.add_argument('-i','--input', help='Script File Name', required=False)
 parser.add_argument('-o','--output',help='Script ID', required=False)
@@ -196,12 +140,4 @@ args = parser.parse_args()
 ## show values ##
 print ("Input file: %s" % args.input )
 print ("Output file: %s" % args.output )
-'''
-
-
-
-
-
-
-
-
+"""

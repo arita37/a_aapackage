@@ -1,40 +1,52 @@
 # -*- coding: utf-8 -*-
-#--------- Yahoo main module----------------------------
-import scipy as sci;import numpy as np; import numexpr as ne
-import pandas as pd; import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+# --------- Yahoo main module----------------------------
+import csv
+import datetime
+import glob
+import os
+import re
+import shutil
+import sqlite3 as lite
+import sys
+import time
 from timeit import default_timer as timer
-import global01 as global01 #as global varaibles   global01.varname
-import os; import sys ; import glob
-import urllib3, shutil
-from bs4 import BeautifulSoup
 
-from sklearn import model_selection; from sklearn.metrics import confusion_matrix
-
-import datetime, dill, IPython
-#from fastnumbers import  isreal, isfloat, isint, isintlike, fast_float
-
+import IPython
+import matplotlib.pyplot as plt
 import numba
-from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
-
-
-import re, sys, os, time, datetime, csv, pandas, sqlite3 as lite
-
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sci
+import sqlalchemy as sql
+import urllib3
+from bs4 import BeautifulSoup
+from matplotlib.backends.backend_pdf import PdfPages
+from numba import boolean, float32, float64, guvectorize, int32, jit, vectorize
+from sklearn import model_selection
+from sklearn.metrics import confusion_matrix
 
 import data.yahoo as yh
+import dill
+import global01 as global01  # as global varaibles   global01.varname
+
+# from fastnumbers import  isreal, isfloat, isint, isintlike, fast_float
+
+
+
+
+
 
 
 yh.hist_data_storage()
 
 
-import sqlalchemy as sql
-dbname= '/aaserialize/store/yahoo.db'
-dbengine = sql.create_engine('sqlite://'+dbname)
+
+dbname = "/aaserialize/store/yahoo.db"
+dbengine = sql.create_engine("sqlite://" + dbname)
 
 
 yh.hist_data_storage()
-
-
 
 
 #    from yahoo_finance_historical_data_extract import YFHistDataExtr
@@ -44,8 +56,7 @@ yh.hist_data_storage()
 class sql_dataStore_Finance(object):
     """ For storing and retrieving stocks data from database."""
 
-
-    def __init__(self, db_full_path, listtable= ['daily','dividend']):
+    def __init__(self, db_full_path, listtable=["daily", "dividend"]):
         """ Set the link to the database that store the information.
             Args:  db_full_path (str): full path of the database that store all the stocks information.
         """
@@ -54,7 +65,9 @@ class sql_dataStore_Finance(object):
         self.hist_data_tablename = listtable[0]  # differnt table store in database
         self.divdnt_data_tablename = listtable[1]
 
-        self.set_data_limit_datekey = ''  # set the datekey so, date limit of extracting.(for hist price data only)
+        self.set_data_limit_datekey = (
+            ""
+        )  # set the datekey so, date limit of extracting.(for hist price data only)
 
         ## output data
         self.hist_price_df = pandas.DataFrame()
@@ -68,8 +81,9 @@ class sql_dataStore_Finance(object):
             Args: full_list (list): full list of items.
             Return (list): list of list.
         """
-        if chunk_size < 1: chunk_size = 1
-        return [full_list[i:i + chunk_size] for i in range(0, len(full_list), chunk_size)]
+        if chunk_size < 1:
+            chunk_size = 1
+        return [full_list[i : i + chunk_size] for i in range(0, len(full_list), chunk_size)]
 
     def setup_db_for_hist_prices_storage(self, stock_sym_list):
         """ Get the price and dividend history and store them to the database for the specified stock sym list.
@@ -83,20 +97,36 @@ class sql_dataStore_Finance(object):
         histdata_extr.enable_save_raw_file = 0
 
         for sub_list in self.break_list_to_sub_list(stock_sym_list):
-            print('processing sub list', sub_list)
+            print("processing sub list", sub_list)
             histdata_extr.set_multiple_stock_list(sub_list)
             histdata_extr.get_hist_data_of_all_target_stocks()
             histdata_extr.removed_zero_vol_fr_dataset()
 
             ## save to one particular funciton, save to sql -- hist table
-            histdata_extr.processed_data_df.to_sql(self.hist_data_tablename, self.con, flavor='sqlite',
-                                                   schema=None, if_exists='append', index=True,
-                                                   index_label=None, chunksize=None, dtype=None)
+            histdata_extr.processed_data_df.to_sql(
+                self.hist_data_tablename,
+                self.con,
+                flavor="sqlite",
+                schema=None,
+                if_exists="append",
+                index=True,
+                index_label=None,
+                chunksize=None,
+                dtype=None,
+            )
 
             # save to sql -- div table
-            histdata_extr.all_stock_div_hist_df.to_sql(self.divdnt_data_tablename, self.con, flavor='sqlite',
-                                                       schema=None, if_exists='append', index=True,
-                                                       index_label=None, chunksize=None, dtype=None)
+            histdata_extr.all_stock_div_hist_df.to_sql(
+                self.divdnt_data_tablename,
+                self.con,
+                flavor="sqlite",
+                schema=None,
+                if_exists="append",
+                index=True,
+                index_label=None,
+                chunksize=None,
+                dtype=None,
+            )
 
         self.close_db()
 
@@ -115,9 +145,17 @@ class sql_dataStore_Finance(object):
         w.get_all_hist_data()
 
         ## save to one particular funciton, save to sql -- hist table
-        w.datatype_com_data_allstock_df.to_sql(self.hist_data_tablename, self.con, flavor='sqlite',
-                                               schema=None, if_exists='append', index=True,
-                                               index_label=None, chunksize=None, dtype=None)
+        w.datatype_com_data_allstock_df.to_sql(
+            self.hist_data_tablename,
+            self.con,
+            flavor="sqlite",
+            schema=None,
+            if_exists="append",
+            index=True,
+            index_label=None,
+            chunksize=None,
+            dtype=None,
+        )
 
     def retrieve_stocklist_fr_db(self):
         """ Retrieve the stocklist from db
@@ -138,34 +176,46 @@ class sql_dataStore_Finance(object):
                                     Will not be used if select_all is true.
                 select_all (bool): Default to turn on. Will pull all the stock symbol
         """
-        stock_sym_str = ''.join(['"' + n + '",' for n in stock_list])
+        stock_sym_str = "".join(['"' + n + '",' for n in stock_list])
         stock_sym_str = stock_sym_str[:-1]
         # need to get the header
-        command_str = "SELECT * FROM %s where symbol in (%s)" % (self.hist_data_tablename, stock_sym_str)
-        if select_all: command_str = "SELECT * FROM %s " % self.hist_data_tablename
+        command_str = "SELECT * FROM %s where symbol in (%s)" % (
+            self.hist_data_tablename,
+            stock_sym_str,
+        )
+        if select_all:
+            command_str = "SELECT * FROM %s " % self.hist_data_tablename
         self.cur.execute(command_str)
         headers = [n[0] for n in self.cur.description]
 
         rows = self.cur.fetchall()  # return list of tuples
-        self.hist_price_df = pandas.DataFrame(rows,
-                                              columns=headers)  # need to get the header?? how to get full data from SQL
+        self.hist_price_df = pandas.DataFrame(
+            rows, columns=headers
+        )  # need to get the header?? how to get full data from SQL
 
         ## dividend data extract
-        command_str = "SELECT * FROM %s where symbol in (%s)" % (self.divdnt_data_tablename, stock_sym_str)
-        if select_all: command_str = "SELECT * FROM %s " % self.divdnt_data_tablename
+        command_str = "SELECT * FROM %s where symbol in (%s)" % (
+            self.divdnt_data_tablename,
+            stock_sym_str,
+        )
+        if select_all:
+            command_str = "SELECT * FROM %s " % self.divdnt_data_tablename
 
         self.cur.execute(command_str)
         headers = [n[0] for n in self.cur.description]
 
         rows = self.cur.fetchall()  # return list of tuples
-        self.hist_div_df = pandas.DataFrame(rows,
-                                            columns=headers)  # need to get the header?? how to get full data from SQL
+        self.hist_div_df = pandas.DataFrame(
+            rows, columns=headers
+        )  # need to get the header?? how to get full data from SQL
 
         self.close_db()
 
     def add_datekey_to_hist_price_df(self):
         """ Add datekey in the form of yyyymmdd for easy comparison. """
-        self.hist_price_df['Datekey'] = self.hist_price_df['Date'].map(lambda x: int(x.replace('-', '')))
+        self.hist_price_df["Datekey"] = self.hist_price_df["Date"].map(
+            lambda x: int(x.replace("-", ""))
+        )
 
     def extr_hist_price_by_date(self, date_interval):
         """ Limit the hist_price_df by the date interval.
@@ -173,7 +223,7 @@ class sql_dataStore_Finance(object):
             Set to the self.hist_price_df        """
         self.add_datekey_to_hist_price_df()
         target_datekey = self.convert_date_to_datekey(date_interval)
-        self.hist_price_df = self.hist_price_df[self.hist_price_df['Datekey'] >= target_datekey]
+        self.hist_price_df = self.hist_price_df[self.hist_price_df["Datekey"] >= target_datekey]
 
     def convert_date_to_datekey(self, offset_to_current=0):
         """ Function mainly for the hist data where it is required to specify a date range.
@@ -181,13 +231,14 @@ class sql_dataStore_Finance(object):
             Kwargs:  offset_to_current (int): in num of days. default to zero which mean get currnet date
             Returns: (int): yyymmdd format
         """
-        last_eff_date_list = list((datetime.date.today() - datetime.timedelta(offset_to_current)).timetuple()[0:3])
+        last_eff_date_list = list(
+            (datetime.date.today() - datetime.timedelta(offset_to_current)).timetuple()[0:3]
+        )
 
         if len(str(last_eff_date_list[1])) == 1:
-            last_eff_date_list[1] = '0' + str(last_eff_date_list[1])
+            last_eff_date_list[1] = "0" + str(last_eff_date_list[1])
 
         if len(str(last_eff_date_list[2])) == 1:
-            last_eff_date_list[2] = '0' + str(last_eff_date_list[2])
+            last_eff_date_list[2] = "0" + str(last_eff_date_list[2])
 
         return int(str(last_eff_date_list[0]) + last_eff_date_list[1] + str(last_eff_date_list[2]))
-

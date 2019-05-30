@@ -1,11 +1,13 @@
-import tensorflow as tf
-import numpy as np
+from datetime import datetime, timedelta
+
 import matplotlib.pyplot as plt
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
-from datetime import timedelta
+
+import tensorflow as tf
+
 sns.set()
 
 
@@ -181,4 +183,3 @@ class LSTM(BaseModelDl):
     def predict(self,):
         # takes a sampler as the one in datasampler class
         # in this function it should take a sampler 
-

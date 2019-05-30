@@ -4,15 +4,17 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-from matplotlib import animation
 import matplotlib.pyplot as plt
-from IPython.display import HTML
-import seaborn as sns
+import numpy as np
 import pandas as pd
+import seaborn as sns
+from IPython.display import HTML
+from matplotlib import animation
+
+import tensorflow as tf
+
 sns.set()
-df = pd.read_csv('poverty.csv')
+df = pd.read_csv("poverty.csv")
 df.head()
 
 
@@ -45,16 +47,16 @@ sess = tf.InteractiveSession()
 model = Linear(0.001)
 sess.run(tf.global_variables_initializer())
 for i in range(10):
-    cost, _ = sess.run([model.cost, model.optimizer], feed_dict={model.X:X, model.Y:Y})
-    print('epoch %d, MSE: %f'%(i+1, cost))
+    cost, _ = sess.run([model.cost, model.optimizer], feed_dict={model.X: X, model.Y: Y})
+    print("epoch %d, MSE: %f" % (i + 1, cost))
 
 
 # In[5]:
 
 
-y_output = sess.run(model.logits, feed_dict={model.X:X})
-plt.scatter(X[:,0],Y[:,0])
-plt.plot(X,y_output, c='red')
+y_output = sess.run(model.logits, feed_dict={model.X: X})
+plt.scatter(X[:, 0], Y[:, 0])
+plt.plot(X, y_output, c="red")
 plt.show()
 
 
@@ -66,25 +68,25 @@ sess = tf.InteractiveSession()
 model = Linear(0.001)
 sess.run(tf.global_variables_initializer())
 
-fig = plt.figure(figsize=(10,5))
+fig = plt.figure(figsize=(10, 5))
 ax = plt.axes()
-ax.scatter(X[:,0],Y[:,0], c='b')
-cost, y_output = sess.run([model.cost, model.logits], feed_dict={model.X:X, model.Y:Y})
-ax.set_xlabel('epoch: %d, MSE: %f'%(0,cost))
-line, = ax.plot(X,y_output, lw=2, c='r')
+ax.scatter(X[:, 0], Y[:, 0], c="b")
+cost, y_output = sess.run([model.cost, model.logits], feed_dict={model.X: X, model.Y: Y})
+ax.set_xlabel("epoch: %d, MSE: %f" % (0, cost))
+line, = ax.plot(X, y_output, lw=2, c="r")
+
 
 def gradient_mean_square(epoch):
-    cost, y_output, _ = sess.run([model.cost, model.logits, model.optimizer], feed_dict={model.X:X, model.Y:Y})
-    line.set_data(X,y_output)
-    ax.set_xlabel('epoch: %d, MSE: %f'%(epoch,cost))
+    cost, y_output, _ = sess.run(
+        [model.cost, model.logits, model.optimizer], feed_dict={model.X: X, model.Y: Y}
+    )
+    line.set_data(X, y_output)
+    ax.set_xlabel("epoch: %d, MSE: %f" % (epoch, cost))
     return line, ax
 
+
 anim = animation.FuncAnimation(fig, gradient_mean_square, frames=50, interval=200)
-anim.save('animation-linear-regression.gif', writer='imagemagick', fps=10)
+anim.save("animation-linear-regression.gif", writer="imagemagick", fps=10)
 
 
 # In[ ]:
-
-
-
-

@@ -4,16 +4,19 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-from matplotlib import animation
-import matplotlib.pyplot as plt
-from IPython.display import HTML
-import seaborn as sns
-import pandas as pd
 from itertools import combinations_with_replacement
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from IPython.display import HTML
+from matplotlib import animation
+
+import tensorflow as tf
+
 sns.set()
-df = pd.read_csv('TempLinkoping2016.csv')
+df = pd.read_csv("TempLinkoping2016.csv")
 df.head()
 
 
@@ -49,7 +52,9 @@ class Elasticnet:
         l1_regularizer = tf.contrib.layers.l1_regularizer(scale=alpha, scope=None)
         l2_regularizer = tf.contrib.layers.l2_regularizer(scale=alpha, scope=None)
         weights = tf.trainable_variables()
-        regularization_penalty = 0.5* tf.contrib.layers.apply_regularization(l1_regularizer, weights) + 0.5 * tf.contrib.layers.apply_regularization(l2_regularizer, weights)
+        regularization_penalty = 0.5 * tf.contrib.layers.apply_regularization(
+            l1_regularizer, weights
+        ) + 0.5 * tf.contrib.layers.apply_regularization(l2_regularizer, weights)
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits)) + regularization_penalty
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
 
@@ -62,17 +67,17 @@ sess = tf.InteractiveSession()
 model = Elasticnet(3, 0.0005)
 sess.run(tf.global_variables_initializer())
 for i in range(1000):
-    cost, _ = sess.run([model.cost, model.optimizer], feed_dict={model.X:X_new, model.Y:Y})
-    if (i+1) % 100 == 0:
-        print('epoch %d, MSE: %f'%(i+1, cost))
+    cost, _ = sess.run([model.cost, model.optimizer], feed_dict={model.X: X_new, model.Y: Y})
+    if (i + 1) % 100 == 0:
+        print("epoch %d, MSE: %f" % (i + 1, cost))
 
 
 # In[6]:
 
 
-y_output = sess.run(model.logits, feed_dict={model.X:X_new})
-plt.scatter(X[:,0],Y[:,0])
-plt.plot(X,y_output, c='red')
+y_output = sess.run(model.logits, feed_dict={model.X: X_new})
+plt.scatter(X[:, 0], Y[:, 0])
+plt.plot(X, y_output, c="red")
 plt.show()
 
 
@@ -84,25 +89,25 @@ sess = tf.InteractiveSession()
 model = Elasticnet(3, 0.0005)
 sess.run(tf.global_variables_initializer())
 
-fig = plt.figure(figsize=(10,5))
+fig = plt.figure(figsize=(10, 5))
 ax = plt.axes()
-ax.scatter(X[:,0],Y[:,0], c='b')
-cost, y_output = sess.run([model.cost, model.logits], feed_dict={model.X:X_new, model.Y:Y})
-ax.set_xlabel('epoch: %d, MSE: %f'%(0,cost))
-line, = ax.plot(X,y_output, lw=2, c='r')
+ax.scatter(X[:, 0], Y[:, 0], c="b")
+cost, y_output = sess.run([model.cost, model.logits], feed_dict={model.X: X_new, model.Y: Y})
+ax.set_xlabel("epoch: %d, MSE: %f" % (0, cost))
+line, = ax.plot(X, y_output, lw=2, c="r")
+
 
 def gradient_mean_square(epoch):
-    cost, y_output, _ = sess.run([model.cost, model.logits, model.optimizer], feed_dict={model.X:X_new, model.Y:Y})
-    line.set_data(X,y_output)
-    ax.set_xlabel('epoch: %d, MSE: %f'%(epoch,cost))
+    cost, y_output, _ = sess.run(
+        [model.cost, model.logits, model.optimizer], feed_dict={model.X: X_new, model.Y: Y}
+    )
+    line.set_data(X, y_output)
+    ax.set_xlabel("epoch: %d, MSE: %f" % (epoch, cost))
     return line, ax
 
+
 anim = animation.FuncAnimation(fig, gradient_mean_square, frames=100, interval=200)
-anim.save('animation-elasticnet-regression.gif', writer='imagemagick', fps=10)
+anim.save("animation-elasticnet-regression.gif", writer="imagemagick", fps=10)
 
 
 # In[ ]:
-
-
-
-

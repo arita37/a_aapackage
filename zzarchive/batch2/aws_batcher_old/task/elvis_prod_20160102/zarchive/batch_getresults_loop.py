@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+import sys
+
+import numpy as np
+
+import util
+
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
-import util, numpy as np
 execfile( DIRCWD + '/aapackage/allmodule.py')
 print 'Directory Folder', DIRCWD
 #######################################################################################
@@ -126,13 +131,3 @@ Announcing Amazon S3 Reduced Redundancy Storage
 
 
 '''
-
-
-
-
-
-
-
-
-
-

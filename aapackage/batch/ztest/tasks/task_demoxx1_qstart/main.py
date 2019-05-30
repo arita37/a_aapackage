@@ -6,94 +6,92 @@ python main.py  --hyperparam      --subprocess_script sub
 
 """
 
-import os, sys, socket
-import shutil
+import argparse
+import logging
+import os
 import random
+import shutil
+import socket
+import subprocess
+import sys
+import time
 from functools import partial
 
-import subprocess
-import argparse
-import time
-import logging
-
-
-import toml
+import numpy as np
+import pandas as pd
 import psutil
+import toml
+
 import arrow
-import numpy as np, pandas as pd
-
-
 ################### Generic ###############################################################
 from aapackage import util_log
 from aapackage.batch import util_batch
-
-from utils import OUTFOLDER, os_getparent,   os_folder_create
-
+from utils import OUTFOLDER, os_folder_create, os_getparent
 
 ###########################################################################################
 CUR_FOLDER = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_HYPERPARAMS       = os.path.join(CUR_FOLDER, "hyperparams.csv")
+DEFAULT_HYPERPARAMS = os.path.join(CUR_FOLDER, "hyperparams.csv")
 DEFAULT_SUBPROCESS_SCRIPT = os.path.join(CUR_FOLDER, "subprocess_optim.py")
 
 
-
-
 ##### Logs     ############################################################################
-os_folder_create( OUTFOLDER )
+os_folder_create(OUTFOLDER)
 APP_ID = util_log.create_appid(__file__)
-LOG_FILE = os.path.join(OUTFOLDER ,"log_main.log" )
+LOG_FILE = os.path.join(OUTFOLDER, "log_main.log")
+
 
 def log(s="", s1=""):
-       util_log.printlog(s=s, s1=s1, app_id= APP_ID, logfile= LOG_FILE )
+    util_log.printlog(s=s, s1=s1, app_id=APP_ID, logfile=LOG_FILE)
 
 
 ##### Args     ############################################################################
 def load_arguments():
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("-hp", "--hyperparam_file", default=DEFAULT_HYPERPARAMS, type=str,
-                        help="Select the path for a .csv.")
+    parser.add_argument(
+        "-hp",
+        "--hyperparam_file",
+        default=DEFAULT_HYPERPARAMS,
+        type=str,
+        help="Select the path for a .csv.",
+    )
 
-    parser.add_argument("-s", "--subprocess_script", default=DEFAULT_SUBPROCESS_SCRIPT, type=str,
-                        help="Name of the optimizer script.")
+    parser.add_argument(
+        "-s",
+        "--subprocess_script",
+        default=DEFAULT_SUBPROCESS_SCRIPT,
+        type=str,
+        help="Name of the optimizer script.",
+    )
 
-    parser.add_argument("-f", "--task_folder", default=CUR_FOLDER, type=str,   help="W")
-    parser.add_argument("-l", "--log_file", default=LOG_FILE, type=str,   help="W")
-    parser.add_argument("-o", "--out_folder", default=OUTFOLDER , type=str,   help="W")
+    parser.add_argument("-f", "--task_folder", default=CUR_FOLDER, type=str, help="W")
+    parser.add_argument("-l", "--log_file", default=LOG_FILE, type=str, help="W")
+    parser.add_argument("-o", "--out_folder", default=OUTFOLDER, type=str, help="W")
 
     options = parser.parse_args()
     return options
 
 
 ############################################################################################
-def os_folder_rename( task_folder ):
+def os_folder_rename(task_folder):
     # After termination of script
     k = task_folder.rfind("qstart")
     new_name = task_folder[:k] + "qdone"
     os.rename(task_folder, new_name)
 
 
-
 ############################################################################################
-if __name__ == '__main__':
+if __name__ == "__main__":
     log("main.py", "start")
     args = load_arguments()
 
-    util_batch.batch_parallel_subprocess(args.hyperparam_file,
-                                         args.subprocess_script, args.log_file)
+    util_batch.batch_parallel_subprocess(
+        args.hyperparam_file, args.subprocess_script, args.log_file
+    )
 
     os_folder_rename(args.task_folder)
     log("main.py", "finish")
-
-
-
-
-
-
-
-
-
-
 
 
 """

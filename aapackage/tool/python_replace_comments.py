@@ -60,8 +60,3 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
       matches[1].append(os.path.splitext(files)[1])  
       matches[2].append(os.path.join(root, files))   
   return np.array(matches)
-
-
-
-
-

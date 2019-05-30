@@ -4,20 +4,24 @@
 # In[1]:
 
 
-from bs4 import BeautifulSoup
-import re
-import numpy as np
-import tensorflow as tf
-from tqdm import tqdm
 import itertools
+import re
+import time
 
+import numpy as np
+from bs4 import BeautifulSoup
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
 
 def process_string(string):
-    string = re.sub('[^A-Za-z0-9\-\/ ]+', ' ', string).split()
+    string = re.sub("[^A-Za-z0-9\-\/ ]+", " ", string).split()
     return [y.strip() for y in string]
+
 
 def to_title(string):
     if string.isupper():
@@ -29,36 +33,36 @@ def to_title(string):
 
 
 def parse_raw(filename):
-    with open(filename, 'r') as fopen:
+    with open(filename, "r") as fopen:
         entities = fopen.read()
-    soup = BeautifulSoup(entities, 'html.parser')
-    inside_tag = ''
+    soup = BeautifulSoup(entities, "html.parser")
+    inside_tag = ""
     texts, labels = [], []
-    for sentence in soup.prettify().split('\n'):
+    for sentence in soup.prettify().split("\n"):
         if len(inside_tag):
             splitted = process_string(sentence)
             texts += splitted
             labels += [inside_tag] * len(splitted)
-            inside_tag = ''
+            inside_tag = ""
         else:
-            if not sentence.find('</'):
+            if not sentence.find("</"):
                 pass
-            elif not sentence.find('<'):
-                inside_tag = sentence.split('>')[0][1:]
+            elif not sentence.find("<"):
+                inside_tag = sentence.split(">")[0][1:]
             else:
                 splitted = process_string(sentence)
                 texts += splitted
-                labels += ['OTHER'] * len(splitted)
-    assert (len(texts)==len(labels)), "length texts and labels are not same"
-    print('len texts and labels: ', len(texts))
-    return texts,labels
+                labels += ["OTHER"] * len(splitted)
+    assert len(texts) == len(labels), "length texts and labels are not same"
+    print("len texts and labels: ", len(texts))
+    return texts, labels
 
 
 # In[4]:
 
 
-train_texts, train_labels = parse_raw('data_train.txt')
-test_texts, test_labels = parse_raw('data_test.txt')
+train_texts, train_labels = parse_raw("data_train.txt")
+test_texts, test_labels = parse_raw("data_test.txt")
 train_texts += test_texts
 train_labels += test_labels
 
@@ -66,25 +70,24 @@ train_labels += test_labels
 # In[5]:
 
 
-with open('entities-bm-normalize-v3.txt','r') as fopen:
-    entities_bm = fopen.read().split('\n')[:-1]
+with open("entities-bm-normalize-v3.txt", "r") as fopen:
+    entities_bm = fopen.read().split("\n")[:-1]
 entities_bm = [i.split() for i in entities_bm]
-entities_bm = [[i[0],'TIME' if i[0] in 'jam' else i[1]] for i in entities_bm]
+entities_bm = [[i[0], "TIME" if i[0] in "jam" else i[1]] for i in entities_bm]
 
 
 # In[6]:
 
 
-replace_by = {'organizaiton':'organization','orgnization':'organization',
-             'othoer': 'OTHER'}
+replace_by = {"organizaiton": "organization", "orgnization": "organization", "othoer": "OTHER"}
 
-with open('NER-part1.txt','r') as fopen:
-    nexts = fopen.read().split('\n')[:-1]
+with open("NER-part1.txt", "r") as fopen:
+    nexts = fopen.read().split("\n")[:-1]
 nexts = [i.split() for i in nexts]
 for i in nexts:
     if len(i) == 2:
         label = i[1].lower()
-        if 'other' in label:
+        if "other" in label:
             label = label.upper()
         if label in replace_by:
             label = replace_by[label]
@@ -95,36 +98,42 @@ for i in nexts:
 # In[7]:
 
 
-replace_by = {'LOC':'location','PRN':'person','NORP':'organization','ORG':'organization','LAW':'law',
-             'EVENT':'event','FAC':'organization','TIME':'time','O':'OTHER','ART':'person','DOC':'law'}
+replace_by = {
+    "LOC": "location",
+    "PRN": "person",
+    "NORP": "organization",
+    "ORG": "organization",
+    "LAW": "law",
+    "EVENT": "event",
+    "FAC": "organization",
+    "TIME": "time",
+    "O": "OTHER",
+    "ART": "person",
+    "DOC": "law",
+}
 for i in entities_bm:
     try:
         string = process_string(i[0])
         if len(string):
             train_labels.append(replace_by[i[1]])
-            train_texts.append(process_string(i[0])[0])  
+            train_texts.append(process_string(i[0])[0])
     except Exception as e:
         print(e)
-        
-assert (len(train_texts)==len(train_labels)), "length texts and labels are not same"
+
+assert len(train_texts) == len(train_labels), "length texts and labels are not same"
 
 
 # In[8]:
 
 
-np.unique(train_labels,return_counts=True)
+np.unique(train_labels, return_counts=True)
 
 
 # In[9]:
 
 
 def _pad_sequence(
-    sequence,
-    n,
-    pad_left = False,
-    pad_right = False,
-    left_pad_symbol = None,
-    right_pad_symbol = None,
+    sequence, n, pad_left=False, pad_right=False, left_pad_symbol=None, right_pad_symbol=None
 ):
     sequence = iter(sequence)
     if pad_left:
@@ -135,12 +144,7 @@ def _pad_sequence(
 
 
 def ngrams(
-    sequence,
-    n,
-    pad_left = False,
-    pad_right = False,
-    left_pad_symbol = None,
-    right_pad_symbol = None,
+    sequence, n, pad_left=False, pad_right=False, left_pad_symbol=None, right_pad_symbol=None
 ):
     """
     generate ngrams
@@ -156,9 +160,7 @@ def ngrams(
     -------
     ngram: list
     """
-    sequence = _pad_sequence(
-        sequence, n, pad_left, pad_right, left_pad_symbol, right_pad_symbol
-    )
+    sequence = _pad_sequence(sequence, n, pad_left, pad_right, left_pad_symbol, right_pad_symbol)
 
     history = []
     while n > 1:
@@ -177,19 +179,20 @@ def ngrams(
 # In[10]:
 
 
-def get_ngrams(s, grams=(2,3,4)):
-    return [''.join(i) for k in grams for i in list(ngrams(s,k))]
+def get_ngrams(s, grams=(2, 3, 4)):
+    return ["".join(i) for k in grams for i in list(ngrams(s, k))]
 
 
 # In[11]:
 
 
-word2idx = {'PAD': 0,'NUM':1,'UNK':2}
-tag2idx = {'PAD': 0}
-char2idx = {'PAD': 0,'NUM':1,'UNK':2}
+word2idx = {"PAD": 0, "NUM": 1, "UNK": 2}
+tag2idx = {"PAD": 0}
+char2idx = {"PAD": 0, "NUM": 1, "UNK": 2}
 word_idx = 3
 tag_idx = 1
 char_idx = 3
+
 
 def parse_XY(texts, labels):
     global word2idx, tag2idx, char2idx, word_idx, tag_idx, char_idx
@@ -218,7 +221,7 @@ def parse_XY(texts, labels):
 
 
 X, Y = parse_XY(train_texts, train_labels)
-idx2word={idx: tag for tag, idx in word2idx.items()}
+idx2word = {idx: tag for tag, idx in word2idx.items()}
 idx2tag = {i: w for w, i in tag2idx.items()}
 
 
@@ -226,18 +229,22 @@ idx2tag = {i: w for w, i in tag2idx.items()}
 
 
 seq_len = 50
+
+
 def iter_seq(x):
-    return np.array([x[i: i+seq_len] for i in range(0, len(x)-seq_len, 1)])
+    return np.array([x[i : i + seq_len] for i in range(0, len(x) - seq_len, 1)])
+
 
 def to_train_seq(*args):
     return [iter_seq(x) for x in args]
 
+
 def generate_char_seq(batch, maxlen):
-    temp = np.zeros((batch.shape[0],batch.shape[1], maxlen),dtype=np.int32)
+    temp = np.zeros((batch.shape[0], batch.shape[1], maxlen), dtype=np.int32)
     for i in range(batch.shape[0]):
         for k in range(batch.shape[1]):
-            for no, c in enumerate(get_ngrams(idx2word[batch[i,k]])):
-                temp[i,k,no] = char2idx[c]
+            for no, c in enumerate(get_ngrams(idx2word[batch[i, k]])):
+                temp[i, k, no] = char2idx[c]
     return temp
 
 
@@ -258,113 +265,89 @@ Y_seq.shape
 # In[16]:
 
 
-from sklearn.cross_validation import train_test_split
-train_Y, test_Y, train_X, test_X = train_test_split(Y_seq, X_char_seq,test_size=0.2)
+
+train_Y, test_Y, train_X, test_X = train_test_split(Y_seq, X_char_seq, test_size=0.2)
 
 
 # In[17]:
 
 
 class Attention:
-    def __init__(self,hidden_size):
+    def __init__(self, hidden_size):
         self.hidden_size = hidden_size
         self.dense_layer = tf.layers.Dense(hidden_size)
-        self.v = tf.random_normal([hidden_size],mean=0,stddev=1/np.sqrt(hidden_size))
-        
+        self.v = tf.random_normal([hidden_size], mean=0, stddev=1 / np.sqrt(hidden_size))
+
     def score(self, hidden_tensor, encoder_outputs):
-        energy = tf.nn.tanh(self.dense_layer(tf.concat([hidden_tensor,encoder_outputs],2)))
-        energy = tf.transpose(energy,[0,2,1])
+        energy = tf.nn.tanh(self.dense_layer(tf.concat([hidden_tensor, encoder_outputs], 2)))
+        energy = tf.transpose(energy, [0, 2, 1])
         batch_size = tf.shape(encoder_outputs)[0]
-        v = tf.expand_dims(tf.tile(tf.expand_dims(self.v,0),[batch_size,1]),1)
-        energy = tf.matmul(v,energy)
-        return tf.squeeze(energy,1)
-    
+        v = tf.expand_dims(tf.tile(tf.expand_dims(self.v, 0), [batch_size, 1]), 1)
+        energy = tf.matmul(v, energy)
+        return tf.squeeze(energy, 1)
+
     def __call__(self, hidden, encoder_outputs):
         seq_len = tf.shape(encoder_outputs)[1]
         batch_size = tf.shape(encoder_outputs)[0]
-        H = tf.tile(tf.expand_dims(hidden, 1),[1,seq_len,1])
-        attn_energies = self.score(H,encoder_outputs)
-        return tf.expand_dims(tf.nn.softmax(attn_energies),1)
+        H = tf.tile(tf.expand_dims(hidden, 1), [1, seq_len, 1])
+        attn_energies = self.score(H, encoder_outputs)
+        return tf.expand_dims(tf.nn.softmax(attn_energies), 1)
+
 
 class Model:
-    def __init__(
-        self,
-        dict_size,
-        size_layers,
-        learning_rate,
-        maxlen,
-        num_blocks = 3,
-        block_size = 128,
-    ):
-        self.word_ids = tf.placeholder(tf.int32, shape = [None, maxlen, maxlen * 2])
-        self.labels = tf.placeholder(tf.int32, shape = [None, maxlen])
+    def __init__(self, dict_size, size_layers, learning_rate, maxlen, num_blocks=3, block_size=128):
+        self.word_ids = tf.placeholder(tf.int32, shape=[None, maxlen, maxlen * 2])
+        self.labels = tf.placeholder(tf.int32, shape=[None, maxlen])
         embeddings = tf.Variable(tf.random_uniform([dict_size, size_layers], -1, 1))
         embedded = tf.nn.embedding_lookup(embeddings, self.word_ids)
-        embedded = tf.reduce_mean(embedded,axis=2)
+        embedded = tf.reduce_mean(embedded, axis=2)
         self.attention = Attention(size_layers)
         self.maxlen = tf.shape(self.word_ids)[1]
-        self.lengths = tf.count_nonzero(tf.reduce_sum(self.word_ids,axis=2), 1)
+        self.lengths = tf.count_nonzero(tf.reduce_sum(self.word_ids, axis=2), 1)
 
         def residual_block(x, size, rate, block):
-            with tf.variable_scope(
-                'block_%d_%d' % (block, rate), reuse = False
-            ):
-                attn_weights = self.attention(tf.reduce_sum(x,axis=1), x)
+            with tf.variable_scope("block_%d_%d" % (block, rate), reuse=False):
+                attn_weights = self.attention(tf.reduce_sum(x, axis=1), x)
                 conv_filter = tf.layers.conv1d(
                     attn_weights,
                     x.shape[2] // 4,
-                    kernel_size = size,
-                    strides = 1,
-                    padding = 'same',
-                    dilation_rate = rate,
-                    activation = tf.nn.tanh,
+                    kernel_size=size,
+                    strides=1,
+                    padding="same",
+                    dilation_rate=rate,
+                    activation=tf.nn.tanh,
                 )
                 conv_gate = tf.layers.conv1d(
                     x,
                     x.shape[2] // 4,
-                    kernel_size = size,
-                    strides = 1,
-                    padding = 'same',
-                    dilation_rate = rate,
-                    activation = tf.nn.sigmoid,
+                    kernel_size=size,
+                    strides=1,
+                    padding="same",
+                    dilation_rate=rate,
+                    activation=tf.nn.sigmoid,
                 )
                 out = tf.multiply(conv_filter, conv_gate)
                 out = tf.layers.conv1d(
-                    out,
-                    block_size,
-                    kernel_size = 1,
-                    strides = 1,
-                    padding = 'same',
-                    activation = tf.nn.tanh,
+                    out, block_size, kernel_size=1, strides=1, padding="same", activation=tf.nn.tanh
                 )
                 return tf.add(x, out), out
 
-        forward = tf.layers.conv1d(
-            embedded, block_size, kernel_size = 1, strides = 1, padding = 'SAME'
-        )
+        forward = tf.layers.conv1d(embedded, block_size, kernel_size=1, strides=1, padding="SAME")
         zeros = tf.zeros_like(forward)
         for i in range(num_blocks):
             for r in [1, 2, 4, 8, 16]:
-                forward, s = residual_block(
-                    forward, size = 7, rate = r, block = i
-                )
+                forward, s = residual_block(forward, size=7, rate=r, block=i)
                 zeros = tf.add(zeros, s)
-        logits = tf.layers.conv1d(
-            zeros, len(idx2tag), kernel_size = 1, strides = 1, padding = 'SAME'
-        )
+        logits = tf.layers.conv1d(zeros, len(idx2tag), kernel_size=1, strides=1, padding="SAME")
         log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(
             logits, self.labels, self.lengths
         )
         self.cost = tf.reduce_mean(-log_likelihood)
-        self.optimizer = tf.train.AdamOptimizer(
-            learning_rate = learning_rate
-        ).minimize(self.cost)
-        
-        mask = tf.sequence_mask(self.lengths, maxlen = self.maxlen)
-        
-        self.tags_seq, _ = tf.contrib.crf.crf_decode(
-            logits, transition_params, self.lengths
-        )
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+
+        mask = tf.sequence_mask(self.lengths, maxlen=self.maxlen)
+
+        self.tags_seq, _ = tf.contrib.crf.crf_decode(logits, transition_params, self.lengths)
 
         self.prediction = tf.boolean_mask(self.tags_seq, mask)
         mask_label = tf.boolean_mask(self.labels, mask)
@@ -391,61 +374,45 @@ sess.run(tf.global_variables_initializer())
 # In[19]:
 
 
-import time
 
 for e in range(2):
     lasttime = time.time()
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
-    pbar = tqdm(
-        range(0, len(train_X), batch_size), desc = 'train minibatch loop'
-    )
+    pbar = tqdm(range(0, len(train_X), batch_size), desc="train minibatch loop")
     for i in pbar:
         batch_x = train_X[i : min(i + batch_size, train_X.shape[0])]
         batch_y = train_Y[i : min(i + batch_size, train_X.shape[0])]
         acc, cost, _ = sess.run(
             [model.accuracy, model.cost, model.optimizer],
-            feed_dict = {
-                model.word_ids: batch_x,
-                model.labels: batch_y
-            },
+            feed_dict={model.word_ids: batch_x, model.labels: batch_y},
         )
         assert not np.isnan(cost)
         train_loss += cost
         train_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
-    
-    pbar = tqdm(
-        range(0, len(test_X), batch_size), desc = 'test minibatch loop'
-    )
+        pbar.set_postfix(cost=cost, accuracy=acc)
+
+    pbar = tqdm(range(0, len(test_X), batch_size), desc="test minibatch loop")
     for i in pbar:
         batch_x = test_X[i : min(i + batch_size, test_X.shape[0])]
         batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
         acc, cost = sess.run(
-            [model.accuracy, model.cost],
-            feed_dict = {
-                model.word_ids: batch_x,
-                model.labels: batch_y
-            },
+            [model.accuracy, model.cost], feed_dict={model.word_ids: batch_x, model.labels: batch_y}
         )
         assert not np.isnan(cost)
         test_loss += cost
         test_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
-    
+        pbar.set_postfix(cost=cost, accuracy=acc)
+
     train_loss /= len(train_X) / batch_size
     train_acc /= len(train_X) / batch_size
     test_loss /= len(test_X) / batch_size
     test_acc /= len(test_X) / batch_size
 
-    print('time taken:', time.time() - lasttime)
+    print("time taken:", time.time() - lasttime)
     print(
-        'epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n'
+        "epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n"
         % (e, train_loss, train_acc, test_loss, test_acc)
     )
 
 
 # In[ ]:
-
-
-
-

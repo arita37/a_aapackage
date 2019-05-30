@@ -1,97 +1,107 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import ast
+import builtins
+import glob
+import inspect
+import operator
+import os
+import platform
+import re
+import sys
+from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
-import builtins, operator, inspect, future
-####################################################################################################
 
-import regex, past, ast, re,   os, sys, glob, platform, arrow
-from collections import OrderedDict
+import future
+import past
+
+import arrow
+import regex
 from attrdict import AttrDict as dict2
 
+####################################################################################################
+
+
 
 ####################################################################################################
-#__path__= '/'
-#__version__= "1.0.0"
-#__file__= "configmy.py"
-__all__ = ['get_environ_details', 'get_config_from_environ', 'get', 'set']
-CONFIGMY_ROOT_FILE= "CONFIGMY_ROOT_FILE"
+# __path__= '/'
+# __version__= "1.0.0"
+# __file__= "configmy.py"
+__all__ = ["get_environ_details", "get_config_from_environ", "get", "set"]
+CONFIGMY_ROOT_FILE = "CONFIGMY_ROOT_FILE"
 
 try:
-   import configmy
-   PACKAGE_PATH= configmy.__path__[0] + "/"
+    import configmy
+
+    PACKAGE_PATH = configmy.__path__[0] + "/"
 except:
-   PACKAGE_PATH= ""
+    PACKAGE_PATH = ""
 
 
 ####################################################################################################
-def zdoc() :
- source= inspect.getsource(ztest)
- print(source)
-
-
-
+def zdoc():
+    source = inspect.getsource(ztest)
+    print(source)
 
 
 def os_file_replacestring1(findStr, repStr, filePath):
     "replaces all findStr by repStr in file filePath"
     import fileinput
-    file1= fileinput.FileInput(filePath, inplace=True, backup='.bak')
-    for line in file1:
-       line= line.replace(findStr,  repStr)
-       sys.stdout.write(line)
-    file1.close()
-    print(("OK: "+format(filePath)))
 
+    file1 = fileinput.FileInput(filePath, inplace=True, backup=".bak")
+    for line in file1:
+        line = line.replace(findStr, repStr)
+        sys.stdout.write(line)
+    file1.close()
+    print(("OK: " + format(filePath)))
 
 
 def os_popen(cmd):
-      result = subprocess.Popen(cmd, shell=True,  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      output,error = result.communicate()
-      return output
+    result = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = result.communicate()
+    return output
 
 
-def os_grep(search, folder='/home/ubuntu/', exclude="" ):
-    '''
+def os_grep(search, folder="/home/ubuntu/", exclude=""):
+    """
       LC_ALL=C fgrep -Irsl --exclude-dir=\*ubuntu\*  --exclude=\*.{py}   'DIRCWD=' /
-    '''
-    cmd= "fgrep  -Irsl '" +search+"' "+ folder
-    a= os.popen( cmd ).read()
+    """
+    cmd = "fgrep  -Irsl '" + search + "' " + folder
+    a = os.popen(cmd).read()
     print(a)
     # grep -rs  "export CONDA_ROOT" /home/ubuntu/
 
 
-
-
 ####################################################################################################
 def get_environ_details(isprint=0):
- '''
+    """
   Calculate environnment details
   platform.system() #returns the base system, in your case Linux
   platform.release() #returns release version
   Dynamic release and data
- '''
- CFG   = {'os': sys.platform[:3],
-          'username': os.path.expanduser('~').split("\\")[-1].split("/")[-1],
-          "pythonversion":      str(sys.version_info.major),
-          "pythonversion_full": str(sys.version_info),
-          'os_release' :        str(platform.release()),
-          'processor' :         str(platform.processor())
-          # print subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT)
+ """
+    CFG = {
+        "os": sys.platform[:3],
+        "username": os.path.expanduser("~").split("\\")[-1].split("/")[-1],
+        "pythonversion": str(sys.version_info.major),
+        "pythonversion_full": str(sys.version_info),
+        "os_release": str(platform.release()),
+        "processor": str(platform.processor())
+        # print subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT)
+    }
 
-          }
-
- if isprint :  print(CFG); return CFG
- else :
-   # CFG= dict2(CFG);        
-   return CFG
-
+    if isprint:
+        print(CFG)
+        return CFG
+    else:
+        # CFG= dict2(CFG);
+        return CFG
 
 
 def get_config_from_environ(CFG, dd_config_all, method0=["os", "username"]):
-    '''
+    """
     Create unique id from method, using environnment details
     :param CFG: 
     :param dd_config_all: 
@@ -104,101 +114,104 @@ def get_config_from_environ(CFG, dd_config_all, method0=["os", "username"]):
        1) argument method0
        2) CONFIGMY_ROOT_FILE["configmy"]["method0"]
        3) Default method os_username    
-    '''
+    """
 
-    #Check configmy_root_file for method0
-    method_default= "os_username"
-    if "_".join(method0) == method_default :
-       try :     method0= dd_config_all["configmy"]["method0"]
-       except :  pass
+    # Check configmy_root_file for method0
+    method_default = "os_username"
+    if "_".join(method0) == method_default:
+        try:
+            method0 = dd_config_all["configmy"]["method0"]
+        except:
+            pass
 
+    config_unique_id = ""  #  os_env_id
+    for x in method0:
+        try:
+            key = str(CFG[x])  # add value of config
+        except:
+            key = x  # add prefix
 
-    config_unique_id= ""   #  os_env_id
-    for x in method0 :
-       try :     key= str(CFG[x])  # add value of config
-       except :  key= x            # add prefix
+        if config_unique_id == "":
+            config_unique_id = key
+        else:
+            config_unique_id = config_unique_id + "+" + key
 
-       if config_unique_id == "": config_unique_id= key
-       else :                     config_unique_id=  config_unique_id + "+" + key
-
-    dd_config= dd_config_all[config_unique_id]
+    dd_config = dd_config_all[config_unique_id]
     return dd_config
 
 
-
-def get(config_file="_ROOT", method0=["os", "username"], output=["_CFG", "DIRCWD",]):
-    ''' Get the config dictionary.
+def get(config_file="_ROOT", method0=["os", "username"], output=["_CFG", "DIRCWD"]):
+    """ Get the config dictionary.
     method0:       os, username, pythonversion  
     config_file:  _ROOT: os.environ["CONFIGMY_ROOT_FILE"]  /   CONFIGMY_ROOT_FILE.py
     outputs:      _ALL: full file, _CFG : Config File,  DIRCWD root directory 
-    '''
-    try :
-        if config_file == "_ROOT" :  config_file= os.environ[CONFIGMY_ROOT_FILE]
-    except Exception as e :
-        print(e);  print("Cannot Find os.environ['CONFIGMY_ROOT_FILE'] ")
+    """
+    try:
+        if config_file == "_ROOT":
+            config_file = os.environ[CONFIGMY_ROOT_FILE]
+    except Exception as e:
+        print(e)
+        print("Cannot Find os.environ['CONFIGMY_ROOT_FILE'] ")
         return None
 
-
-    try :
-      with   open(config_file) as f1 :
-        dd_config_all = ast.literal_eval(f1.read())
+    try:
+        with open(config_file) as f1:
+            dd_config_all = ast.literal_eval(f1.read())
     except Exception as e:
-      print(e) ;   print("Incorrect config file Dictionnary format")
-      return None
+        print(e)
+        print("Incorrect config file Dictionnary format")
+        return None
 
-
-    CFG=       get_environ_details()
-    dd_config= get_config_from_environ(CFG, dd_config_all, method0=method0)
-    dd_config.update(CFG)    #Add system parameters os, system
-    dd_config= dict2(dd_config)
-
+    CFG = get_environ_details()
+    dd_config = get_config_from_environ(CFG, dd_config_all, method0=method0)
+    dd_config.update(CFG)  # Add system parameters os, system
+    dd_config = dict2(dd_config)
 
     dd_config_all.update(CFG)
-    dd_config_all= dict2(dd_config_all)
-
+    dd_config_all = dict2(dd_config_all)
 
     #################################################################################
-    output_tuple= ()
-    for x in output :
-      if x[0] != "_" :  output_tuple= (output_tuple + (dd_config[x],) )   #Ask directly items argument
-      if x == "_CFG" :  output_tuple= (output_tuple + (dd_config,))
-      if x == "_ALL" :  output_tuple= (output_tuple + (dd_config_all,))
-
+    output_tuple = ()
+    for x in output:
+        if x[0] != "_":
+            output_tuple = output_tuple + (dd_config[x],)  # Ask directly items argument
+        if x == "_CFG":
+            output_tuple = output_tuple + (dd_config,)
+        if x == "_ALL":
+            output_tuple = output_tuple + (dd_config_all,)
 
     return output_tuple
 
 
-
-
-def set(configmy_root_file="") :
-    '''
+def set(configmy_root_file=""):
+    """
     Do Command Line to set configmy root file in   os.environ['CONFIGMY_ROOT_FILE'] 
-    '''
+    """
     print("Setuping PERMANENTLY   'CONFIGMY_ROOT_FILE' in Env Var ")
-    CFG=      get_environ_details(isprint=0)
+    CFG = get_environ_details(isprint=0)
     env_var = CONFIGMY_ROOT_FILE
 
-    os.environ[env_var] = configmy_root_file # visible in this process + all children
+    os.environ[env_var] = configmy_root_file  # visible in this process + all children
 
-    if CFG["os"] == "win" :
-      os.system("SETX {0} {1} /M".format(env_var, configmy_root_file))
-      os.system("SETX {0} {1} ".format(env_var, configmy_root_file))
-      print("You need to reboot Windows to get the Env Var visible, permanently")
+    if CFG["os"] == "win":
+        os.system("SETX {0} {1} /M".format(env_var, configmy_root_file))
+        os.system("SETX {0} {1} ".format(env_var, configmy_root_file))
+        print("You need to reboot Windows to get the Env Var visible, permanently")
 
+    if CFG["os"] == "lin":
+        with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
+            print(" ./.bashrc")
+            outfile.write("export  " + env_var + "=" + configmy_root_file)
+        os.system("source ~/.bashrc")  # Reload the bash
 
-    if CFG["os"] == "lin" :
-      with open(os.path.expanduser("~/.bashrc"), "a") as outfile:
-         print(" ./.bashrc")
-         outfile.write("export  "+env_var + "="+configmy_root_file)
-      os.system("source ~/.bashrc")  #Reload the bash
+        with open("sudo /etc/environment", "a") as outfile:
+            print(" /etc/environment")
+            outfile.write(env_var + "=" + configmy_root_file)
 
-      with open("sudo /etc/environment", "a") as outfile:
-         print(" /etc/environment")
-         outfile.write(env_var + "="+configmy_root_file)
+        os.system("source /etc/environnment")  # Reload the bash
 
-      os.system("source /etc/environnment")  #Reload the bash
-
-      print("""
+        print(
+            """
       Please setup manually here by sudo user
        sudo nano /etc/environment
        /etc/environment - 
@@ -224,238 +237,270 @@ def set(configmy_root_file="") :
        source /etc/profile  
        export CONFIGMY_ROOT_FILE=/home/ubuntu/myconfig.file
 
-      """)
+      """
+        )
 
-    if CFG["os"] == "mac" :
-       pass
-
-
-
-
+    if CFG["os"] == "mac":
+        pass
 
 
 #####################################################################################################
-def conda_env_list() :
- import os
- a= os.popen('conda env list').read()
- ll= [ x.split(" ")[0]   for x in  a.split("\n")  if  x.split(" ")[0] not in ["#", ""]  ]
- return ll
+def conda_env_list():
+    import os
+
+    a = os.popen("conda env list").read()
+    ll = [x.split(" ")[0] for x in a.split("\n") if x.split(" ")[0] not in ["#", ""]]
+    return ll
 
 
-def conda_install(package_list=['configmy==0.13.5'], condaenv_list=[], install_tool="pip/conda") :
-    '''
+def conda_install(package_list=["configmy==0.13.5"], condaenv_list=[], install_tool="pip/conda"):
+    """
     #  /anaconda/envs/venv_name/bin/pip install
     Cannot install on root, please install manually, No-deps, no update
-    '''
+    """
     import os, sys
-    if   os.__file__.find("envs") > -1 :  DIRANA= os.__file__.split("envs")[0]        # Anaconda Directory
-    elif os.__file__.find("lib") > -1 :   DIRANA= os.__file__.split("lib")[0]   +"/"  # Anaconda from root
-    elif os.__file__.find("Lib") > -1 :   DIRANA= os.__file__.split("Lib")[0]   +"/"  # Anaconda from root
 
-    os_name= sys.platform[:3]
+    if os.__file__.find("envs") > -1:
+        DIRANA = os.__file__.split("envs")[0]  # Anaconda Directory
+    elif os.__file__.find("lib") > -1:
+        DIRANA = os.__file__.split("lib")[0] + "/"  # Anaconda from root
+    elif os.__file__.find("Lib") > -1:
+        DIRANA = os.__file__.split("Lib")[0] + "/"  # Anaconda from root
 
-    if install_tool == "pip" :
-      for package0 in package_list :
-       for condaenv in condaenv_list :
-         if condaenv != 'root' :
+    os_name = sys.platform[:3]
 
-          if os_name == 'lin' :   DIR1=  DIRANA +'/envs/'+ condaenv +'/bin/'
-          elif os_name== "win" :  DIR1=  DIRANA +'/envs/'+ condaenv +'/Scripts/'
+    if install_tool == "pip":
+        for package0 in package_list:
+            for condaenv in condaenv_list:
+                if condaenv != "root":
 
-          cmd= DIR1 +'pip install  --upgrade --no-deps --force-reinstall '+package0
-          print("condaenv: " + condaenv + " , "+package0)
-          print("     " + cmd)
-          sys.stdout.flush()
-          #condaenv= 'sandbox'
-          try :
-            a= os.popen( cmd ).read()
-            print("     "+a)
-          except Exception as e:print(e)
-          sys.stdout.flush()
+                    if os_name == "lin":
+                        DIR1 = DIRANA + "/envs/" + condaenv + "/bin/"
+                    elif os_name == "win":
+                        DIR1 = DIRANA + "/envs/" + condaenv + "/Scripts/"
+
+                    cmd = DIR1 + "pip install  --upgrade --no-deps --force-reinstall " + package0
+                    print("condaenv: " + condaenv + " , " + package0)
+                    print("     " + cmd)
+                    sys.stdout.flush()
+                    # condaenv= 'sandbox'
+                    try:
+                        a = os.popen(cmd).read()
+                        print("     " + a)
+                    except Exception as e:
+                        print(e)
+                    sys.stdout.flush()
+
+    if install_tool == "conda":
+        for package0 in package_list:
+            for condaenv in condaenv_list:
+                if condaenv != "root":
+
+                    if os_name == "lin":
+                        DIR2 = DIRANA + "/bin/"
+                    elif os_name == "win":
+                        DIR2 = DIRANA + "/Scripts/"
+
+                    cmd = (
+                        DIR2
+                        + "conda install --no-deps --no-update-deps --verbose  --yes -n "
+                        + condaenv
+                        + " "
+                        + package0
+                    )
+
+                    print("condaenv: " + condaenv + " , " + package0)
+                    print("     " + cmd)
+                    sys.stdout.flush()
+                    try:
+                        a = os.popen(cmd).read()
+                        print("     " + a)
+                    except Exception as e:
+                        print(e)
+                    sys.stdout.flush()
 
 
-    if install_tool == "conda" :
-      for package0 in package_list :
-       for condaenv in condaenv_list :
-         if condaenv != 'root' :
-
-          if   os_name == 'lin' :  DIR2=  DIRANA +'/bin/'
-          elif os_name==  "win" :  DIR2=  DIRANA +'/Scripts/'
-
-          cmd= DIR2+'conda install --no-deps --no-update-deps --verbose  --yes -n '+condaenv + ' '  +package0
-
-          print("condaenv: " + condaenv + " , "+package0)
-          print("     " + cmd);   sys.stdout.flush()
-          try :
-            a= os.popen( cmd ).read()
-            print("     "+a)
-          except Exception as e:print(e)
-          sys.stdout.flush()
-
-
-
-
-def conda_uninstall(package_list=['configmy==0.13.5'], condaenv_list=[], install_tool="pip/conda") :
-    '''
+def conda_uninstall(package_list=["configmy==0.13.5"], condaenv_list=[], install_tool="pip/conda"):
+    """
     #  /anaconda/envs/venv_name/bin/pip install
     Cannot install on root, please install manually, No-deps, no update
-    '''
+    """
     import os, sys
-    if   os.__file__.find("envs") > -1 :  DIRANA= os.__file__.split("envs")[0]        # Anaconda Directory
-    elif os.__file__.find("lib") > -1 :   DIRANA= os.__file__.split("lib")[0]   +"/"  # Anaconda from root
-    elif os.__file__.find("Lib") > -1 :   DIRANA= os.__file__.split("Lib")[0]   +"/"  # Anaconda from root
 
-    os_name= sys.platform[:3]
+    if os.__file__.find("envs") > -1:
+        DIRANA = os.__file__.split("envs")[0]  # Anaconda Directory
+    elif os.__file__.find("lib") > -1:
+        DIRANA = os.__file__.split("lib")[0] + "/"  # Anaconda from root
+    elif os.__file__.find("Lib") > -1:
+        DIRANA = os.__file__.split("Lib")[0] + "/"  # Anaconda from root
 
-    if install_tool == "pip" :
-      for package0 in package_list :
-       for condaenv in condaenv_list :
-         if condaenv != 'root' :
+    os_name = sys.platform[:3]
 
-          if os_name == 'lin' :   DIR1=  DIRANA +'/envs/'+ condaenv +'/bin/'
-          elif os_name== "win" :  DIR1=  DIRANA +'/envs/'+ condaenv +'/Scripts/'
+    if install_tool == "pip":
+        for package0 in package_list:
+            for condaenv in condaenv_list:
+                if condaenv != "root":
 
-          cmd= DIR1 +'pip uninstall  --yes    '+package0
-          print("condaenv: " + condaenv + " , "+package0)
-          print("     " + cmd)
-          sys.stdout.flush()
-          #condaenv= 'sandbox'
-          try :
-            a= os.popen( cmd ).read()
-            print("     "+a)
-          except Exception as e:print(e)
-          sys.stdout.flush()
+                    if os_name == "lin":
+                        DIR1 = DIRANA + "/envs/" + condaenv + "/bin/"
+                    elif os_name == "win":
+                        DIR1 = DIRANA + "/envs/" + condaenv + "/Scripts/"
+
+                    cmd = DIR1 + "pip uninstall  --yes    " + package0
+                    print("condaenv: " + condaenv + " , " + package0)
+                    print("     " + cmd)
+                    sys.stdout.flush()
+                    # condaenv= 'sandbox'
+                    try:
+                        a = os.popen(cmd).read()
+                        print("     " + a)
+                    except Exception as e:
+                        print(e)
+                    sys.stdout.flush()
+
+    if install_tool == "conda":
+        for package0 in package_list:
+            for condaenv in condaenv_list:
+                if condaenv != "root":
+
+                    if os_name == "lin":
+                        DIR2 = DIRANA + "/bin/"
+                    elif os_name == "win":
+                        DIR2 = DIRANA + "/Scripts/"
+
+                    cmd = (
+                        DIR2
+                        + "conda uninstall --force --verbose  --yes -n "
+                        + condaenv
+                        + " "
+                        + package0
+                    )
+
+                    print("condaenv: " + condaenv + " , " + package0)
+                    print("     " + cmd)
+                    sys.stdout.flush()
+                    try:
+                        a = os.popen(cmd).read()
+                        print("     " + a)
+                    except Exception as e:
+                        print(e)
+                    sys.stdout.flush()
 
 
-    if install_tool == "conda" :
-      for package0 in package_list :
-       for condaenv in condaenv_list :
-         if condaenv != 'root' :
+def conda_path_get():
+    if os.__file__.find("lib") > -1:
+        DIRANA = os.__file__.split("lib")[0] + "/"  # Anaconda from linux
+    elif os.__file__.find("Lib") > -1:
+        DIRANA = os.__file__.split("Lib")[0] + "/"  # Anaconda from root
 
-          if   os_name == 'lin' :  DIR2=  DIRANA +'/bin/'
-          elif os_name==  "win" :  DIR2=  DIRANA +'/Scripts/'
-
-          cmd= DIR2+'conda uninstall --force --verbose  --yes -n '+condaenv + ' '  +package0
-
-          print("condaenv: " + condaenv + " , "+package0)
-          print("     " + cmd);   sys.stdout.flush()
-          try :
-            a= os.popen( cmd ).read()
-            print("     "+a)
-          except Exception as e:print(e)
-          sys.stdout.flush()
+    os_name = sys.platform[:3]
+    if os_name == "lin":
+        DIR2 = DIRANA + "/bin/"
+    elif os_name == "win":
+        DIR2 = DIRANA + "/Scripts/"
+    return DIR2
 
 
-
-
-def conda_path_get() :
-   if   os.__file__.find("lib") > -1 :   DIRANA= os.__file__.split("lib")[0]   +"/"  # Anaconda from linux
-   elif os.__file__.find("Lib") > -1 :  DIRANA= os.__file__.split("Lib")[0]   +"/"  # Anaconda from root
-
-   os_name= sys.platform[:3]
-   if   os_name == 'lin' :  DIR2=  DIRANA +'/bin/'
-   elif os_name==  "win" :  DIR2=  DIRANA +'/Scripts/'
-   return DIR2
-
-
-
-def conda_env_export(condaenv_list=[], folder_export="/") :
-    '''
+def conda_env_export(condaenv_list=[], folder_export="/"):
+    """
     #  /anaconda/envs/venv_name/bin/pip install
     Export Config
-    '''
-    os_name= sys.platform[:3]
-    prefix= os_name
-    prefix= prefix+ "-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1]
-    prefix= prefix+ "-"+      str(platform.release().replace(".", "-"))
-    date0= arrow.now().format('YYYYMMDD')
+    """
+    os_name = sys.platform[:3]
+    prefix = os_name
+    prefix = prefix + "-" + os.path.expanduser("~").split("\\")[-1].split("/")[-1]
+    prefix = prefix + "-" + str(platform.release().replace(".", "-"))
+    date0 = arrow.now().format("YYYYMMDD")
 
-    CONDA_PATH= conda_path_get()
+    CONDA_PATH = conda_path_get()
 
-    for condaenv in condaenv_list :
-          file0 = folder_export +"/condaenv_" + prefix + "_" + condaenv + "_" + date0 +".yml"
-          cmd= CONDA_PATH +'/conda env export --json -n '+condaenv + '  -f '  +file0
+    for condaenv in condaenv_list:
+        file0 = folder_export + "/condaenv_" + prefix + "_" + condaenv + "_" + date0 + ".yml"
+        cmd = CONDA_PATH + "/conda env export --json -n " + condaenv + "  -f " + file0
 
-          print("condaenv: " + condaenv )
-          print("     " + cmd);   sys.stdout.flush()
-          a= os.popen( cmd ).read()
-          print("     "+a);      sys.stdout.flush()
-
-
-
-
-def conda_env_readyaml(condaexport_file=".yaml") :
-   import pandas as pd
-   ##### Read Files
-   # file1= r'D:\_devs\Python01\project27\__config\condaenv\condaenv_win-asus1-7_root_20170929.yml'
-   with open(condaexport_file, mode='r') as f1 :
-     ff= f1.read()
-     ff2= ff.split("\n")
-
-   ff3=[ x.replace("-","").strip() for x in ff2  ]
-   df= pd.DataFrame(ff3, columns=["fullname"])
-   df["name"]= df["fullname"].apply(lambda x: x.split("=")[0].strip())
-
-   def version(x):
-     try :    return x.split("=")[1]
-     except : return ''
-   df["version"]= df["fullname"].apply(lambda x: version(x ) )
-
-   def pyversion(x):
-     try :    return x.split("=")[-1]
-     except : return ''
-   df["pyversion"]= df["fullname"].apply(lambda x: pyversion(x ) )
+        print("condaenv: " + condaenv)
+        print("     " + cmd)
+        sys.stdout.flush()
+        a = os.popen(cmd).read()
+        print("     " + a)
+        sys.stdout.flush()
 
 
-   def condapip(x):
-     if x["fullname"] != x["name"] :
-       if x["version"] == "" :  return 'pip'
-       else :                   return "conda"
-     else : return ""
+def conda_env_readyaml(condaexport_file=".yaml"):
+    import pandas as pd
 
-   df["condapip"]= df.apply(lambda x:  condapip(x ), axis=1 )
-   return df
+    ##### Read Files
+    # file1= r'D:\_devs\Python01\project27\__config\condaenv\condaenv_win-asus1-7_root_20170929.yml'
+    with open(condaexport_file, mode="r") as f1:
+        ff = f1.read()
+        ff2 = ff.split("\n")
+
+    ff3 = [x.replace("-", "").strip() for x in ff2]
+    df = pd.DataFrame(ff3, columns=["fullname"])
+    df["name"] = df["fullname"].apply(lambda x: x.split("=")[0].strip())
+
+    def version(x):
+        try:
+            return x.split("=")[1]
+        except:
+            return ""
+
+    df["version"] = df["fullname"].apply(lambda x: version(x))
+
+    def pyversion(x):
+        try:
+            return x.split("=")[-1]
+        except:
+            return ""
+
+    df["pyversion"] = df["fullname"].apply(lambda x: pyversion(x))
+
+    def condapip(x):
+        if x["fullname"] != x["name"]:
+            if x["version"] == "":
+                return "pip"
+            else:
+                return "conda"
+        else:
+            return ""
+
+    df["condapip"] = df.apply(lambda x: condapip(x), axis=1)
+    return df
 
 
+def install_on_allcondaenv(package="configmy"):
+    condaenv_all = conda_env_list()
+    conda_install(package_list=[package], condaenv_list=condaenv_all, install_tool="pip")
 
-
-
-
-
-
-
-def install_on_allcondaenv(package='configmy'):
-   condaenv_all= conda_env_list()
-   conda_install(package_list= [package] , condaenv_list=condaenv_all, install_tool="pip")
-
-   '''
+    """
    pip install  --upgrade --no-deps --force-reinstall configmy
    
-   '''
-
-
-
-
-
+   """
 
 
 ###############################################################################################
-global IIX; IIX=0
-def pprint(a): global IIX; IIX+= 1; print("\n--" + str(IIX) + ": " + str(a), flush=True)
+global IIX
+IIX = 0
 
 
-def  ztest():
-   # print( configmy.get(PACKAGE_PATH+"ztest/test_config.py", output= ["_CFG", "DIRCWD",]) )
+def pprint(a):
+    global IIX
+    IIX += 1
+    print("\n--" + str(IIX) + ": " + str(a), flush=True)
 
-   # configmy.set(path+"/ztest/test_config.py")
-   CFG, DIRCWD=  configmy.get(method0=["os", "username"], output=["_CFG", "DIRCWD"] )
-   print("Test print", CFG, DIRCWD )
-   # print(configmy.get())
 
-   # try:    print(os.environ[CONFIGMY_ROOT_FILE])
-   # except: print("Empty CONFIGMY_ROOT_FILE")
+def ztest():
+    # print( configmy.get(PACKAGE_PATH+"ztest/test_config.py", output= ["_CFG", "DIRCWD",]) )
 
-   '''
+    # configmy.set(path+"/ztest/test_config.py")
+    CFG, DIRCWD = configmy.get(method0=["os", "username"], output=["_CFG", "DIRCWD"])
+    print("Test print", CFG, DIRCWD)
+    # print(configmy.get())
+
+    # try:    print(os.environ[CONFIGMY_ROOT_FILE])
+    # except: print("Empty CONFIGMY_ROOT_FILE")
+
+    """
    print(
 #Test
 from configmy import configmy
@@ -480,54 +525,32 @@ python configmy.py --action test
    with open(PACKAGE_PATH+"ztest/test_config.py", "r") as f1 :
       ff1= f1.read()
    print(ff1)
-   '''
+   """
 
 
-if __name__ == "__main__"  :
-  import argparse
-  ppa = argparse.ArgumentParser()
-  ppa.add_argument('--do',  type=str, default= ''  ,  help=" unit_test")
-  ppa.add_argument('--run', type=str, default= ''  ,  help=" unit_test")
-  arg = ppa.parse_args()
+if __name__ == "__main__":
+    import argparse
+
+    ppa = argparse.ArgumentParser()
+    ppa.add_argument("--do", type=str, default="", help=" unit_test")
+    ppa.add_argument("--run", type=str, default="", help=" unit_test")
+    arg = ppa.parse_args()
 
 
-if __name__ == "__main__" and  arg.run != ''   :
+if __name__ == "__main__" and arg.run != "":
     print("Running Task")
-    globals()[arg.run]()   #Execute command
+    globals()[arg.run]()  # Execute command
 
 
-if __name__ == "__main__" and  arg.do == 'test' :
-    pprint('### Unit Tests')
+if __name__ == "__main__" and arg.do == "test":
+    pprint("### Unit Tests")
     import configmy
+
     configmy.ztest()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##################################################################################################################
-'''
+"""
 
 Open terminal window and change directory to /project/
   python setup.py sdist bdist_wheel --universal
@@ -545,10 +568,10 @@ Open terminal window and change directory to /project/
 
 
 
-'''
+"""
 
 
-'''
+"""
 import os, sys
 CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
 DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }
@@ -582,12 +605,10 @@ ast.literal_eval(node_or_string)
 TypeError: 'NoneType' object is not subscriptable
 
 
-'''
+"""
 
 
-
-
-'''
+"""
 
 
 
@@ -643,27 +664,4 @@ git push origin --tags
 
 
 
-'''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+"""

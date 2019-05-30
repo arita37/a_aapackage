@@ -1,27 +1,30 @@
 # -*- coding: utf-8 -*-
 #---------AWS utilities--------------------------------------------------------
-from __future__ import division
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
+from __future__ import division, print_function
 
+import csv
 ###############################################################################
 import json
-from time import sleep
-import csv
-import sys
 import os
 import re
+import sys
+from time import sleep
 
-import paramiko
 import boto
 from boto import ec2
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
+from future import standard_library
 
+import paramiko
 # from attrdict import AttrDict as dict2
 # from pprint import pprint
 # from aapackage.globals import AWS
-from aapackage import util   # want to remove after refactor 
+from aapackage import util  # want to remove after refactor
+
+standard_library.install_aliases()
+
+
+
 ###############################################################################
 
 
@@ -2470,5 +2473,3 @@ if __name__ == '__main__':
     if args.do == "put_file":
         aws_ec2_putfile(fromfolder=args.fromfolder,
                         tofolder=args.tofolder, host=args.host)
-                        
-                        

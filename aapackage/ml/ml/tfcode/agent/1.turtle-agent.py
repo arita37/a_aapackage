@@ -4,17 +4,18 @@
 # In[1]:
 
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
+
 sns.set()
 
 
 # In[2]:
 
 
-df = pd.read_csv('../dataset/GOOG-year.csv')
+df = pd.read_csv("../dataset/GOOG-year.csv")
 df.head()
 
 
@@ -23,25 +24,19 @@ df.head()
 
 count = int(np.ceil(len(df) * 0.1))
 signals = pd.DataFrame(index=df.index)
-signals['signal'] = 0.0
-signals['trend'] = df['Close']
-signals['RollingMax'] = (signals.trend.shift(1).rolling(count).max())
-signals['RollingMin'] = (signals.trend.shift(1).rolling(count).min())
-signals.loc[signals['RollingMax'] < signals.trend, 'signal'] = -1
-signals.loc[signals['RollingMin'] > signals.trend, 'signal'] = 1
+signals["signal"] = 0.0
+signals["trend"] = df["Close"]
+signals["RollingMax"] = signals.trend.shift(1).rolling(count).max()
+signals["RollingMin"] = signals.trend.shift(1).rolling(count).min()
+signals.loc[signals["RollingMax"] < signals.trend, "signal"] = -1
+signals.loc[signals["RollingMin"] > signals.trend, "signal"] = 1
 signals
 
 
 # In[4]:
 
 
-def buy_stock(
-    real_movement,
-    signal,
-    initial_money = 10000,
-    max_buy = 20,
-    max_sell = 20,
-):
+def buy_stock(real_movement, signal, initial_money=10000, max_buy=20, max_sell=20):
     """
     real_movement = actual movement in the real world
     delay = how much interval you want to delay to change our decision from buy to sell, vice versa
@@ -59,7 +54,7 @@ def buy_stock(
         shares = initial_money // real_movement[i]
         if shares < 1:
             print(
-                'day %d: total balances %f, not enough money to buy a unit price %f'
+                "day %d: total balances %f, not enough money to buy a unit price %f"
                 % (i, initial_money, real_movement[i])
             )
         else:
@@ -70,7 +65,7 @@ def buy_stock(
             initial_money -= buy_units * real_movement[i]
             current_inventory += buy_units
             print(
-                'day %d: buy %d units at price %f, total balance %f'
+                "day %d: buy %d units at price %f, total balance %f"
                 % (i, buy_units, buy_units * real_movement[i], initial_money)
             )
             states_buy.append(0)
@@ -79,13 +74,11 @@ def buy_stock(
     for i in range(real_movement.shape[0] - int(0.025 * len(df))):
         state = signal[i]
         if state == 1:
-            initial_money, current_inventory = buy(
-                i, initial_money, current_inventory
-            )
+            initial_money, current_inventory = buy(i, initial_money, current_inventory)
             states_buy.append(i)
         elif state == -1:
             if current_inventory == 0:
-                    print('day %d: cannot sell anything, inventory 0' % (i))
+                print("day %d: cannot sell anything, inventory 0" % (i))
             else:
                 if current_inventory > max_sell:
                     sell_units = max_sell
@@ -102,11 +95,11 @@ def buy_stock(
                 except:
                     invest = 0
                 print(
-                    'day %d, sell %d units at price %f, investment %f %%, total balance %f,'
+                    "day %d, sell %d units at price %f, investment %f %%, total balance %f,"
                     % (i, sell_units, total_sell, invest, initial_money)
                 )
             states_sell.append(i)
-            
+
     invest = ((initial_money - starting_money) / starting_money) * 100
     total_gains = initial_money - starting_money
     return states_buy, states_sell, total_gains, invest
@@ -115,24 +108,20 @@ def buy_stock(
 # In[5]:
 
 
-states_buy, states_sell, total_gains, invest = buy_stock(df.Close, signals['signal'])
+states_buy, states_sell, total_gains, invest = buy_stock(df.Close, signals["signal"])
 
 
 # In[6]:
 
 
-close = df['Close']
-fig = plt.figure(figsize = (15,5))
-plt.plot(close, color='r', lw=2.)
-plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
-plt.plot(close, 'v', markersize=10, color='k', label = 'selling signal', markevery = states_sell)
-plt.title('total gains %f, total investment %f%%'%(total_gains, invest))
+close = df["Close"]
+fig = plt.figure(figsize=(15, 5))
+plt.plot(close, color="r", lw=2.0)
+plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
+plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
+plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
 plt.legend()
 plt.show()
 
 
 # In[ ]:
-
-
-
-

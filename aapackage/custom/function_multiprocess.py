@@ -1,82 +1,85 @@
-#-----Put all multi process function here-----------------------
-import scipy as sp;import numpy as np; import numexpr as ne
-import pandas as pd; import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
+# -----Put all multi process function here-----------------------
 from timeit import default_timer as timer
 
-import globalvar #as global varaibles   global01.varname
+import matplotlib.pyplot as plt
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sp
+from matplotlib.backends.backend_pdf import PdfPages
+from numba import boolean, float32, float64, guvectorize, int32, jit, vectorize
+
+import globalvar  # as global varaibles   global01.varname
 
 # import derivatives as dx
 
 
-
-#---Multi Process does not work with BIG Array   ------------------------------------
-#Very Important make Shared Array as Global Resources-------------------------------
-
-
-#-----------Return Partial Result the Monte Carlo simulation---------------
-#----Returning Big array of price is very slow-----------------------------
-def multigbm_paralell_func(nbsimul, ww, voldt, drift, upper_cholesky,  nbasset, n, price, type1=0, strike=0, cp=1):
-  if type1==0: sum1=0.0    #Agregate sum
-  elif type1==1: allprocess = np.zeros(nbsimul) # Bsk last value      
-  elif type1==2: allprocess = np.zeros((nbsimul,nbasset)) # Last value
-  elif type1==3: allprocess = np.zeros((nbsimul,nbasset,n)) #ALl time step
+# ---Multi Process does not work with BIG Array   ------------------------------------
+# Very Important make Shared Array as Global Resources-------------------------------
 
 
-# Process MC calc 
-# np.random.seed(1234)
-  iidbm1 = np.random.normal(0, 1, (nbasset,n,nbsimul))  
+# -----------Return Partial Result the Monte Carlo simulation---------------
+# ----Returning Big array of price is very slow-----------------------------
+def multigbm_paralell_func(
+    nbsimul, ww, voldt, drift, upper_cholesky, nbasset, n, price, type1=0, strike=0, cp=1
+):
+    if type1 == 0:
+        sum1 = 0.0  # Agregate sum
+    elif type1 == 1:
+        allprocess = np.zeros(nbsimul)  # Bsk last value
+    elif type1 == 2:
+        allprocess = np.zeros((nbsimul, nbasset))  # Last value
+    elif type1 == 3:
+        allprocess = np.zeros((nbsimul, nbasset, n))  # ALl time step
 
-  for k in range(0, nbsimul):  #generate the random
+    # Process MC calc
+    # np.random.seed(1234)
+    iidbm1 = np.random.normal(0, 1, (nbasset, n, nbsimul))
 
-    corrbm = np.dot(upper_cholesky, iidbm1[:,:,k])    # correlated brownian    
-    bm_process= np.multiply(corrbm,voldt)  #multiply element by elt
-    price[:,1:]= np.exp(bm_process + drift)  
-    price = np.cumprod(price, axis = 1)  #exponen product st = st-1 *st
-     
-    #Update data   
-    if type1==0: 
-        if cp==1 : sum1+=  np.maximum(0,sum(ww*price[:,-1])-strike1) 
-        else:      sum1+=  np.maximum(0,strike1-sum(ww*price[:,-1]))  #Agregate sum but NO Strike ! Only Forward
-   
-    elif type1==1: allprocess[:]= sum(ww*price[:,-1])
-       # lock.acquire()
-       # res_shared[k] = 1 # float(sum(ww*price[:,-1]))  # Bsk last value      
-       # lock.release()
-    elif type1==2: allprocess[k,:] = price[:,-1]  # Last value
-    elif type1==3: allprocess[k,:] = price #ALl time step
-    
-  #Return data
-  if type1==0: return sum1/float(nbsimul)    #Agregate sum/nbsimul
-  else: return allprocess          #Array of Values
+    for k in range(0, nbsimul):  # generate the random
 
+        corrbm = np.dot(upper_cholesky, iidbm1[:, :, k])  # correlated brownian
+        bm_process = np.multiply(corrbm, voldt)  # multiply element by elt
+        price[:, 1:] = np.exp(bm_process + drift)
+        price = np.cumprod(price, axis=1)  # exponen product st = st-1 *st
 
+        # Update data
+        if type1 == 0:
+            if cp == 1:
+                sum1 += np.maximum(0, sum(ww * price[:, -1]) - strike1)
+            else:
+                sum1 += np.maximum(
+                    0, strike1 - sum(ww * price[:, -1])
+                )  # Agregate sum but NO Strike ! Only Forward
 
+        elif type1 == 1:
+            allprocess[:] = sum(ww * price[:, -1])
+        # lock.acquire()
+        # res_shared[k] = 1 # float(sum(ww*price[:,-1]))  # Bsk last value
+        # lock.release()
+        elif type1 == 2:
+            allprocess[k, :] = price[:, -1]  # Last value
+        elif type1 == 3:
+            allprocess[k, :] = price  # ALl time step
 
-
-
-
-
-
-
-
-
-
-
-
+    # Return data
+    if type1 == 0:
+        return sum1 / float(nbsimul)  # Agregate sum/nbsimul
+    else:
+        return allprocess  # Array of Values
 
 
-#-------------------------Test Function Multi Processing---------------------------------------
-#-------------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------------
+# -------------------------Test Function Multi Processing---------------------------------------
+# -------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 def func(val, lock):
     for i in range(50):
         time.sleep(0.01)
         with lock:
             val.value += 1
 
-'''
+
+"""
    Function that operates on shared memory.
 
     
@@ -87,10 +90,10 @@ def func(val, lock):
     
     # Always release the lock!
     lock.release()
-'''
+"""
 
 
-'''
+"""
 #Can be generalized to 3D Vector + Make Chunk of NbSimul, work on vectorize
 def multigbm_processfast6(nbsimul, s0, voldt, drift, upper_cholesky,  nbasset, n, price):
  # allprocess = np.zeros((nbsimul, nbasset, n))
@@ -116,14 +119,10 @@ def multigbm_processfast6(nbsimul, s0, voldt, drift, upper_cholesky,  nbasset, n
 
 
 #Architecture of Paralellization through Tensor and Tensor operations
-'''
+"""
 
 
-
-
-
-       
-'''
+"""
 The issue is that np.dot(a,b) for multidimensional arrays makes the dot product of the last dimension of a with the second dimension of b:
 
 np.dot(a,b) == np.tensordot(a, b, axes=([-1],[2]))
@@ -141,75 +140,65 @@ iidbm1 = np.random.randint(1000, 10000, (2,5, 10))
 
 iiv=np.tensordot(iim, iidbm1, axes=([-1],[0]))
  
-'''
+"""
 
 
- 
+def multigbm_processfast7(nbsimul, s0, voldt, drift, upper_cholesky, nbasset, n, price):
+    # allprocess = np.zeros((nbsimul, nbasset, n))
+    np.random.seed(1234)
+    iidbm1 = np.random.normal(0, 1, (nbasset, n, nbsimul))
+    sum1 = 0.0
+    for k in range(0, nbsimul):  # generate the random
+        iidbm = iidbm1[:, :, k]
+        corrbm = np.dot(upper_cholesky, iidbm)  # correlated brownian
+
+        #   wtt= np.multiply(corrbm,voldt)  #multiply element by elt
+        wtt = bm_generator(corrbm, dt, n, 1)
+
+        # ret= np.exp(wtt+ drift)
+        vol = 0
+        for t in range(1, n + 1):
+            for ii in range(0, nbasset):
+                voli = vol[ii]
+                price[ii, t] = price[ii, t - 1] * np.exp(
+                    (drift[ii] - voli * voli ** 0.5) * dt + voli * wtt[ii, t]
+                )
+
+        sum1 += sum(price[:, -1])
+
+    return sum1 / float(nbsimul)
 
 
-def multigbm_processfast7(nbsimul, s0, voldt, drift, upper_cholesky,  nbasset, n, price):
- # allprocess = np.zeros((nbsimul, nbasset, n))
-  np.random.seed(1234)
-  iidbm1 = np.random.normal(0, 1, (nbasset,n,nbsimul))
-  sum1=0.0
-  for k in range(0, nbsimul):  #generate the random
-    iidbm= iidbm1[:,:,k]
-    corrbm = np.dot(upper_cholesky, iidbm)    # correlated brownian
-    
- #   wtt= np.multiply(corrbm,voldt)  #multiply element by elt
-    wtt=  bm_generator(corrbm, dt,n,1)
-
-   #ret= np.exp(wtt+ drift)
-    vol=0
-    for t in range(1, n+1):
-        for ii in range(0,nbasset):
-            voli= vol[ii]
-            price[ii,t]  = price[ii,t-1] * np.exp((drift[ii] - voli*voli**0.5)*dt + voli*wtt[ii,t] )
-    
-    sum1+= sum(price[:,-1]) 
-  
-  return sum1/float(nbsimul)
-
-    
-
-
-
-def bm_generator(bm,dt,n,type1):
- tt= dt*n
- if type1==1:
-     return bm
- else:
-     return bm
-
-
-
-
+def bm_generator(bm, dt, n, type1):
+    tt = dt * n
+    if type1 == 1:
+        return bm
+    else:
+        return bm
 
 
 # variables and set-up
-M = 1000 	# Number of paths
-N = 50	 	# Number of time steps
-T = 1.0 	# Simulation time horizon
+M = 1000  # Number of paths
+N = 50  # Number of time steps
+T = 1.0  # Simulation time horizon
 
-sigma = 0.3 	# annual volatlity 
-mu = 0.05	# annual drift rate
+sigma = 0.3  # annual volatlity
+mu = 0.05  # annual drift rate
 
-dt = T/N	# simulation time step 
-S0 = 100	# assset price at t=0
+dt = T / N  # simulation time step
+S0 = 100  # assset price at t=0
 
-S = np.zeros((M,N+1))
-S[:,0] = S0
+S = np.zeros((M, N + 1))
+S[:, 0] = S0
 
-# full vectorisation 
-#eps = np.random.normal(0, 1, (M,N))
-#S[:,1:] = np.exp((mu-0.5*sigma**2)*dt + eps*sigma*np.sqrt(dt));
-#S = np.cumprod(S, axis = 1);
-
-
+# full vectorisation
+# eps = np.random.normal(0, 1, (M,N))
+# S[:,1:] = np.exp((mu-0.5*sigma**2)*dt + eps*sigma*np.sqrt(dt));
+# S = np.cumprod(S, axis = 1);
 
 
 def merge(d2):
-    time.sleep(1) # some time consuming stuffs
+    time.sleep(1)  # some time consuming stuffs
     for key in list(d2.keys()):
         if key in d1:
             d1[key] += d2[key]
@@ -217,89 +206,84 @@ def merge(d2):
             d1[key] = d2[key]
 
 
-
-
-def integratenp2(its, nchunk):  
-#    nchunk = 10000
-    chunk_size = its / nchunk   
-    np.random.seed() 
+def integratenp2(its, nchunk):
+    #    nchunk = 10000
+    chunk_size = its / nchunk
+    np.random.seed()
     sum = 0.0
-    for i in range(0,nchunk):  # do a vectorised Monte Carlo calculation
-        u = np.random.uniform(size= chunk_size)
-        sum += ne.evaluate("sum(exp(-u * u))")  # Do the Monte Carlo 
-
-    return sum / float(its)
-
-
-def integratenp(its):  
-    nchunk= 5000 
-    
-    chunk_size = its / nchunk   # I totally cheated and tweaked the number of chunks to get the fastest result
-    np.random.seed()  # Each process needs a different seed!
-    sum = 0.0
-    for i in range(0,nchunk):  # .do a vectorised Monte Carlo calculation
-        u = np.random.uniform(size= chunk_size)
-        sum += np.sum(np.exp(-u * u))  
-
-    return sum / float(its)
-
-
-def integratene(its):  
-    nchunk= 2500
-    chunk_size = its / nchunk   
-    np.random.seed()  # Each process needs a different seed!
-    sum = 0.0
-    for i in range(0,nchunk):  # For each chunk......do a vectorised Monte Carlo calculation
-        u = np.random.uniform(size= chunk_size)
+    for i in range(0, nchunk):  # do a vectorised Monte Carlo calculation
+        u = np.random.uniform(size=chunk_size)
         sum += ne.evaluate("sum(exp(-u * u))")  # Do the Monte Carlo
 
     return sum / float(its)
 
 
+def integratenp(its):
+    nchunk = 5000
+
+    chunk_size = (
+        its / nchunk
+    )  # I totally cheated and tweaked the number of chunks to get the fastest result
+    np.random.seed()  # Each process needs a different seed!
+    sum = 0.0
+    for i in range(0, nchunk):  # .do a vectorised Monte Carlo calculation
+        u = np.random.uniform(size=chunk_size)
+        sum += np.sum(np.exp(-u * u))
+
+    return sum / float(its)
+
+
+def integratene(its):
+    nchunk = 2500
+    chunk_size = its / nchunk
+    np.random.seed()  # Each process needs a different seed!
+    sum = 0.0
+    for i in range(0, nchunk):  # For each chunk......do a vectorised Monte Carlo calculation
+        u = np.random.uniform(size=chunk_size)
+        sum += ne.evaluate("sum(exp(-u * u))")  # Do the Monte Carlo
+
+    return sum / float(its)
 
 
 def list_append(count, id, out_list):
-	"""Creates an empty list and then appends a random number to the list 'count' number of times. A CPU-heavy operation!"""
-	for i in range(count):
-		out_list.append(random.random())
-
+    """Creates an empty list and then appends a random number to the list 'count' number of times. A CPU-heavy operation!"""
+    for i in range(count):
+        out_list.append(random.random())
 
 
 def parzen_estimation(x_samples, point_x, h):
     k_n = 0
     for row in x_samples:
-        x_i = (point_x - row[:,np.newaxis]) / (h)
+        x_i = (point_x - row[:, np.newaxis]) / (h)
         for row in x_i:
-            if np.abs(row) > (1/2):
+            if np.abs(row) > (1 / 2):
                 break
-            else: # "completion-else"*
-               k_n += 1
-    return (h, (k_n / len(x_samples)) / (h**point_x.shape[1]))
-
-
+            else:  # "completion-else"*
+                k_n += 1
+    return (h, (k_n / len(x_samples)) / (h ** point_x.shape[1]))
 
 
 def init2(d):
     global d1
     d1 = d
-    
-def init_global1(l, r):
-   global01.lock=l
-   global01.res_shared=r
 
-#into multiprocess function
+
+def init_global1(l, r):
+    global01.lock = l
+    global01.res_shared = r
+
+
+# into multiprocess function
 def np_sin(value):
     return np.sin(value)
-    
+
+
 def ne_sin(x):
-      return ne.evaluate("sin(x)")
-    
+    return ne.evaluate("sin(x)")
+
+
 def res_shared2():
- return res_shared    
-    
-
-
-
+    return res_shared
 
 
 '''
@@ -872,14 +856,3 @@ func            :    20
 
 
 '''
-
-
-
-
-
-
-
-
-
-
-

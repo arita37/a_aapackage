@@ -4,17 +4,21 @@
 # In[1]:
 
 
-import numpy as np
 import collections
 import random
-import tensorflow as tf
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
 
 def build_dataset(words, n_words):
-    count = [['GO', 0], ['PAD', 1], ['EOS', 2], ['UNK', 3]]
+    count = [["GO", 0], ["PAD", 1], ["EOS", 2], ["UNK", 3]]
     count.extend(collections.Counter(words).most_common(n_words - 1))
     dictionary = dict()
     for word, _ in count:
@@ -30,21 +34,23 @@ def build_dataset(words, n_words):
     reversed_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
     return data, count, dictionary, reversed_dictionary
 
+
 def str_idx(corpus, dic, maxlen, UNK=3):
-    X = np.zeros((len(corpus),maxlen))
+    X = np.zeros((len(corpus), maxlen))
     for i in range(len(corpus)):
         for no, k in enumerate(corpus[i][:maxlen][::-1]):
             val = dic[k] if k in dic else UNK
-            X[i,-1 - no]= val
+            X[i, -1 - no] = val
     return X
 
+
 def load_data(filepath):
-    x1=[]
-    x2=[]
-    y=[]
+    x1 = []
+    x2 = []
+    y = []
     for line in open(filepath):
-        l=line.strip().split("\t")
-        if len(l)<2:
+        l = line.strip().split("\t")
+        if len(l) < 2:
             continue
         if random.random() > 0.5:
             x1.append(l[0].lower())
@@ -53,32 +59,31 @@ def load_data(filepath):
             x1.append(l[1].lower())
             x2.append(l[0].lower())
         y.append(int(l[2]))
-    return np.array(x1),np.array(x2),np.array(y)
+    return np.array(x1), np.array(x2), np.array(y)
 
 
 # In[3]:
 
 
-X1_text, X2_text, Y = load_data('train_snli.txt')
+X1_text, X2_text, Y = load_data("train_snli.txt")
 
 
 # In[4]:
 
 
-concat = (' '.join(X1_text.tolist() + X2_text.tolist())).split()
+concat = (" ".join(X1_text.tolist() + X2_text.tolist())).split()
 vocabulary_size = len(list(set(concat)))
 data, count, dictionary, rev_dictionary = build_dataset(concat, vocabulary_size)
-print('vocab from size: %d'%(vocabulary_size))
-print('Most common words', count[4:10])
-print('Sample data', data[:10], [rev_dictionary[i] for i in data[:10]])
+print("vocab from size: %d" % (vocabulary_size))
+print("Most common words", count[4:10])
+print("Sample data", data[:10], [rev_dictionary[i] for i in data[:10]])
 
 
 # In[5]:
 
 
 def _pairwise_distances(embeddings_left, embeddings_right, squared=False):
-    dot_product = tf.matmul(embeddings_left, 
-                            tf.transpose(embeddings_right))
+    dot_product = tf.matmul(embeddings_left, tf.transpose(embeddings_right))
     square_norm = tf.diag_part(dot_product)
     distances = tf.expand_dims(square_norm, 1) - 2.0 * dot_product + tf.expand_dims(square_norm, 0)
     distances = tf.maximum(distances, 0.0)
@@ -107,6 +112,7 @@ def _get_anchor_negative_triplet_mask(labels):
 
     return mask
 
+
 def _get_triplet_mask(labels):
     indices_equal = tf.cast(tf.eye(tf.shape(labels)[0]), tf.bool)
     indices_not_equal = tf.logical_not(indices_equal)
@@ -124,6 +130,8 @@ def _get_triplet_mask(labels):
     mask = tf.logical_and(distinct_indices, valid_labels)
 
     return mask
+
+
 def batch_all_triplet_loss(labels, embeddings_left, embeddings_right, margin, squared=False):
     pairwise_dist = _pairwise_distances(embeddings_left, embeddings_right, squared=squared)
 
@@ -154,19 +162,20 @@ def batch_all_triplet_loss(labels, embeddings_left, embeddings_right, margin, sq
 
 
 class Model:
-    def __init__(self, size_layer, num_layers, embedded_size,
-                 dict_size, learning_rate, dimension_output):
-        
+    def __init__(
+        self, size_layer, num_layers, embedded_size, dict_size, learning_rate, dimension_output
+    ):
         def cells(reuse=False):
-            return tf.nn.rnn_cell.LSTMCell(size_layer,
-                                           initializer=tf.orthogonal_initializer(),reuse=reuse)
-        
+            return tf.nn.rnn_cell.LSTMCell(
+                size_layer, initializer=tf.orthogonal_initializer(), reuse=reuse
+            )
+
         def rnn(inputs, reuse=False):
-            with tf.variable_scope('model', reuse = reuse):
+            with tf.variable_scope("model", reuse=reuse):
                 rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)])
-                outputs, _ = tf.nn.dynamic_rnn(rnn_cells, inputs, dtype = tf.float32)
-                return tf.layers.dense(outputs[:,-1], dimension_output)
-        
+                outputs, _ = tf.nn.dynamic_rnn(rnn_cells, inputs, dtype=tf.float32)
+                return tf.layers.dense(outputs[:, -1], dimension_output)
+
         self.X_left = tf.placeholder(tf.int32, [None, None])
         self.X_right = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.float32, [None])
@@ -174,23 +183,32 @@ class Model:
         encoder_embeddings = tf.Variable(tf.random_uniform([dict_size, embedded_size], -1, 1))
         embedded_left = tf.nn.embedding_lookup(encoder_embeddings, self.X_left)
         embedded_right = tf.nn.embedding_lookup(encoder_embeddings, self.X_right)
-        
+
         self.output_left = rnn(embedded_left, False)
         self.output_right = rnn(embedded_right, True)
-        
-        self.cost, fraction = batch_all_triplet_loss(self.Y, self.output_left, 
-                                                     self.output_right, margin=0.5, squared=False)
-        
-        self.distance = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.output_left,self.output_right)),1,keep_dims=True))
-        self.distance = tf.div(self.distance, tf.add(tf.sqrt(tf.reduce_sum(tf.square(self.output_left),1,keep_dims=True)),
-                                                     tf.sqrt(tf.reduce_sum(tf.square(self.output_right),1,keep_dims=True))))
+
+        self.cost, fraction = batch_all_triplet_loss(
+            self.Y, self.output_left, self.output_right, margin=0.5, squared=False
+        )
+
+        self.distance = tf.sqrt(
+            tf.reduce_sum(
+                tf.square(tf.subtract(self.output_left, self.output_right)), 1, keep_dims=True
+            )
+        )
+        self.distance = tf.div(
+            self.distance,
+            tf.add(
+                tf.sqrt(tf.reduce_sum(tf.square(self.output_left), 1, keep_dims=True)),
+                tf.sqrt(tf.reduce_sum(tf.square(self.output_right), 1, keep_dims=True)),
+            ),
+        )
         self.distance = tf.reshape(self.distance, [-1])
-        
-        self.temp_sim = tf.subtract(tf.ones_like(self.distance),
-                                    tf.rint(self.distance))
+
+        self.temp_sim = tf.subtract(tf.ones_like(self.distance), tf.rint(self.distance))
         correct_predictions = tf.equal(self.temp_sim, self.Y)
         self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
 
 
 # In[7]:
@@ -210,92 +228,84 @@ batch_size = 128
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
-model = Model(size_layer,num_layers,embedded_size,len(dictionary),
-              learning_rate,dimension_output)
+model = Model(
+    size_layer, num_layers, embedded_size, len(dictionary), learning_rate, dimension_output
+)
 sess.run(tf.global_variables_initializer())
 
 
 # In[9]:
 
 
-from sklearn.cross_validation import train_test_split
 
 vectors_left = str_idx(X1_text, dictionary, maxlen)
 vectors_right = str_idx(X2_text, dictionary, maxlen)
-train_X_left, test_X_left, train_X_right, test_X_right, train_Y, test_Y = train_test_split(vectors_left,
-                                                                                           vectors_right,
-                                                                                           Y,
-                                                                                           test_size = 0.2)
+train_X_left, test_X_left, train_X_right, test_X_right, train_Y, test_Y = train_test_split(
+    vectors_left, vectors_right, Y, test_size=0.2
+)
 
 
 # In[10]:
 
 
-from tqdm import tqdm
-import time
 
 for EPOCH in range(5):
     lasttime = time.time()
-        
+
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
-    pbar = tqdm(range(0, len(train_X_left), batch_size), desc='train minibatch loop')
+    pbar = tqdm(range(0, len(train_X_left), batch_size), desc="train minibatch loop")
     for i in pbar:
-        batch_x_left = train_X_left[i:min(i+batch_size,train_X_left.shape[0])]
-        batch_x_right = train_X_right[i:min(i+batch_size,train_X_left.shape[0])]
-        batch_y = train_Y[i:min(i+batch_size,train_X_left.shape[0])]
-        acc, loss, _ = sess.run([model.accuracy, model.cost, model.optimizer], 
-                           feed_dict = {model.X_left : batch_x_left, 
-                                        model.X_right: batch_x_right,
-                                        model.Y : batch_y})
+        batch_x_left = train_X_left[i : min(i + batch_size, train_X_left.shape[0])]
+        batch_x_right = train_X_right[i : min(i + batch_size, train_X_left.shape[0])]
+        batch_y = train_Y[i : min(i + batch_size, train_X_left.shape[0])]
+        acc, loss, _ = sess.run(
+            [model.accuracy, model.cost, model.optimizer],
+            feed_dict={model.X_left: batch_x_left, model.X_right: batch_x_right, model.Y: batch_y},
+        )
         assert not np.isnan(loss)
         train_loss += loss
         train_acc += acc
-        pbar.set_postfix(cost = loss, accuracy = acc)
-    
-    pbar = tqdm(range(0, len(test_X_left), batch_size), desc='test minibatch loop')
+        pbar.set_postfix(cost=loss, accuracy=acc)
+
+    pbar = tqdm(range(0, len(test_X_left), batch_size), desc="test minibatch loop")
     for i in pbar:
-        batch_x_left = test_X_left[i:min(i+batch_size,train_X_left.shape[0])]
-        batch_x_right = test_X_right[i:min(i+batch_size,train_X_left.shape[0])]
-        batch_y = test_Y[i:min(i+batch_size,train_X_left.shape[0])]
-        acc, loss = sess.run([model.accuracy, model.cost], 
-                           feed_dict = {model.X_left : batch_x_left, 
-                                        model.X_right: batch_x_right,
-                                        model.Y : batch_y})
+        batch_x_left = test_X_left[i : min(i + batch_size, train_X_left.shape[0])]
+        batch_x_right = test_X_right[i : min(i + batch_size, train_X_left.shape[0])]
+        batch_y = test_Y[i : min(i + batch_size, train_X_left.shape[0])]
+        acc, loss = sess.run(
+            [model.accuracy, model.cost],
+            feed_dict={model.X_left: batch_x_left, model.X_right: batch_x_right, model.Y: batch_y},
+        )
         test_loss += loss
         test_acc += acc
-        pbar.set_postfix(cost = loss, accuracy = acc)
-    
-    train_loss /= (len(train_X_left) / batch_size)
-    train_acc /= (len(train_X_left) / batch_size)
-    test_loss /= (len(test_X_left) / batch_size)
-    test_acc /= (len(test_X_left) / batch_size)
-        
-    print('time taken:', time.time()-lasttime)
-    print('epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n'%(EPOCH,train_loss,
-                                                                                          train_acc,test_loss,
-                                                                                          test_acc))
+        pbar.set_postfix(cost=loss, accuracy=acc)
+
+    train_loss /= len(train_X_left) / batch_size
+    train_acc /= len(train_X_left) / batch_size
+    test_loss /= len(test_X_left) / batch_size
+    test_acc /= len(test_X_left) / batch_size
+
+    print("time taken:", time.time() - lasttime)
+    print(
+        "epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n"
+        % (EPOCH, train_loss, train_acc, test_loss, test_acc)
+    )
 
 
 # In[11]:
 
 
-left = str_idx(['a person is outdoors, on a horse.'], dictionary, maxlen)
-right = str_idx(['a person on a horse jumps over a broken down airplane.'], dictionary, maxlen)
-sess.run([model.temp_sim,1-model.distance], feed_dict = {model.X_left : left, 
-                                        model.X_right: right})
+left = str_idx(["a person is outdoors, on a horse."], dictionary, maxlen)
+right = str_idx(["a person on a horse jumps over a broken down airplane."], dictionary, maxlen)
+sess.run([model.temp_sim, 1 - model.distance], feed_dict={model.X_left: left, model.X_right: right})
 
 
 # In[12]:
 
 
-left = str_idx(['i love you'], dictionary, maxlen)
-right = str_idx(['you love i'], dictionary, maxlen)
-sess.run([model.temp_sim,1-model.distance], feed_dict = {model.X_left : left, 
-                                        model.X_right: right})
+left = str_idx(["i love you"], dictionary, maxlen)
+right = str_idx(["you love i"], dictionary, maxlen)
+sess.run([model.temp_sim, 1 - model.distance], feed_dict={model.X_left: left, model.X_right: right})
 
 
 # In[ ]:
-
-
-
-

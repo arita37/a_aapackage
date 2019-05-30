@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 #------------------------utilities for Panda----------------------------------
-import numpy as np; import pandas as pd
+import re
 
-
+import numpy as np
+import pandas as pd
+from scipy.interpolate import interp1d
 
 #From database into Panda and get the results
 #Process the results and put it in database : 
@@ -171,7 +173,6 @@ df['preTestScore'].where(df['postTestScore'] > 50)
 
 
 
-from scipy.interpolate import interp1d
 
 f2 = interp1d(qq['Datetime'], qq['Open'],bounds_error=False)
 open =    np.column_stack((open, f2(dater)))
@@ -249,8 +250,6 @@ Repo: Python 3 code snippets for data science
 Note: Originally based on this tutorial in nbviewer.
 Import modules
 In [24]:
-import re
-import pandas as pd
 Create a dataframe of raw strings
 In [25]:
 # Create a dataframe with a single column of strings
@@ -510,24 +509,3 @@ Unicode codepoint properties with the \p{} syntax.
 
 
 http://nbviewer.jupyter.org/github/pybokeh/ipython_notebooks/blob/master/pandas/PandasCheatSheet.ipynb
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

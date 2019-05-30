@@ -4,15 +4,23 @@
 # In[1]:
 
 
-import tensorflow as tf
-import pandas as pd
-import numpy as np
+import re
+import time
 
+import numpy as np
+import pandas as pd
+from sklearn import metrics
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from tqdm import tqdm
+
+import tensorflow as tf
 
 # In[2]:
 
 
-lang = pd.read_csv('sentences.csv',sep='\t')
+lang = pd.read_csv("sentences.csv", sep="\t")
 lang = lang.dropna()
 lang.head()
 
@@ -26,7 +34,7 @@ for no, ln in enumerate(lang.cmn.unique()):
     if langs.shape[0] < 500:
         continue
     print(no, ln)
-    langs = langs.iloc[:500,-1].tolist()
+    langs = langs.iloc[:500, -1].tolist()
     X.extend(langs)
     Y.extend([ln] * len(langs))
 
@@ -34,27 +42,24 @@ for no, ln in enumerate(lang.cmn.unique()):
 # In[4]:
 
 
-import re
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import CountVectorizer
+
 
 def clean_text(string):
-    string = re.sub(u'[0-9!@#$%^&*()_\-+{}|\~`\'";:?/.>,<]', ' ', string.lower(), flags=re.UNICODE)
-    return re.sub(r'[ ]+', ' ', string.lower()).strip()
+    string = re.sub("[0-9!@#$%^&*()_\-+{}|\~`'\";:?/.>,<]", " ", string.lower(), flags=re.UNICODE)
+    return re.sub(r"[ ]+", " ", string.lower()).strip()
 
 
 # In[5]:
 
 
-X =[clean_text(s) for s in X]
+X = [clean_text(s) for s in X]
 
 
 # In[6]:
 
 
-bow_chars = CountVectorizer(ngram_range=(3, 5), analyzer='char_wb', max_features=700000).fit(X)
-delattr(bow_chars, 'stop_words_')
+bow_chars = CountVectorizer(ngram_range=(3, 5), analyzer="char_wb", max_features=700000).fit(X)
+delattr(bow_chars, "stop_words_")
 target = LabelEncoder().fit_transform(Y)
 features = bow_chars.transform(X)
 features.shape
@@ -63,30 +68,32 @@ features.shape
 # In[7]:
 
 
-train_X, test_X, train_Y, test_Y = train_test_split(features, target, test_size = 0.2)
+train_X, test_X, train_Y, test_Y = train_test_split(features, target, test_size=0.2)
 del features
 
 
 # In[8]:
 
 
-from sklearn import metrics
 
 
 # In[9]:
 
 
-def convert_sparse_matrix_to_sparse_tensor(X, limit = 5):
+def convert_sparse_matrix_to_sparse_tensor(X, limit=5):
     coo = X.tocoo()
     indices = np.mat([coo.row, coo.col]).transpose()
     coo.data[coo.data > limit] = limit
-    return tf.SparseTensorValue(indices, coo.col, coo.shape), tf.SparseTensorValue(indices, coo.data, coo.shape)
+    return (
+        tf.SparseTensorValue(indices, coo.col, coo.shape),
+        tf.SparseTensorValue(indices, coo.data, coo.shape),
+    )
 
 
 # In[10]:
 
 
-labels = np.unique(Y,return_counts=True)[0]
+labels = np.unique(Y, return_counts=True)[0]
 labels
 
 
@@ -99,12 +106,13 @@ class Model:
         self.W = tf.sparse_placeholder(tf.int32)
         self.Y = tf.placeholder(tf.int32, [None])
         embeddings = tf.Variable(tf.truncated_normal([train_X.shape[1], 64]))
-        embed = tf.nn.embedding_lookup_sparse(embeddings, self.X, self.W, combiner='mean')
+        embed = tf.nn.embedding_lookup_sparse(embeddings, self.X, self.W, combiner="mean")
         self.logits = tf.layers.dense(embed, len(labels))
-        self.cost = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits = self.logits, labels = self.Y))
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.cost)
-        correct_pred = tf.equal(tf.argmax(self.logits, 1,output_type=tf.int32), self.Y)
+        self.cost = tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=self.Y)
+        )
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+        correct_pred = tf.equal(tf.argmax(self.logits, 1, output_type=tf.int32), self.Y)
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 
@@ -119,57 +127,49 @@ sess.run(tf.global_variables_initializer())
 # In[13]:
 
 
-import time
-from tqdm import tqdm
 
 batch_size = 64
 for e in range(50):
     lasttime = time.time()
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
-    pbar = tqdm(
-        range(0, train_X.shape[0], batch_size), desc = 'train minibatch loop'
-    )
+    pbar = tqdm(range(0, train_X.shape[0], batch_size), desc="train minibatch loop")
     for i in pbar:
-        batch_x = convert_sparse_matrix_to_sparse_tensor(train_X[i : min(i + batch_size, train_X.shape[0])])
+        batch_x = convert_sparse_matrix_to_sparse_tensor(
+            train_X[i : min(i + batch_size, train_X.shape[0])]
+        )
         batch_y = train_Y[i : min(i + batch_size, train_X.shape[0])]
         acc, cost, _ = sess.run(
             [model.accuracy, model.cost, model.optimizer],
-            feed_dict = {
-                model.X: batch_x[0],
-                model.W: batch_x[1],
-                model.Y: batch_y
-            },
+            feed_dict={model.X: batch_x[0], model.W: batch_x[1], model.Y: batch_y},
         )
         assert not np.isnan(cost)
         train_loss += cost
         train_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
+        pbar.set_postfix(cost=cost, accuracy=acc)
 
-    pbar = tqdm(range(0, test_X.shape[0], batch_size), desc = 'test minibatch loop')
+    pbar = tqdm(range(0, test_X.shape[0], batch_size), desc="test minibatch loop")
     for i in pbar:
-        batch_x = convert_sparse_matrix_to_sparse_tensor(test_X[i : min(i + batch_size, test_X.shape[0])])
+        batch_x = convert_sparse_matrix_to_sparse_tensor(
+            test_X[i : min(i + batch_size, test_X.shape[0])]
+        )
         batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
-        batch_x_expand = np.expand_dims(batch_x,axis = 1)
+        batch_x_expand = np.expand_dims(batch_x, axis=1)
         acc, cost = sess.run(
             [model.accuracy, model.cost],
-            feed_dict = {
-                model.X: batch_x[0],
-                model.W: batch_x[1],
-                model.Y: batch_y
-            },
+            feed_dict={model.X: batch_x[0], model.W: batch_x[1], model.Y: batch_y},
         )
         test_loss += cost
         test_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
+        pbar.set_postfix(cost=cost, accuracy=acc)
 
     train_loss /= train_X.shape[0] / batch_size
     train_acc /= train_X.shape[0] / batch_size
     test_loss /= test_X.shape[0] / batch_size
     test_acc /= test_X.shape[0] / batch_size
 
-    print('time taken:', time.time() - lasttime)
+    print("time taken:", time.time() - lasttime)
     print(
-        'epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n'
+        "epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n"
         % (e, train_loss, train_acc, test_loss, test_acc)
     )
 
@@ -179,15 +179,15 @@ for e in range(50):
 
 real_Y, predict_Y = [], []
 
-pbar = tqdm(
-    range(0, test_X.shape[0], batch_size), desc = 'validation minibatch loop'
-)
+pbar = tqdm(range(0, test_X.shape[0], batch_size), desc="validation minibatch loop")
 for i in pbar:
-    batch_x = convert_sparse_matrix_to_sparse_tensor(test_X[i : min(i + batch_size, test_X.shape[0])])
+    batch_x = convert_sparse_matrix_to_sparse_tensor(
+        test_X[i : min(i + batch_size, test_X.shape[0])]
+    )
     batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])].tolist()
     predict_Y += np.argmax(
         sess.run(
-            model.logits, feed_dict = {model.X: batch_x[0], model.W: batch_x[1], model.Y: batch_y}
+            model.logits, feed_dict={model.X: batch_x[0], model.W: batch_x[1], model.Y: batch_y}
         ),
         1,
     ).tolist()
@@ -197,9 +197,4 @@ for i in pbar:
 # In[15]:
 
 
-print(
-    metrics.classification_report(
-        real_Y, predict_Y, target_names = labels
-    )
-)
-
+print(metrics.classification_report(real_Y, predict_Y, target_names=labels))

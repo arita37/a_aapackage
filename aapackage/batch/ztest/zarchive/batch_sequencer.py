@@ -38,46 +38,67 @@ batch_sequencer.py :
 
 """
 
-import numpy as np
-import os
-import shutil
-import sys
-import random
-import psutil
-
-import toml
-import subprocess
 import argparse
-import pandas as pd
+import os
+import random
+import shutil
+import subprocess
+import sys
 import time
 
+import numpy as np
+import pandas as pd
+import psutil
+import toml
+
 ################### Argument catching #########################################
-print('Start Args')
-'''
+print("Start Args")
+"""
 print sys.argv, "\n\n", sys.argv[0], "\n\n", sys.argv[1], "\n\n"
-'''
+"""
 
 
 def load_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--hyperparam", dest="HyperParametersFile",
-                      help="Select the path for a .csv containing batch optimization parameters.\n One row per optimization.")
+    parser.add_argument(
+        "--hyperparam",
+        dest="HyperParametersFile",
+        help="Select the path for a .csv containing batch optimization parameters.\n One row per optimization.",
+    )
 
-    parser.add_argument("--directory", dest="WorkingDirectory", default=".",
-                      help="Absolute or relative path to the working directory.")
+    parser.add_argument(
+        "--directory",
+        dest="WorkingDirectory",
+        default=".",
+        help="Absolute or relative path to the working directory.",
+    )
 
-    parser.add_argument("--optimizer", dest="OptimizerName",
-                      default="optimizer.py",
-                      help="Name of the optimizer script. Should be located at WorkingDirectory")
+    parser.add_argument(
+        "--optimizer",
+        dest="OptimizerName",
+        default="optimizer.py",
+        help="Name of the optimizer script. Should be located at WorkingDirectory",
+    )
 
-    parser.add_argument("--file", dest="AdditionalFiles",
-                      help="A file or comma-separated list of files to be provided for the optimizer function.")
+    parser.add_argument(
+        "--file",
+        dest="AdditionalFiles",
+        help="A file or comma-separated list of files to be provided for the optimizer function.",
+    )
 
-    parser.add_argument("--aws", dest="ExecuteAws", action="store_true",
-                      help="Wether optimization will run locally or on a dedicated AWS instance.")
+    parser.add_argument(
+        "--aws",
+        dest="ExecuteAws",
+        action="store_true",
+        help="Wether optimization will run locally or on a dedicated AWS instance.",
+    )
 
-    parser.add_argument("--file_log", dest="ExecuteAws", action="store_true",
-                      help="Wether optimization will run locally or on a dedicated AWS instance.")
+    parser.add_argument(
+        "--file_log",
+        dest="ExecuteAws",
+        action="store_true",
+        help="Wether optimization will run locally or on a dedicated AWS instance.",
+    )
 
     options = parser.parse_args()
     return options
@@ -88,8 +109,7 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     if not AdditionalFiles:
         return []
 
-    AdditionalFiles = [f.strip(" ")
-                       for f in AdditionalFiles.split(",")]
+    AdditionalFiles = [f.strip(" ") for f in AdditionalFiles.split(",")]
 
     for File in AdditionalFiles:
         ExpectedFilePath = os.path.isfile(os.path.join(WorkingDirectory, File))
@@ -100,10 +120,9 @@ def checkAdditionalFiles(WorkingDirectory, AdditionalFiles):
     return AdditionalFiles
 
 
-
 ################  Output Data table ###########################################
 def log(f, m):
-    with open(f, 'a') as _log:
+    with open(f, "a") as _log:
         _log.write(m)
 
 
@@ -111,7 +130,7 @@ def get_computer_resources_usage():
     cpu_used_percent = psutil.cpu_percent()
 
     mem_info = dict(psutil.virtual_memory()._asdict())
-    mem_used_percent = 100 - mem_info['available'] / mem_info['total']
+    mem_used_percent = 100 - mem_info["available"] / mem_info["total"]
 
     return cpu_used_percent, mem_used_percent
 
@@ -123,50 +142,43 @@ def createFolder(WorkingDirectory, folderName):
 
 
 ############### Loop on each parameters sets ##################################
-def batch_execute_parallel(HyperParametersFile, WorkingDirectory,
-                        ScriptPath, batch_log_file ="batch_logfile.txt"):
+def batch_execute_parallel(
+    HyperParametersFile, WorkingDirectory, ScriptPath, batch_log_file="batch_logfile.txt"
+):
 
     waitseconds = 2
     python_path = sys.executable
-        
+
     HyperParameters = pd.read_csv(os.path.join(WorkingDirectory, HyperParametersFile))
-    OptimizerName   = os.path.basename(ScriptPath)
+    OptimizerName = os.path.basename(ScriptPath)
 
     batch_label = "%s_%.3i" % (OptimizerName, random.randint(0, 10e5))
     batch_log_file = os.path.join(WorkingDirectory, "batch_logs/batch_%s.txt" % batch_label)
     ChildProcesses = []
 
     for ii in range(HyperParameters.shape[0]):
-       # Extract parameters for single run from batch_parameters data.
-       params_dict = HyperParameters.iloc[ii].to_dict()
+        # Extract parameters for single run from batch_parameters data.
+        params_dict = HyperParameters.iloc[ii].to_dict()
 
-       log(batch_log_file, "Executing index %i at %s." % (ii, WorkingDirectory))
-       log(batch_log_file, "\n\n")
+        log(batch_log_file, "Executing index %i at %s." % (ii, WorkingDirectory))
+        log(batch_log_file, "\n\n")
 
-       proc = subprocess.Popen([ python_path, ScriptPath, str(ii)],
-                                 stdout=subprocess.PIPE)
+        proc = subprocess.Popen([python_path, ScriptPath, str(ii)], stdout=subprocess.PIPE)
 
-       # ChildProcesses.append(proc)
+        # ChildProcesses.append(proc)
 
-       # wait if computer resources are scarce.
-       cpu, mem = 100, 100
-       while cpu > 90 and mem > 90:
-          cpu, mem = get_computer_resources_usage()
-          time.sleep(waitseconds)
-
+        # wait if computer resources are scarce.
+        cpu, mem = 100, 100
+        while cpu > 90 and mem > 90:
+            cpu, mem = get_computer_resources_usage()
+            time.sleep(waitseconds)
 
 
-
-
-
-if __name__ != '__main__' :
+if __name__ != "__main__":
     args = load_arguments()
     # init folders
     createFolder(WorkingDirectory, "batch_logs")
     createFolder(WorkingDirectory, "batch_results")
-
-
-
 
 
 """
@@ -192,7 +204,6 @@ util.os_print_tofile('\n\n'+title1, batch_out_log)
 """
 
 
-
 """
 if util.os_file_exist(batch_out_data):
     aux3_cols, aafolio_storage = util.py_load_obj(
@@ -203,7 +214,6 @@ else:
 
 
 """
-
 
 
 """
@@ -229,17 +239,3 @@ else:
                 shutil.copy(os.path.join(WorkingDirectory, File),
                             os.path.join(TaskDirectory, File))
 """
-
-
-
-
-
-
-
-
-
-
-
-
-
-

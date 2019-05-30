@@ -4,20 +4,22 @@
 # In[1]:
 
 
-from dynamic_memory_network import DynamicMemoryNetwork
-import tensorflow as tf
 import os
-import numpy as np
-from utils import *
-from sklearn.cross_validation import train_test_split
+import time
 
+import numpy as np
+from sklearn import metrics
+from sklearn.cross_validation import train_test_split
+from tqdm import tqdm
+
+import tensorflow as tf
+from dynamic_memory_network import DynamicMemoryNetwork
+from utils import *
 
 # In[2]:
 
 
-trainset = sklearn.datasets.load_files(
-    container_path = 'data', encoding = 'UTF-8'
-)
+trainset = sklearn.datasets.load_files(container_path="data", encoding="UTF-8")
 trainset.data, trainset.target = separate_dataset(trainset, 1.0)
 print(trainset.target_names)
 print(len(trainset.data))
@@ -27,21 +29,21 @@ print(len(trainset.target))
 # In[3]:
 
 
-concat = ' '.join(trainset.data).split()
+concat = " ".join(trainset.data).split()
 vocabulary_size = len(list(set(concat)))
 data, count, dictionary, rev_dictionary = build_dataset(concat, vocabulary_size)
-print('vocab from size: %d'%(vocabulary_size))
-print('Most common words', count[4:10])
-print('Sample data', data[:10], [rev_dictionary[i] for i in data[:10]])
+print("vocab from size: %d" % (vocabulary_size))
+print("Most common words", count[4:10])
+print("Sample data", data[:10], [rev_dictionary[i] for i in data[:10]])
 
 
 # In[4]:
 
 
-GO = dictionary['GO']
-PAD = dictionary['PAD']
-EOS = dictionary['EOS']
-UNK = dictionary['UNK']
+GO = dictionary["GO"]
+PAD = dictionary["PAD"]
+EOS = dictionary["EOS"]
+UNK = dictionary["UNK"]
 
 
 # In[5]:
@@ -74,7 +76,7 @@ model = DynamicMemoryNetwork(
     story_len,
     len(dictionary),
     embedded_size,
-    size_layer
+    size_layer,
 )
 
 sess.run(tf.global_variables_initializer())
@@ -84,64 +86,58 @@ sess.run(tf.global_variables_initializer())
 
 
 vectors = str_idx(trainset.data, dictionary, maxlen)
-train_X, test_X, train_Y, test_Y = train_test_split(
-    vectors, trainset.target, test_size = 0.2
-)
+train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, test_size=0.2)
 
 
 # In[8]:
 
 
-from tqdm import tqdm
-import time
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 5, 0, 0, 0
 
 while True:
     lasttime = time.time()
     if CURRENT_CHECKPOINT == EARLY_STOPPING:
-        print('break epoch:%d\n' % (EPOCH))
+        print("break epoch:%d\n" % (EPOCH))
         break
 
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
-    pbar = tqdm(
-        range(0, len(train_X), batch_size), desc = 'train minibatch loop'
-    )
+    pbar = tqdm(range(0, len(train_X), batch_size), desc="train minibatch loop")
     for i in pbar:
         batch_x = train_X[i : min(i + batch_size, train_X.shape[0])]
         batch_y = train_Y[i : min(i + batch_size, train_X.shape[0])]
-        batch_x_expand = np.expand_dims(batch_x,axis = 1)
+        batch_x_expand = np.expand_dims(batch_x, axis=1)
         acc, cost, _ = sess.run(
             [model.accuracy, model.cost, model.optimizer],
-            feed_dict = {
+            feed_dict={
                 model.answer_single: batch_y,
                 model.query: batch_x,
                 model.story: batch_x_expand,
-                model.dropout_keep_prob: 1.0
+                model.dropout_keep_prob: 1.0,
             },
         )
         assert not np.isnan(cost)
         train_loss += cost
         train_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
+        pbar.set_postfix(cost=cost, accuracy=acc)
 
-    pbar = tqdm(range(0, len(test_X), batch_size), desc = 'test minibatch loop')
+    pbar = tqdm(range(0, len(test_X), batch_size), desc="test minibatch loop")
     for i in pbar:
         batch_x = test_X[i : min(i + batch_size, test_X.shape[0])]
         batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
-        batch_x_expand = np.expand_dims(batch_x,axis = 1)
+        batch_x_expand = np.expand_dims(batch_x, axis=1)
         acc, cost = sess.run(
             [model.accuracy, model.cost],
-            feed_dict = {
+            feed_dict={
                 model.answer_single: batch_y,
                 model.query: batch_x,
                 model.story: batch_x_expand,
-                model.dropout_keep_prob: 1.0
+                model.dropout_keep_prob: 1.0,
             },
         )
         test_loss += cost
         test_acc += acc
-        pbar.set_postfix(cost = cost, accuracy = acc)
+        pbar.set_postfix(cost=cost, accuracy=acc)
 
     train_loss /= len(train_X) / batch_size
     train_acc /= len(train_X) / batch_size
@@ -149,18 +145,15 @@ while True:
     test_acc /= len(test_X) / batch_size
 
     if test_acc > CURRENT_ACC:
-        print(
-            'epoch: %d, pass acc: %f, current acc: %f'
-            % (EPOCH, CURRENT_ACC, test_acc)
-        )
+        print("epoch: %d, pass acc: %f, current acc: %f" % (EPOCH, CURRENT_ACC, test_acc))
         CURRENT_ACC = test_acc
         CURRENT_CHECKPOINT = 0
     else:
         CURRENT_CHECKPOINT += 1
 
-    print('time taken:', time.time() - lasttime)
+    print("time taken:", time.time() - lasttime)
     print(
-        'epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n'
+        "epoch: %d, training loss: %f, training acc: %f, valid loss: %f, valid acc: %f\n"
         % (EPOCH, train_loss, train_acc, test_loss, test_acc)
     )
     EPOCH += 1
@@ -171,21 +164,19 @@ while True:
 
 real_Y, predict_Y = [], []
 
-pbar = tqdm(
-    range(0, len(test_X), batch_size), desc = 'validation minibatch loop'
-)
+pbar = tqdm(range(0, len(test_X), batch_size), desc="validation minibatch loop")
 for i in pbar:
     batch_x = test_X[i : min(i + batch_size, test_X.shape[0])]
     batch_y = test_Y[i : min(i + batch_size, test_X.shape[0])]
-    batch_x_expand = np.expand_dims(batch_x,axis = 1)
+    batch_x_expand = np.expand_dims(batch_x, axis=1)
     predict_Y += np.argmax(
         sess.run(
             model.logits,
-            feed_dict = {
+            feed_dict={
                 model.answer_single: batch_y,
                 model.query: batch_x,
                 model.story: batch_x_expand,
-                model.dropout_keep_prob: 1.0
+                model.dropout_keep_prob: 1.0,
             },
         ),
         1,
@@ -196,12 +187,8 @@ for i in pbar:
 # In[10]:
 
 
-from sklearn import metrics
-print(metrics.classification_report(real_Y, predict_Y, target_names = ['negative','positive']))
+
+print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))
 
 
 # In[ ]:
-
-
-
-

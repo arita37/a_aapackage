@@ -4,19 +4,21 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from crnn_model import crnn_model
 import json
 
+import numpy as np
+
+import cv2
+import tensorflow as tf
+from crnn_model import crnn_model
 
 # In[2]:
 
 
-with open('crnn_model/char_dict.json') as fopen:
+with open("crnn_model/char_dict.json") as fopen:
     char_dict = json.load(fopen)
-    
-with open('crnn_model/ord_map.json') as fopen:
+
+with open("crnn_model/ord_map.json") as fopen:
     order_dict = json.load(fopen)
 
 
@@ -25,17 +27,18 @@ with open('crnn_model/ord_map.json') as fopen:
 
 class Model:
     def __init__(self):
-        self.X = tf.placeholder(tf.float32,(None,None,3))
+        self.X = tf.placeholder(tf.float32, (None, None, 3))
         image = tf.expand_dims(self.X, 0)
         image = tf.image.resize_images(image, [32, 100])
         num_classes = 37
-        net = crnn_model.ShadowNet(phase = 'Test', 
-                                   hidden_nums = 256,
-                                   layers_nums = 2,
-                                   num_classes = num_classes)
-        with tf.variable_scope('shadow'):
+        net = crnn_model.ShadowNet(
+            phase="Test", hidden_nums=256, layers_nums=2, num_classes=num_classes
+        )
+        with tf.variable_scope("shadow"):
             net_out = net.build_shadownet(inputdata=image)
-        self.decode, _ = tf.nn.ctc_beam_search_decoder(net_out, 25 * np.ones(1), merge_repeated=False)
+        self.decode, _ = tf.nn.ctc_beam_search_decoder(
+            net_out, 25 * np.ones(1), merge_repeated=False
+        )
 
 
 # In[4]:
@@ -46,14 +49,14 @@ sess = tf.InteractiveSession()
 model = Model()
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver(tf.global_variables())
-saver.restore(sess, 'rename-checkpoint2/model.ckpt')
+saver.restore(sess, "rename-checkpoint2/model.ckpt")
 
 
 # In[5]:
 
 
-import cv2
-image = cv2.imread('back-car.jpeg', cv2.IMREAD_COLOR)
+
+image = cv2.imread("back-car.jpeg", cv2.IMREAD_COLOR)
 
 
 # In[6]:
@@ -65,7 +68,7 @@ image.shape
 # In[7]:
 
 
-output = sess.run(model.decode,feed_dict={model.X:image})[0]
+output = sess.run(model.decode, feed_dict={model.X: image})[0]
 
 
 # In[8]:
@@ -91,7 +94,7 @@ def sparse_tensor_to_str(sparse_tensor):
     for number_list in number_lists:
         str_lists.append([char_dict[val] for val in number_list])
     for str_list in str_lists:
-        res.append(''.join(c for c in str_list if c != '\x00'))
+        res.append("".join(c for c in str_list if c != "\x00"))
     return res
 
 
@@ -104,7 +107,7 @@ sparse_tensor_to_str(output)[0]
 # In[11]:
 
 
-char_list = '0123456789abcdefghijklmnopqrstuvwxyz '
+char_list = "0123456789abcdefghijklmnopqrstuvwxyz "
 
 
 # In[12]:
@@ -124,7 +127,7 @@ def sparse_tensor_to_str2(spares_tensor):
     for number_list in number_lists:
         str_lists.append([char_list[val] for val in number_list])
     for str_list in str_lists:
-        res.append(''.join(c for c in str_list if c != '1'))
+        res.append("".join(c for c in str_list if c != "1"))
     return res
 
 
@@ -135,7 +138,3 @@ sparse_tensor_to_str2(output)
 
 
 # In[ ]:
-
-
-
-

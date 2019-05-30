@@ -1,4 +1,6 @@
 import numpy as np
+
+
 def py_nms(dets, thresh, mode="Union"):
     """
     greedily select boxes with high confidence
@@ -33,7 +35,7 @@ def py_nms(dets, thresh, mode="Union"):
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
         elif mode == "Minimum":
             ovr = inter / np.minimum(areas[i], areas[order[1:]])
-        #keep
+        # keep
         inds = np.where(ovr <= thresh)[0]
         order = order[inds + 1]
 

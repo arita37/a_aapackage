@@ -1,34 +1,30 @@
 # -*- coding: utf-8 -*-
 
 
-
 """ Global variables
 global01.varname import global01 as global01
 """
 
 global ONE_SQRT_2PI, PI, PI2, TWOPI, ONE_2PI
-ONE_SQRT_2PI =  0.3989422804014326779399460599343818684758586311649346,
-ONE_2PI =  0.159154943091895335768883763372514362034459645740456448747,
-PI= 3.1415926535897932384626433832795028841971693993751058,
-TWOPI= 6.2831853071795864769252867665590057683943387987502115,
-PI2= 6.2831853071795864769252867665590057683943387987502115
+ONE_SQRT_2PI = (0.3989422804014326779399460599343818684758586311649346,)
+ONE_2PI = (0.159154943091895335768883763372514362034459645740456448747,)
+PI = (3.1415926535897932384626433832795028841971693993751058,)
+TWOPI = (6.2831853071795864769252867665590057683943387987502115,)
+PI2 = 6.2831853071795864769252867665590057683943387987502115
 
 
 global DAYS_PER_YEAR
-DAYS_PER_YEAR= 252
+DAYS_PER_YEAR = 252
 
 
-#-----------Compiler--VS Studio----Path---------------------------------------
+# -----------Compiler--VS Studio----Path---------------------------------------
 global VS_DEVENV, VS_COMPILDIR, VS_MSBUILD, NVIDIA_DRIVER
 
-#Need to put r to have Python compliant for string
-VS_DEVENV= r"D:\_app\visualstudio13\Common7\IDE\devenv.exe"
-VS_BIN= r"D:\_app\visualstudio13\VC\bin"
-VS_MSBUILD= r"D:\_app\visualstudio13\VC\bin"
-NVIDIA_DRIVER= r"D:\_app\nvidiacuda\gpu\gdk_win7_amd64_release\nvml"
-
-
-
+# Need to put r to have Python compliant for string
+VS_DEVENV = r"D:\_app\visualstudio13\Common7\IDE\devenv.exe"
+VS_BIN = r"D:\_app\visualstudio13\VC\bin"
+VS_MSBUILD = r"D:\_app\visualstudio13\VC\bin"
+NVIDIA_DRIVER = r"D:\_app\nvidiacuda\gpu\gdk_win7_amd64_release\nvml"
 
 
 global lock
@@ -36,8 +32,7 @@ global res_shared
 global allv
 
 
-
-'''
+"""
 # os.environ['MyVar'] = 'Hello World!' #Variable
 # os.getenv('MyVar',-1)   # get your variable
 
@@ -59,7 +54,4 @@ root=   D:\_app\nvidiacuda\gpu\gdk_win7_amd64_release\nvml
 
 
 
-'''
-
-
-    
+"""

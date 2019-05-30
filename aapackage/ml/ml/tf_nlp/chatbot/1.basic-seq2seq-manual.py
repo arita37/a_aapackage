@@ -4,20 +4,21 @@
 # In[1]:
 
 
-import numpy as np
-import tensorflow as tf
-from sklearn.utils import shuffle
-import re
-import time
 import collections
 import os
+import re
+import time
 
+import numpy as np
+from sklearn.utils import shuffle
+
+import tensorflow as tf
 
 # In[2]:
 
 
 def build_dataset(words, n_words, atleast=1):
-    count = [['PAD', 0], ['GO', 1], ['EOS', 2], ['UNK', 3]]
+    count = [["PAD", 0], ["GO", 1], ["EOS", 2], ["UNK", 3]]
     counter = collections.Counter(words).most_common(n_words)
     counter = [i for i in counter if i[1] >= atleast]
     count.extend(counter)
@@ -39,28 +40,29 @@ def build_dataset(words, n_words, atleast=1):
 # In[3]:
 
 
-lines = open('movie_lines.txt', encoding='utf-8', errors='ignore').read().split('\n')
-conv_lines = open('movie_conversations.txt', encoding='utf-8', errors='ignore').read().split('\n')
+lines = open("movie_lines.txt", encoding="utf-8", errors="ignore").read().split("\n")
+conv_lines = open("movie_conversations.txt", encoding="utf-8", errors="ignore").read().split("\n")
 
 id2line = {}
 for line in lines:
-    _line = line.split(' +++$+++ ')
+    _line = line.split(" +++$+++ ")
     if len(_line) == 5:
         id2line[_line[0]] = _line[4]
-        
-convs = [ ]
+
+convs = []
 for line in conv_lines[:-1]:
-    _line = line.split(' +++$+++ ')[-1][1:-1].replace("'","").replace(" ","")
-    convs.append(_line.split(','))
-    
+    _line = line.split(" +++$+++ ")[-1][1:-1].replace("'", "").replace(" ", "")
+    convs.append(_line.split(","))
+
 questions = []
 answers = []
 
 for conv in convs:
-    for i in range(len(conv)-1):
+    for i in range(len(conv) - 1):
         questions.append(id2line[conv[i]])
-        answers.append(id2line[conv[i+1]])
-        
+        answers.append(id2line[conv[i + 1]])
+
+
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"i'm", "i am", text)
@@ -83,16 +85,17 @@ def clean_text(text):
     text = re.sub(r"'bout", "about", text)
     text = re.sub(r"'til", "until", text)
     text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text)
-    return ' '.join([i.strip() for i in filter(None, text.split())])
+    return " ".join([i.strip() for i in filter(None, text.split())])
+
 
 clean_questions = []
 for question in questions:
     clean_questions.append(clean_text(question))
-    
-clean_answers = []    
+
+clean_answers = []
 for answer in answers:
     clean_answers.append(clean_text(answer))
-    
+
 min_line_length = 2
 max_line_length = 5
 short_questions_temp = []
@@ -124,67 +127,76 @@ short_answers = short_answers[:500]
 # In[4]:
 
 
-concat_from = ' '.join(short_questions+question_test).split()
+concat_from = " ".join(short_questions + question_test).split()
 vocabulary_size_from = len(list(set(concat_from)))
-data_from, count_from, dictionary_from, rev_dictionary_from = build_dataset(concat_from, vocabulary_size_from)
-print('vocab from size: %d'%(vocabulary_size_from))
-print('Most common words', count_from[4:10])
-print('Sample data', data_from[:10], [rev_dictionary_from[i] for i in data_from[:10]])
-print('filtered vocab size:',len(dictionary_from))
-print("% of vocab used: {}%".format(round(len(dictionary_from)/vocabulary_size_from,4)*100))
+data_from, count_from, dictionary_from, rev_dictionary_from = build_dataset(
+    concat_from, vocabulary_size_from
+)
+print("vocab from size: %d" % (vocabulary_size_from))
+print("Most common words", count_from[4:10])
+print("Sample data", data_from[:10], [rev_dictionary_from[i] for i in data_from[:10]])
+print("filtered vocab size:", len(dictionary_from))
+print("% of vocab used: {}%".format(round(len(dictionary_from) / vocabulary_size_from, 4) * 100))
 
 
 # In[5]:
 
 
-concat_to = ' '.join(short_answers+answer_test).split()
+concat_to = " ".join(short_answers + answer_test).split()
 vocabulary_size_to = len(list(set(concat_to)))
 data_to, count_to, dictionary_to, rev_dictionary_to = build_dataset(concat_to, vocabulary_size_to)
-print('vocab from size: %d'%(vocabulary_size_to))
-print('Most common words', count_to[4:10])
-print('Sample data', data_to[:10], [rev_dictionary_to[i] for i in data_to[:10]])
-print('filtered vocab size:',len(dictionary_to))
-print("% of vocab used: {}%".format(round(len(dictionary_to)/vocabulary_size_to,4)*100))
+print("vocab from size: %d" % (vocabulary_size_to))
+print("Most common words", count_to[4:10])
+print("Sample data", data_to[:10], [rev_dictionary_to[i] for i in data_to[:10]])
+print("filtered vocab size:", len(dictionary_to))
+print("% of vocab used: {}%".format(round(len(dictionary_to) / vocabulary_size_to, 4) * 100))
 
 
 # In[6]:
 
 
-GO = dictionary_from['GO']
-PAD = dictionary_from['PAD']
-EOS = dictionary_from['EOS']
-UNK = dictionary_from['UNK']
+GO = dictionary_from["GO"]
+PAD = dictionary_from["PAD"]
+EOS = dictionary_from["EOS"]
+UNK = dictionary_from["UNK"]
 
 
 # In[7]:
 
 
-PAD,GO
+PAD, GO
 
 
 # In[8]:
 
 
 for i in range(len(short_answers)):
-    short_answers[i] += ' EOS'
+    short_answers[i] += " EOS"
 
 
 # In[9]:
 
 
 class Chatbot:
-    def __init__(self, size_layer, num_layers, embedded_size,
-                 from_dict_size, to_dict_size, learning_rate, batch_size):
-        
+    def __init__(
+        self,
+        size_layer,
+        num_layers,
+        embedded_size,
+        from_dict_size,
+        to_dict_size,
+        learning_rate,
+        batch_size,
+    ):
         def cells(reuse=False):
-            return tf.nn.rnn_cell.BasicRNNCell(size_layer,reuse=reuse)
-        
+            return tf.nn.rnn_cell.BasicRNNCell(size_layer, reuse=reuse)
+
         self.X = tf.placeholder(tf.int32, [None, None])
         self.Y = tf.placeholder(tf.int32, [None, None])
         self.X_seq_len = tf.placeholder(tf.int32, [None])
         self.Y_seq_len = tf.placeholder(tf.int32, [None])
         batch_size = tf.shape(self.X)[0]
-        
+
         encoder_embeddings = tf.Variable(tf.random_uniform([from_dict_size, embedded_size], -1, 1))
         decoder_embeddings = tf.Variable(tf.random_uniform([to_dict_size, embedded_size], -1, 1))
         encoder_embedded = tf.nn.embedding_lookup(encoder_embeddings, self.X)
@@ -192,22 +204,25 @@ class Chatbot:
         decoder_input = tf.concat([tf.fill([batch_size, 1], GO), main], 1)
         decoder_embedded = tf.nn.embedding_lookup(encoder_embeddings, decoder_input)
         rnn_cells = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)])
-        _, last_state = tf.nn.dynamic_rnn(rnn_cells, encoder_embedded,
-                                          sequence_length=self.X_seq_len,
-                                          dtype = tf.float32)
+        _, last_state = tf.nn.dynamic_rnn(
+            rnn_cells, encoder_embedded, sequence_length=self.X_seq_len, dtype=tf.float32
+        )
         with tf.variable_scope("decoder"):
             rnn_cells_dec = tf.nn.rnn_cell.MultiRNNCell([cells() for _ in range(num_layers)])
-            outputs, _ = tf.nn.dynamic_rnn(rnn_cells_dec, decoder_embedded, 
-                                           sequence_length=self.X_seq_len,
-                                           initial_state = last_state,
-                                           dtype = tf.float32)
-        self.logits = tf.layers.dense(outputs,to_dict_size)
+            outputs, _ = tf.nn.dynamic_rnn(
+                rnn_cells_dec,
+                decoder_embedded,
+                sequence_length=self.X_seq_len,
+                initial_state=last_state,
+                dtype=tf.float32,
+            )
+        self.logits = tf.layers.dense(outputs, to_dict_size)
         masks = tf.sequence_mask(self.Y_seq_len, tf.reduce_max(self.Y_seq_len), dtype=tf.float32)
-        self.cost = tf.contrib.seq2seq.sequence_loss(logits = self.logits,
-                                                     targets = self.Y,
-                                                     weights = masks)
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.cost)
-        y_t = tf.argmax(self.logits,axis=2)
+        self.cost = tf.contrib.seq2seq.sequence_loss(
+            logits=self.logits, targets=self.Y, weights=masks
+        )
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
+        y_t = tf.argmax(self.logits, axis=2)
         y_t = tf.cast(y_t, tf.int32)
         self.prediction = tf.boolean_mask(y_t, masks)
         mask_label = tf.boolean_mask(self.Y, masks)
@@ -232,8 +247,15 @@ epoch = 20
 
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
-model = Chatbot(size_layer, num_layers, embedded_size, len(dictionary_from), 
-                len(dictionary_to), learning_rate,batch_size)
+model = Chatbot(
+    size_layer,
+    num_layers,
+    embedded_size,
+    len(dictionary_from),
+    len(dictionary_to),
+    learning_rate,
+    batch_size,
+)
 sess.run(tf.global_variables_initializer())
 
 
@@ -245,7 +267,7 @@ def str_idx(corpus, dic):
     for i in corpus:
         ints = []
         for k in i.split():
-            ints.append(dic.get(k,UNK))
+            ints.append(dic.get(k, UNK))
         X.append(ints)
     return X
 
@@ -293,29 +315,41 @@ for i in range(epoch):
     X, Y = shuffle(X, Y)
     for k in range(0, len(short_questions), batch_size):
         index = min(k + batch_size, len(short_questions))
-        batch_x, seq_x = pad_sentence_batch(X[k: index], PAD, maxlen_answer)
-        batch_y, seq_y = pad_sentence_batch(Y[k: index], PAD, maxlen_answer)
-        predicted, accuracy, loss, _ = sess.run([tf.argmax(model.logits,2),
-                                      model.accuracy, model.cost, model.optimizer], 
-                                      feed_dict={model.X:batch_x,
-                                                model.Y:batch_y,
-                                                model.X_seq_len:seq_x,
-                                                model.Y_seq_len:seq_y})
+        batch_x, seq_x = pad_sentence_batch(X[k:index], PAD, maxlen_answer)
+        batch_y, seq_y = pad_sentence_batch(Y[k:index], PAD, maxlen_answer)
+        predicted, accuracy, loss, _ = sess.run(
+            [tf.argmax(model.logits, 2), model.accuracy, model.cost, model.optimizer],
+            feed_dict={
+                model.X: batch_x,
+                model.Y: batch_y,
+                model.X_seq_len: seq_x,
+                model.Y_seq_len: seq_y,
+            },
+        )
         total_loss += loss
         total_accuracy += accuracy
-    total_loss /= (len(short_questions) / batch_size)
-    total_accuracy /= (len(short_questions) / batch_size)
-    print('epoch: %d, avg loss: %f, avg accuracy: %f'%(i+1, total_loss, total_accuracy))
+    total_loss /= len(short_questions) / batch_size
+    total_accuracy /= len(short_questions) / batch_size
+    print("epoch: %d, avg loss: %f, avg accuracy: %f" % (i + 1, total_loss, total_accuracy))
 
 
 # In[18]:
 
 
 for i in range(len(batch_x)):
-    print('row %d'%(i+1))
-    print('QUESTION:',' '.join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0,1,2,3]]))
-    print('REAL ANSWER:',' '.join([rev_dictionary_to[n] for n in batch_y[i] if n not in[0,1,2,3]]))
-    print('PREDICTED ANSWER:',' '.join([rev_dictionary_to[n] for n in predicted[i] if n not in[0,1,2,3]]),'\n')
+    print("row %d" % (i + 1))
+    print(
+        "QUESTION:", " ".join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0, 1, 2, 3]])
+    )
+    print(
+        "REAL ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in batch_y[i] if n not in [0, 1, 2, 3]]),
+    )
+    print(
+        "PREDICTED ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in predicted[i] if n not in [0, 1, 2, 3]]),
+        "\n",
+    )
 
 
 # In[19]:
@@ -323,15 +357,25 @@ for i in range(len(batch_x)):
 
 batch_x, seq_x = pad_sentence_batch(X_test[:batch_size], PAD, maxlen_answer)
 batch_y, seq_y = pad_sentence_batch(Y_test[:batch_size], PAD, maxlen_answer)
-predicted = sess.run(tf.argmax(model.logits,2), feed_dict={model.X:batch_x,model.X_seq_len:seq_x})
+predicted = sess.run(
+    tf.argmax(model.logits, 2), feed_dict={model.X: batch_x, model.X_seq_len: seq_x}
+)
 
 
 # In[20]:
 
 
 for i in range(len(batch_x)):
-    print('row %d'%(i+1))
-    print('QUESTION:',' '.join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0,1,2,3]]))
-    print('REAL ANSWER:',' '.join([rev_dictionary_to[n] for n in batch_y[i] if n not in[0,1,2,3]]))
-    print('PREDICTED ANSWER:',' '.join([rev_dictionary_to[n] for n in predicted[i] if n not in[0,1,2,3]]),'\n')
-
+    print("row %d" % (i + 1))
+    print(
+        "QUESTION:", " ".join([rev_dictionary_from[n] for n in batch_x[i] if n not in [0, 1, 2, 3]])
+    )
+    print(
+        "REAL ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in batch_y[i] if n not in [0, 1, 2, 3]]),
+    )
+    print(
+        "PREDICTED ANSWER:",
+        " ".join([rev_dictionary_to[n] for n in predicted[i] if n not in [0, 1, 2, 3]]),
+        "\n",
+    )

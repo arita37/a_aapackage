@@ -4,23 +4,27 @@
 # In[2]:
 
 
-import numpy as np
+import time
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+
 sns.set()
 
 
 # In[21]:
 
 
-plt.figure(figsize = (10, 5))
+plt.figure(figsize=(10, 5))
 bins = np.linspace(-10, 10, 100)
 
 solution = np.random.randn(100)
 w = np.random.randn(100)
 
-plt.hist(solution, bins, alpha = 0.5, label = 'solution', color = 'r')
-plt.hist(w, bins, alpha = 0.5, label = 'random', color = 'y')
+plt.hist(solution, bins, alpha=0.5, label="solution", color="r")
+plt.hist(w, bins, alpha=0.5, label="random", color="y")
 plt.legend()
 plt.show()
 
@@ -40,7 +44,7 @@ for i in range(5000):
 
     if (i + 1) % 1000 == 0:
         print(
-            'iter %d. w: %s, solution: %s, reward: %f'
+            "iter %d. w: %s, solution: %s, reward: %f"
             % (i + 1, str(w[-1]), str(solution[-1]), f(w))
         )
     N = np.random.randn(npop, 100)
@@ -56,21 +60,21 @@ for i in range(5000):
 # In[12]:
 
 
-'''
+"""
 I want to compare my first two individuals with my real w
-'''
-plt.figure(figsize=(10,5))
+"""
+plt.figure(figsize=(10, 5))
 
 sigma = 0.1
 N = np.random.randn(npop, 100)
 individuals = []
 for j in range(2):
     individuals.append(w + sigma * N[j])
-    
-    
-plt.hist(w, bins, alpha=0.5, label='w',color='r')
-plt.hist(individuals[0], bins, alpha=0.5, label='individual 1')
-plt.hist(individuals[1], bins, alpha=0.5, label='individual 2')
+
+
+plt.hist(w, bins, alpha=0.5, label="w", color="r")
+plt.hist(individuals[0], bins, alpha=0.5, label="individual 1")
+plt.hist(individuals[1], bins, alpha=0.5, label="individual 2")
 plt.legend()
 plt.show()
 
@@ -78,8 +82,8 @@ plt.show()
 # In[29]:
 
 
-import pandas as pd
-google = pd.read_csv('/Users/huseinzolkepli/Desktop/GOOG.csv')
+
+google = pd.read_csv("/Users/huseinzolkepli/Desktop/GOOG.csv")
 google.head()
 
 
@@ -118,9 +122,7 @@ get_state(close, 2, 10)
 
 
 class Deep_Evolution_Strategy:
-    def __init__(
-        self, weights, reward_function, population_size, sigma, learning_rate
-    ):
+    def __init__(self, weights, reward_function, population_size, sigma, learning_rate):
         self.weights = weights
         self.reward_function = reward_function
         self.population_size = population_size
@@ -137,7 +139,7 @@ class Deep_Evolution_Strategy:
     def get_weights(self):
         return self.weights
 
-    def train(self, epoch = 100, print_every = 1):
+    def train(self, epoch=100, print_every=1):
         lasttime = time.time()
         for i in range(epoch):
             population = []
@@ -148,9 +150,7 @@ class Deep_Evolution_Strategy:
                     x.append(np.random.randn(*w.shape))
                 population.append(x)
             for k in range(self.population_size):
-                weights_population = self._get_weight_from_population(
-                    self.weights, population[k]
-                )
+                weights_population = self._get_weight_from_population(self.weights, population[k])
                 rewards[k] = self.reward_function(weights_population)
             rewards = (rewards - np.mean(rewards)) / np.std(rewards)
             for index, w in enumerate(self.weights):
@@ -162,11 +162,8 @@ class Deep_Evolution_Strategy:
                     * np.dot(A.T, rewards).T
                 )
             if (i + 1) % print_every == 0:
-                print(
-                    'iter %d. reward: %f'
-                    % (i + 1, self.reward_function(self.weights))
-                )
-        print('time taken to train:', time.time() - lasttime, 'seconds')
+                print("iter %d. reward: %f" % (i + 1, self.reward_function(self.weights)))
+        print("time taken to train:", time.time() - lasttime, "seconds")
 
 
 # In[64]:
@@ -253,7 +250,6 @@ for t in range(0, len_close, skip):
 # In[77]:
 
 
-import time
 
 
 class Agent:
@@ -262,9 +258,7 @@ class Agent:
     SIGMA = 0.1
     LEARNING_RATE = 0.03
 
-    def __init__(
-        self, model, money, max_buy, max_sell, close, window_size, skip
-    ):
+    def __init__(self, model, money, max_buy, max_sell, close, window_size, skip):
         self.window_size = window_size
         self.skip = skip
         self.close = close
@@ -320,7 +314,7 @@ class Agent:
         return ((initial_money - starting_money) / starting_money) * 100
 
     def fit(self, iterations, checkpoint):
-        self.es.train(iterations, print_every = checkpoint)
+        self.es.train(iterations, print_every=checkpoint)
 
     def buy(self):
         initial_money = self.initial_money
@@ -347,7 +341,7 @@ class Agent:
                 quantity += buy_units
                 states_buy.append(t)
                 print(
-                    'day %d: buy %d units at price %f, total balance %f'
+                    "day %d: buy %d units at price %f, total balance %f"
                     % (t, buy_units, total_buy, initial_money)
                 )
             elif action == 2 and len(inventory) > 0:
@@ -367,24 +361,19 @@ class Agent:
                 except:
                     invest = 0
                 print(
-                    'day %d, sell %d units at price %f, investment %f %%, total balance %f,'
+                    "day %d, sell %d units at price %f, investment %f %%, total balance %f,"
                     % (t, sell_units, total_sell, invest, initial_money)
                 )
             state = next_state
 
         invest = ((initial_money - starting_money) / starting_money) * 100
         print(
-            '\ntotal gained %f, total investment %f %%'
-            % (initial_money - starting_money, invest)
+            "\ntotal gained %f, total investment %f %%" % (initial_money - starting_money, invest)
         )
-        plt.figure(figsize = (20, 10))
-        plt.plot(close, label = 'true close', c = 'g')
-        plt.plot(
-            close, 'X', label = 'predict buy', markevery = states_buy, c = 'b'
-        )
-        plt.plot(
-            close, 'o', label = 'predict sell', markevery = states_sell, c = 'r'
-        )
+        plt.figure(figsize=(20, 10))
+        plt.plot(close, label="true close", c="g")
+        plt.plot(close, "X", label="predict buy", markevery=states_buy, c="b")
+        plt.plot(close, "o", label="predict sell", markevery=states_sell, c="r")
         plt.legend()
         plt.show()
 
@@ -392,22 +381,16 @@ class Agent:
 # In[78]:
 
 
-model = Model(input_size = window_size, layer_size = 500, output_size = 3)
+model = Model(input_size=window_size, layer_size=500, output_size=3)
 agent = Agent(
-    model = model,
-    money = 10000,
-    max_buy = 5,
-    max_sell = 5,
-    close = close,
-    window_size = window_size,
-    skip = 1,
+    model=model, money=10000, max_buy=5, max_sell=5, close=close, window_size=window_size, skip=1
 )
 
 
 # In[79]:
 
 
-agent.fit(iterations = 500, checkpoint = 10)
+agent.fit(iterations=500, checkpoint=10)
 
 
 # In[80]:
@@ -417,7 +400,3 @@ agent.buy()
 
 
 # In[ ]:
-
-
-
-

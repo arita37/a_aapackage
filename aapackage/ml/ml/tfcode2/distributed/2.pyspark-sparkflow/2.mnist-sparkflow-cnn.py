@@ -4,15 +4,26 @@
 # In[1]:
 
 
-get_ipython().system('pip3 install tqdm requests dill')
+get_ipython().system("pip3 install tqdm requests dill")
 
 
 # In[2]:
 
 
+import os
+
 import requests
 from tqdm import tqdm
-import os
+
+import tensorflow as tf
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.ml.feature import OneHotEncoder, VectorAssembler
+from pyspark.ml.pipeline import Pipeline
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import rand
+from sparkflow.graph_utils import build_adam_config, build_graph
+from sparkflow.tensorflow_async import SparkAsyncDL
+
 
 def download_from_url(url, dst):
     file_size = int(requests.head(url).headers["Content-Length"])
@@ -24,10 +35,10 @@ def download_from_url(url, dst):
         return file_size
     header = {"Range": "bytes=%s-%s" % (first_byte, file_size)}
     pbar = tqdm(
-        total=file_size, initial=first_byte,
-        unit='B', unit_scale=True, desc=url.split('/')[-1])
+        total=file_size, initial=first_byte, unit="B", unit_scale=True, desc=url.split("/")[-1]
+    )
     req = requests.get(url, headers=header, stream=True)
-    with(open(dst, 'ab')) as f:
+    with (open(dst, "ab")) as f:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:
                 f.write(chunk)
@@ -39,24 +50,20 @@ def download_from_url(url, dst):
 # In[3]:
 
 
-download_from_url('https://raw.githubusercontent.com/sjwhitworth/golearn/master/examples/datasets/mnist_train.csv', 
-                  'mnist_train.csv')
+download_from_url(
+    "https://raw.githubusercontent.com/sjwhitworth/golearn/master/examples/datasets/mnist_train.csv",
+    "mnist_train.csv",
+)
 
 
 # In[4]:
 
 
-from sparkflow.graph_utils import build_graph
-from sparkflow.tensorflow_async import SparkAsyncDL
-import tensorflow as tf
-from pyspark.ml.feature import VectorAssembler, OneHotEncoder
-from pyspark.ml.pipeline import Pipeline
-from sparkflow.graph_utils import build_adam_config
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-    
+
+
 def cnn_model():
-    x = tf.placeholder(tf.float32, shape=[None, 784], name='x')
-    y = tf.placeholder(tf.float32, shape=[None, 10], name='y')
+    x = tf.placeholder(tf.float32, shape=[None, 784], name="x")
+    y = tf.placeholder(tf.float32, shape=[None, 10], name="y")
     x = tf.reshape(x, shape=[-1, 28, 28, 1])
     conv1 = tf.layers.conv2d(x, 32, 5, activation=tf.nn.relu)
     conv1 = tf.layers.max_pooling2d(conv1, 2, 2)
@@ -64,7 +71,7 @@ def cnn_model():
     conv2 = tf.layers.max_pooling2d(conv2, 2, 2)
     fc1 = tf.contrib.layers.flatten(conv2)
     out = tf.layers.dense(fc1, 10)
-    z = tf.argmax(out, 1, name='out')
+    z = tf.argmax(out, 1, name="out")
     loss = tf.losses.softmax_cross_entropy(y, out)
     return loss
 
@@ -72,33 +79,36 @@ def cnn_model():
 # In[5]:
 
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import rand
+
 sparkSession = SparkSession.builder.appName("csv").getOrCreate()
 
 
 # In[6]:
 
 
-df = sparkSession.read.csv('mnist_train.csv',header=True,inferSchema=True)
+df = sparkSession.read.csv("mnist_train.csv", header=True, inferSchema=True)
 
 
 # In[7]:
 
 
-va = VectorAssembler(inputCols=df.columns[1:785], outputCol='features').transform(df)
+va = VectorAssembler(inputCols=df.columns[1:785], outputCol="features").transform(df)
 
 
 # In[8]:
 
 
-va.select('label').show(1)
+va.select("label").show(1)
 
 
 # In[9]:
 
 
-encoded = OneHotEncoder(inputCol='label', outputCol='labels', dropLast=False).transform(va).select(['features', 'labels'])
+encoded = (
+    OneHotEncoder(inputCol="label", outputCol="labels", dropLast=False)
+    .transform(va)
+    .select(["features", "labels"])
+)
 
 
 # In[10]:
@@ -112,21 +122,21 @@ adam_config = build_adam_config(learning_rate=0.001, beta1=0.9, beta2=0.999)
 
 
 spark_model = SparkAsyncDL(
-    inputCol='features',
+    inputCol="features",
     tensorflowGraph=mg,
-    tfInput='x:0',
-    tfLabel='y:0',
-    tfOutput='out:0',
-    tfOptimizer='adam',
+    tfInput="x:0",
+    tfLabel="y:0",
+    tfOutput="out:0",
+    tfOptimizer="adam",
     miniBatchSize=300,
     miniStochasticIters=1,
     shufflePerIter=True,
     iters=50,
-    predictionCol='predicted',
-    labelCol='labels',
+    predictionCol="predicted",
+    labelCol="labels",
     partitions=3,
     verbose=1,
-    optimizerOptions=adam_config
+    optimizerOptions=adam_config,
 )
 
 
@@ -152,13 +162,10 @@ predictions.show(1)
 
 
 evaluator = MulticlassClassificationEvaluator(
-    labelCol="labels", predictionCol="predicted", metricName="accuracy")
+    labelCol="labels", predictionCol="predicted", metricName="accuracy"
+)
 accuracy = evaluator.evaluate(predictions)
 print("Test Error = %g" % (1.0 - accuracy))
 
 
 # In[ ]:
-
-
-
-

@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
-import os, sys
+import os
+#########################################################################################################
+import subprocess
+import sys
+import time
+
+import numpy as np
+
+import util
+
 DIRCWD=  'D:/_devs/Python01/project27/' if sys.platform.find('win')> -1   else  '/home/ubuntu/notebook/' if os.environ['HOME'].find('ubuntu')>-1 else '/media/sf_project27/'
 os.chdir(DIRCWD); sys.path.append(DIRCWD+'/aapackage');  sys.path.append(DIRCWD+'/linux/aapackage')
 print('Directory Folder:'+str(DIRCWD))
-import util, numpy as np
 execfile( DIRCWD + '/aapackage/allmodule.py')
-#########################################################################################################
-import subprocess
 IPYTHON_PATH='D:/_devs/Python01/Anaconda27/Scripts/ipython' if sys.platform.find('win') > -1   else  '/home/ubuntu/anaconda2/bin/ipython' if os.environ['HOME'].find('ubuntu') > -1 else "/home/linux1/anaconda2/bin/ipython"
 ##### NO SPACE in ipython path ---> Error in Shell COMMAND
 
@@ -20,7 +26,6 @@ IPYTHON_PATH='D:/_devs/Python01/Anaconda27/Scripts/ipython' if sys.platform.find
 IPYTHON_PATH =  
 
 
-import time
 ##############  Launch the sub-process for each set of hyper  ##################################
 proc_list=[]
 for ii, row in enumerate(hyperparams.iterrows()) :
@@ -196,5 +201,3 @@ proc0= subprocess.Popen(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.STDO
 
 
 '''
-
-

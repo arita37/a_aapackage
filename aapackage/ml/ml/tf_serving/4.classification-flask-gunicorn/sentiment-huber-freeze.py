@@ -4,16 +4,18 @@
 # In[1]:
 
 
-import tensorflow as tf
-import numpy as np
-import time
-import os
-from sklearn.preprocessing import LabelEncoder
-import re
 import collections
-import random
+import os
 import pickle
+import random
+import re
+import time
 
+import numpy as np
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+import tensorflow as tf
 
 # In[2]:
 
@@ -29,43 +31,45 @@ batch = 100
 # In[3]:
 
 
-with open('dataset-sentiment.p', 'rb') as fopen:
+with open("dataset-sentiment.p", "rb") as fopen:
     df = pickle.load(fopen)
-with open('vector-sentiment.p', 'rb') as fopen:
+with open("vector-sentiment.p", "rb") as fopen:
     vectors = pickle.load(fopen)
-with open('dictionary-sentiment.p', 'rb') as fopen:
+with open("dictionary-sentiment.p", "rb") as fopen:
     dictionary = pickle.load(fopen)
-label = np.unique(df[:,1])
+label = np.unique(df[:, 1])
 
 
 # In[4]:
 
 
-from sklearn.cross_validation import train_test_split
-train_X, test_X, train_Y, test_Y = train_test_split(df[:,0], df[:, 1].astype('int'), test_size = 0.2)
+
+train_X, test_X, train_Y, test_Y = train_test_split(df[:, 0], df[:, 1].astype("int"), test_size=0.2)
 
 
 # In[5]:
 
 
 class Model:
-    
     def __init__(self, num_layers, size_layer, dimension_input, dimension_output, learning_rate):
         def lstm_cell():
             return tf.nn.rnn_cell.LSTMCell(size_layer)
+
         self.rnn_cells = tf.nn.rnn_cell.MultiRNNCell([lstm_cell() for _ in range(num_layers)])
         self.X = tf.placeholder(tf.float32, [None, None, dimension_input])
         self.Y = tf.placeholder(tf.float32, [None, dimension_output])
-        drop = tf.contrib.rnn.DropoutWrapper(self.rnn_cells, output_keep_prob = 0.5)
-        self.outputs, self.last_state = tf.nn.dynamic_rnn(drop, self.X, dtype = tf.float32)
+        drop = tf.contrib.rnn.DropoutWrapper(self.rnn_cells, output_keep_prob=0.5)
+        self.outputs, self.last_state = tf.nn.dynamic_rnn(drop, self.X, dtype=tf.float32)
         self.rnn_W = tf.Variable(tf.random_normal((size_layer, dimension_output)))
         self.rnn_B = tf.Variable(tf.random_normal([dimension_output]))
         # put 'logits' name is very important
-        self.logits = tf.add(tf.matmul(self.outputs[:, -1], self.rnn_W),self.rnn_B,name='logits')
-        self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = self.logits, labels = self.Y))
+        self.logits = tf.add(tf.matmul(self.outputs[:, -1], self.rnn_W), self.rnn_B, name="logits")
+        self.cost = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(logits=self.logits, labels=self.Y)
+        )
         l2 = sum(0.0005 * tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables())
         self.cost += l2
-        self.optimizer = tf.train.AdamOptimizer(learning_rate = learning_rate).minimize(self.cost)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(self.cost)
         self.correct_pred = tf.equal(tf.argmax(self.logits, 1), tf.argmax(self.Y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
 
@@ -83,7 +87,7 @@ EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 10, 0, 0, 0
 while True:
     lasttime = time.time()
     if CURRENT_CHECKPOINT == EARLY_STOPPING:
-        print('break epoch:', EPOCH)
+        print("break epoch:", EPOCH)
         break
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
     for i in range(0, (train_X.shape[0] // batch) * batch, batch):
@@ -91,7 +95,7 @@ while True:
         batch_y = np.zeros((batch, len(label)))
         for k in range(batch):
             tokens = train_X[i + k].split()[:maxlen]
-            emb_data = np.zeros((maxlen, dimension), dtype = np.float32)
+            emb_data = np.zeros((maxlen, dimension), dtype=np.float32)
             for no, text in enumerate(tokens[::-1]):
                 try:
                     emb_data[-1 - no, :] += vectors[dictionary[text], :]
@@ -100,16 +104,18 @@ while True:
                     continue
             batch_y[k, int(train_Y[i + k])] = 1.0
             batch_x[k, :, :] = emb_data[:, :]
-        loss, _ = sess.run([model.cost, model.optimizer], feed_dict = {model.X : batch_x, model.Y : batch_y})
+        loss, _ = sess.run(
+            [model.cost, model.optimizer], feed_dict={model.X: batch_x, model.Y: batch_y}
+        )
         train_loss += loss
-        train_acc += sess.run(model.accuracy, feed_dict = {model.X : batch_x, model.Y : batch_y})
-    
+        train_acc += sess.run(model.accuracy, feed_dict={model.X: batch_x, model.Y: batch_y})
+
     for i in range(0, (test_X.shape[0] // batch) * batch, batch):
         batch_x = np.zeros((batch, maxlen, dimension))
         batch_y = np.zeros((batch, len(label)))
         for k in range(batch):
             tokens = test_X[i + k].split()[:maxlen]
-            emb_data = np.zeros((maxlen, dimension), dtype = np.float32)
+            emb_data = np.zeros((maxlen, dimension), dtype=np.float32)
             for no, text in enumerate(tokens[::-1]):
                 try:
                     emb_data[-1 - no, :] += vectors[dictionary[text], :]
@@ -117,23 +123,36 @@ while True:
                     continue
             batch_y[k, int(test_Y[i + k])] = 1.0
             batch_x[k, :, :] = emb_data[:, :]
-        loss, acc = sess.run([model.cost, model.accuracy], feed_dict = {model.X : batch_x, model.Y : batch_y})
+        loss, acc = sess.run(
+            [model.cost, model.accuracy], feed_dict={model.X: batch_x, model.Y: batch_y}
+        )
         test_loss += loss
         test_acc += acc
-        
-    train_loss /= (train_X.shape[0] // batch)
-    train_acc /= (train_X.shape[0] // batch)
-    test_loss /= (test_X.shape[0] // batch)
-    test_acc /= (test_X.shape[0] // batch)
+
+    train_loss /= train_X.shape[0] // batch
+    train_acc /= train_X.shape[0] // batch
+    test_loss /= test_X.shape[0] // batch
+    test_acc /= test_X.shape[0] // batch
     if test_acc > CURRENT_ACC:
-        print('epoch:', EPOCH, ', pass acc:', CURRENT_ACC, ', current acc:', test_acc)
+        print("epoch:", EPOCH, ", pass acc:", CURRENT_ACC, ", current acc:", test_acc)
         CURRENT_ACC = test_acc
         CURRENT_CHECKPOINT = 0
         saver.save(sess, os.getcwd() + "/model-rnn-vector-huber.ckpt")
     else:
         CURRENT_CHECKPOINT += 1
-    print('time taken:', time.time()-lasttime)
-    print('epoch:', EPOCH, ', training loss:', train_loss, ', training acc:', train_acc, ', valid loss:', test_loss, ', valid acc:', test_acc)
+    print("time taken:", time.time() - lasttime)
+    print(
+        "epoch:",
+        EPOCH,
+        ", training loss:",
+        train_loss,
+        ", training acc:",
+        train_acc,
+        ", valid loss:",
+        test_loss,
+        ", valid acc:",
+        test_acc,
+    )
     EPOCH += 1
 
 
@@ -141,7 +160,13 @@ while True:
 
 
 # only load Variables, placeholder for input, and our logits
-strings=','.join([n.name for n in tf.get_default_graph().as_graph_def().node if "Variable" in n.op or n.name.find('Placeholder') >= 0 or n.name.find('logits') == 0])
+strings = ",".join(
+    [
+        n.name
+        for n in tf.get_default_graph().as_graph_def().node
+        if "Variable" in n.op or n.name.find("Placeholder") >= 0 or n.name.find("logits") == 0
+    ]
+)
 
 
 # In[8]:
@@ -151,23 +176,21 @@ def freeze_graph(model_dir, output_node_names):
 
     if not tf.gfile.Exists(model_dir):
         raise AssertionError(
-            "Export directory doesn't exists. Please specify an export "
-            "directory: %s" % model_dir)
+            "Export directory doesn't exists. Please specify an export " "directory: %s" % model_dir
+        )
 
     checkpoint = tf.train.get_checkpoint_state(model_dir)
     input_checkpoint = checkpoint.model_checkpoint_path
-    
-    absolute_model_dir = "/".join(input_checkpoint.split('/')[:-1])
+
+    absolute_model_dir = "/".join(input_checkpoint.split("/")[:-1])
     output_graph = absolute_model_dir + "/frozen_model.pb"
     clear_devices = True
     with tf.Session(graph=tf.Graph()) as sess:
-        saver = tf.train.import_meta_graph(input_checkpoint + '.meta', clear_devices=clear_devices)
+        saver = tf.train.import_meta_graph(input_checkpoint + ".meta", clear_devices=clear_devices)
         saver.restore(sess, input_checkpoint)
         output_graph_def = tf.graph_util.convert_variables_to_constants(
-            sess,
-            tf.get_default_graph().as_graph_def(),
-            output_node_names.split(",")
-        ) 
+            sess, tf.get_default_graph().as_graph_def(), output_node_names.split(",")
+        )
         with tf.gfile.GFile(output_graph, "wb") as f:
             f.write(output_graph_def.SerializeToString())
         print("%d ops in the final graph." % len(output_graph_def.node))
@@ -194,7 +217,7 @@ def load_graph(frozen_graph_filename):
 # In[11]:
 
 
-g=load_graph('frozen_model.pb')
+g = load_graph("frozen_model.pb")
 
 
 # In[12]:
@@ -207,14 +230,10 @@ for op in g.get_operations():
 # In[15]:
 
 
-x = g.get_tensor_by_name('import/Placeholder:0')
-y = g.get_tensor_by_name('import/logits:0')
+x = g.get_tensor_by_name("import/Placeholder:0")
+y = g.get_tensor_by_name("import/logits:0")
 test_sess = tf.InteractiveSession(graph=g)
-results = np.argmax(test_sess.run(tf.nn.softmax(y), feed_dict={x:batch_x}),axis=1)
+results = np.argmax(test_sess.run(tf.nn.softmax(y), feed_dict={x: batch_x}), axis=1)
 
 
 # In[ ]:
-
-
-
-

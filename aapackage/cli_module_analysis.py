@@ -24,10 +24,10 @@ from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
 
-import pandas as pd
-
 import future
+import pandas as pd
 import past
+
 import regex
 
 ####################################################################################################
@@ -873,7 +873,7 @@ def code_search_usage(
                 isdebug=0,
                 outputfile="",
             )
-            
+
             try:
                 df_all = pd.concat((df_all, df))
             except:

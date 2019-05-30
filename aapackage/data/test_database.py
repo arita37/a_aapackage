@@ -15,13 +15,17 @@ ustef_all = np.array( ['SPY','AMJ','AAXJ','ACWI','ACWV','ACWX','AGG','AGZ'])
 import os
 import sys
 
+import sqlalchemy as sql
+
+import data.hist_data_storage as yhh
+import data.yahoo as yh
+import util
+
 os.chdir('D:\\_devs\\Python01\\project27\\')
 sys.path.append(os.getcwd()+'/aapackage');  sys.path.append(os.getcwd()+'/linux/aapackage')
-import util
 util.a_run_ipython("run " + os.getcwd() + '/aapackage/allmodule.py')
 DIR= os.getcwd()
 
-import data.hist_data_storage as yhh, sqlalchemy as sql
 
 dbname= 'sqlite:///aaserialize/store/yahoo.db'
 dstore= yhh.dailyDataStore(dbname)
@@ -162,7 +166,6 @@ http://sebastianraschka.com/Articles/2014_sqlite_in_python_tutorial.html
 
 
 
-import data.yahoo as yh
 
 yh.YFinanceDataExtr
 
@@ -174,33 +177,3 @@ yh.YFinanceDataExtr
 
 ############################################################################
 #---------------------             --------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

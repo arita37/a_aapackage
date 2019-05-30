@@ -1,11 +1,55 @@
 # coding=utf-8
-from __future__ import division; from __future__ import print_function
+from __future__ import division, print_function
+
+#####################################################################################
+import base64
+import copy
+#####################################################################################################
+import datetime
+import gc
+import os
+import re
+import shutil
+import sys
+import time
+from base64 import b64decode as base64_to_text
+from builtins import map, next, object, range, str, zip
+#####################################################################################
+from urllib.parse import parse_qs, urlencode, urlparse
+
+import IPython
+import numexpr as ne
+import numpy as np
+import pandas as pd
+#####################################################################################
+import requests
+import scipy as sci
+from bs4 import BeautifulSoup
 from future import standard_library
+from lxml.html import fromstring
+from past.builtins import basestring
+from past.utils import old_div
+from requests import get
+
+import arrow
+import github
+######################################################################################################
+######################################################################################################
+import github3
+import wget
+from attrdict import AttrDict as dict2
+from config import LOGIN, PASSWORD
+from github import Github
+# -*- coding: utf-8 -*-
+####################################################################################################
+from selenium import webdriver
+#######Headless PhantomJS ##############################################################################
+from selenium.webdriver import PhantomJS
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+#from login_data import *
+from selenium.webdriver.common.keys import Keys
+
 standard_library.install_aliases()
-from builtins import next;      from builtins import map
-from builtins import zip;       from builtins import str
-from builtins import range;     from past.builtins import basestring
-from past.utils import old_div; from builtins import object
 
 import os, sys; reload(sys); sys.setdefaultencoding('utf8')
 if sys.platform.find('win') > -1 :
@@ -27,10 +71,6 @@ except :  print("Project Root Directory unknown")
 
 
 
-#####################################################################################################
-import datetime, time, arrow,  shutil,  IPython, gc, copy
-import numexpr as ne, numpy as np, pandas as pd, scipy as sci
-from attrdict import AttrDict as dict2
 
 
 __path__= DIRCWD +'/aapackage/'
@@ -42,17 +82,11 @@ config - { "login" : 78  ,  "password" : 78}
 
 
 
-####################################################################################################
-from selenium import webdriver
-import time
 # Issue with recent selenium on firefox...
 # conda install -c conda-forge selenium ==2.53.6
 
 
 
-#######Headless PhantomJS ##############################################################################
-from selenium.webdriver import PhantomJS
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 # DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'uastring'
 DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:16.0) Gecko/20121026 Firefox/16.0'
 
@@ -135,20 +169,12 @@ print(html)
 
 
 
-# -*- coding: utf-8 -*-
-from selenium import webdriver
-from bs4 import BeautifulSoup
-#from login_data import *
-from selenium.webdriver.common.keys import Keys
-import pandas as pd
-import wget
 
 
 LOGIN= ""
 PASSWORD= ""
 
 
-import sys
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -256,9 +282,6 @@ driver.quit()
 
 
 
-######################################################################################################
-######################################################################################################
-import github3
 
 
 gh = github3.GitHub()
@@ -291,10 +314,8 @@ for item in  res.items()  :
 # -*- coding: utf-8 -*-
 
 
-from config import LOGIN, PASSWORD
 
 
-from github import Github
 gh = Github(LOGIN, PASSWORD)
 # print(list(gh.search_code('requests auth github filename:.py language:python')[:5]))
 
@@ -311,7 +332,6 @@ timeout = 2 if LOGIN and PASSWORD else 6
 # Немного добавить на всякий
 timeout += 0.5
 
-import time
 
 search_result = gh.search_code(search_query)
 total_count = search_result.totalCount
@@ -322,7 +342,6 @@ print(data[0])
 print(dir(data[0]))
 print(data[0].url)
 print(data[0].content)
-from base64 import b64decode as base64_to_text
 print(base64_to_text(data[0].content.encode()).decode())
 print(data[0].html_url)
 
@@ -359,8 +378,6 @@ print(user)
 
 
 
-#####################################################################################
-import requests, re
 
 
 
@@ -452,11 +469,7 @@ for link in results.find_elements_by_css_selector("a.gs-title"):
 
 
 
-#####################################################################################
-from urllib.parse import urlencode, urlparse, parse_qs
 
-from lxml.html import fromstring
-from requests import get
 
 raw = get("https://www.google.com/search?q=StackOverflow").text
 page = fromstring(raw)
@@ -471,11 +484,6 @@ for result in pg.cssselect(".r a"):
 
 
 
-#####################################################################################
-import base64
-import os
-import re
-import requests
 
 
 def get_repos(since=0):
@@ -550,7 +558,6 @@ def get_repo_contents(url, sha):
 
 
 
-import github
 def process_repo_contents(repo_contents):
     """
     Left as an exercise for OP
@@ -791,8 +798,3 @@ for item in g.search.RepositorySearchResult():
 
 
 '''
-
-
-
-
-

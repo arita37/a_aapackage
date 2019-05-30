@@ -4,25 +4,27 @@
 # In[1]:
 
 
-import tensorflow as tf
 import os
-from utils import *
-from tacotron import Tacotron
+
+from scipy.io.wavfile import write
 from tqdm import tqdm
 
+import tensorflow as tf
+from tacotron import Tacotron
+from utils import *
 
 # In[2]:
 
 
 paths, lengths, texts, raw_texts = [], [], [], []
-text_files = [f for f in os.listdir('mel') if f.endswith('.npy')]
+text_files = [f for f in os.listdir("mel") if f.endswith(".npy")]
 for fpath in text_files:
-    with open('%s/%s' % (path, fpath.replace('npy', 'txt'))) as fopen:
+    with open("%s/%s" % (path, fpath.replace("npy", "txt"))) as fopen:
         text = fopen.read()
-    paths.append(fpath.replace('.npy', ''))
+    paths.append(fpath.replace(".npy", ""))
     text = text_normalize(text)
     raw_texts.append(text)
-    text = text + 'E'
+    text = text + "E"
     texts.append(np.array([char2idx[char] for char in text], np.int32))
     lengths.append(len(text))
 
@@ -61,7 +63,7 @@ sess.run(tf.global_variables_initializer())
 
 EPOCH = 30
 for i in range(EPOCH):
-    pbar = tqdm(range(0, len(paths), batch_size), desc = 'minibatch loop')
+    pbar = tqdm(range(0, len(paths), batch_size), desc="minibatch loop")
     for k in pbar:
         index = min(k + batch_size, len(paths))
         files, max_y, max_z = dynamic_batching(paths[k:index])
@@ -71,28 +73,20 @@ for i in range(EPOCH):
         batch_z = np.zeros((batch_size, max_z, fourier_window_size // 2 + 1))
         for n in range(len(files)):
             batch_x[n, :] = np.pad(
-                texts[k + n],
-                ((0, max_x - texts[k + n].shape[0])),
-                mode = 'constant',
+                texts[k + n], ((0, max_x - texts[k + n].shape[0])), mode="constant"
             )
             batch_y[n, :, :] = np.pad(
-                files[n][0],
-                ((0, max_y - files[n][0].shape[0]), (0, 0)),
-                mode = 'constant',
+                files[n][0], ((0, max_y - files[n][0].shape[0]), (0, 0)), mode="constant"
             )
             batch_z[n, :, :] = np.pad(
-                files[n][1],
-                ((0, max_z - files[n][1].shape[0]), (0, 0)),
-                mode = 'constant',
+                files[n][1], ((0, max_z - files[n][1].shape[0]), (0, 0)), mode="constant"
             )
         _, cost = sess.run(
             [model.optimizer, model.loss],
-            feed_dict = {model.X: batch_x, model.Y: batch_y, model.Z: batch_z},
+            feed_dict={model.X: batch_x, model.Y: batch_y, model.Z: batch_z},
         )
-        pbar.set_postfix(cost = cost)
-    align = sess.run(
-        model.alignments, feed_dict = {model.X: batch_x, model.Y: batch_y}
-    )
+        pbar.set_postfix(cost=cost)
+    align = sess.run(model.alignments, feed_dict={model.X: batch_x, model.Y: batch_y})
     plot_alignment(align[0, :, :])
 
 
@@ -120,13 +114,9 @@ audio = spectrogram2wav(mags[0])
 # In[10]:
 
 
-from scipy.io.wavfile import write
-print('saving: %s'%(raw_texts[0]))
-write(os.path.join('test.wav'), sample_rate, audio)
+
+print("saving: %s" % (raw_texts[0]))
+write(os.path.join("test.wav"), sample_rate, audio)
 
 
 # In[ ]:
-
-
-
-
