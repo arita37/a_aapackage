@@ -8,6 +8,8 @@
 """
 from __future__ import division, print_function
 
+import glob
+
 import arrow
 import copy
 import datetime
@@ -15,33 +17,34 @@ import dill
 import errno
 import fnmatch
 import gc
+import importlib
 import operator
 import os
 import pickle
+import pip
 import psutil
 import re
 import shutil
 import subprocess
 import sys
 import time
-import util
 import zipfile
-from builtins import map, next, object, range, str, zip
 
 import matplotlib.pyplot as plt
-import urllib3
 
 import IPython
 import numexpr as ne
 import numpy as np
 import pandas as pd
 import scipy as sci
+import scipy.optimize
 from bs4 import BeautifulSoup
 # Date Manipulation
 from dateutil import parser
+# noinspection PyUnresolvedReferences
 from future import standard_library
 from numba import float32, jit
-from past.builtins import basestring
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 from past.utils import old_div
 
 standard_library.install_aliases()
@@ -84,6 +87,7 @@ def py_save_obj_dill(obj1, keyname="", otherfolder=0):
     os_folder_create(DIRCWD + "/aaserialize/" + dir0)
     dir1 = DIRCWD + "/aaserialize/" + dir0 + "/" + keyname + ".pkl" if otherfolder == 0 else keyname
 
+    # noinspection PyUnresolvedReferences
     type_list = [
         np,
         pd.core.series,
@@ -91,12 +95,11 @@ def py_save_obj_dill(obj1, keyname="", otherfolder=0):
         dill.source.getmodule(str),
         dill.source.getmodule(float),
     ]
-    name_type = []
 
     type1 = dill.source.getmodule(type(obj1))
     name1 = ""
     if name1 not in type_list and type1 not in type_list:
-        with open(dir1, "wb") as f:
+        with open(dir1, "wb"):
             dill.dumps(obj1, protocol=pickle.HIGHEST_PROTOCOL)
     else:
         print("Primitive type not dill saved")
@@ -116,7 +119,9 @@ def session_guispyder_save(filename):
     save_session(filename + ".session.tar")
 
 
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences
 def session_guispyder_load(filename):
+    # noinspection PyUnresolvedReferences
     from spyderlib.spyder import load_session
 
     load_session(filename + ".session.tar")
@@ -139,6 +144,7 @@ def session_guispyder_load(filename):
  '''
 
 
+# noinspection PyUnresolvedReferences,PyUnresolvedReferences
 def session_load(filename, dict1=None, towhere="main"):
     """ .spydata file,  dict1: already provided Dict,  towhere= main, function, dict """
     from spyderlib.utils.iofuncs import load_dictionary
@@ -164,9 +170,7 @@ def session_load(filename, dict1=None, towhere="main"):
             print(k, end=" ")
 
     elif towhere == "function":
-        from inspect import getmembers, stack
-
-        globals1 = dict(getmembers(stack()[1][0]))["f_globals"]
+        pass
 
     elif towhere == "dict":
         return data
@@ -267,8 +271,8 @@ df['PREF_NAME']=       df['PREF_NAME'].apply(to_unicode)
 
 
 3. Encode late
->>> f = open('/tmp/ivan_out.txt','w')
->>> f.write(ivan_uni.encode('utf-8'))
+# >>> f = open('/tmp/ivan_out.txt','w')
+# >>> f.write(ivan_uni.encode('utf-8'))
 
 Important methods
 s.decode(encoding)  <type 'str'> to <type 'unicode'>
@@ -285,7 +289,7 @@ def isfloat(x):
             return False
         float(x)
         return True
-    except Exception:
+    except ValueError:
         return False
 
 
@@ -294,8 +298,6 @@ def isint(x):
 
 
 def isanaconda():
-    import sys
-
     txt = sys.version
     if txt.find("Continuum") > 0:
         return True
@@ -316,7 +318,7 @@ def py_autoreload():
 
 
 def os_platform():
-    pass
+    return ""
 
 
 def a_start_log(id1="", folder="aaserialize/log/"):
@@ -351,17 +353,6 @@ def a_module_doc(module_str="pandas"):
     file1 = dir1 + "/" + module_str + "/doc.py"
     txt = os_file_read(file1)
     os_gui_popup_show(txt)
-
-
-def a_module_generatedoc(module_str="pandas", fileout=""):
-    r""" #  getmodule_doc("jedi", r"D:\_devs\Python01\aapackage\doc.txt")"""
-    from .automaton import codeanalysis as ca
-
-    # pathout= DIRCWD+'/docs/'+ module1.__name__
-    pathout = DIRCWD + "/docs/" + module_str
-    if not os.path.exists(pathout):
-        os.makedirs(pathout)
-    ca.getmodule_doc(module_str, file2=pathout + "/signature.py")
 
 
 def a_info_conda_jupyter():
@@ -400,7 +391,7 @@ def a_run_cmd(cmd1):
 
 
 def a_help():
-    str = """
+    help_str = r"""
   PYCHARM shortcut :
     Highlight the Text  +  Alt +G   : Google Search
     Atl+C :  Doc   Alt+X : Doc     Alt+W : Doc Internet
@@ -482,8 +473,8 @@ D:\_devs\Python01\project\zjavajar
 
 
   """
-    os_gui_popup_show(str)
-    # print( str)
+    os_gui_popup_show(help_str)
+    # print(help_str)
 
 
 def a_info_system():
@@ -499,8 +490,6 @@ def a_info_system():
 
 
 def a_info_packagelist():
-    import pip
-
     installed_packages = pip.get_installed_distributions()
     installed_packages_list = sorted(["%s==%s" % (i.key, i.version) for i in installed_packages])
     for p in installed_packages_list:
@@ -545,7 +534,7 @@ def print_object_tofile(vv, txt, file1="d:/regression_output.py"):
                 file1.write(aux + "\n")
 
 
-def print_ProgressBar(iteration, total, prefix="", suffix="", decimals=1, barLength=100):
+def print_progressbar(iteration, total, prefix="", suffix="", decimals=1, bar_length=100):
     """# Print iterations progress
      Call in a loop to create terminal progress bar
     @params:
@@ -554,12 +543,12 @@ def print_ProgressBar(iteration, total, prefix="", suffix="", decimals=1, barLen
         prefix      - Optional  : prefix string (Str)
         suffix      - Optional  : suffix string (Str)
         decimals    - Optional  : positive number of decimals in percent complete (Int)
-        barLength   - Optional  : character length of bar (Int)
+        bar_length   - Optional  : character length of bar (Int)
     """
-    formatStr = "{0:." + str(decimals) + "f}"
-    percent = formatStr.format(100 * (iteration / float(total)))
-    filledLength = int(round(barLength * iteration / float(total)))
-    bar = "#" * filledLength + "-" * (barLength - filledLength)
+    format_str = "{0:." + str(decimals) + "f}"
+    percent = format_str.format(100 * (iteration / float(total)))
+    filled_length = int(round(bar_length * iteration / float(total)))
+    bar = "#" * filled_length + "-" * (bar_length - filled_length)
     sys.stdout.write("\r%s |%s| %s%s %s" % (prefix, bar, percent, "%", suffix)),
     if iteration == total:
         sys.stdout.write("\n")
@@ -569,7 +558,7 @@ def print_ProgressBar(iteration, total, prefix="", suffix="", decimals=1, barLen
      # Do stuff...
      # Update Progress Bar
      i += 1
-     printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', barLength = 50)
+     printProgress(i, l, prefix = 'Progress:', suffix = 'Complete', bar_length = 50)
     """
 
 
@@ -583,7 +572,7 @@ def os_zip_checkintegrity(filezip1):
             return False
         else:
             return True
-    except Exception as e:
+    except RuntimeError:
         return False
 
 
@@ -614,6 +603,8 @@ def os_zipfolder(
                      base_dir='output')
  os_zipfolder('zdisk/test/aapackage', 'zdisk/test/aapackage.zip', 'zdisk/test')"""
     import shutil
+
+    _ = iscompress
 
     dir_tozip = dir_tozip if dir_tozip[-1] != "/" else dir_tozip[:-1]
     # dir_prefix= dir_prefix if dir_prefix[-1] != '/' else dir_prefix[:-1]
@@ -659,12 +650,13 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
     """os_zipextractall( 'aapackage.zip','zdisk/test/'      )  """
     import zipfile
 
+    _ = isprint
+
     if filezip_or_dir.find("*") > -1:  # Many Zip
         ziplist1 = os_file_listall(filezip_or_dir[: filezip_or_dir.find("*")], "*.zip")
         fileziplist_full = ziplist1[2]
 
     else:  # Only 1
-        filename = os_file_getname(filezip_or_dir)
         fileziplist_full = [filezip_or_dir]
 
     # if os.path.exists( foldernew2  ) :      #Either File or Folder exists
@@ -688,12 +680,6 @@ def os_zipextractall(filezip_or_dir="folder1/*.zip", tofolderextract="zdisk/test
         return -1
 
 
-def _default_fun_file_toignore(src, names):
-    pattern = "!" + pattern1
-    file_toignore = fnmatch.filter(names, pattern)
-    return file_toignore
-
-
 def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=None):
     """
        callable(src, names) -> ignored_names
@@ -703,25 +689,31 @@ def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=
     Since copytree() is called recursively, the callable will be called once for each
     directory that is copied.
     It returns a  list of names relative to the `src` directory that should not be copied.
-   :param fun_ignore:
    """
+    def _default_fun_file_toignore(src, names):
+        _ = src
+
+        pattern = "!" + pattern1
+        file_toignore = fnmatch.filter(names, pattern)
+        return file_toignore
+
     if fun_file_toignore is None:
         fun_file_toignore = _default_fun_file_toignore
 
     try:
-        shutil.copytree(src, dst, symlinks=False, ignore=fun_file_toignore)
+        shutil.copytree(src, dst, symlinks=symlinks, ignore=fun_file_toignore)
     except OSError as exc:  # python >2.5
         if exc.errno == errno.ENOTDIR:
-            shutil.copy(src, dst, symlinks=False, ignore=fun_file_toignore)
+            shutil.copy(src, dst, follow_symlinks=False)
         else:
             raise
 
 
 def os_folder_create(directory):
-    DIR0 = os.getcwd()
+    dir0 = os.getcwd()
     if not os.path.exists(directory):
         os.makedirs(directory)
-    os.chdir(DIR0)
+    os.chdir(dir0)
 
 
 def os_folder_robocopy(from_folder="", to_folder="", my_log="H:/robocopy_log.txt"):
@@ -751,16 +743,16 @@ def os_file_replace(source_file_path, pattern, substring):
     move(target_file_path, source_file_path)
 
 
-def os_file_replacestring1(findStr, repStr, filePath):
-    "replaces all findStr by repStr in file filePath"
+def os_file_replacestring1(find_str, rep_str, file_path):
+    """replaces all find_str by rep_str in file file_path"""
     import fileinput
 
-    file1 = fileinput.FileInput(filePath, inplace=True, backup=".bak")
+    file1 = fileinput.FileInput(file_path, inplace=True, backup=".bak")
     for line in file1:
-        line = line.replace(findStr, repStr)
+        line = line.replace(find_str, rep_str)
         sys.stdout.write(line)
     file1.close()
-    print(("OK: " + format(filePath)))
+    print(("OK: " + format(file_path)))
 
 
 def os_file_replacestring2(findstr, replacestr, some_dir, pattern="*.*", dirlevel=1):
@@ -795,7 +787,7 @@ def os_file_gettext(file1):
 
 
 def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
-    """
+    r"""
    # DIRCWD=r"D:\_devs\Python01\project"
    # aa= listallfile(DIRCWD, "*.*", 2)
    # aa[0][30];   aa[2][30]
@@ -817,10 +809,10 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
             matches.append([])
             matches.append([])
             # Filename, DirName
-            for dirs in fnmatch.filter(dirs, pattern):
-                matches[0].append(os.path.splitext(dirs)[0])
+            for inner_dirs in fnmatch.filter(dirs, pattern):
+                matches[0].append(os.path.splitext(inner_dirs)[0])
                 matches[1].append(os.path.splitext(root)[0])
-                matches[2].append(os.path.join(root, dirs))
+                matches[2].append(os.path.join(root, inner_dirs))
         return np.array(matches)
 
     for root, dirs, files in os.walk(dir1):
@@ -831,19 +823,20 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
         matches.append([])
         matches.append([])
         # Filename, DirName
-        for files in fnmatch.filter(files, pattern):
-            matches[0].append(os.path.splitext(files)[0])
-            matches[1].append(os.path.splitext(files)[1])
-            matches[2].append(os.path.join(root, files))
+        for inner_files in fnmatch.filter(files, pattern):
+            matches[0].append(os.path.splitext(inner_files)[0])
+            matches[1].append(os.path.splitext(inner_files)[1])
+            matches[2].append(os.path.join(root, inner_files))
     return np.array(matches)
 
 
 def os_file_listall2(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
-    """ dirpath, filename, fullpath
+    r""" dirpath, filename, fullpath
    # DIRCWD=r"D:\_devs\Python01\project"
    # aa= listallfile(DIRCWD, "*.*", 2)
    # aa[0][30];   aa[2][30]
   """
+    _ = onlyfolder
 
     matches = {}
     dir1 = dir1.rstrip(os.path.sep)
@@ -863,10 +856,11 @@ def os_file_listall2(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
     return matches
 
 
-def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
+def _os_file_search_fast(fname, texts=None, mode="regex/str"):
+    if texts is None:
+        texts = ["myword"]
+
     res = []  # url:   line_id, match start, line
-    nb = 0
-    error_flag = False
     enc = "utf-8"
     fname = os.path.abspath(fname)
     try:
@@ -878,7 +872,7 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
                     if found is not None:
                         try:
                             line_enc = line.decode(enc)
-                        except Exception:
+                        except UnicodeError:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found.start(), line_enc))
 
@@ -890,7 +884,7 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
                     if found > -1:
                         try:
                             line_enc = line.decode(enc)
-                        except Exception:
+                        except UnicodeError:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found, line_enc))
 
@@ -908,8 +902,11 @@ def _os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
 
 
 def os_file_search_content(
-        srch_pattern=["from ", "import "], mode="str", dir1="", file_pattern="*.*", dirlevel=1
+        srch_pattern=None, mode="str", dir1="", file_pattern="*.*", dirlevel=1
 ):
+    if srch_pattern is None:
+        srch_pattern = ["from ", "import "]
+
     list_all = os_file_listall(dir1, pattern=file_pattern, dirlevel=dirlevel)
     ll = []
     for f in list_all["fullpath"]:
@@ -942,11 +939,11 @@ def os_file_rename(some_dir, pattern="*.*", pattern2="", dirlevel=1):
         matches.append([])
         matches.append([])
         # Filename, DirName
-        for files in fnmatch.filter(files, pattern):
+        for inner_files in fnmatch.filter(files, pattern):
             # replace pattern by pattern2
-            nfile = re.sub(pattern, pattern2, files)
+            nfile = re.sub(pattern, pattern2, inner_files)
             os.path.abspath(root)
-            os.rename(files, nfile)
+            os.rename(inner_files, nfile)
 
             matches[0].append(os.path.splitext(nfile)[0])
             matches[1].append(os.path.splitext(nfile)[1])
@@ -959,13 +956,13 @@ def os_gui_popup_show(txt):
         from tkinter import Tk, Scrollbar, Text, mainloop, RIGHT, END, LEFT, Y
 
         root = Tk()
-        S = Scrollbar(root)
-        T = Text(root, height=50, width=90)
-        S.pack(side=RIGHT, fill=Y)
-        T.pack(side=LEFT, fill=Y)
-        S.config(command=T.yview)
-        T.config(yscrollcommand=S.set)
-        T.insert(END, txt)
+        scrollbar = Scrollbar(root)
+        text = Text(root, height=50, width=90)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        text.pack(side=LEFT, fill=Y)
+        scrollbar.config(command=text.yview)
+        text.config(yscrollcommand=scrollbar.set)
+        text.insert(END, txt)
         root.attributes("-topmost", True)  # note - before topmost
         mainloop()
 
@@ -1098,9 +1095,9 @@ def os_file_isame(file1, file2):
 
 def os_file_get_extension(file_path):
     """
-    >>> get_file_extension("/a/b/c")
+    # >>> get_file_extension("/a/b/c")
     ''
-    >>> get_file_extension("/a/b/c.tar.xz")
+    # >>> get_file_extension("/a/b/c.tar.xz")
     'xz'
     """
     _ext = os.path.splitext(file_path)[-1]
@@ -1136,12 +1133,12 @@ def os_file_get_path_from_stream(maybe_stream):
     :param maybe_stream: A file or file-like object
     :return: Path of given file or file-like object or None
 
-    >>> __file__ == get_path_from_stream(__file__)
+    # >>> __file__ == get_path_from_stream(__file__)
     True
-    >>> __file__ == get_path_from_stream(open(__file__, 'r'))
+    # >>> __file__ == get_path_from_stream(open(__file__, 'r'))
     True
-    >>> strm = anyconfig.compat.StringIO()
-    >>> get_path_from_stream(strm) is None
+    # >>> strm = anyconfig.compat.StringIO()
+    # >>> get_path_from_stream(strm) is None
     True
     """
     if os_folder_is_path(maybe_stream):
@@ -1171,14 +1168,14 @@ def os_file_are_same_file_types(paths):
     Are given (maybe) file paths same type (extension) ?
     :param paths: A list of file path or file(-like) objects
 
-    >>> are_same_file_types([])
+    # >>> are_same_file_types([])
     False
-    >>> are_same_file_types(["a.conf"])
+    # >>> are_same_file_types(["a.conf"])
     True
-    >>> are_same_file_types(["a.yml", "b.json"])
+    # >>> are_same_file_types(["a.yml", "b.json"])
     False
-    >>> strm = anyconfig.compat.StringIO()
-    >>> are_same_file_types(["a.yml", "b.yml", strm])
+    # >>> strm = anyconfig.compat.StringIO()
+    # >>> are_same_file_types(["a.yml", "b.yml", strm])
     False
     """
     if not paths:
@@ -1197,16 +1194,16 @@ def os_file_norm_paths(paths, marker="*"):
         path pattern strings or file objects
     :param marker: Glob marker character or string, e.g. '*'
     :return: List of path strings
-    >>> norm_paths([])
+    # >>> norm_paths([])
     []
-    >>> norm_paths("/usr/lib/a/b.conf /etc/a/b.conf /run/a/b.conf".split())
+    # >>> norm_paths("/usr/lib/a/b.conf /etc/a/b.conf /run/a/b.conf".split())
     ['/usr/lib/a/b.conf', '/etc/a/b.conf', '/run/a/b.conf']
-    >>> paths_s = os.path.join(os.path.dirname(__file__), "u*.py")
-    >>> ref = sglob(paths_s)
-    >>> ref = ["/etc/a.conf"] + ref
-    >>> assert norm_paths(["/etc/a.conf", paths_s]) == ref
-    >>> strm = anyconfig.compat.StringIO()
-    >>> assert norm_paths(["/etc/a.conf", strm]) == ["/etc/a.conf", strm]
+    # >>> paths_s = os.path.join(os.path.dirname(__file__), "u*.py")
+    # >>> ref = sglob(paths_s)
+    # >>> ref = ["/etc/a.conf"] + ref
+    # >>> assert norm_paths(["/etc/a.conf", paths_s]) == ref
+    # >>> strm = anyconfig.compat.StringIO()
+    # >>> assert norm_paths(["/etc/a.conf", strm]) == ["/etc/a.conf", strm]
     """
 
     def sglob(files_pattern):
@@ -1237,8 +1234,6 @@ def os_file_norm_paths(paths, marker="*"):
 def os_file_mergeall(nfile, dir1, pattern1, deepness=2):
     ll = os_file_listall(dir1, pattern1, deepness)
     with open(nfile, mode="a", encoding="UTF-8") as nfile1:
-        txt = ""
-        ii = 0
         for l in ll[2]:
             txt = "\n\n\n\n" + os_file_gettext(l)
             nfile1.write(txt)
@@ -1247,11 +1242,11 @@ def os_file_mergeall(nfile, dir1, pattern1, deepness=2):
 
 def os_file_extracttext(output_file, dir1, pattern1="*.html", htmltag="p", deepness=2):
     """ Extract text from html """
+    _ = deepness
+
     ll = os_file_listall(dir1, pattern1, 5)
 
     with open(output_file, mode="a", encoding="UTF-8") as output_file1:
-        txt = ""
-        ii = 0
         for l in ll[2]:
             page = os_file_gettext(l)
             soup = BeautifulSoup(page, "lxml")
@@ -1294,19 +1289,23 @@ def os_split_dir_file(dirfile):
     return dir1, dirfile
 
 
-def os_process_run(cmd_list=["program", "arg1", "arg2"], capture_output=False):
-    import subprocess
+def os_process_run(cmd_list, capture_output=False):
+    """os_process_run
+    
+    Args:
+         cmd_list: list ["program", "arg1", "arg2"]
+         capture_output: bool
+    """
 
     # cmd_list= os_path_norm(cmd_list)
-    PIPE = subprocess.PIPE
-    STDOUT = subprocess.STDOUT
+    pipe = subprocess.PIPE
+    stdout = subprocess.STDOUT
     proc = subprocess.Popen(
-        cmd_list, stdout=PIPE, stderr=STDOUT, shell=False
+        cmd_list, stdout=pipe, stderr=stdout, shell=False
     )  # Always put to False
 
     if capture_output:
         stdout, stderr = proc.communicate()
-        err_code = proc.returncode
         print("Console Msg: \n")
         print((str(stdout)))  # ,"utf-8"))
         print(("\nConsole Error: \n" + str(stderr)))
@@ -1349,6 +1348,9 @@ p.wait()
 # Python Interpreter
 def py_importfromfile(modulename, dir1):
     # Import module from file:  (Although this has been deprecated in Python 3.4.)
+    _ = modulename
+    _ = dir1
+
     vv = a_get_pythonversion()
     if vv == 3:
         from importlib.machinery import SourceFileLoader
@@ -1356,9 +1358,7 @@ def py_importfromfile(modulename, dir1):
         foo = SourceFileLoader("module.name", "/path/to/file.py").load_module()
         foo.MyClass()
     elif vv == 2:
-        import imp
-
-        foo = imp.load_source("module.name", "/path/to/file.py")
+        foo = importlib.import_module("module.name", "/path/to/file.py")
         foo.MyClass()
 
 
@@ -1370,6 +1370,8 @@ def py_memorysize(o, ids, hint=" deep_getsizeof(df_pd, set()) "):
     """
     from collections import Mapping, Container
     from sys import getsizeof
+
+    _ = hint
 
     d = py_memorysize
     if id(o) in ids:
@@ -1406,8 +1408,6 @@ def save_test(folder="/folder1/keyname", isabsolutpath=0):
 
 
 def py_save_obj(obj, folder="/folder1/keyname", isabsolutpath=0):
-    import pickle
-
     if isabsolutpath == 0 and folder.find(".pkl") == -1:  # Local Path
         dir0, keyname = z_key_splitinto_dir_name(folder)
         os_folder_create(DIRCWD + "/aaserialize/" + dir0)
@@ -1426,6 +1426,8 @@ def py_load_obj(folder="/folder1/keyname", isabsolutpath=0, encoding1="utf-8"):
             return pickle.load(f, encoding=encoding1)
     """
     import pickle
+
+    _ = encoding1
 
     if isabsolutpath == 0 and folder.find(".pkl") == -1:
         dir0, keyname = z_key_splitinto_dir_name(folder)
@@ -1532,8 +1534,8 @@ def obj_getclass_of_method(meth):
 
 
 def obj_getclass_property(pfi):
-    for property, value in vars(pfi).items():
-        print(property, ": ", value)
+    for prop, value in vars(pfi).items():
+        print(prop, ": ", value)
 
 
 # XML / HTML processing
@@ -1611,6 +1613,8 @@ def os_config_getfile(file1):
 
 
 def os_csv_process(file1):
+    _ = file1
+
     print(
         """
 import csv
@@ -1834,26 +1838,26 @@ def str_parse_stringcalendar(cal):
         i0 = x.find(":")
         cal4.append([datetime_toint(dateutil.parser.parse(x[:i0])), x[i0 + 1:]])
     cal4 = np.array(cal4)
-    cal5 = np.array(sortcol(cal4, 0), dtype=str)
+    cal5 = np.array(np_sortcol(cal4, 0), dtype=str)
     for x in cal5:
         print(x[0], ":", x[1].strip())
     return cal5
 
 
-def str_make_unicode(input, errors="replace"):
-    ttype = type(input)
+def str_make_unicode(input_str, errors="replace"):
+    ttype = type(input_str)
     if ttype != str:
-        input = input.decode("utf-8", errors=errors)
-        return input
+        input_str = input_str.decode("utf-8", errors=errors)
+        return input_str
     else:
-        return input
+        return input_str
 
 
 def str_empty_string_array(x, y=1):
     if y == 1:
-        return ["" for x in range(x)]
+        return ["" for _ in range(x)]
     else:
-        return [["" for row in range(0, x)] for col in range(0, y)]
+        return [["" for _ in range(0, x)] for _ in range(0, y)]
 
 
 def str_empty_string_array_numpy(nx, ny=1):
@@ -1866,7 +1870,7 @@ def str_isfloat(value):
     try:
         float(value)
         return True
-    except Exception:
+    except ValueError:
         return False
 
 
@@ -1874,7 +1878,7 @@ def str_is_azchar(x):
     try:
         float(x)
         return True
-    except Exception:
+    except ValueError:
         return False
 
 
@@ -1882,11 +1886,11 @@ def str_is_az09char(x):
     try:
         float(x)
         return True
-    except Exception:
+    except ValueError:
         return False
 
 
-def str_reindent(s, numSpaces):  # change indentation of multine string
+def str_reindent(s, num_spaces):  # change indentation of multine string
     """
    if args:
        aux= name1+'.'+obj.__name__ +'('+ str(args) +')  \n' + str(inspect.getdoc(obj))
@@ -1896,23 +1900,25 @@ def str_reindent(s, numSpaces):  # change indentation of multine string
        wi( aux)
     """
     s = s.split("\n")
-    s = [(numSpaces * " ") + line.lstrip() for line in s]
-    s = s.join("\n")
+    s = [(num_spaces * " ") + line.lstrip() for line in s]
+    s = "\n".join(s)
     return s
 
 
 def str_split2(delimiters, string, maxsplit=0):  # Split into Sub-Sentence
     import re
 
-    regexPattern = "|".join(map(re.escape, delimiters))
-    return re.split(regexPattern, string, maxsplit)
+    regex_pattern = "|".join(map(re.escape, delimiters))
+    return re.split(regex_pattern, string, maxsplit)
 
 
 def str_split_pattern(sep2, ll, maxsplit=0):  # Find Sentence Pattern
     import re
 
-    regexPat = "|".join(sep2)
-    regex3 = re.compile("(" + regexPat + r")|(?:(?!" + regexPat + ").)*", re.S)
+    _ = maxsplit
+
+    regex_pat = "|".join(sep2)
+    regex3 = re.compile("(" + regex_pat + r")|(?:(?!" + regex_pat + ").)*", re.S)
     # re.compile(r'(word1|word2|word3)|(?:(?!word1|word2|word3).)*', re.S)
     ll = regex3.sub(lambda m: m.group(1) if m.group(1) else "P", ll)
     return ll
@@ -1922,8 +1928,8 @@ def pd_str_isascii(x):
     try:
         x.decode("ascii")
         return True
-    except Exception:
-        return false
+    except UnicodeError:
+        return False
 
 
 def str_to_utf8(x):
@@ -2022,8 +2028,14 @@ zfill() retains any sign given (less one zero).
 
 # LIST UTIL / Array
 def np_minimize(
-        fun_obj, x0=[0.0], argext=(0, 0), bounds1=[(0.03, 0.20), (10, 150)], method="Powell"
+        fun_obj, x0=None, argext=(0, 0), bounds1=None, method="Powell"
 ):
+    if x0 is None:
+        x0 = [0.0]
+
+    if bounds1 is None:
+        bounds1 = [(0.03, 0.20), (10, 150)]
+
     def penalty(vv):  # Constraints Penalty
         penalty = 0.0
         for i, x in enumerate(vv):
@@ -2037,10 +2049,12 @@ def np_minimize(
     return res
 
 
-def np_minimizeDE(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
-    solver = sci.optimize._differentialevolution.DifferentialEvolutionSolver(
-        fun_obj, bounds=bounds, popsize=popsize
-    )
+def np_minimize_de(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
+    if solver is None:
+        solver = sci.optimize._differentialevolution.DifferentialEvolutionSolver(
+            fun_obj, bounds=bounds, popsize=popsize
+        )
+
     imin = 0
 
     name1 = "/batch/solver_" + name1
@@ -2051,7 +2065,7 @@ def np_minimizeDE(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
         res = (copy.deepcopy(solver), i, xbest, fbest)
         try:
             save(res, name1 + date_now() + "_" + np_int_tostr(i))
-        except Exception:
+        except pickle.PicklingError:
             pass
         if np.mod(i + 1, 11) == 0:
             if np.abs(fbest - fbest0) < 0.001:
@@ -2059,13 +2073,13 @@ def np_minimizeDE(fun_obj, bounds, name1, maxiter=10, popsize=5, solver=None):
             fbest0 = fbest
 
 
-def np_remove_NA_INF_2d(X):
-    im, jm = np.shape(X)
+def np_remove_na_inf_2d(x):
+    im, jm = np.shape(x)
     for i in range(0, im):
         for j in range(0, jm):
-            if np.isnan(X[i, j]) or np.isinf(X[i, j]):
-                X[i, j] = X[i - 1, j]
-    return X
+            if np.isnan(x[i, j]) or np.isinf(x[i, j]):
+                x[i, j] = x[i - 1, j]
+    return x
 
 
 def np_addcolumn(arr, nbcol):
@@ -2101,42 +2115,42 @@ def np_dictordered_create():
 
 
 def np_list_unique(seq):
-    from sets import Set
-
-    set = Set(seq)
-    return list(set)
+    return list(set(seq))
 
 
-def np_list_tofreqdict(l1, wweight=[]):
+def np_list_tofreqdict(l1, wweight=None):
+    if wweight is None:
+        wweight = []
+
     # Get list frequency
     dd = dict()
     if len(wweight) == 0:
         for x in l1:
             try:
                 dd[x] += 1
-            except Exception:
+            except IndexError:
                 dd[x] = 1
         return dd
     else:
         for ii, x in enumerate(l1):
             try:
                 dd[x] += wweight[ii]
-            except Exception:
+            except IndexError:
                 dd[x] = wweight[ii]
         return dd
 
 
 # used to flatten a list or tupel [1,2[3,4],[5,[6,7]]] -> [1,2,3,4,5,6,7]
 def np_list_flatten(seq):
-    l = []
+    ret = []
     for elt in seq:
         t = type(elt)
         if t is tuple or t is list:
-            for elt2 in flatten(elt):
-                l.append(elt2)
+            for elt2 in np_list_flatten(elt):
+                ret.append(elt2)
         else:
-            l.append(elt)
-    return l
+            ret.append(elt)
+    return ret
 
 
 def np_dict_tolist(dd, withkey=0):
@@ -2154,7 +2168,10 @@ def np_dict_tostr_key(dd):
     return ",".join([str(key) for key, _ in list(dd.items())])
 
 
-def np_removelist(x0, xremove=[]):
+def np_removelist(x0, xremove=None):
+    if xremove is None:
+        xremove = []
+
     xnew = []
     for x in x0:
         if np_findfirst(x, xremove) < 0:
@@ -2163,6 +2180,8 @@ def np_removelist(x0, xremove=[]):
 
 
 def np_transform2d_int_1d(m2d, onlyhalf=False):
+    _ = onlyhalf
+
     imax, jmax = np.shape(m2d)
     v1d = np.zeros((imax * jmax, 4))
     k = 0
@@ -2333,7 +2352,7 @@ def findx(item, vec):
         else:
             i = np.where(vec == item)[0]
             i2 = i[0] if len(i) > 0 else -1
-    except Exception:
+    except IndexError:
         i2 = -1
     return i2
 
@@ -2349,7 +2368,7 @@ def finds(itemlist, vec):
                 ix = i
         if ix == -1:
             idlist.append(-1)
-    if idlist == []:
+    if not idlist:
         return -1
     else:
         return idlist
@@ -2406,7 +2425,7 @@ def np_findlocalmax2(v, trig):
         return v2
     else:
         for i, x in enumerate(v):
-            if i < n - 1 and i > 0:
+            if 0 < i < n - 1:
                 if x > v[i - 1] and x > v[i + 1]:
                     v2[i, 0] = i
                     v2[i, 1] = x
@@ -2428,7 +2447,7 @@ def np_findlocalmax2(v, trig):
         v2[k, 6] = kmaxr - kmax
 
     v2 = v2[np.logical_and(v2[:, 5] > trig, v2[:, 6] > trig)]
-    v2 = np_sortbycolumn(v2, 0, asc=1)
+    v2 = np_sortbycolumn(v2, 0, asc=True)
     return v2
 
 
@@ -2442,7 +2461,7 @@ def np_findlocalmin2(v, trig):
         return v2
     else:
         for i, x in enumerate(v):
-            if i < n - 1 and i > 0:
+            if 0 < i < n - 1:
                 if x < v[i - 1] and x < v[i + 1]:
                     v2[i, 0] = i
                     v2[i, 1] = x
@@ -2464,7 +2483,7 @@ def np_findlocalmin2(v, trig):
                 v2[k, 5] = kmin - kminl
                 v2[k, 6] = kminr - kmin
     v2 = v2[np.logical_and(v2[:, 5] > trig, v2[:, 6] > trig)]
-    v2 = np_sortbycolumn(v2, 0, asc=1)
+    v2 = np_sortbycolumn(v2, 0, asc=True)
     return v2
 
 
@@ -2473,7 +2492,7 @@ def np_findlocalmax(v):
     v2 = np.zeros((n, 2))
     if n > 2:
         for i, x in enumerate(v):
-            if i < n - 1 and i > 0:
+            if 0 < i < n - 1:
                 if x > v[i - 1] and x > v[i + 1]:
                     v2[i, 0] = i
                     v2[i, 1] = x
@@ -2489,12 +2508,12 @@ def np_findlocalmin(v):
     v2 = np.zeros((n, 2))
     if n > 2:
         for i, x in enumerate(v):
-            if i < n - 1 and i > 0:
+            if 0 < i < n - 1:
                 if x < v[i - 1] and x < v[i + 1]:
                     v2[i, 0] = i
                     v2[i, 1] = x
 
-        v2 = np_sortbycolumn(v2[:i2], 0, asc=True)
+        v2 = np_sortbycolumn(v2, 0, asc=True)
         return v2
     else:
 
@@ -2698,7 +2717,7 @@ def pd_row_select(df, **conditions):
 
 def pd_csv_randomread(filename, nsample=10000, filemaxline=-1, dtype=None):
     if filemaxline == -1:
-        n = sum(1 for line in open(filename)) - 1  # number of records in file (excludes header)
+        n = sum(1 for _ in open(filename)) - 1  # number of records in file (excludes header)
     else:
         n = filemaxline
     skip = np.sort(
@@ -2759,23 +2778,26 @@ def pd_split_col_idx_val(df):
 
 def pd_splitdf_inlist(df, colid, type1="dict"):
     """ Split df into dictionnary of dict/list """
-    UniqueNames = df.sym.unique()
+    unique_names = df.sym.unique()
     if type1 == "dict":
-        dfDict = {elem: pd.DataFrame for elem in UniqueNames}
-        for key in list(dfDict.keys()):
-            dfDict[key] = df[df[colid] == key]
-        return dfDict
+        df_dict = {elem: pd.DataFrame for elem in unique_names}
+        for key in list(df_dict.keys()):
+            df_dict[key] = df[df[colid] == key]
+        return df_dict
 
     if type1 == "list":
         l1 = []
-        for key in UniqueNames:
+        for key in unique_names:
             l1.append(df[df[colid] == key])
         return l1
 
 
-def pd_find(df, regex_pattern="*", col_restrict=[], isnumeric=False, doreturnposition=False):
+def pd_find(df, regex_pattern="*", col_restrict=None, isnumeric=False, doreturnposition=False):
     """ Find string / numeric values inside df columns, return position where found
      col_restrict : restrict to these columns """
+    if col_restrict is None:
+        col_restrict = []
+
     dtype0 = df.dtypes.to_dict()
     col0 = df.columns if col_restrict == [] else col_restrict
 
@@ -2831,7 +2853,7 @@ def pd_dtypes_tocategory(df, columns=[], targetype='category'):
 """
 
 
-def pd_dtypes_totype2(df, columns=[], targetype="category"):
+def pd_dtypes_totype2(df, columns=(), targetype="category"):
     for col in columns:
         df[col] = df[col].astype(targetype)
     return df
@@ -2857,7 +2879,7 @@ def pd_dtypes(df, returnasdict=0):
     )
 
 
-def pd_df_todict2(df, colkey="table", excludekey=[""], onlyfirstelt=True):
+def pd_df_todict2(df, colkey="table", excludekey=("", ), onlyfirstelt=True):
     df = df.drop_duplicates(colkey).reset_index(level=0, drop=True)
     dict0 = {}
     for i in range(0, len(df)):
@@ -2877,7 +2899,7 @@ def pd_df_todict(df, colkey="machine_code", colval="adress"):
     for ii, row in df.iterrows():
         try:
             dict0[row[colkey]] = row[colval]
-        except Exception:
+        except IndexError:
             pass
 
     return dict0
@@ -2900,7 +2922,7 @@ def pd_col_addfrom_dfmap(
     def map_dict_fun(rowi):
         try:
             return map_dict[rowi[df_colused]]
-        except Exception:
+        except KeyError:
             return exceptval
 
     df[df_colnew] = df.apply(lambda x: map_dict_fun(x), axis=1)
@@ -2979,7 +3001,7 @@ def pd_is_categorical(z):
         return True
     try:
         return isinstance(z.values, pd.Categorical)
-    except Exception:
+    except TypeError:
         return False
 
 
@@ -3004,15 +3026,17 @@ encoding,
 u": Makes your string literals into Unicode objects rather than byte sequences.
 Warning: Don't use encode() on bytes or decode() on Unicode objects
 
->>> uni_greeting % utf8_name
+# >>> uni_greeting % utf8_name
 Traceback (most recent call last):
  File "<stdin>", line 1, in <module>
 UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 3: ordinal not in range(128)
 # Solution:
->>> uni_greeting % utf8_name.decode('utf-8')
+# >>> uni_greeting % utf8_name.decode('utf-8')
 u'Hi, my name is Josxe9.'
 
  """
+    _ = targetype
+
     return pd_dtypes_type1_totype2(df, fromtype=str, targetype=str)
 
 
@@ -3036,7 +3060,7 @@ def pd_insertdatecol(df, col, format1="%Y-%m-%d %H:%M:%S:%f"):
 
 def pd_replacevalues(df, matrix):
     """ Matrix replaces df.values  """
-    imax, jmax = np.shape(vec)
+    imax, jmax = np.shape(matrix)
     colname = df.columns.values
     for j in jmax:
         df.loc[colname[j]] = matrix[:, j]
@@ -3044,7 +3068,7 @@ def pd_replacevalues(df, matrix):
     return df
 
 
-def pd_removerow(df, row_list_index=[23, 45]):
+def pd_removerow(df, row_list_index=(23, 45)):
     return df.drop(row_list_index)
 
 
@@ -3053,6 +3077,8 @@ def pd_removecol(df1, name1):
 
 
 def pd_insertrow(df, rowval, index1=None, isreset=1):
+    _ = isreset
+
     df2 = pd_array_todataframe(rowval, df.columns.values, index1)
     df = df.append(df2, ignore_index=True)
     # if isreset : df.reset_index(inplace=True)
@@ -3098,7 +3124,7 @@ def pd_h5_dumpinfo(dbfile=r"E:\_data\stock\intraday_google.h5"):
     errsym = []
     for symbol in list(store.keys()):
         try:
-            df = pd.read_hdf(dbfile, symbol)
+            df = pd.DataFrame(pd.read_hdf(dbfile, symbol))
             extract.append(
                 [
                     symbol[1:],
@@ -3109,7 +3135,7 @@ def pd_h5_dumpinfo(dbfile=r"E:\_data\stock\intraday_google.h5"):
                 ]
             )
 
-        except Exception:
+        except IndexError:
             errsym.append(symbol)
     return np.array(extract), errsym
 
@@ -3127,12 +3153,14 @@ def pd_h5_load(
         exportype="pandas",
         rowstart=-1,
         rowend=-1,
-        cols=[],
+        cols=(),
 ):
+    _ = cols
+
     if rowend == -1:
         df = pd.read_hdf(filenameh5, table_id)
     else:
-        df = pd.read_hdf(filenameh5, table_id, start=rowstart, end=rowend)
+        df = pd.DataFrame(pd.read_hdf(filenameh5, table_id, start=rowstart, end=rowend))
     if exportype == "pandas":
         return df
     elif exportype == "numpy":
@@ -3144,19 +3172,20 @@ def pd_h5_fromcsv_tohdfs(
         filepattern="*.csv",
         tofilehdfs="file1.h5",
         tablename="df",
-        col_category=[],
+        col_category=(),
         dtype0=None,
         encoding="utf-8",
         chunksize=2000000,
         mode="a",
-        format="table",
+        form="table",
         complib=None,
 ):
+    _ = encoding
+
     csvlist = os_file_listall(dircsv, filepattern)
     csvlist = csvlist[2]  # 2: Full_path + filename
 
     store = pd.HDFStore(tofilehdfs)
-    max_size = {}
     for ii, tablei_file in enumerate(csvlist):
 
         # Inference of Type, String size from top 1000 records......
@@ -3166,7 +3195,7 @@ def pd_h5_fromcsv_tohdfs(
                     tablei_file, nrows=1000, sep=","
                 )  # Use Top 1000 to estimate size....
                 dtype0 = df_i.dtypes.to_dict()
-                col_list = []
+                # col_list = []
                 # for col, x  in dtype0.items():
                 #   if x == np.dtype('O') :    #Object == date, string, need to convert to
                 #                              #string....
@@ -3186,7 +3215,7 @@ def pd_h5_fromcsv_tohdfs(
             # for col in col_list :
             # df_i[col] = df_i[col].map(lambda x:  str(str(x).encode(encoding)))
             store.append(
-                tablename, df_i, mode=mode, format=format, complib=complib
+                tablename, df_i, mode=mode, format=form, complib=complib
             )  # ,  min_itemsize=max_size)
 
     store.close()
@@ -3209,33 +3238,6 @@ https://aboutsimon.com/blog/2016/08/04/datetime-vs-Arrow-vs-Pendulum-vs-Delorean
 
 
    """
-
-
-def date_convert(t1, fromtype, totype):
-    try:
-        n = len(t1)
-    except Exception:
-        t1 = [t1]
-        n = 1
-    t0 = t1[0]
-
-    if isinstance(t0, str):
-        pass
-
-    elif isinstance(t0, int):
-        pass
-
-    elif isinstance(t0, datetime):
-        pass
-
-    elif isinstance(t0, np.datetime64):
-        pass
-
-    for t in t1:
-        t2 = _dateconvert_from(t, type1)  # to Datetime
-        t3 = _dateconvert_from(t, totype)  # Datetime  to target type
-        tlist.append(t3)
-    return tlist
 
 
 def datetime_tostring(datelist1):
@@ -3306,10 +3308,13 @@ def datenumpy_todatetime(tt, islocaltime=True):
 
 def datetime_tonumpydate(t, islocaltime=True):
     #  http://stackoverflow.com/questions/29753060/how-to-convert-numpy-datetime64-into-datetime
+    _ = islocaltime
     return np.datetime64(t)
 
 
 def datestring_todatetime(datelist1, format1="%Y%m%d"):
+    _ = format1
+
     if isinstance(datelist1, str):
         return parser.parse(datelist1)
     date2 = []
@@ -3380,10 +3385,6 @@ def date_diffinday(intdate1, intdate2):
     return dt.days
 
 
-def date_diffinyear(startdate, enddate):
-    return date_as_float(startdate) - date_as_float(enddate)
-
-
 def date_diffinbday(intd2, intd1):
     d1 = dateint_todatetime(intd1)
     d2 = dateint_todatetime(intd2)
@@ -3397,8 +3398,10 @@ def date_gencalendar(start="2010-01-01", end="2010-01-15", country="us"):
     from pandas.tseries.holiday import USFederalHolidayCalendar
     from pandas.tseries.offsets import CustomBusinessDay
 
+    _ = country
+
     us_bd = CustomBusinessDay(calendar=USFederalHolidayCalendar())
-    return np.arrray(pd.DatetimeIndex(start=start, end=end, freq=us_bd))
+    return np.array(pd.DatetimeIndex(start=start, end=end, freq=us_bd))
 
 
 def date_finddateid(date1, dateref):
@@ -3460,15 +3463,6 @@ def date_nowtime(type1="str", format1="%Y-%m-%d %H:%M:%S:%f"):
         return d
 
 
-def date_tofloat(dt):
-    size_of_day = 1.0 / 366.0
-    size_of_second = size_of_day / (24.0 * 60.0 * 60.0)
-    days_from_jan1 = dt - datetime.datetime(dt.year, 1, 1)
-    if not isleap(dt.year) and days_from_jan1.days >= 31 + 28:
-        days_from_jan1 += timedelta(1)
-    return dt.year + days_from_jan1.days * size_of_day + days_from_jan1.seconds * size_of_second
-
-
 def date_generatedatetime(start="20100101", nbday=10, end=""):
     from dateutil.rrule import DAILY, rrule, MO, TU, WE, TH, FR
 
@@ -3487,8 +3481,7 @@ def np_numexpr_vec_calc(
     r""" New= xx*xx  over very large series
  #numexpr_vect_calc(filename, 0, imax=16384*4096, "xx*xx", 'E:\_data\_QUASI_SOBOL_gaussian_xx3.h5'):
 """
-    pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
-    xx = pdframe.values
+    pdframe = pd.DataFrame(pd.read_hdf(filename, "data", start=i0, stop=imax))  # from file
     del pdframe  # to numpy vector
     xx = ne.evaluate(expr)
     pdf = pd.DataFrame(xx)
@@ -3502,8 +3495,7 @@ def np_numexpr_vec_calc(
 def np_numexpr_tohdfs(
         filename, expr, i0=0, imax=1000, fileout=r"E:\_data\_QUASI_SOBOL_gaussian_xx3.h5"
 ):
-    pdframe = pd.read_hdf(filename, "data", start=i0, stop=imax)  # from file
-    xx = pdframe.values
+    pdframe = pd.DataFrame(pd.read_hdf(filename, "data", start=i0, stop=imax))  # from file
     del pdframe
     xx = ne.evaluate(expr)
     pdf = pd.DataFrame(xx)
@@ -3524,7 +3516,12 @@ def np_numexpr_tohdfs(
 def np_comoment(xx, yy, nsample, kx, ky):
     #   cx= ne.evaluate("sum(xx)") /  (nsample);   cy= ne.evaluate("sum( yy)")  /  (nsample)
     #   cxy= ne.evaluate("sum((xx-cx)**kx * (yy-cy)**ky)") / (nsample)
-    cxy = ne.evaluate("sum((xx)**kx * (yy)**ky)") / (nsample)
+    _ = xx
+    _ = yy
+    _ = kx
+    _ = ky
+
+    cxy = ne.evaluate("sum((xx)**kx * (yy)**ky)") / nsample
     return cxy
 
 
@@ -3544,7 +3541,7 @@ def np_acf(data):
 
 
 # Plot Utilities
-def plot_XY(
+def plot_xy(
         xx,
         yy,
         zcolor=None,
@@ -3561,7 +3558,7 @@ def plot_XY(
     if zcolor is None:
         c = [[0, 0, 0]]
     elif isinstance(zcolor, int):
-        zcolor = zcolor
+        pass
     else:
         aux = np.array(zcolor, dtype=np.float64)
         c = np.abs(aux)
@@ -3658,7 +3655,7 @@ def np_map_dict_to_bq_schema(source_dict, schema, dest_dict):
             else:
                 dest_dict[field["name"]] = source_dict[field["name"]]
 
-                format_value_bq(source_dict[field["name"]], field["type"])
+                # format_value_bq(source_dict[field["name"]], field["type"])
 
 
 # Google Drive
@@ -3788,6 +3785,8 @@ def date_getspecificdate(
         includelastdate=True,
         includefirstdate=False,
 ):
+    _ = includefirstdate
+
     vec2 = []
 
     if isint(datelist[0]):
@@ -3875,25 +3874,25 @@ def py_exception_print():
     print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj))
 
 
-def py_log_write(LOGFILE, prefix):
+def py_log_write(logfile, prefix):
     ###########################################################################
-    # LOGFILE =     DIRCWD + '/aapackage/'+ 'ztest_all.txt';
-    print(LOGFILE)
-    DATENOW = arrow.utcnow().to("Japan").format("YYYYMMDDHHmm")
-    UNIQUE_ID = (
-            prefix + "_" + DATENOW + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
+    # logfile =     DIRCWD + '/aapackage/'+ 'ztest_all.txt';
+    print(logfile)
+    datenow = arrow.utcnow().to("Japan").format("YYYYMMDDHHmm")
+    unique_id = (
+            prefix + "_" + datenow + "_" + str(np.random.randint(10 ** 5, 10 ** 6, dtype="int64"))
     )
-    sys.stdout = open(LOGFILE, "a")
+    sys.stdout = open(logfile, "a")
     print(
         "\n\n" +
-        UNIQUE_ID +
+        unique_id +
         " ###################### Start:" +
         arrow.utcnow().to("Japan").format() +
         "###########################"
     )
     sys.stdout.flush()
     print(os)
-    return UNIQUE_ID
+    return unique_id
     ##############################################################################
 
 
@@ -3906,27 +3905,26 @@ if __name__ == "__main__":
     arg = ppa.parse_args()
 
     if arg.do == "test":
-        print(__file__, dircwd)
+        print(__file__, DIRCWD)
         try:
-            unique_id = util.py_log_write(dircwd + "/aapackage/ztest_log_all.txt", "util")
+            unique_id = py_log_write(DIRCWD + "/aapackage/ztest_log_all.txt", "util")
 
             #############################################################################
 
-            print(util)
             print("")
-            # util.a_info_system()
-            util.isanaconda()
-            util.date_allinfo()
+            # a_info_system()
+            isanaconda()
+            date_allinfo()
 
             vv = np.random.rand(1, 10)
             mm = np.random.rand(100, 5)
-            df1 = pd.dataframe(mm, columns=["aa", "bb", "c", "d", "e"])
+            df1 = pd.DataFrame(mm, columns=["aa", "bb", "c", "d", "e"])
 
-            # util.pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
-            print(util.np_sort(vv))
+            # pd_createdf(mm, ["aa", "bb", 'c', 'd', 'e'],  )
+            print(np_sort(vv))
 
-            util.save(df1, "ztest_df")
-            df2 = util.load("ztest_df")
+            save(df1, "ztest_df")
+            df2 = load("ztest_df")
 
             #############################################################################
             print(
@@ -3937,5 +3935,5 @@ if __name__ == "__main__":
                 "###########################"
             )
             sys.stdout.flush()
-        except exception as e:
+        except Exception as e:
             print(e)
