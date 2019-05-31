@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103,W0601,E1123,W0614,F0401,E1120,E1101,E0611,W0702
-"""
-Launch processors and monitor the CPU, memory usage.
-Maintain same leve of processors over time.
-
-"""
-VERSION = "0.0.1.1"
 
 import argparse
 import arrow
@@ -28,6 +22,13 @@ from time import sleep, time
 import psutil
 # noinspection PyUnresolvedReferences
 import util_log
+
+"""
+Launch processors and monitor the CPU, memory usage.
+Maintain same leve of processors over time.
+
+"""
+VERSION = "0.0.1.1"
 
 
 ############# Root folder #####################################################

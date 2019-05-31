@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+
+import os
+import requests
+import sys
+
 from __future__ import division, print_function
 
 #####################################################################################
@@ -23,8 +28,10 @@ import wget
 #####################################################################################
 from bs4 import BeautifulSoup
 
+from attrdict import AttrDict as dict2
 # noinspection PyUnresolvedReferences
 from config import LOGIN, PASSWORD
+from config import Config
 from future import standard_library
 from github import Github
 from lxml.html import fromstring
@@ -41,8 +48,6 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 
 standard_library.install_aliases()
-
-import os, sys
 
 reload(sys)
 sys.setdefaultencoding("utf8")
@@ -114,9 +119,6 @@ url = urlbase + search_type + page + query
 driver.get(url)
 # html = driver.page_source
 
-
-from config import Config
-
 cfg = Config(file("D:/_devs/keypair/config.py"))
 print(cfg.github_login)
 
@@ -162,9 +164,6 @@ PASSWORD = ""
 
 reload(sys)
 sys.setdefaultencoding("utf8")
-
-
-from attrdict import AttrDict as dict2
 
 f = open(DIRCWD + "/__config/config.py")
 cfg = dict2(eval(f.read()))
@@ -358,14 +357,12 @@ print(user)
 
 keyword = ["import jedi", "jedi.Script("]
 
-import requests
-
 ss = " ".join(keyword)
 
 with open("git_" + keyword.replace("'", "_") + ".txt", "a") as f:
     base = "https://raw.githubusercontent.com"
-    l = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
-    for language in re.findall('<a href="(.*?)".*?ter-item">', l.text):
+    resp = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
+    for language in re.findall('<a href="(.*?)".*?ter-item">', resp.text):
         for page in range(1, 100):
             req = requests.get(language + "&p={}".format(page))
             for url in re.findall('a href="(.*?)" title', req.text):
