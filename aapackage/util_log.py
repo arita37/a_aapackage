@@ -12,32 +12,46 @@ def log(s1='', s2='', s3='', s4='', s5='', s6='', s7='', s8='', s9='', s10='') :
 
 
 Attribute name	Format	Description
-args	You shouldn’t need to format this yourself.	The tuple of arguments merged into msg to produce message, or a dict whose values are used for the merge (when there is only one argument, and it is a dictionary).
-asctime	%(asctime)s	Human-readable time when the LogRecord was created. By default this is of the form ‘2003-07-08 16:49:45,896’ (the numbers after the comma are millisecond portion of the time).
+args	You shouldn’t need to format this yourself.	The tuple of arguments merged into msg to
+produce message, or a dict whose values are used for the merge (when there is only one argument,
+and it is a dictionary).
+asctime	%(asctime)s	Human-readable time when the LogRecord was created. By default this is of
+the form ‘2003-07-08 16:49:45,896’ (the numbers after the comma are millisecond portion of the
+time).
 created	%(created)f	Time when the LogRecord was created (as returned by time.time()).
-exc_info	You shouldn’t need to format this yourself.	Exception tuple (à la sys.exc_info) or, if no exception has occurred, None.
+exc_info	You shouldn’t need to format this yourself.	Exception tuple (à la sys.exc_info)
+or, if no exception has occurred, None.
 filename	%(filename)s	Filename portion of pathname.
 funcName	%(funcName)s	Name of function containing the logging call.
-levelname	%(levelname)s	Text logging level for the message ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL').
+levelname	%(levelname)s	Text logging level for the message ('DEBUG', 'INFO', 'WARNING',
+'ERROR', 'CRITICAL').
 levelno	%(levelno)s	Numeric logging level for the message (DEBUG, INFO, WARNING, ERROR, CRITICAL).
 lineno	%(lineno)d	Source line number where the logging call was issued (if available).
-message	%(message)s	The logged message, computed as msg % args. This is set when Formatter.format() is invoked.
+message	%(message)s	The logged message, computed as msg % args. This is set when
+Formatter.format() is invoked.
 module	%(module)s	Module (name portion of filename).
 msecs	%(msecs)d	Millisecond portion of the time when the LogRecord was created.
-msg	You shouldn’t need to format this yourself.	The format string passed in the original logging call. Merged with args to produce message, or an arbitrary object (see Using arbitrary objects as messages).
+msg	You shouldn’t need to format this yourself.	The format string passed in the original
+logging call. Merged with args to produce message, or an arbitrary object (see Using arbitrary
+objects as messages).
 name	%(name)s	Name of the logger used to log the call.
-pathname	%(pathname)s	Full pathname of the source file where the logging call was issued (if available).
+pathname	%(pathname)s	Full pathname of the source file where the logging call was issued
+(if available).
 process	%(process)d	Process ID (if available).
 processName	%(processName)s	Process name (if available).
-relativeCreated	%(relativeCreated)d	Time in milliseconds when the LogRecord was created, relative to the time the logging module was loaded.
-stack_info	You shouldn’t need to format this yourself.	Stack frame information (where available) from the bottom of the stack in the current thread, up to and including the stack frame of the logging call which resulted in the creation of this record.
+relativeCreated	%(relativeCreated)d	Time in milliseconds when the LogRecord was created,
+relative to the time the logging module was loaded.
+stack_info	You shouldn’t need to format this yourself.	Stack frame information
+(where available) from the bottom of the stack in the current thread, up to and including
+the stack frame of the logging call which resulted in the creation of this record.
 thread	%(thread)d	Thread ID (if available).
 threadName	%(threadName)s	Thread name (if available).
 
 
 
 
-The problem here is that you're not initializing the root logger; you're initializing the logger for your main module.
+The problem here is that you're not initializing the root logger; you're initializing the logger
+for your main module.
 
 Try this for main.py:
 
@@ -64,7 +78,11 @@ def loggerCall():
     logger.debug('SUBMODULE: DEBUG LOGGING MODE : ')
     logger.info('Submodule: INFO LOG')
     return
-Since you said you wanted to send log messages from all your submodules to the same place, you should initialize the root logger and then simply use the message logging methods (along with setlevel() calls, as appropriate). Because there's no explicit handler for your submodule, logging.getLogger(__name__) will traverse the tree to the root, where it will find the handler you established in main.py.
+Since you said you wanted to send log messages from all your submodules to the same place, you
+should initialize the root logger and then simply use the message logging methods
+(along with setlevel() calls, as appropriate). Because there's no explicit handler for
+your submodule, logging.getLogger(__name__) will traverse the tree to the root,
+where it will find the handler you established in main.py.
 
 
 
@@ -74,7 +92,6 @@ import os
 import random
 import socket
 import sys
-import time
 from logging.handlers import TimedRotatingFileHandler
 
 import arrow
@@ -86,7 +103,7 @@ APP_ID2 = str(os.getpid()) + "_" + str(socket.gethostname())
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logfile.log")
 FORMATTER_1 = logging.Formatter("%(asctime)s,  %(name)s, %(levelname)s, %(message)s")
 FORMATTER_2 = logging.Formatter("%(asctime)s.%(msecs)03dZ %(levelname)s %(message)s")
-FORMATTER_2 = logging.Formatter("%(asctime)s  %(levelname)s %(message)s")
+FORMATTER_3 = logging.Formatter("%(asctime)s  %(levelname)s %(message)s")
 FORMATTER_4 = logging.Formatter("%(asctime)s, %(process)d, %(filename)s,    %(message)s")
 
 
@@ -173,6 +190,8 @@ def logger_handler_file(isrotate=False, rotate_time="midnight", formatter=None, 
 
 
 def logger_setup2(name=__name__, level=None):
+    _ = level
+
     # logger defines
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
@@ -230,7 +249,7 @@ def printlog(
     except Exception as e:
         print(e)
         if iswritelog:
-            writelog(e, logfile)
+            writelog(str(e), logfile)
 
 
 def writelog(m="", f=None):
