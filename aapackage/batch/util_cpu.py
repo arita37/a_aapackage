@@ -8,13 +8,9 @@ Maintain same level of processors over time.
 
 
 """
-import argparse
-import copy
 import csv
-import logging
 import os
 import platform
-import random
 import re
 import shlex
 import subprocess
@@ -24,10 +20,10 @@ from collections import namedtuple
 from datetime import datetime
 from time import sleep, time
 
+import arrow
 # non-stdlib imports
 import psutil
 
-import arrow
 from aapackage import util_log
 
 ############# Root folder #####################################################
@@ -56,6 +52,7 @@ def os_getparent(dir0):
     return os.path.abspath(os.path.join(dir0, os.pardir))
 
 
+# noinspection PyTypeChecker
 def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
     # We import psutil here so that the module can be imported even if psutil
     # is not present (for example if accessing the version)
@@ -65,6 +62,7 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
     # Record start time
     start_time = time.time()
 
+    f = None
     if logfile:
         f = open(logfile, "w")
         f.write(
@@ -101,6 +99,7 @@ def ps_process_monitor_child(pid, logfile=None, duration=None, interval=None):
             # Get current CPU and memory
             try:
                 current_cpu = ps_get_cpu_percent(pr)
+                # noinspection PyTypeChecker
                 current_mem = ps_get_memory_percent(pr)
             except Exception:
                 break
@@ -230,22 +229,11 @@ def ps_get_computer_resources_usage():
     return cpu_used_percent, mem_used_percent
 
 
-def str_match(s1, s2):
-    if s1 is not None or s2 is not None:
-        return True
-
-    if s1.lower() in " ".join(s2).lower():
-        return True
-    else:
-        return False
-
-
 def ps_find_procs_by_name(name=r"((.*/)?tasks.*/t.*/main\.(py|sh))", ishow=1, isregex=1):
     """ Return a list of processes matching 'name'.
         Regex (./tasks./t./main.(py|sh)|tasks./t.*/main.(py|sh))
         Condensed Regex to:
         ((.*/)?tasks.*/t.*/main\.(py|sh)) - make the characters before 'tasks' optional group.
-      
     """
     ls = []
     for p in psutil.process_iter(["pid", "name", "exe", "cmdline"]):
@@ -303,9 +291,12 @@ def os_extract_commands(csv_file, has_header=False):
 
 
 def ps_is_issue(p):
+    global pars
+
     pdict = p.as_dict()
     pidi = p.pid
 
+    Mb = 1024**2
     log("Worker PID;CPU;RAM:", pidi, pdict["cpu_percent"], pdict["memory_full_info"][0] / Mb)
 
     try:
@@ -342,7 +333,8 @@ def ps_net_send(tperiod=5):
 
 
 def ps_is_issue_system():
-    global net_avg
+    global net_avg, pars
+
     try:
         if psutil.cpu_percent(interval=5) > pars["cpu_usage_total"]:
             return True
@@ -362,13 +354,15 @@ def monitor_maintain():
        Launch processors and monitor the CPU, memory usage.
        Maintain same leve of processors over time.
     """
+    global pars
+
     log("start monitoring", len(CMDS))
     cmds2 = []
     for cmd in CMDS:
         ss = shlex.split(cmd)
         cmds2.append(ss)
 
-    processes = launch(cmds2)
+    processes = os_launch(cmds2)
     try:
         while True:
             has_issue = []
@@ -404,10 +398,10 @@ def monitor_maintain():
                 try:
                     log("Relaunching", p.pid)
                     pcmdline = p.cmdline()
-                    pidlist = launch([pcmdline])  # New process can start before
+                    pidlist = os_launch([pcmdline])  # New process can start before
 
                     sleep(3)
-                    terminate([p])
+                    ps_terminate([p])
                 except:
                     pass
 
@@ -418,15 +412,15 @@ def monitor_maintain():
             log("Active process", len(lpp))
             if len(lpp) < pars["nproc"]:
                 for i in range(0, pars["nproc"] - len(lpp)):
-                    pidlist = launch([shlex.split(pars["proc_cmd"])])
+                    pidlist = os_launch([shlex.split(pars["proc_cmd"])])
 
             else:
                 for i in range(0, len(lpp) - pars["nproc"]):
-                    pidlist = terminate([lpp[i]])
+                    pidlist = ps_terminate([lpp[i]])
 
             sleep(5)
             lpp = ps_find_procs_by_name(pars["proc_name"], 0)
-            processes = [x.pid for x in lpp]
+            processes = [x["pid"] for x in lpp]
 
             log("Waiting....")
             sleep(arg.nfreq)
@@ -515,9 +509,9 @@ class NodeStats:
         self.mem_avail = mem_avail
         self.swap_total = swap_total
         self.swap_avail = swap_avail
-        self.disk_io = disk_io or NodeIOStats()
+        self.disk_io = disk_io or NodeIOStats(0, 0)
         self.disk_usage = disk_usage or dict()
-        self.net = net or NodeIOStats()
+        self.net = net or NodeIOStats(0, 0)
 
     @property
     def mem_used(self):
@@ -762,6 +756,7 @@ def monitor_nodes():
 
 
 def os_generate_cmdline():
+    Mb = 1024**2
     pars = {
         "max_memory": 1500.0 * Mb,
         "max_cpu": 85.0,
@@ -786,6 +781,8 @@ def os_generate_cmdline():
 if __name__ == "__main__":
     ################## Initialization #########################################
     log(" Log check")
+
+    CMDS, pars = os_generate_cmdline()
 
     ############## RUN Monitor ################################################
     # monitor()
