@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """
  cli_codesource --do    --module jedi
 --do  module_signature_write(arg.module)

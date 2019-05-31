@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Auto install missing package by scanning error message
 
