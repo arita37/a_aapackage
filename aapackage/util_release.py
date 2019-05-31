@@ -3,34 +3,18 @@
 
 from __future__ import division, print_function
 
-import copy
-import datetime
-import gc
-#####################################################################################################
 import os
 import os.path as op
 import re
-import shutil
 import sys
-import time
-from builtins import map, next, object, range, str, zip
 from subprocess import call
 
-import IPython
-import matplotlib.pyplot as plt
-import numexpr as ne
-import numpy as np
-import pandas as pd
-import scipy as sci
 import six
-import urllib3
-from bs4 import BeautifulSoup
+
+# noinspection PyUnresolvedReferences
 from future import standard_library
-from past.builtins import basestring
-from past.utils import old_div
 from six.moves import input
 
-import arrow
 from github3 import login
 
 standard_library.install_aliases()
@@ -42,8 +26,11 @@ standard_library.install_aliases()
 
 
 
-# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/', 'lin-travis': '/home/ubuntu/project27/'}[CFG['plat']]
+# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1],
+# "ver": sys.version_info.major}
+# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/',
+# 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/', 'lin-travis':
+# '/home/ubuntu/project27/'}[CFG['plat']]
 # print(os.environ)
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
@@ -93,11 +80,13 @@ def _update_version(dev_n="+1", dev=True):
 
     def func(m):
         if dev:
+            n = None
             if isinstance(dev_n, six.string_types):
                 n = int(m.group(3)) + int(dev_n)
-            assert n >= 0
+            assert n is not None and n >= 0
         else:
             n = ""
+
         if not m.group(2):
             raise ValueError()
         return _version_replace.format(m.group(1), dev, n)
@@ -141,14 +130,14 @@ def _create_gh_release():
 
     if input("About to create a GitHub release: are you sure?") != "yes":
         return
-    release = phy.create_release(
+    rel = phy.create_release(
         "v" + version,
         name=name,
         # draft=False,
         # prerelease=False,
     )
 
-    release.upload_asset("application/zip", op.basename(path), path)
+    rel.upload_asset("application/zip", op.basename(path), path)
 
 
 def _git_commit(message, push=False):
@@ -212,4 +201,4 @@ def release():
 
 
 if __name__ == "__main__":
-    globals()[sys.argv[1]]()  ### Execute the function    python release.py release using global var
+    globals()[sys.argv[1]]()  # Execute the function    python release.py release using global var
