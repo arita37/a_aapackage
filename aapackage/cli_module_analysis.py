@@ -10,7 +10,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
-import builtins
 import inspect
 import math
 import operator
@@ -18,16 +17,12 @@ import os
 import pydoc
 import re
 import sys
-from builtins import (ascii, bytes, chr, dict, filter, hex, input, int, map,
-                      next, oct, open, pow, range, round, str, super, zip)
+from builtins import (int, open, range, str, zip)
 from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
 
-import future
 import pandas as pd
-import past
-
 import regex
 
 ####################################################################################################
@@ -185,7 +180,7 @@ def obj_get_args(obj):
         obj_signature = obj_get_signature(obj)
         if obj_signature:
             pattern = "\w+=[-+]?[0-9]*\.?[0-9]+|\w+=\w+|\w+=\[.+?\]|\w+=\(.+?\)|[\w=']+"
-            items = regex.findall(pattern, obj_signature)
+            items = re.findall(pattern, obj_signature)
             for item in items:
                 split_item = item.split("=")
                 if len(split_item) == 2:
@@ -196,7 +191,7 @@ def obj_get_args(obj):
         else:
             return {}
     else:
-        argspec = inspect.getargspec(obj)
+        argspec = inspect.getfullargspec(obj)
         args = argspec.args
         defaults = argspec.defaults
         if defaults:
@@ -244,7 +239,7 @@ def obj_get_nametype(obj):
 
 def obj_class_ispecial(obj):
     try:
-        inspect.getargspec(obj.__init__)
+        inspect.getfullargspec(obj.__init__)
     except TypeError:
         return False
     else:
@@ -360,12 +355,14 @@ def module_signature_write(module_name, file_out="", return_df=0, isdebug=0):
 #    return data
 
 
-def obj_arg_filter_apply(df, filter_list=[("filter_name", "arg")]):
+def obj_arg_filter_apply(df, filter_list=None):
     """  Apply Sequential Filtering to the frame of argument
     :param df: Signature Datframe
     :param filter_list:    ('sort_ascending', 1)  we can add very easily new filter
     :return: dataframe filtering
     """
+    if filter_list is None:
+        filter_list = [("filter_name", "arg")]
     for filter0 in filter_list:
         f, farg = filter0
         if f == "class_only":
@@ -407,7 +404,7 @@ def module_unitest_write(
     input_signature_csv_file="",
     module_name="",
     outputfile="unittest.txt",
-    filter_list=[],
+        filter_list=None,
     isdebug=0,
 ):
     """
@@ -417,6 +414,8 @@ def module_unitest_write(
      :param filter_list:  ("public_only","") 
      :return: 
     """
+    if filter_list is None:
+        filter_list = []
     if isdebug:
         print("Module Unitest Writing ")
     if module_name != "":
@@ -503,7 +502,7 @@ def module_doc_write(
     module_name="",
     input_signature_csv_file="",
     outputfile="",
-    filter_list=[("public_only", "")],
+        filter_list=None,
     debug=0,
 ):
     """
@@ -512,6 +511,8 @@ def module_doc_write(
       numpy.core.sort(a, axis, kind, order) 
 
     """
+    if filter_list is None:
+        filter_list = [("public_only", "")]
     if module_name != "":
         df_data = module_signature_write(module_name, return_df=1)
     elif input_signature_csv_file != "":
@@ -552,8 +553,11 @@ def module_doc_write(
             template.write("{}\n".format(row.function))  # 1 line writing
 
 
-def module_doc_write_batch(module_list=["json"], list_exclude=[""], folder_export="/"):
-    pass
+def module_doc_write_batch(module_list=None, list_exclude=None, folder_export="/"):
+    if list_exclude is None:
+        list_exclude = [""]
+    if module_list is None:
+        module_list = ["json"]
 
 
 def module_signature_compare(df_csv_new, df_csv_old, export_csv="", return_df=0):
@@ -661,7 +665,7 @@ def os_folder_create(directory):
 
 
 def code_search_github(
-    keywords=["import jedi", "jedi.Script("],
+        keywords=None,
     outputfolder="",
     browser="",
     login="",
@@ -677,10 +681,6 @@ def code_search_github(
     CFG=None,
 ):
     """  pip install selenium  --no-deps
- :param keywords: 
- :param outputfolder: 
- :param browser: 
- :param page_num: 
  #df= github_search_source_code(keywords= ["import jedi",   "jedi.Script(" ], outputfolder= DIRCWD + "/tmp/", browser="",
   # page_num=1, isreturn_df=1)
 
@@ -689,6 +689,8 @@ def code_search_github(
     # from attrdict import AttrDict as dict2
     # CFG= dict2({ "github_login": "", "github_pass":   "",  "github_phantomjs": "D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe"})
 
+    if keywords is None:
+        keywords = ["import jedi", "jedi.Script("]
     CFG_phantomjs, CFG_github_login, CFG_github_pass = (
         CFG.phantomjs,
         CFG.github_login,
@@ -696,10 +698,10 @@ def code_search_github(
     )
 
     from selenium import webdriver
-    from selenium.webdriver import PhantomJS
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
     from selenium.webdriver.common.keys import Keys
     from bs4 import BeautifulSoup
+    # noinspection PyUnresolvedReferences
     import wget
 
     DesiredCapabilities.PHANTOMJS[
@@ -764,10 +766,8 @@ def code_search_github(
                     print(box_id, end=" ", flush=True)
 
                     dict1 = {
-                        "url_scrape": "",
                         "keywords": keywords,
                         "language": "Python",
-                        "page": "",
                         "box_id": "",
                         "box_date": "",
                         "box_text": "",
@@ -775,8 +775,6 @@ def code_search_github(
                         "box_repourl": "",
                         "box_filename": "",
                         "box_fileurl": "",
-                        "url_scrape": base_url,
-                        "page": str(page),
                     }
 
                     urls = desc.findAll("a")
@@ -903,6 +901,7 @@ def conda_path_get(subfolder="package/F:/"):
 
     os_name = sys.platform[:3]
     if subfolder == "package":
+        DIR2 = None
         if os_name == "lin":
             DIR2 = DIRANA + "/Lib/site-packages/"
         elif os_name == "win":
@@ -916,7 +915,7 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
    # aa= listallfile(DIRCWD, "*.*", 2)
    # aa[0][30];   aa[2][30]
   """
-    import fnmatch, os, numpy as np
+    import fnmatch, os
 
     matches = {}
     dir1 = dir1.rstrip(os.path.sep)
@@ -936,7 +935,9 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
     return matches
 
 
-def os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
+def os_file_search_fast(fname, texts=None, mode="regex/str"):
+    if texts is None:
+        texts = ["myword"]
     res = []  # url:   line_id, match start, line
     nb = 0
     error_flag = False
@@ -972,16 +973,15 @@ def os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
             with open(fname, "rb") as f1:
                 lines = f1.readlines()
 
-            for text, textc in texts:
-                pos = lines.find(textc)
-                lineo = lines.text("\n", 0, pos)
-                if pos > -1:
-                    try:
-                        line_enc = line.decode(enc)
-                    except:
-                        line_enc = line
-
-                    res.append((text, fname, lineno + 1, pos, line_enc))
+            for lineno, line in enumerate(lines):
+                for text, textc in texts:
+                    found = line.find(textc)
+                    if found > -1:
+                        try:
+                            line_enc = line.decode(enc)
+                        except:
+                            line_enc = line
+                        res.append((text, fname, lineno + 1, found, line_enc))
 
     except IOError as xxx_todo_changeme:
         (_errno, _strerror) = xxx_todo_changeme.args
@@ -994,22 +994,19 @@ def os_file_search_fast(fname, texts=["myword"], mode="regex/str"):
 
 
 def code_search_file(
-    srch_pattern=["word1", "word2"],
+        srch_pattern=None,
     mode="str/regex",
     module_name_in="",
     folder_in="",
-    folder_excluder=[""],
+        folder_excluder=None,
     file_pattern="*.py",
     output_file="",
     dirlevel=20,
 ):
-    """
-  :param pattern: 
-  :param module_name: 
-  :param folder_in: 
-  :param output_folder: 
-  :return: 
-  """
+    if srch_pattern is None:
+        srch_pattern = ["word1", "word2"]
+    if folder_excluder is None:
+        folder_excluder = [""]
     if module_name_in != "":
         folder_in = conda_path_get(subfolder="package")
         folder_in += "/" + module_name_in + "/"
@@ -1115,7 +1112,6 @@ def code_parse_file(filepattern="*.py", folder="", search_regex="", dirlevel=0):
 
 ######################################################################################################
 ######################################################################################################
-global IIX
 IIX = 0
 
 
@@ -1188,15 +1184,15 @@ if __name__ == "__main__":
     arg = ppa.parse_args()
 
 
-if __name__ == "__main__" and arg.do != "" and arg.module != "":
-    print("Running Task")
-    if arg.do == "module_signature_write":
-        module_signature_write(arg.module)
-    if arg.do == "module_unittestt_write":
-        module_unitest_write(module_name=arg.module)
-    else:
-        globals()[arg.action](arg.module)  # Execute command
+    if arg.do != "" and arg.module != "":
+        print("Running Task")
+        if arg.do == "module_signature_write":
+            module_signature_write(arg.module)
+        if arg.do == "module_unittestt_write":
+            module_unitest_write(module_name=arg.module)
+        else:
+            globals()[arg.action](arg.module)  # Execute command
 
 
-if __name__ == "__main__" and arg.do == "test":
-    ztest()
+    if arg.do == "test":
+        ztest()
