@@ -13,6 +13,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import ast
+import fnmatch
 import inspect
 import math
 import operator
@@ -918,8 +919,6 @@ def os_file_listall(dir1, pattern="*.*", dirlevel=1, onlyfolder=0):
    # aa= listallfile(DIRCWD, "*.*", 2)
    # aa[0][30];   aa[2][30]
   """
-    import fnmatch, os
-
     matches = {}
     dir1 = dir1.rstrip(os.path.sep)
     num_sep = dir1.count(os.path.sep)
