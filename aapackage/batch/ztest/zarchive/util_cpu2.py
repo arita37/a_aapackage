@@ -8,6 +8,7 @@ Maintain same leve of processors over time.
 VERSION = "0.0.1.1"
 
 import argparse
+import arrow
 import copy
 import csv
 # stdlib imports
@@ -23,7 +24,6 @@ from collections import namedtuple
 from datetime import datetime
 from time import sleep, time
 
-import arrow
 # non-stdlib imports
 import psutil
 # noinspection PyUnresolvedReferences

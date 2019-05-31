@@ -40,7 +40,7 @@ sys.path.append(DIRCWD + "/aapackage")
 # print(os.environ)
 
 
-###Headless PhantomJS ##############################################################################
+# Headless PhantomJS ##############################################################################
 def web_get_url_loginpassword(
         url_list=None,
         browser="phantomjs",
@@ -163,7 +163,7 @@ def web_get_url_loginpassword(
  '''
 
 
-############Internet data connect- #################################################################
+# Internet data connect- #################################################################
 """
 https://moz.com/
     devblog/benchmarking-python-content-extraction-algorithms-dragnet-readability-goose-and-eatiht/

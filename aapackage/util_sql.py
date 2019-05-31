@@ -497,7 +497,7 @@ def sql_postgres_create_table(my_table="", database="", username="", password=""
 
 
 def sql_postgres_insert_csv(path_2_csv="", my_table="", mydatabase=None,
-        myusername=None, mypassword=None):
+                            myusername=None, mypassword=None):
     """  Use the PostgreSQL COPY command to bulk-copy the CSVs into the newly created table """
     # Connect
     con = psycopg2.connect(database=mydatabase, user=myusername, password=mypassword)

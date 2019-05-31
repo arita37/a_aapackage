@@ -7,7 +7,10 @@
 
 
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import ast
 import inspect
@@ -979,7 +982,7 @@ def os_file_search_fast(fname, texts=None, mode="regex/str"):
                     if found > -1:
                         try:
                             line_enc = line.decode(enc)
-                        except:
+                        except Exception:
                             line_enc = line
                         res.append((text, fname, lineno + 1, found, line_enc))
 
@@ -1183,7 +1186,6 @@ if __name__ == "__main__":
     ppa.add_argument("--module", type=str, default="", help=" unit_test")
     arg = ppa.parse_args()
 
-
     if arg.do != "" and arg.module != "":
         print("Running Task")
         if arg.do == "module_signature_write":
@@ -1192,7 +1194,6 @@ if __name__ == "__main__":
             module_unitest_write(module_name=arg.module)
         else:
             globals()[arg.action](arg.module)  # Execute command
-
 
     if arg.do == "test":
         ztest()
