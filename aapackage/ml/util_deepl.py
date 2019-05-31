@@ -1,14 +1,10 @@
 import linecache
-import math
 import os
 import pickle
 from time import gmtime, strftime
 
 import numpy
-from sklearn.metrics import mean_squared_error, roc_auc_score
-
 import theano
-import theano.tensor as T
 
 rng = numpy.random
 rng.seed(1234)
