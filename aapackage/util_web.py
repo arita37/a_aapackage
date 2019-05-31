@@ -4,33 +4,24 @@ from __future__ import division
 # ---------Various Utilities function for Python--------------------------------------
 # if sys.platform.find('win') > -1 :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
-import datetime
-#####################################################################################################
 import os
-import shutil
+import requests
 import sys
-import time
-from builtins import map, next, object, range, str, zip
+from builtins import str
 
-import IPython
 import numpy as np
-import pandas as pd
-import scipy as sci
 import urllib3
+# noinspection PyUnresolvedReferences
+from attrdict import AttrDict as dict2
 from bs4 import BeautifulSoup
 from future import standard_library
-from past.builtins import basestring
-from past.utils import old_div
-
-import arrow
-import util as util
-from attrdict import AttrDict as dict2
 
 standard_library.install_aliases()
 
-
-# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}
-# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/' , 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
+# CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1],
+# "ver": sys.version_info.major}
+# DIRCWD= {'win-asus1': 'D:/_devs/Python01/project27/', 'win-unerry': 'G:/_devs/project27/',
+# 'lin-noel': '/home/noel/project27/', 'lin-ubuntu': '/home/ubuntu/project27/' }[CFG['plat']]
 # DIRCWD= os.environ["DIRCWD"];
 # os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 # f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()
@@ -41,31 +32,22 @@ os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
 
-
-
-
-
 # __path__= DIRCWD +'/aapackage/'
 # __version__= "1.0.0"
 # __file__= "util.py"
 
-########################################################################################################
+####################################################################################################
 # print(os.environ)
 
 
-#######Headless PhantomJS ##############################################################################
+###Headless PhantomJS ##############################################################################
 def web_get_url_loginpassword(
-    url_list=["url1", "url2"],
-    browser="phantomjs",
-    login="",
-    password="",
-    phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe",
-    pars={
-        "url_login": "https://github.com/login",
-        "login_field": "username",
-        "password_field": "password",
-        "submit_field": "commit",
-    },
+        url_list=None,
+        browser="phantomjs",
+        login="",
+        password="",
+        phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe",
+        pars=None,
 ):
     """
    from selenium import webdriver
@@ -73,10 +55,18 @@ def web_get_url_loginpassword(
    # Issue with recent selenium on firefox...
    # conda install -c conda-forge selenium ==2.53.6 
  """
+    if pars is None:
+        pars = {
+            "url_login": "https://github.com/login",
+            "login_field": "username",
+            "password_field": "password",
+            "submit_field": "commit",
+        }
+    if url_list is None:
+        url_list = ["url1", "url2"]
     pa = dict2(pars)
 
     from selenium import webdriver
-    from selenium.webdriver import PhantomJS
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
     DesiredCapabilities.PHANTOMJS[
@@ -121,7 +111,8 @@ def web_get_url_loginpassword(
   for page in range(page_start, page_end+1):
         print("\nPage "+str(page)+": ", end=' ',  flush=True)
 
-        base_url = 'https://github.com/search?l=Python&p='  + str(page) + '&q=' + kw_query + '&type=Code&utf8=%E2%9C%93'
+        base_url = ('https://github.com/search?l=Python&p='  + str(page) + '&q=' + kw_query +
+            '&type=Code&utf8=%E2%9C%93')
         driver.get(base_url)
         html1 = driver.page_source
         soup = BeautifulSoup(html1, 'lxml')
@@ -133,9 +124,9 @@ def web_get_url_loginpassword(
             box_id = box_id + 1
             print(box_id, end=' ',  flush=True)
 
-            dict1 = {"url_scrape": '', "keywords": keywords, "language": 'Python', "page": '', 'box_id': '',
-                    'box_date': '', 'box_text': '', 'box_reponame': '', 'box_repourl': '', 'box_filename': '',
-                    'box_fileurl': '', 'url_scrape': base_url, 'page': str(page)}
+            dict1 = {"url_scrape": '', "keywords": keywords, "language": 'Python', "page": '',
+                'box_id': '', 'box_date': '', 'box_text': '', 'box_reponame': '', 'box_repourl': '',
+                'box_filename': '', 'box_fileurl': '', 'url_scrape': base_url, 'page': str(page)}
 
             urls = desc.findAll('a')
             dict1['box_repourl'] = 'https://github.com' + urls[0]['href']
@@ -151,7 +142,8 @@ def web_get_url_loginpassword(
             dict1['box_id'] =       box_id
             dict1['box_reponame'] = desc.text.strip().split(' ')[0].split('/')[-1].strip('\n')
             dict1['box_filename'] = desc.text.strip().split('\n      –\n      ')[1].split('\n')[0]
-            dict1['box_date'] =     desc.text.strip().split('\n      –\n      ')[1].split('\n')[3].strip('Last indexed on ')
+            dict1['box_date'] = desc.text.strip().split(
+                '\n      –\n      ')[1].split('\n')[3].strip('Last indexed on ')
             blob_code = """ """
             for k in blob.findAll('td', class_='blob-code blob-code-inner'):
                 aux= k.text.rstrip()
@@ -171,9 +163,10 @@ def web_get_url_loginpassword(
  '''
 
 
-##############Internet data connect- #################################################################
+############Internet data connect- #################################################################
 """
-https://moz.com/devblog/benchmarking-python-content-extraction-algorithms-dragnet-readability-goose-and-eatiht/
+https://moz.com/
+    devblog/benchmarking-python-content-extraction-algorithms-dragnet-readability-goose-and-eatiht/
 pip install numpy
 pip install --upgrade cython
 !pip install lxml
@@ -201,31 +194,29 @@ article.cleaned_text[:150]
 
 
 def web_restapi_toresp(apiurl1):
-    import requests
 
     resp = requests.get(apiurl1)
     if resp.status_code != 200:  # This means something went wrong.
-        raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+        raise requests.ConnectionError("GET /tasks_folder/ {}".format(resp.status_code))
     return resp
 
 
 def web_getrawhtml(url1):
-    import requests
 
     resp = requests.get(url1)
     if resp.status_code != 200:  # This means something went wrong.
-        raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+        raise requests.ConnectionError("GET /tasks_folder/ {}".format(resp.status_code))
     else:
         return resp.text
 
 
 def web_importio_todataframe(apiurl1, isurl=1):
-    import requests
 
+    resp = None
     if isurl:
         resp = requests.get(apiurl1)
         if resp.status_code != 200:  # This means something went wrong.
-            raise ApiError("GET /tasks_folder/ {}".format(resp.status_code))
+            raise requests.ConnectionError("GET /tasks_folder/ {}".format(resp.status_code))
     au = resp.json()
     txt = au["extractorData"]["data"][0]["group"]
     colname = []
@@ -249,8 +240,8 @@ def web_importio_todataframe(apiurl1, isurl=1):
             dictlist[i, j] = str(value[0]["text"])
             j += 1
 
-    dictlist = dictlist[0 : i + 1, :]
-    df = pd_createdf(dictlist, col1=colname, idx1=np.arange(0, len(dictlist)))
+    dictlist = dictlist[0: i + 1, :]
+    df = util.pd_createdf(dictlist, col1=colname, idx1=np.arange(0, len(dictlist)))
     return df
 
 
@@ -300,18 +291,19 @@ short that everyone should be using it.
 
 First, it supports a fully restful API, and is as easy as:
 
-import requests
 ...
 
 resp = requests.get('http://www.mywebsite.com/user')
 resp = requests.post('http://www.mywebsite.com/user')
 resp = requests.put('http://www.mywebsite.com/user/put')
 resp = requests.delete('http://www.mywebsite.com/user/delete')
-Regardless of whether GET/POST you never have to encode parameters again, it simply takes a dictionary as an argument and is good to go.
+Regardless of whether GET/POST you never have to encode parameters again, it simply takes
+a dictionary as an argument and is good to go.
 
 userdata = {"firstname": "John", "lastname": "Doe", "password": "jdoe123"}
 resp = requests.post('http://www.mywebsite.com/user', params=userdata)
-Plus it even has a built in json decoder (again, i know json.loads() isn't a lot more to write, but this sure is convenient):
+Plus it even has a built in json decoder (again, i know json.loads() isn't a lot more to write,
+but this sure is convenient):
 
 resp.json()
 Or if your response data is just text, use:
@@ -350,14 +342,14 @@ def web_getlink_fromurl(url):
 
 
 def web_send_email(
-    FROM,
-    recipient,
-    subject,
-    body,
-    login1="mizenjapan@gmail.com",
-    pss1="sophieelise237",
-    server1="smtp.gmail.com",
-    port1=465,
+        FROM,
+        recipient,
+        subject,
+        body,
+        login1="mizenjapan@gmail.com",
+        pss1="sophieelise237",
+        server1="smtp.gmail.com",
+        port1=465,
 ):
     """  # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt") """
     import smtplib
@@ -388,14 +380,14 @@ def web_send_email(
 
 
 def web_send_email_tls(
-    FROM,
-    recipient,
-    subject,
-    body,
-    login1="mizenjapan@gmail.com",
-    pss1="sophieelise237",
-    server1="smtp.gmail.com",
-    port1=465,
+        FROM,
+        recipient,
+        subject,
+        body,
+        login1="mizenjapan@gmail.com",
+        pss1="sophieelise237",
+        server1="smtp.gmail.com",
+        port1=465,
 ):
     # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt")
     import smtplib
@@ -435,4 +427,4 @@ def web_send_email_tls(
 def web_sendurl(url1):
     # Send Text by email
     mm = web_gettext_fromurl(url1)
-    send_email("Python", "brookm291@gmail.com", mm[0:30], url1 + "\n\n" + mm)
+    web_send_email("Python", "brookm291@gmail.com", mm[0:30], url1 + "\n\n" + mm)
