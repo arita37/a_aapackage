@@ -7,23 +7,18 @@ Batch utils
 
 
 """
-import logging
 import os
 import random
-import shutil
 import subprocess
 import sys
 import time
 
 import numpy as np
 import pandas as pd
-import psutil
-import toml
 
-import arrow
 from aapackage import util_log
+
 #######################################################################
-from aapackage.batch import util_cpu
 
 ################### Variables #########################################
 
@@ -33,6 +28,7 @@ global logger
 LOG_FILE = "zlog/" + util_log.create_logfilename(__file__)
 APP_ID = util_log.create_appid(__file__)
 
+# noinspection PyRedeclaration
 logger = util_log.logger_setup(__name__, log_file=None, formatter=util_log.FORMATTER_4)
 
 
