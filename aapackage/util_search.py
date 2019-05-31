@@ -3,50 +3,33 @@ from __future__ import division, print_function
 
 #####################################################################################
 import base64
-import copy
 #####################################################################################################
-import datetime
-import gc
-import os
 import re
-import shutil
-import sys
-import time
 from base64 import b64decode as base64_to_text
-from builtins import map, next, object, range, str, zip
+from builtins import map, range, str, zip
 #####################################################################################
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import parse_qs, urlparse
 
-import IPython
-import numexpr as ne
-import numpy as np
-import pandas as pd
-#####################################################################################
-import requests
-import scipy as sci
-from bs4 import BeautifulSoup
-from future import standard_library
-from lxml.html import fromstring
-from past.builtins import basestring
-from past.utils import old_div
-from requests import get
-
-import arrow
 import github
 ######################################################################################################
 ######################################################################################################
 import github3
+import pandas as pd
 import wget
-from attrdict import AttrDict as dict2
+#####################################################################################
+from bs4 import BeautifulSoup
+# noinspection PyUnresolvedReferences
 from config import LOGIN, PASSWORD
+from future import standard_library
 from github import Github
+from lxml.html import fromstring
+from requests import get
 # -*- coding: utf-8 -*-
 ####################################################################################################
 from selenium import webdriver
 #######Headless PhantomJS ##############################################################################
-from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-#from login_data import *
+# from login_data import *
 from selenium.webdriver.common.keys import Keys
 
 standard_library.install_aliases()
@@ -57,16 +40,17 @@ if sys.platform.find('win') > -1 :
    # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
 #####################################################################################################
+# noinspection PyUnboundLocalVariable
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
 try :
   # DIRCWD= os.environ["DIRCWD"];
   from attrdict import AttrDict as dict2
-  DIRCWD= DIRCWD[ CFG["plat"]]; # print(DIRCWD, flush=True)
+  # DIRCWD= DIRCWD[ cfg["plat"]] # print(DIRCWD, flush=True)
   os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-  f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()  #Load Config
-  # print(CFG.github_login, flush=True)
+  f= open(DIRCWD+'/__config/config.py'); cfg= dict2(dict(cfg,  **eval(f.read()))); f.close()  #Load Config
+  # print(cfg.github_login, flush=True)
 except :  print("Project Root Directory unknown")
 
 
@@ -78,7 +62,7 @@ __version__= "1.0.0"
 __file__= "util.py"
 
 
-config - { "login" : 78  ,  "password" : 78}
+config = { "login" : 78  ,  "password" : 78}
 
 
 
@@ -115,13 +99,13 @@ query= "&   "
 
 url= urlbase + search_type + page + query
 driver.get(url)
-html = driver.page_source
+# html = driver.page_source
 
 
 from config import Config; cfg = Config(file('D:/_devs/keypair/config.py'))
 print(cfg.github_login)
 
-cfg.app1.name
+# cfg.app1.name
 
 
 
@@ -183,7 +167,7 @@ sys.setdefaultencoding('utf8')
 from attrdict import AttrDict as dict2; f= open(DIRCWD+'/__config/config.py'); cfg = dict2(eval(f.read())); f.close()
 
 
-cfg.github_login
+# cfg.github_login
 
 
 
@@ -221,7 +205,7 @@ def run():
 
 
 
-            dict1 = {"url_scrape": '', "keywords": keywords, "language": 'Python', "page": '', 'box_id': '',
+            dict1 = {"keywords": keywords, "language": 'Python', 'box_id': '',
                     'box_date': '', 'box_text': '', 'box_reponame': '', 'box_repourl': '', 'box_filename': '',
                     'box_fileurl': '', 'url_scrape': base_url, 'page': str(page+1)}
 
@@ -284,16 +268,16 @@ driver.quit()
 
 
 
-gh = github3.GitHub()
+# gh = github3.GitHub()
 # gh.set_client_id(client_id, client_secret)
 
 
 
-gh= github3.login(username="arita37", password="tokyoparis237.")
+gh = github3.login(username="arita37", password="tokyoparis237.")
 
 
 
-res= gh.search_code(    'requests auth github filename:.py language:python'
+res = gh.search_code(    'requests auth github filename:.py language:python'
                 )
 
 
@@ -383,20 +367,20 @@ print(user)
 
 keyword= [ "import jedi", "jedi.Script(" ]
 
-    import requests
-    ss= " ".join(keyword)
+import requests
+ss= " ".join(keyword)
 
-    with open('git_'+keyword.replace("'","_")+".txt", "a") as f:
-        base ="https://raw.githubusercontent.com"
-        l = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
-        for language in re.findall('<a href="(.*?)".*?ter-item">',l.text):
-            for page in range(1,100):
-                req = requests.get(language + "&p={}".format(page))
-                for url in  re.findall('a href="(.*?)" title', req.text):
-                    raw = base + url.replace("/blob", "")
-                    print(raw + '\n')
-                    #f.write(raw + '\n')
-                    # print(raw)
+with open('git_'+keyword.replace("'","_")+".txt", "a") as f:
+    base ="https://raw.githubusercontent.com"
+    l = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
+    for language in re.findall('<a href="(.*?)".*?ter-item">',l.text):
+        for page in range(1,100):
+            req = requests.get(language + "&p={}".format(page))
+            for url in  re.findall('a href="(.*?)" title', req.text):
+                raw = base + url.replace("/blob", "")
+                print(raw + '\n')
+                #f.write(raw + '\n')
+                # print(raw)
 
 
 '''
@@ -605,8 +589,8 @@ def getFileContent(item):
   content = requests.get(item['url']).json()
   lines = content['content'].split('\n')
   lines = map(base64.b64decode, lines)
-  print 'path', item['path']
-  print 'lines', "".join(lines[:5])
+  print('path', item['path'])
+  print('lines', "".join(lines[:5]))
   return "".join(lines)
 
 def getRepoContents(url, sha):
