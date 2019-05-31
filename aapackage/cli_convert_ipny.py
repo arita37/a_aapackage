@@ -11,7 +11,6 @@ import ast
 import glob
 import os
 import shutil
-import subprocess
 import sys
 
 # from IPython.nbformat import current as nbformat
