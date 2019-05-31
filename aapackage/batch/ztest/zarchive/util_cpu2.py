@@ -23,10 +23,10 @@ from collections import namedtuple
 from datetime import datetime
 from time import sleep, time
 
+import arrow
 # non-stdlib imports
 import psutil
-
-import arrow
+# noinspection PyUnresolvedReferences
 import util_log
 
 
@@ -45,8 +45,6 @@ DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
 ###############################################################################
 #############Variable #########################################################
-"""
-global CMDS, net_avg
 APP_ID = __file__ + ',' + str(os.getpid()) + '_' + str(random.randrange(10000))
 logfolder = '_'.join(
     [arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,
@@ -55,8 +53,6 @@ logfolder = '_'.join(
 util.os_folder_create(logfolder)
 LOGFILE = logfolder + '/stream_monitor_cli.txt'
 Mb = 1024 * 1024
-net_avg = 0.0
-"""
 
 
 ############# Arg parsing #####################################################
@@ -88,8 +84,6 @@ def log(s="", s1="", s2="", s3="", s4="", s5="", s6="", s7="", s8="", s9="", s10
             util_log.APP_ID
             + ","
             + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
-            + ","
-            + arg.input_topic
         )
         s = ",".join(
             [
@@ -194,7 +188,7 @@ def launch(commands):
             sleep(1)
 
         except Exception as e:
-            log(e)
+            log(str(e))
     return processes
 
 
@@ -205,7 +199,7 @@ def terminate(processes):
             os.kill(p.pid, 9)
             log("killed ", pidi)
         except Exception as e:
-            log(e)
+            log(str(e))
             try:
                 os.kill(pidi, 9)
                 log("killed ", pidi)
@@ -249,7 +243,7 @@ def is_issue(p):
         else:
             return False
     except Exception as e:
-        log(e)
+        log(str(e))
         return True
 
 
@@ -263,7 +257,6 @@ def ps_net_send(tperiod=5):
 
 
 def is_issue_system():
-    global net_avg
     try:
         if psutil.cpu_percent(interval=5) > pars["cpu_usage_total"]:
             return True
@@ -283,7 +276,7 @@ def monitor_maintain():
        Launch processors and monitor the CPU, memory usage.
        Maintain same leve of processors over time.
     """
-    log("start monitoring", len(CMDS))
+    log("start monitoring", str(len(CMDS)))
     cmds2 = []
     for cmd in CMDS:
         ss = shlex.split(cmd)
@@ -294,7 +287,7 @@ def monitor_maintain():
         while True:
             has_issue = []
             ok_process = []
-            log("N_process", len(processes))
+            log("N_process", str(len(processes)))
 
             ### check global system  ##########################################
             if len(processes) == 0 or is_issue_system():
@@ -318,7 +311,7 @@ def monitor_maintain():
                         ok_process.append(p)
 
                 except Exception as e:
-                    log(e)
+                    log(str(e))
 
             ### Process with issues    ########################################
             for p in has_issue:
@@ -336,7 +329,7 @@ def monitor_maintain():
             sleep(5)
             lpp = ps_find_procs_by_name(pars["proc_name"], 1)
 
-            log("Active process", len(lpp))
+            log("Active process", str(len(lpp)))
             if len(lpp) < pars["nproc"]:
                 for i in range(0, pars["nproc"] - len(lpp)):
                     pidlist = launch([shlex.split(pars["proc_cmd"])])
@@ -353,7 +346,7 @@ def monitor_maintain():
             sleep(arg.nfreq)
 
     except Exception as e:
-        log(e)
+        log(str(e))
 
 
 ############ AZURE NODE #################################################################
@@ -454,9 +447,9 @@ class NodeStats:
         self.mem_avail = mem_avail
         self.swap_total = swap_total
         self.swap_avail = swap_avail
-        self.disk_io = disk_io or NodeIOStats()
+        self.disk_io = disk_io or NodeIOStats(0, 0)
         self.disk_usage = disk_usage or dict()
-        self.net = net or NodeIOStats()
+        self.net = net or NodeIOStats(0, 0)
 
     @property
     def mem_used(self):
@@ -725,6 +718,8 @@ if __name__ == "__main__":
     log(" Initialize workers", arg.name)
 
     log(arg.name, "parameters", pars)
+
+    CMDS, pars = generate_cmdline()
 
     ############## RUN Monitor ################################################
     # monitor()
