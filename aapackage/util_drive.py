@@ -1,7 +1,11 @@
-﻿
+﻿import os
+
+import util
 
 
 # Google Drive
+
+
 def googledrive_get():
     """
    https://github.com/ctberthiaume/gdcp
@@ -131,8 +135,8 @@ def ztest_processify():
 def a_module_codesample(module_str="pandas"):
     dir1 = "D:/_devs/Python01/project27/docs/"
     file1 = dir1 + "/" + module_str + "/codesample.py"
-    txt = os_file_read(file1)
-    os_gui_popup_show(txt)
+    txt = util.os_file_read(file1)
+    util.os_gui_popup_show(txt)
 
 
 
@@ -142,8 +146,8 @@ def a_module_codesample(module_str="pandas"):
 def a_module_doc(module_str="pandas"):
     dir1 = "D:/_devs/Python01/project27/docs/"
     file1 = dir1 + "/" + module_str + "/doc.py"
-    txt = os_file_read(file1)
-    os_gui_popup_show(txt)
+    txt = util.os_file_read(file1)
+    util.os_gui_popup_show(txt)
 
 
 
