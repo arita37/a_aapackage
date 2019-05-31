@@ -423,7 +423,7 @@ def monitor_maintain():
             processes = [x["pid"] for x in lpp]
 
             log("Waiting....")
-            sleep(arg.nfreq)
+            sleep(1)
 
     except Exception as e:
         log(e)
@@ -463,7 +463,7 @@ def os_environment():
 
 
 def os_is_wndows():
-    return _IS_PLATFORM_WINDOWS
+    return platform.system() == 'Windows'
 
 
 def np_avg(list):
@@ -578,14 +578,14 @@ class NodeStatsCollector:
                 or os.environ.get("APP_INSIGHTS_KEY")
             )
 
-            log("Detected instrumentation key. Will upload stats to app insights")
-            self.telemetry_client = TelemetryClient(key)
-            context = self.telemetry_client.context
-            context.application.id = "AzureBatchInsights"
-            context.application.ver = VERSION
-            context.device.model = "BatchNode"
-            context.device.role_name = self.pool_id
-            context.device.role_instance = self.node_id
+            # log("Detected instrumentation key. Will upload stats to app insights")
+            # self.telemetry_client = TelemetryClient(key)
+            # context = self.telemetry_client.context
+            # context.application.id = "AzureBatchInsights"
+            # context.application.ver = VERSION
+            # context.device.model = "BatchNode"
+            # context.device.role_name = self.pool_id
+            # context.device.role_instance = self.node_id
         else:
             log(
                 "No instrumentation key detected. Cannot upload to app insights."
@@ -732,7 +732,6 @@ def monitor_nodes():
     """
     # log basic info
     log("Python args: %s", sys.argv)
-    log("Python interpreter: %s", python_environment())
     log("Operating system: %s", os_environment())
     log("Cpu count: %s", psutil.cpu_count())
 
@@ -761,16 +760,6 @@ def os_generate_cmdline():
         "max_memory": 1500.0 * Mb,
         "max_cpu": 85.0,
         "proc_name": "streaming_couchbase_update_cli.py",
-        "nproc": arg.nproc,
-        "proc_cmd": "python kafkastreaming/streaming_couchbase_update_cli.py   --consumergroup {0} --nlogfreq {1}  --logfile {2} --verbose {3}  --input_topic {4}  --test {5}  --mode {6} ".format(
-            arg.consumergroup + "couch" + arg.mode,
-            arg.nlogfreq,
-            logfolder + "/stream_couchbase_" + str(arg.consumergroup) + ".txt",
-            arg.verbose,
-            arg.input_topic,
-            arg.test,
-            arg.mode,
-        ),
         "mem_available_total": 2000.0 * Mb,
         "cpu_usage_total": 98.0,
     }
