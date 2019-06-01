@@ -5,7 +5,7 @@ which conda
 
 
 echo "Conda Install"
-conda env create -n py36tch -f py36tch.yml
+conda env create -n py36tch -f zpy36tch.yml
 
 
 echo "Open MPI"
