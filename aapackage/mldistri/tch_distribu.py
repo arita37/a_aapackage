@@ -15,7 +15,7 @@ import torch.utils.data.distributed
 from torchvision import datasets, transforms
 from util import load_config
 
-git rev-parse --show-toplevel
+
 #####################################################################################
 def load_arguments():
     """
