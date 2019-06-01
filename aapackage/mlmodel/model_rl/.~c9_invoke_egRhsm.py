@@ -132,15 +132,14 @@ class Agent:
                           }
        
             d           = do_action( action_dict )  
-            inventory   = d["inventory"]
+            inventory,  = d[""]
             
-            next_state  = self.get_state(t + 1, d.get("reward_state"))  # can be None
+            next_state = self.get_state(t + 1, d.get("reward_state"))  # can be None
             
             action_results.append( dict_res )
             ep_history.append([state,action,  d.get("reward") ,next_state])
             
             state = next_state
-
 
         ep_history      = np.array(ep_history)
         ep_history[:,2] = agent.discount_rewards(ep_history[:,2])
