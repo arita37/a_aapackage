@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Auto install missing package by scanning error message
 
@@ -17,16 +18,11 @@ conda install ipykernel
 
 """
 
-import ast
 import glob
-import os
-import shutil
 # from IPython.nbformat import current as nbformat
 # from IPython.nbconvert import PythonExporter
 # import nbformat
 # from nbconvert import PythonExporter
-import subprocess
-import sys
 # from tqdm import tqdm
 from time import sleep
 

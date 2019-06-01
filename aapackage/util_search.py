@@ -1,98 +1,101 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
+
+import os
+import requests
+import sys
+
 from __future__ import division, print_function
 
 #####################################################################################
 import base64
-import copy
+
 #####################################################################################################
-import datetime
-import gc
-import os
 import re
-import shutil
-import sys
-import time
 from base64 import b64decode as base64_to_text
-from builtins import map, next, object, range, str, zip
-#####################################################################################
-from urllib.parse import parse_qs, urlencode, urlparse
+from builtins import map, range, str, zip
 
-import IPython
-import numexpr as ne
-import numpy as np
-import pandas as pd
 #####################################################################################
-import requests
-import scipy as sci
-from bs4 import BeautifulSoup
-from future import standard_library
-from lxml.html import fromstring
-from past.builtins import basestring
-from past.utils import old_div
-from requests import get
+from urllib.parse import parse_qs, urlparse
 
-import arrow
 import github
+
 ######################################################################################################
 ######################################################################################################
 import github3
+import pandas as pd
 import wget
+
+#####################################################################################
+from bs4 import BeautifulSoup
+
 from attrdict import AttrDict as dict2
+# noinspection PyUnresolvedReferences
 from config import LOGIN, PASSWORD
+from config import Config
+from future import standard_library
 from github import Github
+from lxml.html import fromstring
+from requests import get
+
 # -*- coding: utf-8 -*-
 ####################################################################################################
 from selenium import webdriver
+
 #######Headless PhantomJS ##############################################################################
-from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-#from login_data import *
+
+# from login_data import *
 from selenium.webdriver.common.keys import Keys
 
 standard_library.install_aliases()
 
-import os, sys; reload(sys); sys.setdefaultencoding('utf8')
-if sys.platform.find('win') > -1 :
-   print("")
-   # from guidata import qthelpers  #Otherwise Error with Spyder Save
+reload(sys)
+sys.setdefaultencoding("utf8")
+if sys.platform.find("win") > -1:
+    print("")
+    # from guidata import qthelpers  #Otherwise Error with Spyder Save
 
 #####################################################################################################
+# noinspection PyUnboundLocalVariable
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
+os.chdir(DIRCWD)
+sys.path.append(DIRCWD + "/aapackage")
 
-try :
-  # DIRCWD= os.environ["DIRCWD"];
-  from attrdict import AttrDict as dict2
-  DIRCWD= DIRCWD[ CFG["plat"]]; # print(DIRCWD, flush=True)
-  os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
-  f= open(DIRCWD+'/__config/config.py'); CFG= dict2(dict(CFG,  **eval(f.read()))); f.close()  #Load Config
-  # print(CFG.github_login, flush=True)
-except :  print("Project Root Directory unknown")
+try:
+    # DIRCWD = os.environ["DIRCWD"];
+    from attrdict import AttrDict as dict2
 
-
-
-
-
-__path__= DIRCWD +'/aapackage/'
-__version__= "1.0.0"
-__file__= "util.py"
+    # DIRCWD = DIRCWD[ cfg["plat"]] # print(DIRCWD, flush=True)
+    os.chdir(DIRCWD)
+    sys.path.append(DIRCWD + "/aapackage")
+    f = open(DIRCWD + "/__config/config.py")
+    cfg = dict2(dict(cfg, **eval(f.read())))
+    f.close()  # Load Config
+    # print(cfg.github_login, flush=True)
+except Exception:
+    print("Project Root Directory unknown")
 
 
-config - { "login" : 78  ,  "password" : 78}
+__path__ = DIRCWD + "/aapackage/"
+__version__ = "1.0.0"
+__file__ = "util.py"
 
+
+config = {"login": 78, "password": 78}
 
 
 # Issue with recent selenium on firefox...
 # conda install -c conda-forge selenium ==2.53.6
 
 
-
 # DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'uastring'
-DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:16.0) Gecko/20121026 Firefox/16.0'
+DesiredCapabilities.PHANTOMJS[
+    "phantomjs.page.settings.userAgent"
+] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:16.0) Gecko/20121026 Firefox/16.0"
 
 
 driver = webdriver.PhantomJS(r"D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe")
-driver.get('https://github.com/login')
+driver.get("https://github.com/login")
 username = driver.find_element_by_id("login_field")
 password = driver.find_element_by_id("password")
 username.clear()
@@ -102,48 +105,39 @@ password.send_keys(config.password)
 driver.find_element_by_name("commit").click()
 
 
-
-urlbase= "url= 'https://github.com/search?"
+urlbase = "url= 'https://github.com/search?"
 ####Most Relevant
-search_type= "l=Python&o=desc&s=&type=Code&utf8=%E2%9C%93"
+search_type = "l=Python&o=desc&s=&type=Code&utf8=%E2%9C%93"
 
 ### Recently Indexed
 # search_type= "l=Python&o=desc&s=indexed&type=Code&utf8=%E2%9C%93"
-page= "&p=1"
-query= "&   "
+page = "&p=1"
+query = "&   "
 
 
-url= urlbase + search_type + page + query
+url = urlbase + search_type + page + query
 driver.get(url)
-html = driver.page_source
+# html = driver.page_source
 
-
-from config import Config; cfg = Config(file('D:/_devs/keypair/config.py'))
+cfg = Config(file("D:/_devs/keypair/config.py"))
 print(cfg.github_login)
 
-cfg.app1.name
+# cfg.app1.name
 
 
-
-
-url= 'https://github.com/search?l=Python&q=%22import+jedi%22+++%22jedi.Script%28%22&type=Code&utf8=%E2%9C%93'
+url = "https://github.com/search?l=Python&q=%22import+jedi%22+++%22jedi.Script%28%22&type=Code&utf8=%E2%9C%93"
 driver.get(url)
 html = driver.page_source
 print(html)
 
 
-driver.close()  #Current window
-driver.quit()   # All windows
-
-
-
-
-
+driver.close()  # Current window
+driver.quit()  # All windows
 
 
 ######################### Using Firefox ##############################################################
-driver= webdriver.Firefox()
-driver.get('https://github.com/login')
+driver = webdriver.Firefox()
+driver.get("https://github.com/login")
 username = driver.find_element_by_id("login_field")
 password = driver.find_element_by_id("password")
 
@@ -154,8 +148,7 @@ password.send_keys(config.password)
 driver.find_element_by_name("commit").click()
 
 
-
-url= 'https://github.com/search?l=Python&q=%22import+jedi%22+++%22jedi.Script%28%22&type=Code&utf8=%E2%9C%93'
+url = "https://github.com/search?l=Python&q=%22import+jedi%22+++%22jedi.Script%28%22&type=Code&utf8=%E2%9C%93"
 driver.get(url)
 html = driver.page_source
 print(html)
@@ -165,88 +158,101 @@ print(html)
 # blob-code blob-code-inner sg-annotated
 
 
-
-
-
-
-
-
-LOGIN= ""
-PASSWORD= ""
-
+LOGIN = ""
+PASSWORD = ""
 
 
 reload(sys)
-sys.setdefaultencoding('utf8')
+sys.setdefaultencoding("utf8")
+
+f = open(DIRCWD + "/__config/config.py")
+cfg = dict2(eval(f.read()))
+f.close()
 
 
-from attrdict import AttrDict as dict2; f= open(DIRCWD+'/__config/config.py'); cfg = dict2(eval(f.read())); f.close()
-
-
-cfg.github_login
-
-
+# cfg.github_login
 
 
 def run():
     driver = webdriver.PhantomJS(r"D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe")
-    driver.get('https://github.com/login')
-    login_field = driver.find_element_by_id('login_field')
+    driver.get("https://github.com/login")
+    login_field = driver.find_element_by_id("login_field")
     login_field.send_keys(LOGIN)
-    pass_field = driver.find_element_by_id('password')
+    pass_field = driver.find_element_by_id("password")
     pass_field.send_keys(PASSWORD)
     pass_field.send_keys(Keys.ENTER)
     list_of_dicts = []
 
     # INSERT KEYWORDS BELOW
-    keywords = ["from config import",  "login"]
-    kw_query = ''
+    keywords = ["from config import", "login"]
+    kw_query = ""
 
-    for kw in keywords:   kw_query = kw_query + '%22' + kw + '%22+'
+    for kw in keywords:
+        kw_query = kw_query + "%22" + kw + "%22+"
 
     # PAGE NUMBERS HERE
     page_num = 1
     box_id = 0
     list_of_dicts = []
     for page in range(page_num):
-        base_url = 'https://github.com/search?l=Python&p='+ str(page+1) + '&q=' + kw_query + '&type=Code&utf8=%E2%9C%93'
+        base_url = (
+            "https://github.com/search?l=Python&p="
+            + str(page + 1)
+            + "&q="
+            + kw_query
+            + "&type=Code&utf8=%E2%9C%93"
+        )
         driver.get(base_url)
         html = driver.page_source
-        soup = BeautifulSoup(html, 'lxml')
+        soup = BeautifulSoup(html, "lxml")
 
-        #print("ok")
-        for desc, blob in zip(soup.findAll('div', class_='d-inline-block col-10'),
-                              soup.findAll('div', class_='file-box blob-wrapper')):
+        # print("ok")
+        for desc, blob in zip(
+            soup.findAll("div", class_="d-inline-block col-10"),
+            soup.findAll("div", class_="file-box blob-wrapper"),
+        ):
             box_id = box_id + 1
 
+            dict1 = {
+                "keywords": keywords,
+                "language": "Python",
+                "box_id": "",
+                "box_date": "",
+                "box_text": "",
+                "box_reponame": "",
+                "box_repourl": "",
+                "box_filename": "",
+                "box_fileurl": "",
+                "url_scrape": base_url,
+                "page": str(page + 1),
+            }
 
-
-            dict1 = {"url_scrape": '', "keywords": keywords, "language": 'Python', "page": '', 'box_id': '',
-                    'box_date': '', 'box_text': '', 'box_reponame': '', 'box_repourl': '', 'box_filename': '',
-                    'box_fileurl': '', 'url_scrape': base_url, 'page': str(page+1)}
-
-            urls = desc.findAll('a')
-            dict1['box_repourl'] = 'https://github.com' + urls[0]['href']
-            dict1['box_fileurl'] = 'https://github.com' + urls[1]['href']
-            driver.get(dict1['box_fileurl'])
+            urls = desc.findAll("a")
+            dict1["box_repourl"] = "https://github.com" + urls[0]["href"]
+            dict1["box_fileurl"] = "https://github.com" + urls[1]["href"]
+            driver.get(dict1["box_fileurl"])
             driver.find_element_by_xpath('//*[@id="raw-url"]').click()
 
             # print("DOWNLOADING...")
             # print(driver.current_url)
             wget.download(driver.current_url)
 
-
-            dict1['box_id'] = box_id
-            dict1['box_reponame'] = desc.text.strip().split(' ')[0].split('/')[-1].strip('\n')
-            dict1['box_filename'] = desc.text.strip().split('\n      –\n      ')[1].split('\n')[0]
-            dict1['box_date'] = desc.text.strip().split('\n      –\n      ')[1].split('\n')[3].strip('Last indexed on ')
+            dict1["box_id"] = box_id
+            dict1["box_reponame"] = desc.text.strip().split(" ")[0].split("/")[-1].strip("\n")
+            dict1["box_filename"] = desc.text.strip().split("\n      –\n      ")[1].split("\n")[0]
+            dict1["box_date"] = (
+                desc.text.strip()
+                .split("\n      –\n      ")[1]
+                .split("\n")[3]
+                .strip("Last indexed on ")
+            )
 
             blob_code = """ """
-            for k in blob.findAll('td', class_='blob-code blob-code-inner'):
-                aux= k.text.rstrip()
-                if len(aux) > 1 :  blob_code= blob_code +  "\n" + aux
-            dict1['box_text']= blob_code
-
+            for k in blob.findAll("td", class_="blob-code blob-code-inner"):
+                aux = k.text.rstrip()
+                if len(aux) > 1:
+                    blob_code = blob_code + "\n" + aux
+            dict1["box_text"] = blob_code
 
             list_of_dicts.append(dict1)
 
@@ -254,72 +260,46 @@ def run():
     print(df)
 
 
-df.to_csv('source_code.csv')
+df.to_csv("source_code.csv")
 
 
 print(blob_code)
 print(df)
 
 
-
 driver.quit()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-gh = github3.GitHub()
+# gh = github3.GitHub()
 # gh.set_client_id(client_id, client_secret)
 
 
-
-gh= github3.login(username="arita37", password="tokyoparis237.")
-
+gh = github3.login(username="arita37", password="tokyoparis237.")
 
 
-res= gh.search_code(    'requests auth github filename:.py language:python'
-                )
+res = gh.search_code("requests auth github filename:.py language:python")
 
 
 gh = Github(LOGIN, PASSWORD)
 # print(list(gh.search_code('requests auth github filename:.py language:python')[:5]))
 
-search_query = 'requests auth github filename:.py language:python'
+search_query = "requests auth github filename:.py language:python"
 # print(gh.search_code(search_query).totalCount)
 
-gh.search_code(     'HTTPAdapter in:file language:python'
-                ' repo:kennethreitz/requests'  )
+gh.search_code("HTTPAdapter in:file language:python" " repo:kennethreitz/requests")
 
 
-for item in  res.items()  :
+for item in res.items():
     print(item)
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 
-
-
 gh = Github(LOGIN, PASSWORD)
 # print(list(gh.search_code('requests auth github filename:.py language:python')[:5]))
 
-search_query = 'requests auth github filename:.py language:python'
+search_query = "requests auth github filename:.py language:python"
 # print(gh.search_code(search_query).totalCount)
 
 # The Search API has a custom rate limit. For requests using Basic Authentication, OAuth, or client ID and
@@ -346,7 +326,7 @@ print(base64_to_text(data[0].content.encode()).decode())
 print(data[0].html_url)
 
 # get user from repo url
-user = data[0].html_url.split('/')[3]
+user = data[0].html_url.split("/")[3]
 print(user)
 
 # i = 1
@@ -375,36 +355,29 @@ print(user)
 #     # break
 
 
+keyword = ["import jedi", "jedi.Script("]
+
+ss = " ".join(keyword)
+
+with open("git_" + keyword.replace("'", "_") + ".txt", "a") as f:
+    base = "https://raw.githubusercontent.com"
+    resp = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
+    for language in re.findall('<a href="(.*?)".*?ter-item">', resp.text):
+        for page in range(1, 100):
+            req = requests.get(language + "&p={}".format(page))
+            for url in re.findall('a href="(.*?)" title', req.text):
+                raw = base + url.replace("/blob", "")
+                print(raw + "\n")
+                # f.write(raw + '\n')
+                # print(raw)
 
 
-
-
-
-
-keyword= [ "import jedi", "jedi.Script(" ]
-
-    import requests
-    ss= " ".join(keyword)
-
-    with open('git_'+keyword.replace("'","_")+".txt", "a") as f:
-        base ="https://raw.githubusercontent.com"
-        l = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
-        for language in re.findall('<a href="(.*?)".*?ter-item">',l.text):
-            for page in range(1,100):
-                req = requests.get(language + "&p={}".format(page))
-                for url in  re.findall('a href="(.*?)" title', req.text):
-                    raw = base + url.replace("/blob", "")
-                    print(raw + '\n')
-                    #f.write(raw + '\n')
-                    # print(raw)
-
-
-'''
+"""
 https://github.com/search?l=Python&q=%22import+jedi%22+++%22jedi.Script%28%22&type=Code&utf8=%E2%9C%93
 
 
 
-'''
+"""
 
 """
 
@@ -460,45 +433,29 @@ for link in results.find_elements_by_css_selector("a.gs-title"):
 """
 
 
-
-
-
-
-
-
-
-
-
-
-
 raw = get("https://www.google.com/search?q=StackOverflow").text
 page = fromstring(raw)
 
 for result in pg.cssselect(".r a"):
     url = result.get("href")
     if url.startswith("/url?"):
-        url = parse_qs(urlparse(url).query)['q']
+        url = parse_qs(urlparse(url).query)["q"]
     print(url[0])
-
-
-
-
-
 
 
 def get_repos(since=0):
     """
     Left as an exercise for OP
     """
-    url = 'http://api.github.com/repositories'
-    data = '{{since: {}}}'.format(since)
+    url = "http://api.github.com/repositories"
+    data = "{{since: {}}}".format(since)
     response = requests.get(url, data=data)
 
     if response.status_code == 403:
-        print('Problem making request! {}'.format(response.status_code))
+        print("Problem making request! {}".format(response.status_code))
         print(response.headers)
 
-    matches = re.match(r'<.+?>', response.headers['Link'])
+    matches = re.match(r"<.+?>", response.headers["Link"])
     next = matches.group(0)[1:-1]
 
     return response.json(), next
@@ -515,7 +472,7 @@ def get_readme(url):
     """
     Left as an exercise for OP
     """
-    url += '/readme'
+    url += "/readme"
     return requests.get(url).json()
 
 
@@ -524,103 +481,99 @@ def get_repo_sha(url):
     """
     Left as an exercise for OP
     """
-    commits = requests.get(url + '/commits').json()
-    return commits[0]['sha']
+    commits = requests.get(url + "/commits").json()
+    return commits[0]["sha"]
 
 
 def get_file_content(item):
     """
     Left as an exercise for OP
     """
-    ignore_extensions = ['jpg']
-    filename, extension = os.path.splitext(item['path'])
+    ignore_extensions = ["jpg"]
+    filename, extension = os.path.splitext(item["path"])
 
     if extension in ignore_extensions:
         return []
 
-    content = requests.get(item['url']).json()
-    lines = content['content'].split('\n')
+    content = requests.get(item["url"]).json()
+    lines = content["content"].split("\n")
     lines = map(base64.b64decode, lines)
 
-    print('Path: '.format(item['path']))
-    print('Lines: '.format(''.join(lines[:5])))
+    print("Path: ".format(item["path"]))
+    print("Lines: ".format("".join(lines[:5])))
 
-    return ''.join(lines)
+    return "".join(lines)
 
 
 def get_repo_contents(url, sha):
     """
     Left as an exercise for OP
     """
-    url += '/git/trees/{}?recursive=1'.format(sha)
+    url += "/git/trees/{}?recursive=1".format(sha)
 
     return requests.get(url).json()
-
 
 
 def process_repo_contents(repo_contents):
     """
     Left as an exercise for OP
     """
-    for tree in repo_contents['tree']:
-        content_type = tree['type']
-        print('content_type --- {}'.format(content_type))
+    for tree in repo_contents["tree"]:
+        content_type = tree["type"]
+        print("content_type --- {}".format(content_type))
 
-        if content_type == 'blob':
+        if content_type == "blob":
             github.get_file_content(tree)
-            print('***blob***')
-        elif content_type == 'tree':
-            print('***tree***')
+            print("***blob***")
+        elif content_type == "tree":
+            print("***tree***")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     repos, next = github.get_repos()
     for repo in repos[0:10]:
-        sha = github.get_repo_sha(repo['url'])
-        repo_json = github.get_repo_contents(repo['url'], sha)
+        sha = github.get_repo_sha(repo["url"])
+        repo_json = github.get_repo_contents(repo["url"], sha)
         process_repo_contents(repo_json)
 
 
-
 def getRepo(url):
-  response = requests.get(url)
-  return response.json()
+    response = requests.get(url)
+    return response.json()
+
 
 def getReadMe(url):
-  url = url + "/readme"
-  response = requests.get(url)
-  return response.json()
+    url = url + "/readme"
+    response = requests.get(url)
+    return response.json()
+
 
 # todo: return array of all commits so we can examine each one
 def getRepoSHA(url):
-  # /repos/:owner/:repo/commits
-  commits = requests.get(url + "/commits").json()
-  return commits[0]['sha']
+    # /repos/:owner/:repo/commits
+    commits = requests.get(url + "/commits").json()
+    return commits[0]["sha"]
+
 
 def getFileContent(item):
-  ignoreExtensions = ['jpg']
-  filename, extension = os.path.splitext(item['path'])
-  if extension in ignoreExtensions:
-    return []
-  content = requests.get(item['url']).json()
-  lines = content['content'].split('\n')
-  lines = map(base64.b64decode, lines)
-  print 'path', item['path']
-  print 'lines', "".join(lines[:5])
-  return "".join(lines)
+    ignoreExtensions = ["jpg"]
+    filename, extension = os.path.splitext(item["path"])
+    if extension in ignoreExtensions:
+        return []
+    content = requests.get(item["url"]).json()
+    lines = content["content"].split("\n")
+    lines = map(base64.b64decode, lines)
+    print("path", item["path"])
+    print("lines", "".join(lines[:5]))
+    return "".join(lines)
+
 
 def getRepoContents(url, sha):
-  # /repos/:owner/:repo/git/trees/:sha?recursive=1
-  url = url + ('/git/trees/%s?recursive=1' % sha)
-  # print 'url', url
-  response = requests.get(url)
-  return response.json()
-
-
-
-
-
-
+    # /repos/:owner/:repo/git/trees/:sha?recursive=1
+    url = url + ("/git/trees/%s?recursive=1" % sha)
+    # print 'url', url
+    response = requests.get(url)
+    return response.json()
 
 
 ################################################################################################
