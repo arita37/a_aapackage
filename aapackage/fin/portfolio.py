@@ -12,6 +12,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+
 # -----Multivariate regression ---------------------------------------------
 import warnings
 from datetime import datetime
@@ -21,15 +22,19 @@ import numba
 import numpy as np
 import pandas as pd
 import requests
+
 # --------------------Import Quotes Google  ------------------------------------------
 import requests.packages.urllib3
 import scipy as sci
 import sklearn as sk
+
 #################### Finviz  ###############################################################
 from bs4 import BeautifulSoup
 from dateutil import parser
+
 # from matplotlib.finance import quotes_historical_yahoo_ochl
 from numba import float32, float64, int32, int64, jit
+
 # --------------------Calculate Rank Table    ---------------------------------------
 from scipy.stats import norm
 from sklearn import linear_model
@@ -45,7 +50,6 @@ os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
 
 
-
 __path__ = DIRCWD + "/aapackage/"
 
 
@@ -53,7 +57,6 @@ __path__ = DIRCWD + "/aapackage/"
 # runfile('D:/_devs/Python01/aapackage/alldata.py', wdir='D:/_devs/Python01/project27')
 #  Get the list of Tickers
 # exec(compile(open(DIRCWD+'/aapackage/fin/alldata.py').read(), DIRCWD+'/aapackage/fin/alldata.py', 'exec'))
-
 
 
 def data_jpsector():
@@ -287,8 +290,6 @@ def date_align(quotes, dateref=None, datestart=19550101, type1="close"):
 # else:  dateref2= dateref
 # else :   dateref2= np.array(datetime_toint(dateref))
 # return dateref, datei
-
-
 
 
 def min_withposition(values):
@@ -822,7 +823,6 @@ def rolling_cointegration(x, y):
 
 
 # ---------------------------------------------------------------------------
-
 
 
 with warnings.catch_warnings():
@@ -4056,7 +4056,6 @@ http://quanttech.co/2015/06/23/quickly-run-up-microservices-for-your-trading-app
 # --------------------Statistical Analysis of Time Series-----------------------------
 
 
-
 def np_countretsign(x):
     s = 0
     for k in range(0, len(x) - 1):
@@ -4825,7 +4824,6 @@ def imp_yahoo_periodic_figure(soup, yahoo_figure):
 
 
 # print(imp_yahoo_periodic(imp_yahoo_financials_url("AAPL", "is"), "Income Tax Expense"))
-
 
 
 requests.packages.urllib3.disable_warnings()
@@ -6090,8 +6088,6 @@ def monitor_addrecommend(string1, dbname="stock_recommend"):
         util.save_obj(stock_recommend, dbname)
         print(aux)
     return stock_recommend
-
-
 
 
 def imp_finviz():

@@ -58,7 +58,6 @@ UNK = dictionary["UNK"]
 # In[6]:
 
 
-
 _BIAS_VARIABLE_NAME = "bias"
 _WEIGHTS_VARIABLE_NAME = "kernel"
 

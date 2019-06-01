@@ -30,8 +30,6 @@ with open("headlines.json", "r") as fopen:
 # In[3]:
 
 
-
-
 def topic_modelling(string, n=500):
     vectorizer = TfidfVectorizer()
     tf = vectorizer.fit_transform([string])
@@ -304,7 +302,6 @@ def pad_sentence_batch(sentence_batch, pad_int):
 
 
 # In[17]:
-
 
 
 for EPOCH in range(10):

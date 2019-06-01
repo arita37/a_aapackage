@@ -27,8 +27,6 @@ df.head()
 # In[3]:
 
 
-
-
 class Agent:
     def __init__(self, state_size, window_size, trend, skip, batch_size):
         self.state_size = state_size

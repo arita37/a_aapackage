@@ -36,8 +36,6 @@ nlp = spacy.load("en_core_web_sm")
 # In[2]:
 
 
-
-
 def clearstring(string):
     string = re.sub("[^A-Za-z ]+", "", string)
     string = string.split(" ")
@@ -62,7 +60,6 @@ def separate_dataset(trainset):
 
 
 # In[3]:
-
 
 
 trainset = sklearn.datasets.load_files(container_path="data", encoding="UTF-8")
@@ -129,7 +126,6 @@ feature_clf.fit(
 
 
 # In[7]:
-
 
 
 predicted = feature_clf.predict(test_X)
@@ -308,7 +304,6 @@ plt.show()
 
 
 # In[39]:
-
 
 
 process = psutil.Process(os.getpid())

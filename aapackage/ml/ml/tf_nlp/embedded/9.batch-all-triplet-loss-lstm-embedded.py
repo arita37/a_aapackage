@@ -222,7 +222,6 @@ logits_test.shape
 # In[13]:
 
 
-
 sns.set()
 
 

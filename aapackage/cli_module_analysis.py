@@ -21,7 +21,7 @@ import os
 import pydoc
 import re
 import sys
-from builtins import (int, open, range, str, zip)
+from builtins import int, open, range, str, zip
 from collections import OrderedDict
 from importlib import import_module
 from pkgutil import walk_packages
@@ -408,7 +408,7 @@ def module_unitest_write(
     input_signature_csv_file="",
     module_name="",
     outputfile="unittest.txt",
-        filter_list=None,
+    filter_list=None,
     isdebug=0,
 ):
     """
@@ -503,11 +503,7 @@ def module_unitest_write(
 
 
 def module_doc_write(
-    module_name="",
-    input_signature_csv_file="",
-    outputfile="",
-        filter_list=None,
-    debug=0,
+    module_name="", input_signature_csv_file="", outputfile="", filter_list=None, debug=0
 ):
     """
       Write doc of module: 1 line per function /argument :
@@ -669,7 +665,7 @@ def os_folder_create(directory):
 
 
 def code_search_github(
-        keywords=None,
+    keywords=None,
     outputfolder="",
     browser="",
     login="",
@@ -705,6 +701,7 @@ def code_search_github(
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
     from selenium.webdriver.common.keys import Keys
     from bs4 import BeautifulSoup
+
     # noinspection PyUnresolvedReferences
     import wget
 
@@ -996,11 +993,11 @@ def os_file_search_fast(fname, texts=None, mode="regex/str"):
 
 
 def code_search_file(
-        srch_pattern=None,
+    srch_pattern=None,
     mode="str/regex",
     module_name_in="",
     folder_in="",
-        folder_excluder=None,
+    folder_excluder=None,
     file_pattern="*.py",
     output_file="",
     dirlevel=20,

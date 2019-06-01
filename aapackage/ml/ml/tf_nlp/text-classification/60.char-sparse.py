@@ -42,7 +42,6 @@ def convert_sparse_matrix_to_sparse_tensor(X, limit=5):
 # In[5]:
 
 
-
 bow_chars = CountVectorizer(ngram_range=(3, 5), analyzer="char_wb", max_features=300000).fit(
     trainset.data
 )
@@ -91,7 +90,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 
 
 # In[10]:
-
 
 
 batch_size = 32
@@ -176,7 +174,6 @@ for i in pbar:
 
 
 # In[12]:
-
 
 
 print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))

@@ -38,7 +38,6 @@ import tensorflow as tf
 matplotlib.use("Agg")  # pylint: disable=multiple-statements
 
 
-
 _TITLE_LEFT_MARGIN = 10
 _TITLE_TOP_MARGIN = 10
 STANDARD_COLORS = [

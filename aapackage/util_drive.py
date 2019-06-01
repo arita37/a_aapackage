@@ -54,8 +54,6 @@ def googledrive_list():
     pass
 
 
-
-
 def os_processify_fun(func):
     """Decorator to run a function as a process.
     Be sure that every argument and the return value is *pickable*.
@@ -128,11 +126,6 @@ def ztest_processify():
     return os.getpid()
 
 
-
-
-
-
-
 def a_module_codesample(module_str="pandas"):
     dir1 = "D:/_devs/Python01/project27/docs/"
     file1 = dir1 + "/" + module_str + "/codesample.py"
@@ -140,18 +133,11 @@ def a_module_codesample(module_str="pandas"):
     util.os_gui_popup_show(txt)
 
 
-
-
-
-
 def a_module_doc(module_str="pandas"):
     dir1 = "D:/_devs/Python01/project27/docs/"
     file1 = dir1 + "/" + module_str + "/doc.py"
     txt = util.os_file_read(file1)
     util.os_gui_popup_show(txt)
-
-
-
 
 
 # Object Class Introspection
@@ -167,9 +153,6 @@ def obj_getclass_of_method(meth):
 def obj_getclass_property(pfi):
     for prop, value in vars(pfi).items():
         print(prop, ": ", value)
-
-
-
 
 
 # Object
@@ -245,7 +228,6 @@ save_obj(aux, 'batch/elvis_usd_9assets_3_regime_perf_best_population_01')
 """
 
 
-
 # XML / HTML processing
 """
 https://pypi.python.org/pypi/RapidXml/
@@ -298,10 +280,6 @@ def print_topdf():
 
 # --------CSV processing -------------------------------------------------------------
 # Put Excel and CSV into Database / Extract CSV from database
-
-
-
-
 
 
 """
@@ -382,7 +360,3 @@ Returns original string leftpadded with zeros to a total of width characters; in
 zfill() retains any sign given (less one zero).
 
 """
-
-
-
-

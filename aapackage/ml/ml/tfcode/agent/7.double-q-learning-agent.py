@@ -27,8 +27,6 @@ df.head()
 # In[3]:
 
 
-
-
 class Model:
     def __init__(self, input_size, output_size, layer_size, learning_rate):
         self.X = tf.placeholder(tf.float32, (None, input_size))

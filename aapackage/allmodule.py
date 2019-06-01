@@ -27,13 +27,9 @@ from tabulate import tabulate
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
 
 
-
-
-
 ##### Pandas
 # from pandas.types.dtypes import CategoricalDtype
 # import  ggplot as gg
-
 
 
 # import datanalysis as da, fast

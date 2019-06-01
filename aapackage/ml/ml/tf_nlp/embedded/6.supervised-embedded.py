@@ -328,13 +328,11 @@ doc_vectors.shape
 # In[65]:
 
 
-
 tsne = TSNE(perplexity=200, n_jobs=4)
 doc_tsne = tsne.fit_transform(doc_vectors.astype("float64"))
 
 
 # In[38]:
-
 
 
 sns.set()
@@ -358,7 +356,6 @@ plt.show()
 
 
 # In[67]:
-
 
 
 pca = PCA(n_components=2)

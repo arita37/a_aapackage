@@ -92,7 +92,6 @@ plt.show()
 # In[11]:
 
 
-
 minmax = MinMaxScaler().fit(df[["Polarity", "Sensitivity", "Close_Price"]])
 scaled = minmax.transform(df[["Polarity", "Sensitivity", "Close_Price"]])
 

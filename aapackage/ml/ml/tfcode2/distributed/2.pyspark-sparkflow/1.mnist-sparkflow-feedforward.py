@@ -59,8 +59,6 @@ download_from_url(
 # In[3]:
 
 
-
-
 def small_model():
     x = tf.placeholder(tf.float32, shape=[None, 784], name="x")
     y = tf.placeholder(tf.float32, shape=[None, 10], name="y")
@@ -73,7 +71,6 @@ def small_model():
 
 
 # In[4]:
-
 
 
 sparkSession = SparkSession.builder.appName("csv").getOrCreate()

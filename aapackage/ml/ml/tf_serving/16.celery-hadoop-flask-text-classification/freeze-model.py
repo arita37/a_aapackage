@@ -260,7 +260,6 @@ freeze_graph("model-test", strings)
 # In[14]:
 
 
-
 with open("dictionary-test.json", "w") as fopen:
     fopen.write(json.dumps(dictionary))
 

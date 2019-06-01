@@ -140,7 +140,6 @@ clf.save_model("lgb-timestamp.model")
 # In[16]:
 
 
-
 print(
     metrics.classification_report(
         test_Y, np.argmax(clf.predict(test_X), axis=1), target_names=trainset_data.target_names

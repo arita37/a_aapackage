@@ -220,7 +220,6 @@ logits_test.shape
 # In[14]:
 
 
-
 label_test = []
 for i in range(logits_test.shape[0]):
     label_test.append(

@@ -31,6 +31,7 @@ Auto-Scale :
 """
 import argparse
 import copy
+
 #################################################################################
 import json
 import logging
@@ -45,6 +46,7 @@ import paramiko
 from aapackage import util_log
 from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
+
 ################################################################################
 from aapackage.util_log import logger_setup
 

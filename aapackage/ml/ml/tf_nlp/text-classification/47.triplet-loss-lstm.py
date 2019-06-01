@@ -200,7 +200,6 @@ logits_test.shape
 # In[24]:
 
 
-
 label_test = []
 for i in range(logits_test.shape[0]):
     label_test.append(
@@ -212,7 +211,6 @@ print(metrics.classification_report(test_Y, label_test, target_names=trainset.ta
 
 
 # In[15]:
-
 
 
 sns.set()

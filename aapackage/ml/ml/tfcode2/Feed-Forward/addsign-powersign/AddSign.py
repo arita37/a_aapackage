@@ -60,7 +60,6 @@ class AddSign(optimizer.Optimizer):
 # In[4]:
 
 
-
 mnist = input_data.read_data_sets("", validation_size=0)
 
 

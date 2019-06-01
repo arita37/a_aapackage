@@ -13,8 +13,6 @@ import requests
 # In[2]:
 
 
-
-
 def run_parallel_in_threads(target, args_list):
     globalparas = []
     result = Queue()

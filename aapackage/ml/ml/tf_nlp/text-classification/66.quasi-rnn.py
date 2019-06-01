@@ -59,8 +59,6 @@ num_layers = 2
 # In[33]:
 
 
-
-
 def zoneout(x, keep_prob, noise_shape=None, seed=None, name=None):
     with tf.name_scope(name or "dropout") as name:
         x = ops.convert_to_tensor(x, name="x")
@@ -236,7 +234,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 
 
 # In[39]:
-
 
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0

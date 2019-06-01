@@ -49,7 +49,6 @@ with open("data/text8") as f:
 # In[2]:
 
 
-
 data_index = 0
 
 
@@ -97,8 +96,6 @@ def generate_batch_skipgram(words, batch_size, num_skips, skip_window):
 
 
 # In[3]:
-
-
 
 
 class Model:
@@ -151,7 +148,6 @@ print("Vocabulary size:", len(dictionary))
 # In[6]:
 
 
-
 sess = tf.InteractiveSession()
 print("Creating Word2Vec model..")
 
@@ -173,7 +169,6 @@ for step in range(EPOCH):
 # In[11]:
 
 
-
 sns.set()
 
 embed_mat = sess.run(model.normalized_embeddings)
@@ -187,7 +182,6 @@ plt.show()
 
 
 # In[8]:
-
 
 
 neighbors = NearestNeighbors(10, metric="cosine").fit(embed_mat)

@@ -105,7 +105,6 @@ export_model_dir = "./serving/versions"
 # In[8]:
 
 
-
 export_path_base = export_model_dir
 export_path = os.path.join(
     tf.compat.as_bytes(export_path_base), tf.compat.as_bytes(str(model_version))
@@ -137,8 +136,6 @@ builder.save(as_text=True)
 # ```
 
 # In[9]:
-
-
 
 
 # In[13]:

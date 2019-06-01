@@ -286,8 +286,6 @@ class Model:
 # In[4]:
 
 
-
-
 # In[5]:
 
 
@@ -317,7 +315,6 @@ label = np.unique(df[:, 1])
 
 
 # In[ ]:
-
 
 
 train_X, test_X, train_Y, test_Y = train_test_split(df[:, 0], df[:, 1].astype("int"), test_size=0.2)

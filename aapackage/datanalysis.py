@@ -31,8 +31,12 @@ from sklearn import covariance, linear_model, model_selection
 from sklearn.cluster import dbscan, k_means
 from sklearn.decomposition import PCA, pca
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
-from sklearn.ensemble import (AdaBoostClassifier, ExtraTreesClassifier,
-                              GradientBoostingClassifier, RandomForestClassifier)
+from sklearn.ensemble import (
+    AdaBoostClassifier,
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
@@ -53,19 +57,16 @@ from tabulate import tabulate
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 # import configmy; CFG, DIRCWD= configmy.get(config_file="_ROOT", output= ["_CFG", "DIRCWD"])
 DIRCWD = "./"
-#os.chdir(DIRCWD)
-#sys.path.append(DIRCWD + "/aapackage")
+# os.chdir(DIRCWD)
+# sys.path.append(DIRCWD + "/aapackage")
 
 
-
-
-#__path__ = DIRCWD + "/aapackage/"
+# __path__ = DIRCWD + "/aapackage/"
 __version__ = "1.0.0"
 __file__ = "datanalysis.py"
 
 
 ############# CONSTANT   ###############################################################################
-
 
 
 ############# Pandas Processing   ######################################################################

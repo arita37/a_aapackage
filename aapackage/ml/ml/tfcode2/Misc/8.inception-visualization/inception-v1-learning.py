@@ -71,7 +71,6 @@ Conv2d_1a_7x7.shape
 # In[8]:
 
 
-
 plt.imshow(Conv2d_1a_7x7[:, :, 0], cmap="viridis")
 plt.show()
 
@@ -201,7 +200,6 @@ plt.show()
 
 
 # In[16]:
-
 
 
 heatmap = cv2.resize(heatmap, (img.shape[1], img.shape[0]))

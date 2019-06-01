@@ -119,7 +119,6 @@ print(round(time.time() - t, 3), "Seconds to train lgb")
 # In[12]:
 
 
-
 print(
     metrics.classification_report(
         test_Y, np.argmax(clf.predict(test_X), axis=1), target_names=trainset_data.target_names

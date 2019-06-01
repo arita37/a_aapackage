@@ -106,8 +106,6 @@ for i in range(len(short_questions)):
 # In[28]:
 
 
-
-
 def train_chatbot(data, order=4):
     lm = defaultdict(Counter)
     for i in range(len(data) - order):
@@ -137,8 +135,6 @@ lm["you"]
 
 
 # In[33]:
-
-
 
 
 def generate_word(lm, history, order):

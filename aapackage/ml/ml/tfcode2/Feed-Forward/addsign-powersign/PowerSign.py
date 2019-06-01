@@ -60,7 +60,6 @@ class PowerSign(optimizer.Optimizer):
 # In[3]:
 
 
-
 mnist = input_data.read_data_sets("", validation_size=0)
 
 

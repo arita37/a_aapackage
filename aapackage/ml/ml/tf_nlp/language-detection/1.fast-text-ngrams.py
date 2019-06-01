@@ -42,8 +42,6 @@ for no, ln in enumerate(lang.cmn.unique()):
 # In[4]:
 
 
-
-
 def clean_text(string):
     string = re.sub("[0-9!@#$%^&*()_\-+{}|\~`'\";:?/.>,<]", " ", string.lower(), flags=re.UNICODE)
     return re.sub(r"[ ]+", " ", string.lower()).strip()
@@ -73,8 +71,6 @@ del features
 
 
 # In[8]:
-
-
 
 
 # In[9]:
@@ -125,7 +121,6 @@ sess.run(tf.global_variables_initializer())
 
 
 # In[13]:
-
 
 
 batch_size = 64

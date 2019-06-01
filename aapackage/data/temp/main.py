@@ -31,9 +31,6 @@ import global01 as global01  # as global varaibles   global01.varname
 # from fastnumbers import  isreal, isfloat, isint, isintlike, fast_float
 
 
-
-
-
 #    from yahoo_finance_historical_data_extract import YFHistDataExtr
 #    from Yahoo_finance_YQL_company_data import YComDataExtr  # use for fast retrieval of data.
 

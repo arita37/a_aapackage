@@ -27,8 +27,6 @@ df.head()
 # In[3]:
 
 
-
-
 class Actor:
     def __init__(self, name, input_size, output_size, size_layer):
         with tf.variable_scope(name):

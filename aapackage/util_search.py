@@ -29,6 +29,7 @@ import wget
 from bs4 import BeautifulSoup
 
 from attrdict import AttrDict as dict2
+
 # noinspection PyUnresolvedReferences
 from config import LOGIN, PASSWORD
 from config import Config
@@ -361,7 +362,9 @@ ss = " ".join(keyword)
 
 with open("git_" + keyword.replace("'", "_") + ".txt", "a") as f:
     base = "https://raw.githubusercontent.com"
-    resp = requests.get("https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword))
+    resp = requests.get(
+        "https://github.com/search?q={}&type=Code&ref=searchresults".format(keyword)
+    )
     for language in re.findall('<a href="(.*?)".*?ter-item">', resp.text):
         for page in range(1, 100):
             req = requests.get(language + "&p={}".format(page))

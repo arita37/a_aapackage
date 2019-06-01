@@ -13,6 +13,7 @@ import sys
 
 import pandas as pd
 import toml
+
 #########################################################################################
 ######## Custom Code ####################################################################
 from scipy import optimize
@@ -44,8 +45,6 @@ def load_arguments():
     parser.add_argument("-hy", "--hyperparam_ii", default="0", help="", type=int)
     options = parser.parse_args()
     return options
-
-
 
 
 def optimizerFunction(x):

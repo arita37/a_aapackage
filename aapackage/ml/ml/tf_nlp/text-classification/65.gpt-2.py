@@ -49,7 +49,6 @@ UNK = dictionary["UNK"]
 # In[5]:
 
 
-
 params = HParams(n_vocab=len(dictionary), n_ctx=512, n_embd=256, n_head=8, n_layer=8)
 maxlen = 100
 batch_size = 16
@@ -91,7 +90,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 
 
 # In[9]:
-
 
 
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0

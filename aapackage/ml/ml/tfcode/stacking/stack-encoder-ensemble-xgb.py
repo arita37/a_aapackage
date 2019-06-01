@@ -105,7 +105,6 @@ thought_vector.shape
 # In[7]:
 
 
-
 ada = AdaBoostRegressor(n_estimators=500, learning_rate=0.1)
 bagging = BaggingRegressor(n_estimators=500)
 et = ExtraTreesRegressor(n_estimators=500)
@@ -189,7 +188,6 @@ plt.show()
 # # Wow, I do not expect this heatmap. Totally a heat!
 
 # In[16]:
-
 
 
 params_xgd = {

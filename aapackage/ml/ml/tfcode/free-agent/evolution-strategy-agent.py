@@ -20,8 +20,6 @@ sns.set()
 # In[2]:
 
 
-
-
 def get_imports():
     for name, val in globals().items():
         if isinstance(val, types.ModuleType):

@@ -55,7 +55,6 @@ saver.restore(sess, "rename-checkpoint2/model.ckpt")
 # In[5]:
 
 
-
 image = cv2.imread("back-car.jpeg", cv2.IMREAD_COLOR)
 
 

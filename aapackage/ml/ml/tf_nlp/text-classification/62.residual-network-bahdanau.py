@@ -158,7 +158,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(vectors, trainset.target, te
 # In[9]:
 
 
-
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 3, 0, 0, 0
 
 while True:

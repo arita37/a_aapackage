@@ -45,7 +45,6 @@ tesla_2011.head()
 # In[5]:
 
 
-
 df_cp = tesla.copy()
 df_cp.Date = date2num(pd.to_datetime(tesla.Date).dt.to_pydatetime())
 ax1 = plt.subplot2grid((1, 1), (0, 0))
@@ -168,7 +167,6 @@ tesla.plot(kind="line", x="Date", y=["Close", "Closemean"])
 # In[21]:
 
 
-
 x = np.arange(tesla.shape[0]).reshape((-1, 1))
 y = tesla.Close.values.reshape((-1, 1))
 reg = linear_model.LinearRegression()
@@ -207,8 +205,6 @@ tesla.tail()
 
 
 # In[26]:
-
-
 
 
 # In[27]:
@@ -378,7 +374,6 @@ adf(ts)
 # In[68]:
 
 
-
 tesla.index = tesla.index.to_datetime()
 
 
@@ -403,7 +398,6 @@ ts_diff.dropna(inplace=True)
 
 
 # In[83]:
-
 
 
 lag_acf = acf(ts_diff, nlags=20)

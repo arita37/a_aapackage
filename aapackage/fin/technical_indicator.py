@@ -18,8 +18,6 @@ def np_find(item, vec):
     return -1
 
 
-
-
 def np_find_minpos(values):
     min_index, min_value = min(enumerate(values), key=operator.itemgetter(1))
     return min_index, min_value

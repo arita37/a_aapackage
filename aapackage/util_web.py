@@ -11,6 +11,7 @@ from builtins import str
 
 import numpy as np
 import urllib3
+
 # noinspection PyUnresolvedReferences
 from attrdict import AttrDict as dict2
 from bs4 import BeautifulSoup
@@ -42,12 +43,12 @@ sys.path.append(DIRCWD + "/aapackage")
 
 # Headless PhantomJS ##############################################################################
 def web_get_url_loginpassword(
-        url_list=None,
-        browser="phantomjs",
-        login="",
-        password="",
-        phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe",
-        pars=None,
+    url_list=None,
+    browser="phantomjs",
+    login="",
+    password="",
+    phantomjs_path="D:/_devs/webserver/phantomjs-1.9.8/phantomjs.exe",
+    pars=None,
 ):
     """
    from selenium import webdriver
@@ -240,7 +241,7 @@ def web_importio_todataframe(apiurl1, isurl=1):
             dictlist[i, j] = str(value[0]["text"])
             j += 1
 
-    dictlist = dictlist[0: i + 1, :]
+    dictlist = dictlist[0 : i + 1, :]
     df = util.pd_createdf(dictlist, col1=colname, idx1=np.arange(0, len(dictlist)))
     return df
 
@@ -342,14 +343,14 @@ def web_getlink_fromurl(url):
 
 
 def web_send_email(
-        FROM,
-        recipient,
-        subject,
-        body,
-        login1="mizenjapan@gmail.com",
-        pss1="sophieelise237",
-        server1="smtp.gmail.com",
-        port1=465,
+    FROM,
+    recipient,
+    subject,
+    body,
+    login1="mizenjapan@gmail.com",
+    pss1="sophieelise237",
+    server1="smtp.gmail.com",
+    port1=465,
 ):
     """  # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt") """
     import smtplib
@@ -380,14 +381,14 @@ def web_send_email(
 
 
 def web_send_email_tls(
-        FROM,
-        recipient,
-        subject,
-        body,
-        login1="mizenjapan@gmail.com",
-        pss1="sophieelise237",
-        server1="smtp.gmail.com",
-        port1=465,
+    FROM,
+    recipient,
+    subject,
+    body,
+    login1="mizenjapan@gmail.com",
+    pss1="sophieelise237",
+    server1="smtp.gmail.com",
+    port1=465,
 ):
     # send_email("Kevin", "brookm291@gmail.com", "JapaneseText:" , "txt")
     import smtplib

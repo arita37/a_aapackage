@@ -151,7 +151,6 @@ plt.show()
 # In[11]:
 
 
-
 n_cluster = range(1, 20)
 data = df_crosscorrelated.iloc[:, 1:].dropna().values
 kmeans = [KMeans(n_clusters=i).fit(data) for i in n_cluster]
@@ -166,7 +165,6 @@ plt.show()
 
 
 # In[12]:
-
 
 
 X = df_crosscorrelated[["Close", "ma14", "ma25"]].dropna()
@@ -187,7 +185,6 @@ plt.show()
 
 
 # In[13]:
-
 
 
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
@@ -310,7 +307,6 @@ plt.show()
 # In[61]:
 
 
-
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
 np_scaled = StandardScaler().fit_transform(X)
 
@@ -349,7 +345,6 @@ plt.show()
 # In[65]:
 
 
-
 X = df_crosscorrelated.iloc[:, 1:].dropna().values
 np_scaled = StandardScaler().fit_transform(X)
 model = OneClassSVM(nu=outliers_fraction, kernel="rbf", gamma=0.01)
@@ -385,7 +380,6 @@ plt.show()
 
 
 # In[70]:
-
 
 
 envelope = EllipticEnvelope(contamination=outliers_fraction)

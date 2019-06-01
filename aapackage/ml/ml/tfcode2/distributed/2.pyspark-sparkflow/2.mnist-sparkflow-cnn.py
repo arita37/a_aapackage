@@ -59,8 +59,6 @@ download_from_url(
 # In[4]:
 
 
-
-
 def cnn_model():
     x = tf.placeholder(tf.float32, shape=[None, 784], name="x")
     y = tf.placeholder(tf.float32, shape=[None, 10], name="y")
@@ -77,7 +75,6 @@ def cnn_model():
 
 
 # In[5]:
-
 
 
 sparkSession = SparkSession.builder.appName("csv").getOrCreate()

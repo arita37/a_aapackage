@@ -211,7 +211,6 @@ def generate_char_seq(batch):
 # In[14]:
 
 
-
 with open("luong-ner.json", "w") as fopen:
     fopen.write(
         json.dumps(
@@ -237,12 +236,10 @@ X_seq.shape
 # In[16]:
 
 
-
 Y_seq_3d = np.array([to_categorical(i, num_classes=len(tag2idx)) for i in Y_seq])
 
 
 # In[17]:
-
 
 
 train_X, test_X, train_Y, test_Y, train_char, test_char = train_test_split(
@@ -365,7 +362,6 @@ sess.run(tf.global_variables_initializer())
 # In[20]:
 
 
-
 for e in range(3):
     lasttime = time.time()
     train_acc, train_loss, test_acc, test_loss = 0, 0, 0, 0
@@ -441,7 +437,6 @@ for i in pbar:
 
 
 # In[23]:
-
 
 
 print(classification_report(np.array(real_Y).ravel(), np.array(predict_Y).ravel()))

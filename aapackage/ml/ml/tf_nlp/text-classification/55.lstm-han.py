@@ -113,7 +113,6 @@ sess.run(tf.global_variables_initializer())
 # In[9]:
 
 
-
 EARLY_STOPPING, CURRENT_CHECKPOINT, CURRENT_ACC, EPOCH = 5, 0, 0, 0
 while True:
     lasttime = time.time()
@@ -182,7 +181,6 @@ for i in pbar:
 
 
 # In[13]:
-
 
 
 print(metrics.classification_report(real_Y, predict_Y, target_names=["negative", "positive"]))

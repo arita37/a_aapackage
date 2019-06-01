@@ -17,7 +17,6 @@ get_ipython().run_line_magic("matplotlib", "inline")
 # In[2]:
 
 
-
 mnist = input_data.read_data_sets("/home/project/imagerecognition", one_hot=True)
 
 

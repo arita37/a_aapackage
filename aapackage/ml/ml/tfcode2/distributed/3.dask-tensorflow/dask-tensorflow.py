@@ -76,7 +76,6 @@ batches = client.compute(batches)
 # In[7]:
 
 
-
 tf_spec, dask_spec = start_tensorflow(client, ps=1, worker=2, scorer=1)
 
 
@@ -87,7 +86,6 @@ dask_spec
 
 
 # In[9]:
-
 
 
 IMAGE_PIXELS = 28
@@ -290,8 +288,6 @@ dask_spec
 
 
 # In[16]:
-
-
 
 
 def transfer_dask_to_tensorflow(batch):

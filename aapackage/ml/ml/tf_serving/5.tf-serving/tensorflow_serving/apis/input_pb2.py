@@ -18,8 +18,6 @@ _b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
 _sym_db = _symbol_database.Default()
 
 
-
-
 DESCRIPTOR = _descriptor.FileDescriptor(
     name="tensorflow_serving/apis/input.proto",
     package="tensorflow.serving",

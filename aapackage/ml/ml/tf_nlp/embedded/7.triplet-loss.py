@@ -248,7 +248,6 @@ logits_test = sess.run(model.output_positive, feed_dict={model.POSITIVE: X})
 # In[28]:
 
 
-
 label_test = []
 for i in range(logits_test.shape[0]):
     label_test.append(Y[np.argsort(cdist(logits_test, [logits_test[i, :]], "cosine").ravel())[0]])
@@ -258,12 +257,10 @@ print(metrics.classification_report(Y, label_test, target_names=dataset.target_n
 # In[30]:
 
 
-
 sns.set()
 
 
 # In[32]:
-
 
 
 tsne = TSNE(perplexity=200, n_jobs=4)

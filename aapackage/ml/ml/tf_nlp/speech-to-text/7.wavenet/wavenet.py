@@ -152,7 +152,6 @@ sess.run(tf.global_variables_initializer())
 # In[12]:
 
 
-
 batch_size = 32
 
 for e in range(50):
@@ -168,7 +167,6 @@ for e in range(50):
 
 
 # In[ ]:
-
 
 
 random_index = random.randint(0, len(targets) - 1)

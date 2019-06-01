@@ -161,8 +161,6 @@ class LDA2VEC:
 # In[5]:
 
 
-
-
 def skipgrams(
     sequence,
     vocabulary_size,
@@ -284,8 +282,6 @@ doc_embed.shape, topic_embed.shape, word_embed.shape
 # In[11]:
 
 
-
-
 # In[12]:
 
 
@@ -310,8 +306,6 @@ for no, topic in enumerate(components):
 # In[27]:
 
 
-
-
 # In[32]:
 
 
@@ -322,12 +316,10 @@ X = tsne.fit_transform(doc_embed.astype("float64"))
 # In[29]:
 
 
-
 sns.set()
 
 
 # In[30]:
-
 
 
 unique_label = np.unique(trainset.target)

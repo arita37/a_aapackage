@@ -35,11 +35,14 @@ import psutil
 import scipy as sci
 import scipy.optimize
 from bs4 import BeautifulSoup
+
 # Date Manipulation
 from dateutil import parser
+
 # noinspection PyUnresolvedReferences
 from future import standard_library
 from numba import float32, jit
+
 # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 from past.utils import old_div
 
@@ -188,7 +191,6 @@ def a_cleanmemory():
     import gc
 
     gc.collect()
-
 
 
 def a_info_conda_jupyter():
@@ -1285,7 +1287,6 @@ def z_key_splitinto_dir_name(keyname):
     return dir1, keyname
 
 
-
 def os_config_setfile(dict_params, outfile, mode1="w+"):
     with open(outfile, mode=mode1) as f1:
         for key, item in dict_params.items():
@@ -1638,8 +1639,6 @@ def str_to_unicode(x, encoding="utf-8"):
             return str(x, encoding)
     else:
         return x
-
-
 
 
 # LIST UTIL / Array

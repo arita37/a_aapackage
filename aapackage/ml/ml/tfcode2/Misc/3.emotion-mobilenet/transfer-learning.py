@@ -58,7 +58,6 @@ img_lists = [data_location + i for i in img_lists]
 # In[5]:
 
 
-
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
 X = tf.placeholder(tf.float32, [None, 224, 224, 1])
@@ -100,7 +99,6 @@ saver.save(sess, "new/emotion-checkpoint-mobilenet.ckpt")
 
 
 # In[6]:
-
 
 
 batching = (len(img_lists) // batch_size) * batch_size
@@ -164,7 +162,6 @@ for k in tqdm(range(0, batching, batch_size), desc="minibatch loop"):
 
 
 # In[23]:
-
 
 
 print(metrics.classification_report(img_Y[:batching], results, target_names=np.unique(img_labels)))

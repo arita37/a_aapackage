@@ -35,8 +35,6 @@ print(len(trainset.target))
 # In[3]:
 
 
-
-
 def _pad_sequence(
     sequence, n, pad_left=False, pad_right=False, left_pad_symbol=None, right_pad_symbol=None
 ):
@@ -317,8 +315,6 @@ outside_array
 
 
 # In[64]:
-
-
 
 
 # In[65]:

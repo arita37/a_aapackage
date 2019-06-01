@@ -148,7 +148,6 @@ for i in range(50):
 # In[11]:
 
 
-
 batch_x = str_idx(train_X_1, dictionary, maxlen)
 batch_y = str_idx(test_X, dictionary, maxlen)
 

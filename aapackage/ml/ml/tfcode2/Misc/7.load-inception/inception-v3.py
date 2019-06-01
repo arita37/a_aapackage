@@ -38,7 +38,6 @@ image.shape
 # In[16]:
 
 
-
 plt.imshow(image)
 plt.show()
 

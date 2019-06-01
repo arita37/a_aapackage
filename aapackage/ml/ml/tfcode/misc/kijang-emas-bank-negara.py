@@ -99,7 +99,6 @@ len(timestamp), len(selling)
 # In[6]:
 
 
-
 sns.set()
 
 
@@ -131,7 +130,6 @@ plt.show()
 # Now let's change our into Pandas, for lagging analysis.
 
 # In[9]:
-
 
 
 df = pd.DataFrame({"timestamp": timestamp, "selling": selling})
@@ -324,8 +322,6 @@ plt.show()
 # In[21]:
 
 
-
-
 # In[22]:
 
 
@@ -395,7 +391,6 @@ plt.show()
 # In[26]:
 
 
-
 Qs = range(0, 2)
 qs = range(0, 2)
 Ps = range(0, 2)
@@ -460,8 +455,6 @@ plt.show()
 # #### RNN + LSTM
 
 # In[30]:
-
-
 
 
 # In[31]:
@@ -609,8 +602,6 @@ plt.show()
 
 
 # In[39]:
-
-
 
 
 # Accuracy based on correlation coefficient, **higher is better!**

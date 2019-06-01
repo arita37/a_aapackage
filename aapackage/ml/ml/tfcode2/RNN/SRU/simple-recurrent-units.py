@@ -58,8 +58,6 @@ UNK = dictionary["UNK"]
 # In[6]:
 
 
-
-
 def linear(args, output_size, bias, bias_start=0.0, scope=None):
     if args is None or (isinstance(args, (list, tuple)) and not args):
         raise ValueError("`args` must be specified")

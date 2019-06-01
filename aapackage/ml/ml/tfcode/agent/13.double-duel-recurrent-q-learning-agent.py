@@ -27,8 +27,6 @@ df.head()
 # In[3]:
 
 
-
-
 class Model:
     def __init__(self, input_size, output_size, layer_size, learning_rate, name):
         with tf.variable_scope(name):

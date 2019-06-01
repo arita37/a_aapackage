@@ -174,7 +174,6 @@ embed = model.output_positive.eval({model.POSITIVE: test_X})
 # In[11]:
 
 
-
 sns.set()
 
 

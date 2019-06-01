@@ -272,7 +272,6 @@ embed = model.embedded.eval({model.X: test_X})
 # In[10]:
 
 
-
 sns.set()
 
 

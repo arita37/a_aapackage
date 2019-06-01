@@ -38,8 +38,6 @@ get_ipython().run_cell_magic(
 # In[9]:
 
 
-
-
 def run_parallel_in_threads(target, args_list):
     globalparas = []
     result = Queue()

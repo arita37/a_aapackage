@@ -35,8 +35,6 @@ def text2idx(text):
     return text, converted
 
 
-
-
 def get_spectrogram(fpath):
     y, sr = librosa.load(fpath, sr=sampling_rate)
     D = librosa.stft(y=y, n_fft=n_fft, hop_length=hop_length, win_length=win_length)

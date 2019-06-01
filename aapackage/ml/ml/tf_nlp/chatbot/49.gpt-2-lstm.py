@@ -212,7 +212,6 @@ maxlen_answer = max([len(y) for y in Y]) * 2
 # In[11]:
 
 
-
 params = HParams(n_vocab=len(dictionary_from), n_ctx=512, n_embd=256, n_head=8, n_layer=8)
 batch_size = 16
 learning_rate = 1e-3

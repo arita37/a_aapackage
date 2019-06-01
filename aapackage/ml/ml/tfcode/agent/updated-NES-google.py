@@ -82,7 +82,6 @@ plt.show()
 # In[29]:
 
 
-
 google = pd.read_csv("/Users/huseinzolkepli/Desktop/GOOG.csv")
 google.head()
 
@@ -248,8 +247,6 @@ for t in range(0, len_close, skip):
 
 
 # In[77]:
-
-
 
 
 class Agent:

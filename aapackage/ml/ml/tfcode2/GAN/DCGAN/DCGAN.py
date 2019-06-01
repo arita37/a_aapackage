@@ -12,6 +12,7 @@ from urllib import urlretrieve
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 # load MATLAB file
 from scipy.io import loadmat
 from tqdm import tqdm
@@ -25,7 +26,6 @@ get_ipython().system("mkdir data")
 
 
 # In[3]:
-
 
 
 data_dir = "data/"

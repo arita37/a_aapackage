@@ -42,7 +42,6 @@ label = np.unique(df[:, 1])
 # In[8]:
 
 
-
 train_X, test_X, train_Y, test_Y = train_test_split(df[:, 0], df[:, 1], test_size=0.2)
 
 

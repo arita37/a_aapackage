@@ -23,8 +23,6 @@ mnist = input_data.read_data_sets("", one_hot=True)
 # In[3]:
 
 
-
-
 # In[4]:
 
 

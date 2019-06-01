@@ -109,7 +109,6 @@ clf.fit(
 # In[12]:
 
 
-
 predicted = clf.predict(test_X)
 print("accuracy validation set: ", np.mean(predicted == test_Y))
 

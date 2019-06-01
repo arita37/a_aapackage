@@ -148,7 +148,6 @@ print(
 # In[12]:
 
 
-
 Qs = range(0, 1)
 qs = range(0, 2)
 Ps = range(0, 2)
@@ -276,7 +275,6 @@ plt.show()
 # # Pretty insane i can say!
 
 # In[26]:
-
 
 
 plot_importance(clf)

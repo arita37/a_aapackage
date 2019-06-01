@@ -23,6 +23,7 @@ import psutil
 import toml
 
 import arrow
+
 ################### Generic ###############################################################
 from aapackage import util_log
 from aapackage.batch import util_batch

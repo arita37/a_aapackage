@@ -67,8 +67,6 @@ class Alexnet:
 # In[2]:
 
 
-
-
 def unpickle(file):
     with open(file, "rb") as fo:
         dict = cPickle.load(fo, encoding="latin1")
@@ -108,7 +106,6 @@ RESULTS = train(
 
 
 # In[13]:
-
 
 
 sns.set()

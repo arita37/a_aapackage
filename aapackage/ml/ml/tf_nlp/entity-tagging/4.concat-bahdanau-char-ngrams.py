@@ -267,7 +267,6 @@ X_char_seq.shape
 # In[16]:
 
 
-
 train_Y, test_Y, train_X, test_X = train_test_split(Y_seq, X_char_seq, test_size=0.2)
 
 
@@ -350,7 +349,6 @@ sess.run(tf.global_variables_initializer())
 
 
 # In[19]:
-
 
 
 for e in range(3):

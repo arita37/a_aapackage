@@ -27,8 +27,6 @@ df.head()
 # In[3]:
 
 
-
-
 class Agent:
 
     LEARNING_RATE = 0.003

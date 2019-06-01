@@ -170,7 +170,6 @@ np.mean(test_Y == np.argmax(bst.predict(xgb.DMatrix(test_X)), axis=1))
 # In[14]:
 
 
-
 print(
     metrics.classification_report(
         test_Y,

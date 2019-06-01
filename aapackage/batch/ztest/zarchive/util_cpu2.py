@@ -5,6 +5,7 @@ import argparse
 import arrow
 import copy
 import csv
+
 # stdlib imports
 import logging
 import os
@@ -20,6 +21,7 @@ from time import sleep, time
 
 # non-stdlib imports
 import psutil
+
 # noinspection PyUnresolvedReferences
 import util_log
 
@@ -46,13 +48,19 @@ DIRCWD = os_getparent(os.path.dirname(os.path.abspath(__file__)))
 
 ###############################################################################
 #############Variable #########################################################
-APP_ID = __file__ + ',' + str(os.getpid()) + '_' + str(random.randrange(10000))
-logfolder = '_'.join(
-    [arg.logfolder, arg.name, arg.consumergroup, arg.input_topic,
-     arrow.utcnow().to('Japan').format("YYYYMMDD_HHmm_ss"),
-     str(random.randrange(1000))])
+APP_ID = __file__ + "," + str(os.getpid()) + "_" + str(random.randrange(10000))
+logfolder = "_".join(
+    [
+        arg.logfolder,
+        arg.name,
+        arg.consumergroup,
+        arg.input_topic,
+        arrow.utcnow().to("Japan").format("YYYYMMDD_HHmm_ss"),
+        str(random.randrange(1000)),
+    ]
+)
 util.os_folder_create(logfolder)
-LOGFILE = logfolder + '/stream_monitor_cli.txt'
+LOGFILE = logfolder + "/stream_monitor_cli.txt"
 Mb = 1024 * 1024
 
 
@@ -81,11 +89,7 @@ def load_arguments():
 ######### Logging #############################################################
 def log(s="", s1="", s2="", s3="", s4="", s5="", s6="", s7="", s8="", s9="", s10=""):
     try:
-        prefix = (
-            util_log.APP_ID
-            + ","
-            + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
-        )
+        prefix = util_log.APP_ID + "," + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
         s = ",".join(
             [
                 prefix,
@@ -352,7 +356,6 @@ def monitor_maintain():
 
 ############ AZURE NODE #################################################################
 """TVM stats"""
-
 
 
 # from applicationinsights import TelemetryClient

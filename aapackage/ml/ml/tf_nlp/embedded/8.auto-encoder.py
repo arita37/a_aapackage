@@ -227,12 +227,10 @@ logits_test
 # In[12]:
 
 
-
 manifold_polarity = TSNE(n_components=2).fit_transform(logits_test)
 
 
 # In[13]:
-
 
 
 sns.set()

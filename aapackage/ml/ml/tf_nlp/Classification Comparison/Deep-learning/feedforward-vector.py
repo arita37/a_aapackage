@@ -73,8 +73,6 @@ class Model:
 # In[2]:
 
 
-
-
 # In[3]:
 
 
@@ -218,7 +216,6 @@ dictionary, reverse_dictionary, vectors = generatevector(
 
 
 # In[17]:
-
 
 
 train_X, test_X, train_Y, test_Y = train_test_split(data[:, 0], data[:, 1], test_size=0.25)

@@ -148,7 +148,6 @@ sess.run(tf.global_variables_initializer())
 # In[8]:
 
 
-
 for e in range(10):
     lasttime = time.time()
     train_loss, test_loss = 0, 0

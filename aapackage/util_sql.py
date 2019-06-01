@@ -2,6 +2,7 @@
 from __future__ import division
 
 import datetime
+
 ###############################################################################
 import os
 import sys
@@ -16,7 +17,6 @@ import sqlalchemy.orm
 from future import standard_library
 
 standard_library.install_aliases()
-
 
 
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -370,7 +370,9 @@ def sql_insert_csv(csvfile, dbtable, dbengine, col_drop=None):
         j += 1
         index_start = df.index[-1] + 1
         print(
-            "{} seconds: completed {} rows".format((datetime.datetime.now() - start).seconds, j * chunksize)
+            "{} seconds: completed {} rows".format(
+                (datetime.datetime.now() - start).seconds, j * chunksize
+            )
         )
 
     """ Batch Mode :
@@ -496,8 +498,9 @@ def sql_postgres_create_table(my_table="", database="", username="", password=""
     con.close()
 
 
-def sql_postgres_insert_csv(path_2_csv="", my_table="", mydatabase=None,
-                            myusername=None, mypassword=None):
+def sql_postgres_insert_csv(
+    path_2_csv="", my_table="", mydatabase=None, myusername=None, mypassword=None
+):
     """  Use the PostgreSQL COPY command to bulk-copy the CSVs into the newly created table """
     # Connect
     con = psycopg2.connect(database=mydatabase, user=myusername, password=mypassword)
@@ -533,8 +536,11 @@ def sql_postgres_insert_csv(path_2_csv="", my_table="", mydatabase=None,
 
 
 def sql_postgres_query_to_csv(
-    sqlr="SELECT ticker,shortratio,sector1_id, FROM stockfundamental", csv_out="",
-    mydatabase=None, myusername=None, mypassword=None
+    sqlr="SELECT ticker,shortratio,sector1_id, FROM stockfundamental",
+    csv_out="",
+    mydatabase=None,
+    myusername=None,
+    mypassword=None,
 ):
     """ Submit query to created PostgreSQL database and output results to a CSV  """
     import psycopg2

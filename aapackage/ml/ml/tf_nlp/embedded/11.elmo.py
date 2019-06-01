@@ -28,8 +28,6 @@ print(len(trainset.target))
 # In[3]:
 
 
-
-
 def build_dataset(words, n_words, atleast=1):
     count = [["PAD", 0], ["GO", 1], ["EOS", 2], ["UNK", 3]]
     counter = collections.Counter(words).most_common(n_words)
@@ -61,8 +59,6 @@ len(dictionary)
 
 
 # In[6]:
-
-
 
 
 class Vocabulary:
@@ -302,8 +298,6 @@ bi = BidirectionalLMDataset(trainset.data, uni)
 
 
 # In[10]:
-
-
 
 
 # In[11]:
@@ -726,8 +720,6 @@ sess.run(tf.global_variables_initializer())
 # In[14]:
 
 
-
-
 def _get_feed_dict_from_X(X, model, char_inputs, bidirectional):
     feed_dict = {}
     if not char_inputs:
@@ -816,8 +808,6 @@ word_embed = model.softmax_W.eval()
 
 
 # In[18]:
-
-
 
 
 # In[19]:

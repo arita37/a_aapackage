@@ -167,7 +167,6 @@ vocabulary_size
 # In[8]:
 
 
-
 stride = 1
 t_range = int((len(contents) - 3) / stride + 1)
 left, middle, right = [], [], []
@@ -233,7 +232,6 @@ encoded, attention = sess.run(
 
 
 # In[13]:
-
 
 
 n_clusters = 10

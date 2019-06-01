@@ -127,7 +127,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(data_X, trainset_data.target
 # In[9]:
 
 
-
 tf.reset_default_graph()
 model = Model(3, 128, 1, len(trainset_data.target_names), 0.0001)
 sess = tf.InteractiveSession()

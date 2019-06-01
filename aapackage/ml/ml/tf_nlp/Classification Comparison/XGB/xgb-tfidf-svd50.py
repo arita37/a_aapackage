@@ -138,7 +138,6 @@ np.mean(
 # In[10]:
 
 
-
 print(
     metrics.classification_report(
         test_Y,

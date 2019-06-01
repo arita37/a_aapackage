@@ -12,8 +12,12 @@ from scipy import sparse
 from sklearn import metrics
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.cross_validation import train_test_split
-from sklearn.feature_extraction.text import (CountVectorizer, HashingVectorizer,
-                                             TfidfTransformer, TfidfVectorizer)
+from sklearn.feature_extraction.text import (
+    CountVectorizer,
+    HashingVectorizer,
+    TfidfTransformer,
+    TfidfVectorizer,
+)
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold
@@ -53,8 +57,6 @@ class NB_SVM(BaseEstimator, ClassifierMixin):
 # In[2]:
 
 
-
-
 # In[3]:
 
 
@@ -92,7 +94,6 @@ print(len(trainset.target))
 
 
 # In[12]:
-
 
 
 cv = StratifiedKFold(n_splits=10, shuffle=True)

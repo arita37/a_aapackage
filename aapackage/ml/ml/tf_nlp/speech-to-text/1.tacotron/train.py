@@ -40,7 +40,6 @@ def dynamic_batching(paths):
 # In[4]:
 
 
-
 tf.reset_default_graph()
 sess = tf.InteractiveSession()
 model = Model()

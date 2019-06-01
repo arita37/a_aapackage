@@ -207,7 +207,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(data_X, trainset_data.target
 # In[17]:
 
 
-
 tf.reset_default_graph()
 model = neuralnet(50, 2, 32)
 sess = tf.InteractiveSession()

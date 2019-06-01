@@ -70,8 +70,6 @@ words_test, depends_test, labels_test = process_corpus(corpus_test)
 # In[4]:
 
 
-
-
 # In[5]:
 
 
@@ -230,7 +228,6 @@ sess.run(tf.global_variables_initializer())
 
 
 # In[10]:
-
 
 
 for e in range(20):

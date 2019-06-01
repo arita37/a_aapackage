@@ -33,13 +33,7 @@ import global01 as global01  # as global varaibles   global01.varname
 # from fastnumbers import  isreal, isfloat, isint, isintlike, fast_float
 
 
-
-
-
-
-
 yh.hist_data_storage()
-
 
 
 dbname = "/aaserialize/store/yahoo.db"

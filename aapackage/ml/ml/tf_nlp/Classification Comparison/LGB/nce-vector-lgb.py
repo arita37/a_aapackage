@@ -66,8 +66,6 @@ epoch = 10
 # In[3]:
 
 
-
-
 # In[4]:
 
 
@@ -110,7 +108,6 @@ print(len(trainset.target))
 
 
 # In[6]:
-
 
 
 combined = list(zip(trainset.data, trainset.target))
@@ -170,7 +167,6 @@ for k in range(0, (out.shape[0] // batch_size) * batch_size, batch_size):
 # In[30]:
 
 
-
 _, vect_temp, _, Y_temp = train_test_split(
     vectorized, trainset.target[: vectorized.shape[0]], test_size=0.005
 )
@@ -183,7 +179,6 @@ embed_2d = TSNE(n_components=2).fit_transform(vect_temp)
 
 
 # In[32]:
-
 
 
 sns.set()
@@ -204,7 +199,6 @@ plt.show()
 # In[34]:
 
 
-
 with open("vector.p", "wb") as fopen:
     pickle.dump(vectorized, fopen)
 with open("label-y.p", "wb") as fopen:
@@ -220,7 +214,6 @@ train_X, test_X, train_Y, test_Y = train_test_split(
 
 
 # In[36]:
-
 
 
 params_lgd = {
@@ -246,7 +239,6 @@ clf.fit(
 
 
 # In[37]:
-
 
 
 predicted = clf.predict(test_X)

@@ -21,6 +21,7 @@ from datetime import datetime
 from time import sleep, time
 
 import arrow
+
 # non-stdlib imports
 import psutil
 
@@ -296,7 +297,7 @@ def ps_is_issue(p):
     pdict = p.as_dict()
     pidi = p.pid
 
-    Mb = 1024**2
+    Mb = 1024 ** 2
     log("Worker PID;CPU;RAM:", pidi, pdict["cpu_percent"], pdict["memory_full_info"][0] / Mb)
 
     try:
@@ -463,7 +464,7 @@ def os_environment():
 
 
 def os_is_wndows():
-    return platform.system() == 'Windows'
+    return platform.system() == "Windows"
 
 
 def np_avg(list):
@@ -755,7 +756,7 @@ def monitor_nodes():
 
 
 def os_generate_cmdline():
-    Mb = 1024**2
+    Mb = 1024 ** 2
     pars = {
         "max_memory": 1500.0 * Mb,
         "max_cpu": 85.0,

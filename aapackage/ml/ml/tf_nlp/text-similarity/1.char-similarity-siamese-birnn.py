@@ -170,7 +170,6 @@ sess.run(tf.global_variables_initializer())
 # In[8]:
 
 
-
 vectors_left = str_idx(X1_text, dictionary, maxlen)
 vectors_right = str_idx(X2_text, dictionary, maxlen)
 train_X_left, test_X_left, train_X_right, test_X_right, train_Y, test_Y = train_test_split(
@@ -179,7 +178,6 @@ train_X_left, test_X_left, train_X_right, test_X_right, train_Y, test_Y = train_
 
 
 # In[9]:
-
 
 
 for EPOCH in range(5):
