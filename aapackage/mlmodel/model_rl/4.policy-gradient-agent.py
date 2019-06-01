@@ -56,9 +56,15 @@ class Agent:
         self.sess.run(tf.global_variables_initializer())
     
     def predict(self, inputs):
+<<<<<<< HEAD
         return self.sess.run(self.logits, feed_dict={self.X:inputs})
     
     def get_state(self, t):
+=======
+        return self.sess.run(self.logits, feed_dict={self.X: inputs})
+
+    def get_state(self, t, reward_state=None):
+>>>>>>> c81ce4ab269c757d23c6940d74d5734a3ab7a470
         window_size = self.window_size + 1
         d = t - window_size + 1
         block = self.trend[d : t + 1] if d >= 0 else -d * [self.trend[0]] + self.trend[0 : t + 1]
@@ -103,10 +109,8 @@ class Agent:
             result_list.append( dict_res )
 
 
-            next_state = self.get_state(t + 1)     
-            state      = next_state
-            
-        return result_list    
+            next_state = self.get_state(t + 1, dict_res["reward_state"])
+            state = next_state
 
 
 

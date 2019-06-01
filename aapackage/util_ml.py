@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import codecs
 import collections
@@ -5,9 +6,6 @@ import collections
 import os
 import pickle
 import sys
-from time import time
-
-import numpy as np
 
 import arrow
 import tensorflow as tf
@@ -18,6 +16,7 @@ import util
 # os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 # DIRCWD= os.environ["DIRCWD"]; os.chdir(DIRCWD); sys.path.append(DIRCWD + '/aapackage')
 
+# noinspection PyUnboundLocalVariable
 DIRCWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(DIRCWD)
 sys.path.append(DIRCWD + "/aapackage")
@@ -47,20 +46,6 @@ def create_adam_optimizer(learning_rate, momentum):
 def tf_check():
     print("Checking TF package")
     print(tf)
-    from tensorflow.examples.tutorials.mnist import input_data
-    from tensorflow.python.ops.rnn import dynamic_rnn
-    from tensorflow.contrib.rnn import BasicLSTMCell
-    from tensorflow.contrib.rnn import LSTMCell, GRUCell
-    from tensorflow.contrib.rnn import RNNCell
-    from tensorflow.python.ops import rnn_cell_impl
-    from tensorflow.python.framework import dtypes
-    from tensorflow.python.framework import ops
-    from tensorflow.python.ops import array_ops
-    from tensorflow.python.ops import init_ops
-    from tensorflow.python.ops import random_ops
-    from tensorflow.python.ops import variable_scope as vs
-    from tensorflow.python.ops.math_ops import sigmoid
-    from tensorflow.python.ops.math_ops import tanh
 
     # Test
     a = tf.constant([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], shape=[2, 3], name="a")
@@ -72,10 +57,9 @@ def tf_check():
     print("Matmul Operation:", sess.run(c))
 
 
-os.environ
-
-
-def parse_args(ppa=None, args={}):
+def parse_args(ppa=None, args=None):
+    if args is None:
+        args = {}
     if ppa is None:
         ppa = argparse.ArgumentParser()
     for key, x in args.items():
@@ -351,15 +335,11 @@ arg = ppa.parse_args()
 if __name__ == "__main__" and arg.do == "test":
     print(__file__)
     try:
-        import util
-
         UNIQUE_ID = util.py_log_write(DIRCWD + "/aapackage/ztest_log_all.txt", "util_ml")
 
         #####################################################################################################
         import numpy as np, pandas as pd, scipy as sci
-        import util_ml
 
-        print(util_ml)
         print("")
 
         #####################################################################################################

@@ -1,26 +1,19 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 import datetime
 ###############################################################################
 import os
-import shutil
 import sys
 import time
-from builtins import map, next, object, range, str, zip
+from builtins import range, str
 
-import matplotlib.pyplot as plt
-import numexpr as ne
 import numpy as np
 import pandas as pd
-import scipy as sci
+import psycopg2
 import sqlalchemy as sql
+import sqlalchemy.orm
 from future import standard_library
-from past.builtins import basestring
-from past.utils import old_div
-
-import arrow
-import util as util
 
 standard_library.install_aliases()
 
@@ -92,6 +85,7 @@ engine = create_engine('postgresql://%s:%s@localhost:5432/%s' %(myusername, mypa
 engine = create_engine('sqlite:///  folder/foo.db')
 
    """
+    global engine
     if type1 == "postgres":  # psycopg2
         engine = sql.create_engine(
             "postgresql+psycopg2://"
@@ -164,6 +158,7 @@ def sql_get_dbschema(dburl="sqlite:///aapackage/store/yahoo.db", dbengine=None, 
     return np.array(l1)
 
 
+# noinspection PyUnresolvedReferences
 def sql_delete_table(name, dbengine):
     pd.io.sql.execute("DROP TABLE IF EXISTS " + name, dbengine)
     pd.io.sql.execute("VACUUM", dbengine)
@@ -247,7 +242,7 @@ os.unlink("birth.xls")
  Every sheet is stored in a separate table
  The sheet name is assigned as the table name for every sheet
  """
-    import sqlite3, re
+    import re
     from openpyxl import load_workbook
 
     def slugify(text, lower=1):
@@ -297,7 +292,9 @@ os.unlink("birth.xls")
     dbengine.close()
 
 
-def sql_insert_df(df, dbtable, dbengine, col_drop=["id"], verbose=1):
+def sql_insert_df(df, dbtable, dbengine, col_drop=None, verbose=1):
+    if col_drop is None:
+        col_drop = ["id"]
     for c in df.columns:  # Remove columns
         if c in col_drop:
             df = df.drop(c, axis=1)
@@ -322,6 +319,7 @@ def sql_insert_df(df, dbtable, dbengine, col_drop=["id"], verbose=1):
     metadata = sql.schema.MetaData(bind=dbengine, reflect=True)
     table = sql.Table(dbtable, metadata, autoload=True)
 
+    # noinspection PyUnresolvedReferences
     Session = sql.orm.session.sessionmaker(bind=dbengine)
     session = Session()
 
@@ -333,8 +331,10 @@ def sql_insert_df(df, dbtable, dbengine, col_drop=["id"], verbose=1):
     return res
 
 
-def sql_insert_csv(csvfile, dbtable, dbengine, col_drop=[]):
-    start = datetime.now()
+def sql_insert_csv(csvfile, dbtable, dbengine, col_drop=None):
+    if col_drop is None:
+        col_drop = []
+    start = datetime.datetime.now()
     chunksize = 20000
     j = 0
     index_start = 1
@@ -370,14 +370,14 @@ def sql_insert_csv(csvfile, dbtable, dbengine, col_drop=[]):
         j += 1
         index_start = df.index[-1] + 1
         print(
-            "{} seconds: completed {} rows".format((datetime.now() - start).seconds, j * chunksize)
+            "{} seconds: completed {} rows".format((datetime.datetime.now() - start).seconds, j * chunksize)
         )
 
     """ Batch Mode :
  #  CSV to SQL Lite ----------------------------------------------------------------------
 disk_engine = create_engine('sqlite:///311_8M.db') # Initializes database with filename 311_8M.db in current directory
 
-start = dt.datetime.now()
+start = dt.datetime.datetime.now()
 chunksize = 20000
 j = 0
 index_start = 1
@@ -399,7 +399,7 @@ for df in pd.read_csv('311_100M.csv', chunksize=chunksize, iterator=True, encodi
             df = df.drop(c, axis=1)
 
     j+=1
-    print '{} seconds: completed {} rows'.format((dt.datetime.now() - start).seconds, j*chunksize)
+    print '{} seconds: completed {} rows'.format((dt.datetime.datetime.now() - start).seconds, j*chunksize)
 
     df.to_sql('data', disk_engine, if_exists='append')
     index_start = df.index[-1] + 1
@@ -410,13 +410,15 @@ for df in pd.read_csv('311_100M.csv', chunksize=chunksize, iterator=True, encodi
  """
 
 
-def sql_insert_csv2(csvfile="", dbtable="", columns=[], dbengine=None, nrows=10000):
+def sql_insert_csv2(csvfile="", dbtable="", columns=None, dbengine=None, nrows=10000):
     """
     Upload data to a temporary table first using PANDAs to identify optimal data-types for columns
     PANDAS is not speed-efficient as it uses INSERT commands rather than COPY e.g. it took COPY 16mins average
     to get a 15GB CSV into the database (door-to-door) whereas pandas.to_sql took 50mins
     """
 
+    if columns is None:
+        columns = []
     dbtable += "_temp"
     counter = 0
     for i in os.listdir(csvfile):
@@ -443,7 +445,8 @@ def sql_insert_csv2(csvfile="", dbtable="", columns=[], dbengine=None, nrows=100
                 print(("Successfully uploaded: %d" % counter))
 
 
-def sql_postgres_create_table(mytable="", database="", username="", password=""):
+# noinspection PyUnresolvedReferences
+def sql_postgres_create_table(my_table="", database="", username="", password=""):
     """ Create table copying the structure of the temp table created using pandas  Timer to benchmark """
     # Connect
     import psycopg2
@@ -467,13 +470,13 @@ def sql_postgres_create_table(mytable="", database="", username="", password="")
         )
         table_test = cur.fetchone()[0]
     except Exception as e:
-        print(("Table %s does not exist" % mytable))
+        print(("Table %s does not exist" % my_table))
         table_test = None
 
     if table_test:
-        print(("%s already exists" % mytable))
+        print(("%s already exists" % my_table))
     else:
-        print(("Creating table: %s" % mytable))
+        print(("Creating table: %s" % my_table))
         try:
             # Copy structure and no data (1=2 is false)
             cur.execute(
@@ -493,7 +496,8 @@ def sql_postgres_create_table(mytable="", database="", username="", password="")
     con.close()
 
 
-def sql_postgres_insert_csv(path_2_csv="", my_table=""):
+def sql_postgres_insert_csv(path_2_csv="", my_table="", mydatabase=None,
+                            myusername=None, mypassword=None):
     """  Use the PostgreSQL COPY command to bulk-copy the CSVs into the newly created table """
     # Connect
     con = psycopg2.connect(database=mydatabase, user=myusername, password=mypassword)
@@ -515,7 +519,7 @@ def sql_postgres_insert_csv(path_2_csv="", my_table=""):
 
     for i in os.listdir(path_2_csv):
         if i.endswith(".csv") and i.startswith("..."):
-            print(("Uploading %s to %s" % (i, mytable)))
+            print(("Uploading %s to %s" % (i, my_table)))
             with open(os.path.join(path_2_csv, i), "r") as f:
                 cur.copy_expert(sql=copy_sql, file=f)
                 con.commit()
@@ -529,7 +533,8 @@ def sql_postgres_insert_csv(path_2_csv="", my_table=""):
 
 
 def sql_postgres_query_to_csv(
-    sqlr="SELECT ticker,shortratio,sector1_id, FROM stockfundamental", csv_out=""
+    sqlr="SELECT ticker,shortratio,sector1_id, FROM stockfundamental", csv_out="",
+    mydatabase=None, myusername=None, mypassword=None
 ):
     """ Submit query to created PostgreSQL database and output results to a CSV  """
     import psycopg2
