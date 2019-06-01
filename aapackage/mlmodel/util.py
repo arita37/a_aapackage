@@ -98,10 +98,10 @@ class DataSampler():
 
 
 class BaseModelDl(object):
-    """
-    Base Model class used for models under Dl class 
-    acting as parent class
-    """
+    
+    #Base Model class used for models under Dl class 
+    #acting as parent class
+
     def __init__(self):
         self.datasampler = None
         self.name = ''
@@ -226,3 +226,6 @@ class LSTM(BaseModelDl):
         # takes a sampler as the one in datasampler class
         # in this function it should take a sampler 
 """
+
+
+

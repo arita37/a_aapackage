@@ -22,6 +22,8 @@ from sklearn.preprocessing import MinMaxScaler
 from util import load_config
 
 
+
+
 #################################################################################
 def get_recursive_files(folderPath, ext):
     results = os.listdir(folderPath)
@@ -35,19 +37,22 @@ def get_recursive_files(folderPath, ext):
     return outFiles
 
 
-def create(modelname="",  modeltype="model_dl", params=None):
+def create(modelname="", params=None):
     """
-      modelname:  1_lstm
-      modeltype:  model_dl, model_dl_tch, model_rl
+      modelname:  model_dl.1_lstm.py
       
       
     """
     modelname = modelname.replace(".py", "")
-    module_path = glob.glob("{}.py".format(modelname))
-    if len(module_path) == 0:
-        raise NameError("Module {} notfound".format(modelname))
+    # module_path = glob.glob("{}.py".format(modelname))
+    #if len(module_path) == 0:
+    #    raise NameError("Module {} notfound".format(modelname))
 
-    module = import_module("{a}.{b}".format(a=modeltype , b=modelname))
+    print(modelname)
+    try :
+      module = import_module("{a}".format(a=modelname))
+    except Exception as e :
+      raise NameError("Module {} notfound".format(modelname))    
 
     if params:
         model = module.Model(**params)
@@ -68,7 +73,7 @@ def fit(model, module, X):
     return module.fit(model, X)
 
 
-def predict(model, module, sess, X):
+def predict(model, module, sess=None, X=None):
     return module.predict(model, sess, X)
 
 
@@ -100,6 +105,9 @@ def test_all(parent_folder="model_dl"):
 
 
 
+
+
+
 ###############################################################################
 def load_arguments(config_file= None ):
     """
@@ -115,7 +123,7 @@ def load_arguments(config_file= None ):
     p.add_argument("--log_file", help="log.log")  
 
     p.add_argument("--do", help="test") 
-    p.add_argument("--name", help=".")  
+    p.add_argument("--modelname", help=".")  
 
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
@@ -130,6 +138,10 @@ if __name__ == "__main__":
     args = load_arguments()
 
     # still not supported yet
-    if args.do == "test":
-        module, _ = create(args.name, None)  # '1_lstm'
+    if args.do == "test"  :
+        module, _ = create(args.modelname, None)  # '1_lstm'
+        print(module)
         module.test()
+
+
+
