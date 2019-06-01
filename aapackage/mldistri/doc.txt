@@ -1,0 +1,84 @@
+The result of work:
+===================
+
+1) "install_dependanices.sh" is a bash script which install all dependanices for your environment to run
+	"pytorch_mnist_horovod_cpu.py" python script examples.
+
+2) "pytorch_mnist_horovod_cpu.py" is a python script similar to 
+the one "horovod/examples/pytorch_mnist.py" in horovod git repo with few
+modifications to make it run only on cpu instead of GPU.
+
+3) "pytorch_mnist.py.diff-patch" is a git diff file shows you the changes
+which are made from the original file "pytorch_mnist.py" to "pytorch_mnist_horovod_cpu.py"
+
+4) "runmpi.sh" is a shell script which contains the mpi command line with the required options
+ to execute the "pytorch_mnist_horovod_cpu.py"
+ 
+	a) The "mpirun" commmand line with `-np 4 -H localhost:4` options is simply distribute the python
+	 script work on 4 Processes in the localhost of my machine. each process is given a partial set of the training/test data
+	 to work on and Open MPI with horovod wrapping handles the collecting the results of processes work.
+
+	 Another way to think about these options is that i want to run my python application on a total number of 4 processes but 
+	 where are these 4 processes should run ? the answer is `-H localhost:4` which makes these 4 processes runs on the local machine where each process is assigned to a physical processor.
+
+ 	b)	"--display-map" option in the mpirun command line is displaying a table which shows
+ 		the mapped location of each process with its rank as in Figure[1].png
+
+ ---> Figure[1].png:
+ 		* This figure is output result of "--display-map" option which shows that we run the "pytorch_mnist_horovod_cpu.py"
+ 		on 4 core processors. each core is assigned with a local rank ID from 0 to 3.
+ 		* Num slots: 4 
+			slots are Open MPI's representation of how many processors are available on a given host.
+			(Source: https://www.open-mpi.org/faq/?category=running#mpirun-scheduling)
+
+ ---> Figure[2].png:
+ 		* This is final outputs of the "pytorch_mnist_horovod_cpu.py" after 10 epoches.
+ 		* Each processor with a local rank(0...3), working on a partial set of data. 
+ 			In MNIST case, we have 60000 training samples. And we split the work on 4 slots (processors),then horovod code
+ 			splits theses samples on 4 parts, each processor works on 15000. And this for each epoch.
+ 		* The last 3 lines of the `real`,`user` and `sys` is the time consumed in each when running "pytorch_mnist_horovod_cpu.py" script.
+
+ ---> Figure[3].png:
+ 		* To make a comparsion with the result of the distributed work in Figure[2].png, I downloaded pytorch mnist example without
+ 			using horovod from pytorch git repo. (source: https://github.com/pytorch/examples/blob/master/mnist/main.py)
+ 		* And after running it, it gives the result in a longer time than the distributed version with horovod.
+
+
+ Important Notes:
+ ================
+
+ 	1) To use horovod with your training model, you don't need to change anything in the model code. 
+ 		you only hooks horovod functions as described in the horovod git repo guide. (Source: https://github.com/horovod/horovod#pytorch )
+ 	2) Horovod is a wrapper for OpenMPI, so you can run horovod code with `mpirun` command.
+
+ 	3) Horovod code is fixed to work with CPUs or GPUs clusters, the changes happen in the library you use for training the model.(e.g: Pytorch)
+
+
+ Environment Setup:
+ =================
+
+ Below is the manaul steps to prepare your environment to work with horovod. 
+ This section is automated by a script called "install_dependanices.sh"
+
+ 1) Open your favorite shell (e.g: bash) and insert
+ ----------------------------
+ shell$ sudo apt-get update && sudo apt-get install -y wget python python-cffi python-pip
+ shell$ sudo pip install torchvision==0.2.0
+ shell$ sudo pip install torch==0.4.1 -f https://download.pytorch.org/whl/cpu/stable
+ 
+ 2) Download the latest OpenMPI version from ( https://www.open-mpi.org/software/ompi/v4.0/ )
+ -------------------------------------
+ Download this file: "openmpi-4.0.1.tar.gz"
+
+ 3) Return to the shell
+ -------------------------
+shell$ gunzip -c openmpi-4.0.1.tar.gz | tar xf -
+shell$ cd openmpi-4.0.1
+shell$ ./configure --prefix=/usr/local
+<...lots of output...>
+shell$ sudo make all install
+shell$ sudo ldconfig
+shell$ sudo pip install horovod
+
+And that's it !, you are ready to run horovod pytorch script.
+
