@@ -1,17 +1,16 @@
-    
 from __future__ import print_function
+
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torchvision import datasets, transforms
 import torch.utils.data.distributed
-
+from torchvision import datasets, transforms
 
 
 def models_instance(name="net"):
-    if name=="net" :
+    if name == "net":
         return Net()
-    
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -33,8 +32,3 @@ class Net(nn.Module):
 
 
 # model = Net()
-
-
-
-
-
