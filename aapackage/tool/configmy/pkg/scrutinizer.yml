@@ -1,5 +1,0 @@
-# vim:sw=2:ts=2:et:
-# :see: https://scrutinizer-ci.com/docs/guides/python/continuous-integration-deployment
-checks:
-  python:
-    duplicate_code: false
