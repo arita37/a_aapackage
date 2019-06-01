@@ -1,14 +1,14 @@
 #!/bin/bash
 
 reset
-
-sudo apt-get update
-sudo apt-get install -y wget python python-cffi python-pip
-sudo pip install torchvision==0.2.0
-sudo pip install torch==0.4.1 -f https://download.pytorch.org/whl/cpu/stable
+which conda
 
 
+echo "Conda Install"
+conda env create -n py36tch -f py36tch.yml
 
+
+echo "Open MPI"
 
 mkdir openmpi
 cd ./openmpi
@@ -21,8 +21,6 @@ sudo make all install
 sudo ldconfig
 
 
-
-
-sudo pip install horovod
-
 echo "Done!"
+
+
