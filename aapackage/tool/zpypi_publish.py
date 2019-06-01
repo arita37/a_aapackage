@@ -1,4 +1,20 @@
 # coding=utf-8
+"""
+Modified in hard  pypi Version number
+  1) Update the change log and edit the version number in setup.py   VERSION
+  2) Open terminal window and change directory to 
+     D:\_devs\Python01\project27\github\configmy
+     activate tf_gpu_12    (conda environnment).
+     
+  3) Write down
+     python setup.py sdist --formats=zip upload
+     
+     python setup.py sdist bdist_wheel --universal
+     twine upload dist/*0.12.5*                
+
+     pip install configmy
+
+"""
 from __future__ import absolute_import, division, print_function
 
 import ast
@@ -37,22 +53,7 @@ print(DIRCWD)
 # __version__= "1.0.0"
 # __file__= "configmy.py"
 
-"""
-Modified in hard  pypi Version number
-  1) Update the change log and edit the version number in setup.py   VERSION
-  2) Open terminal window and change directory to 
-     D:\_devs\Python01\project27\github\configmy
-     activate tf_gpu_12    (conda environnment).
-     
-  3) Write down
-     python setup.py sdist --formats=zip upload
-     
-     python setup.py sdist bdist_wheel --universal
-     twine upload dist/*0.12.5*                
 
-     pip install configmy
-
-"""
 
 #####################################################################################################
 
@@ -94,13 +95,6 @@ def pypi_upload():
 ####################################################################################################
 version_new = pypi_update_version("VERSION", "setup.py")
 
-
-
-ztest()
-
-
-
-ztest()
 
 
 os.chdir(DIRCWD)
