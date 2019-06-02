@@ -1,8 +1,4 @@
-#!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
 
 import numpy as np
 import pandas as pd
@@ -13,8 +9,6 @@ sns.set()
 
 
 
-
-# In[3]:
 
 class Model:
     def __init__(self,
@@ -29,8 +23,8 @@ class Model:
         self.iterations = iterations
         self.initial_reward = initial_reward
 
-class Agent:
 
+class Agent:
     LEARNING_RATE = 1e-4
     LAYER_SIZE = 256
     GAMMA = 0.9
@@ -40,8 +34,8 @@ class Agent:
         self.state_size = state_size
         self.window_size = window_size
         self.half_window = window_size // 2
-        self.trend = trend
-        self.skip = skip
+        self.trend = trend  # history
+        self.skip = skip    # time step
         
         
         ### RL models
@@ -92,62 +86,59 @@ class Agent:
         return np.argmax(prediction)
     
     
-    
-    
-    def predict_sequence(self, trend_input, do_action , dictp=None):
+    def predict_sequence(self, trend_input, do_action , param=None):
         """
           Generate the states, and get action result intoList
         
-          dict_res = {         "starting_money" = initial_money
-             "states_sell"    = []
-             "states_buy"     = []
-             "inventory      = []
-          result_list = [ dict_res ]
-    
-        
+          trend_input :  timeseries of state
+          do_action   :  action to be done
+          param       :  parameters into dict
+
         """
-        state          = self.get_state(0)
-        action_results = []
+        # state          = self.get_state(0)
+        # starting_reward = param["initial_reward"]   
+        
+        state = param["initial_state"]
+
+        action_history = []
         ep_history     = []
-        
-        ep_history = []
-        total_reward = 0
-        inventory = [] # passed by reference
-        state = dictp["state0"]
-        starting_reward = dictp["initial_reward"]        
-        
-        
+        total_reward   = 0
+        inventory      = [] # passed by reference
+     
         for t in range(0, len(trend_input) - 1, self.skip):
             action    = self.get_predicted_action(state)
        
             action_dict = {"t": t, 
                            "action": action,             
             
-                           "half_window": agent.half_window,
-                           "starting_reward": starting_reward, 
+                           "param":  param,    
+                           # { "half_window": agent.half_window},
+                           # "starting_reward": starting_reward, 
                            
-                           "trend": trend_input, 
+                           "history": trend_input, 
                            "total_reward": total_reward,
-                           "inventory" : inventory
+                           "inventory"   : inventory
                           }
        
-            d           = do_action( action_dict )  
-            inventory   = d["inventory"]
+            d            = do_action( action_dict )  
+            inventory    = d["inventory"]
+            total_reward = d["total_reward"]
+            reward_t     = d["reward"]
+            reward_state = d.get("reward_state") # None is ok
             
-            next_state  = self.get_state(t + 1, d.get("reward_state"))  # can be None
-            
-            action_results.append( dict_res )
-            ep_history.append([state,action,  d.get("reward") ,next_state])
+            next_state  = self.get_state(t + 1, reward_state)  # can be None
+            action_history.append( d )
+            ep_history.append([state, action, reward_t ,next_state])
             
             state = next_state
 
 
         ep_history      = np.array(ep_history)
         ep_history[:,2] = agent.discount_rewards(ep_history[:,2])
-        return ep_history, action_results
+        return ep_history, action_history
         
 
-
+    
     def buy(self, initial_money):
         starting_money = initial_money
         states_sell    = []
@@ -189,6 +180,7 @@ class Agent:
         
     
     def train(self, iterations, checkpoint, initial_money):
+        # Old version
         for i in range(iterations):
             ep_history = []
             total_profit = 0
@@ -224,10 +216,10 @@ class Agent:
             if (i+1) % checkpoint == 0:
                 print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, total_profit, cost,
                                                                                   starting_money))
-
+    
     
 
-def fit(model, data_frame, do_action):
+def fit(model, df, do_action):
     agent = model.agent
     for i in range(model.iterations):
         ep_history = []
@@ -239,24 +231,30 @@ def fit(model, data_frame, do_action):
         
         for t in range(0, len(agent.trend) - 1, agent.skip):
             action = agent.get_predicted_action(state)
+            param = { "half_window"     : agent.half_window},
+                      "starting_reward" : starting_reward }
             
+            trend_input = agent.trend
             ######## do_action ###################################
             action_dict = {"t": t, 
                            "action": action,             
             
-                           "half_window": agent.half_window,
-                           "starting_reward": starting_reward, 
+                           "param":  param,    
                            
-                           "trend": data_frame, 
+                           "history": trend_input, 
                            "total_reward": total_reward,
-                           "inventory" : inventory
+                           "inventory"   : inventory
                           }
+                          
             r = do_action(action_dict)
-            reward, total_reward, inventory =  r["reward"], r["total_reward"], r["inventory"]
+            starting_reward        = r["reward"]  #### Be careful
+            
+            total_reward,inventory = r["total_reward"] ,  r["inventory"]
+            reward_state           = r.get("reward_state")
             
             ###################################################
-            ep_history.append([state,action,reward,next_state])
-            state = agent.get_state(t + 1, reward_state= r.get("reward_state"))
+            ep_history.append([state, action, starting_reward, next_state])
+            state = agent.get_state(t + 1, reward_state= reward_state)
 
 
         ep_history = np.array(ep_history)
@@ -274,7 +272,7 @@ def fit(model, data_frame, do_action):
 
 
 
-def predict(model, sess, data_frame, do_action):
+def predict(model, sess, df, do_action):
     model.agent.sess = sess
     res = model.agent.predict_sequence(do_action) #TODO needs an example function to work
     return res
@@ -285,7 +283,7 @@ def predict(model, sess, data_frame, do_action):
 ################################################################################################
 ################################################################################################
 #https://stackoverflow.com/questions/2597278/python-load-variables-in-a-dict-into-namespace
-class Bunch(object):
+class to_name(object):
   def __init__(self, adict):
     self.__dict__.update(adict)
 
@@ -293,9 +291,6 @@ class Bunch(object):
 
 def do_action_example(action_dict):
     """
-    
-    
-    
         starting_money = initial_money
         states_sell    = []
         states_buy     = []
@@ -334,44 +329,66 @@ def do_action_example(action_dict):
         return states_buy, states_sell, total_gains, invest    
     
     
-    data_frame : close price
-    t : iteration step
-    
-    
+                action_dict = {"t": t, 
+                           "action": action,             
+            
+                           "param":  param,    
+                           # { "half_window": agent.half_window},
+                           # "starting_reward": starting_reward, 
+                           
+                           "trend": trend_input, 
+                           "total_reward": total_reward,
+                           "inventory"   : inventory
+                          }
+        
+            d            = do_action( action_dict )  
+            inventory    = d["inventory"]
+            total_reward = d["total_reward"]
+            reward_t     = d["reward"]
+            reward_state = d.get("reward_state") # None is ok
     
     
     """
-    x         = Bunch(action_dict)
-    inventory = x.inventory    # how much we have in stocks
-    price     = x.trend[x.t]   # current price
+    x         = to_name(action_dict)
+
+    ########## Mapping ####################################
+    price        = x.history[x.t]   # current price
+    total_reward = x.total_reward
+    inventory    = x.inventory    # how much we have in stocks    
     
-    
-    states_sell = []
-    states_buy  = []
-    
+    half_window      = x.param.half_window
+    starting_reward  = x.param.starting_reward  
+    states_sell , states_buy = [], []
+     
+    #######################################################
     #### Buy
-    if x.action == 1 and x.starting_reward >= price and x.t < (len(x.trend) - x.half_window):
+    if x.action == 1 and starting_reward >= price and x.t < (len(x.trend) - half_window):
         inventory.append(price)
-        x.starting_reward -= price
+        reward_t = 0
+        starting_reward -= price
         states_buy = [price]
         
     ### Sell    
     elif x.action == 2 and len(inventory):
-        x.bought_price     = inventory.pop(0)
-        x.total_reward    += price - x.bought_price
-        x.starting_reward += price
+        bought_price     = inventory.pop(0)
+        reward_t         = price - bought_price
+        total_reward    += reward_t
+        starting_reward += price
         states_sell = [price]
         try:
-                    invest = ((price - x.bought_price) / x.bought_price) * 100
+                    invest = ((price - bought_price) / bought_price) * 100
         except:
                     invest = 0
     
-    
-    d = { "starting_reward": x.starting_reward, 
-          "total_reward"   : x.total_reward,
+    ##### Mapping Back #################################
+    d = { "total_reward"   : total_reward,
+          "inventory"      : inventory,
+          "reward_t"       : starting_reward, 
+          "reward_state"   : None, 
+          
+
           "states_buy"     : states_buy,
           "states_sell"    : states_sell,
-          "total_gains"    : x.total_reward,
           "invest"         : invest
         }    
     return d
