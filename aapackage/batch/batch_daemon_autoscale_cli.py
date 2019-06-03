@@ -41,7 +41,7 @@ import subprocess
 import sys
 import warnings
 from time import sleep
-
+from datetime import datetime
 import paramiko
 from aapackage import util_log
 from aapackage.batch import util_cpu
@@ -95,8 +95,8 @@ def log(*argv):
 ################################################################################
 def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag="ignore"):
     """
-     ### Copy with criteria
-  """
+    Copy with criteria
+    """
     task_list_added, task_list = [], []
     for f in os.listdir(from_folder_root):
         from_f = from_folder_root + f
@@ -117,34 +117,35 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
     return task_list, task_list_added
 
 
-def task_get_from_github(
-    repourl,
-    reponame="tasks",
-    branch="dev",
-    to_task_folder="/home/ubuntu/zs3drive/tasks/",
-    tmp_folder="/home/ubuntu/data/ztmp/",
-):
+def task_get_from_github(repourl, reponame="tasks", branch="dev",
+                         to_task_folder="/home/ubuntu/zs3drive/tasks/",
+                         tmp_folder="/home/ubuntu/data/ztmp/"):
     """
-   Get tasks from github repo
-   Retrieve tasks folder from Github repo and write on S3 drive for automatic processing.
-   rm folder
-   git clone  https://github.com/arita37/tasks.git
-   git checkout branch
-   for each subfolder :cp folder1  folder_s3
-  """
+    Get tasks from github repo
+    Retrieve tasks folder from Github repo and write on S3 drive for automatic processing.
+    rm folder
+    git clone  https://github.com/arita37/tasks.git --branch <name>
+    git checkout branch
+    for folder1 in subfolder:
+        cp folder1 folder_s3
+    """
     ### Git pull  ########################################################################
     if not os.path.exists(tmp_folder):
         os.mkdir(tmp_folder)
 
-    repo_folder = tmp_folder + "/" + reponame + "/"
-    to_task_folder = to_task_folder + "/"
+    repo_folder = tmp_folder + os.sep + reponame + os.sep
+    if to_task_folder and not to_task_folder.endswith(os.sep):
+        to_task_folder = os.path.join(to_task_folder, os.sep)
 
-    msg = os.system("rm -rf " + repo_folder)
-    cmds = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame)
-    cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
+    os.system("rm -rf " + repo_folder)
+    # cmds = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    # cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
+    cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    if branch:
+        # Checkout the branch directly.
+        cmds = "{a} --branch {b}".format(a=cmds, b=branch)
     print(cmds)
-    msg = os.system(cmds)
-    # print(msg)
+    os.system(cmds)
 
     ### Copy  ##########################################################################
     task_list, task_list_added = os_folder_copy(repo_folder, to_task_folder)
@@ -156,67 +157,61 @@ def task_get_from_github(
     cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
     cmds += " &&  git push --all --force "
     print(cmds)
-    msg = os.system(cmds)
-
+    os.system(cmds)
     return task_list, task_list_added
 
 
-def task_put_to_github(
-    repourl,
-    reponame="tasks",
-    branch="dev",
-    from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/",
-    repo_folder="/home/ubuntu/data/github_tasks_out/",
-):
+def task_put_to_github(repourl, reponame="tasks", branch="dev",
+                       from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/",
+                       repo_folder="/home/ubuntu/data/github_tasks_out/"):
     """
     Put results back to github
     git clone https://github.com/arita37/tasks_out.git  github_tasks_out
-    
     git pull --all
     copy S3 to github_tasks_out
     git add --all, push all
-  """
-    if not os.path.exists(repo_folder):
-        print("Git clone")
-        cmds = " git clone {a} {b} ".format(a=repourl, b=repo_folder)
+    """
+    if os.path.exists(repo_folder):
+        cmds = " cd {a} && git pull --all ".format(a=repo_folder)
         cmds += " && git checkout {b}".format(b=branch)
-        msg = os.system(cmds)
-
-    cmds = " cd {a} && git pull --all ".format(a=repo_folder)
-    cmds += " && git checkout {b}".format(b=branch)
-    print("Git Pull results", cmds)
-    msg = os.system(cmds)
+        print("Git Pull results", cmds)
+        os.system(cmds)
+    else:
+        print("Git clone")
+        cmds = "git clone {a} {b}".format(a=repourl, b=repo_folder)
+        if branch:
+            # Checkout the branch directly.
+            cmds = "{a} --branch {b}".format(a=cmds, b=branch)
+        os.system(cmds)
 
     ### Copy with OVERWRITE
-    task_list, task_list_added = os_folder_copy(from_taskout_folder, repo_folder, isoverwrite=True)
+    task_list, task_list_added = os_folder_copy(from_taskout_folder, repo_folder,
+                                                isoverwrite=True)
 
     ### Git push
-    cmds = " cd {a} && git add --all  && git commit -m 'oo{b}'  ".format(
-        a=repo_folder, b=",".join(task_list_added)
-    )
+    cmds = "cd {a} && git add --all".format(a=repo_folder)
+    cmds += " && git commit -m 'oo{b}'".format(b=",".join(task_list_added))
     cmds += " && git push --all   --force "
     print("Git push task resut", cmds)
-    msg = os.system(cmds)
-    print(msg)
+    os.system(cmds)
     return task_list, task_list_added
 
 
 ################################################################################
 def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
-    """ Make it regex based so that both shell and python can be checked. 
-       _qstart, _ignore , _qdone are excluded.
-       main.sh or main.py should be in the folder.
-  
-  """
+    """
+    Make it regex based so that both shell and python can be checked.
+    _qstart, _ignore , _qdone are excluded.
+    main.sh or main.py should be in the folder.
+    """
     if not os.path.isdir(folder):
         return []
     valid_folders = []
     for root, dirs, files in os.walk(folder):
         root_splits = root.split("/")
         for filename in files:
-            if re.match(script_regex, filename, re.I) and not re.match(
-                r"^.*(_qstart|_qdone|_ignore)$", root_splits[-1], re.I
-            ):
+            if re.match(script_regex, filename, re.I) and \
+                    not re.match(r"^.*(_qstart|_qdone|_ignore)$", root_splits[-1], re.I):
                 valid_folders.append(root)
     return valid_folders
 
@@ -224,9 +219,10 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
 def task_get_list_valid_folder_new(folder_main):
     """ Why was this added  /
     --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
-    --->  Solution is to have a Global File global_task_dict which maintains current "running tasks/done tasks"
-          Different logic should be applied ,  see code in batch_daemon_launch.py
-  """
+    --->  Solution is to have a Global File global_task_dict which maintains current
+    "running tasks/done tasks"
+    Different logic should be applied ,  see code in batch_daemon_launch.py
+    """
     # task already started
     folder_check = json.load(open(global_task_file, mode="r"))
     task_started = {k for k in folder_check}
@@ -245,11 +241,9 @@ def task_get_list_valid_folder_new(folder_main):
 
 def task_isvalid_folder(folder_main, folder, folder_check):
     # Invalid cases
-    if (
-        os.path.isfile(os.path.join(folder_main, folder))
-        or folder in folder_check
-        or re.search(r"_qstart|_qdone|_ignore", folder, re.I)
-    ):
+    if os.path.isfile(os.path.join(folder_main, folder)) or \
+            folder in folder_check or \
+            re.search(r"_qstart|_qdone|_ignore", folder, re.I):
         return False
     else:
         # Valid case
@@ -264,13 +258,10 @@ def task_getcount(folder_main):
 def os_system(cmds, stdout_only=1):
     """
      Get print output from command line
-  """
-    import subprocess
-
+    """
     cmds = cmds.split(" ")
     p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.stdout.read(), p.stderr.read()
-
     if stdout_only:
         return out
     return out, err
@@ -279,9 +270,7 @@ def os_system(cmds, stdout_only=1):
 def task_getcount_cpurequired(folder_main):
     """  
     ncpu_required defined in task_config.py
-    
-  
-  """
+    """
     task_list = task_get_list_valid_folder_new(folder_main)
     ncpu_all = 0
     for f in task_list:
@@ -386,12 +375,10 @@ def ec2_keypair_get():
 ################################################################################
 def ec2_instance_usage(instance_id=None, ipadress=None):
     """
-  https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
-  https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
-  """
-    cpuusage = None
-    ramusage = None
-    totalram = None
+    https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
+    https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
+    """
+    cpuusage, ramusage, totalram = (None,) * 3
     if instance_id and ipadress:
         identity = ec2_keypair_get()
         # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
@@ -436,11 +423,10 @@ def ec2_config_build_template(instance_type):
 ################################################################################
 def ec2_spot_start(instance_type, spot_price, waitsec=100):
     """
-  Request a spot instance based on the price for the instance type
-  # Need a check if this request has been successful.
-  
-  100 sec to be provisionned and started.
-  """
+    Request a spot instance based on the price for the instance type
+    # Need a check if this request has been successful.
+    100 sec to be provisionned and started.
+    """
     if not instance_type:
         instance_type = default_instance_type
     ec2_config_build_template(instance_type)
@@ -461,7 +447,7 @@ def ec2_spot_start(instance_type, spot_price, waitsec=100):
     ]
     print(cmdargs)
     cmd = " ".join(cmdargs)
-    msg = os.system(cmd)
+    os.system(cmd)
     sleep(waitsec)  # It may not be fulfilled in 50 secs.
     ll = ec2_spot_instance_list()
     return ll["SpotInstanceRequests"] if "SpotInstanceRequests" in ll else []
@@ -493,17 +479,13 @@ def ec2_instance_stop(instance_list):
 
 
 ################################################################################
-def ec2_instance_backup(
-    instances_list, folder_list=["zlog/"], folder_backup="/home/ubuntu/zs3drive/backup/"
-):
+def ec2_instance_backup(instances_list, folder_list=["zlog/"],
+                        folder_backup="/home/ubuntu/zs3drive/backup/"):
     """
-      Zip some local folders
-      Tansfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
+    Zip some local folders
+    Transfer data from local to /zs3drive/backup/AMIname_YYYYMMDDss/
     tar -czvf directorios.tar.gz folder
-    
     """
-    from datetime import datetime
-
     now = datetime.today().strftime("%Y%m%d")
     for idx in instances_list:
 
@@ -519,27 +501,27 @@ def ec2_instance_backup(
             print(cmds, msg)
 
         """
-      # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
-      target_folder = folder_backup +  "/" + inst["id"] +  "_" + now
-      cmdstr = "mkdir %s" % target_folder
-      print(cmds)
-      
-      msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
-      print(msg)      
-      for t in folder_list :
+        # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
+        target_folder = folder_backup +  "/" + inst["id"] +  "_" + now
+        cmdstr = "mkdir %s" % target_folder
+        print(cmds)
+        
+        msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
+        print(msg)      
+        for t in folder_list :
         cmds = "tar -czvf  %s/%s.tar.gz %s" % (target_folder,
                                                t.replace('/', ''), t)
         print(cmds)
         # ssh.cmd(cmdstr)
         msg = ssh_cmdrun( inst["ip_address"],  key_file,   cmds, True)
-      """
+        """
 
 
 ################################################################################
 def instance_start_rule(task_folder):
     """ Start spot instance if more than 10 tasks or less than 10 CPUs 
       return instance type, spotprice
-  """
+    """
     global INSTANCE_DICT
     # ntask = task_getcount(task_folder)
     ntask = task_getcount_cpurequired(task_folder)
@@ -572,9 +554,9 @@ def instance_start_rule(task_folder):
 
 
 def instance_stop_rule(task_folder):
-    """IF spot instance usage is ZERO CPU%  and RAM is low --> close instances.
-  
-  """
+    """
+    If spot instance usage is ZERO CPU%  and RAM is low --> close instances.
+    """
     global INSTANCE_DICT
     # ntask              = task_getcount(task_folder)
     ntask = task_getcount_cpurequired(task_folder)
@@ -587,33 +569,32 @@ def instance_stop_rule(task_folder):
         instance_list = [
             x for _, x in INSTANCE_DICT.items() if x["cpu_usage"] < 10.0 and x["ram_usage"] < 9.0
         ]
-
         return instance_list
     else:
         return None
 
     """    
-  instance_list = []
-  
-  if ntask == 0 and  INSTANCE_DICT :
+    instance_list = []
+    
+    if ntask == 0 and  INSTANCE_DICT :
       # Idle Instances
       for idx, x in INSTANCE_DICT.items() :
          if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
             instance_list.append(x)  
       return instance_list
-  else :
+    else :
       return None
-  """
+    """
 
 
 def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
     """ Make an ssh connection using paramiko and  run the command
-   http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-   https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-   https://github.com/paramiko/paramiko/issues/501
-   https://unix.stackexchange.com/questions/30400/execute-remote-commands-completely-detaching-from-the-ssh-connection
-   
-  """
+    http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+    https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+    https://github.com/paramiko/paramiko/issues/501
+    https://unix.stackexchange.com/questions/30400/
+    execute-remote-commands-completely-detaching-from-the-ssh-connection
+    """
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -621,12 +602,12 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
         stdin, stdout, stderr = ssh.exec_command(cmdstr)  # No Blocking  , get_pty=False
 
         """
-    if not isblocking :
-       # Buggy code, use Screen instead
-       sleep(10) # To let run the script
-       ssh.close()
-       return None
-    """
+        if not isblocking :
+           # Buggy code, use Screen instead
+           sleep(10) # To let run the script
+           ssh.close()
+           return None
+        """
 
         #### Can be Blocking for long running process  screen -d -m YOURBASH
         data = stdout.readlines()  # Blocking code
@@ -645,11 +626,11 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
 
 
 def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
-    """ Make an ssh connection using paramiko and  run the command
-     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
- 
-     https://github.com/paramiko/paramiko/issues/501
+    """
+    Make an ssh connection using paramiko and  run the command
+    http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+    https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+    https://github.com/paramiko/paramiko/issues/501
     """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -669,11 +650,11 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
 
 def ec2_instance_initialize_ssh(args):
     """
-          Many issues with S3 and ssh, Very sensitive code...
-          1) Cannot run bash shell from S3 drive folder
-          2) Screen uses SH shell, not bash ---> Need to add .bashrc,python path in main.sh script
-             see task_template/
-        """
+    Many issues with S3 and ssh, Very sensitive code...
+    1) Cannot run bash shell from S3 drive folder
+    2) Screen uses SH shell, not bash ---> Need to add .bashrc,python path in main.sh script
+    see task_template/
+    """
     ##### Launch Batch system by No Blocking SSH  ####################################
     for k, x in INSTANCE_DICT.items():
         ipx = x["ip_address"]
