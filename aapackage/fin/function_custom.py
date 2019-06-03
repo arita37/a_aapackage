@@ -18,7 +18,7 @@ def mapping_calc_risk_elvis_v03(ss, tr, t, riskout):
     return mapping_calc_risk_v01(ss, tr, t, risk0)
 
 
-# Risk Indicator 2, Smootht the noise / false signal
+# Risk Indicator 2, Smooth the noise / false signal
 """
 Random Forest can be used to generate those rules, by using human mapping
 
