@@ -73,21 +73,21 @@ def main():
         elif FLAGS.framework == 'tch':
             train(config, bsde)
 
-            if bsde.y_init:
-                log(
-                    "relative error of Y0: %s",
-                    "{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),
-                )
-
-            # save training history
-            np.savetxt(
-                "{}_training_history_{}.csv".format(path_prefix, idx_run),
-                training_history,
-                fmt=["%d", "%.5e", "%.5e", "%d"],
-                delimiter=",",
-                header="step,loss_function,target_value,elapsed_time",
-                comments="",
+        if bsde.y_init:
+            log(
+                "relative error of Y0: %s",
+                "{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),
             )
+
+        # save training history
+        np.savetxt(
+            "{}_training_history_{}.csv".format(path_prefix, idx_run),
+            training_history,
+            fmt=["%d", "%.5e", "%.5e", "%d"],
+            delimiter=",",
+            header="step,loss_function,target_value,elapsed_time",
+            comments="",
+        )
 
 
 if __name__ == "__main__":
