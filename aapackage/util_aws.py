@@ -54,14 +54,6 @@ class AWS:
     EC2_FILTERS = ('id', 'ip_address')
     EC2_ATTRIBUTES = (
         "id", "instance_type", "state", "public_dns_name", "private_dns_name",
-        "state_code", "previous_state", "previous_state_code", "key_name",
-        "launch_time", "image_id", "placement", "placement_group",
-        "placement_tenancy", "kernel", "ramdisk", "architecture", "hypervisor",
-        "virtualization_type", "product_codes", "ami_launch_index", "monitored",
-        "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id",
-        "private_ip_address", "ip_address", "platform", "root_device_name",
-        "root_device_type", "state_reason", "interfaces", "ebs_optimized",
-        "instance_profile"
     )
     """
 
