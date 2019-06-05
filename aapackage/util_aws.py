@@ -28,8 +28,8 @@ from aapackage import util   # want to remove after refactor
 
 ###############################################################################
 class AWS:
-    """All the globals for AWS utility functionalities.
-    
+    """
+    All the globals for AWS utility functionalities.
     AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
     AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
     AWS_REGION = "us-west-2"
@@ -48,95 +48,128 @@ class AWS:
         "root_device_type", "state_reason", "interfaces", "ebs_optimized",
         "instance_profile"
     )
-    
     """
 
-
-    def __init__(self, name=None ):
+    def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
-        if name is None:
-            self.v = {
-                "DEFAULT_INSTANCE_TYPE": "t3.small",
-                "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
-                "AWS_KEY_PEM": "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
-                "AWS_REGION": "us-west-2",
-                "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
-                "EC2CWD": '/home/ubuntu/notebook/',
-                "EC2_CONN": None,
-                "EC2_FILTERS": ('id', 'ip_address'),
-                "EC2_ATTRIBUTES": (
-                    "id", "instance_type", "state", "public_dns_name", "private_dns_name",
-                    "state_code", "previous_state", "previous_state_code", "key_name",
-                    "launch_time", "image_id", "placement", "placement_group",
-                    "placement_tenancy", "kernel", "ramdisk", "architecture", "hypervisor",
-                    "virtualization_type", "product_codes", "ami_launch_index", "monitored",
-                    "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id",
-                    "private_ip_address", "ip_address", "platform", "root_device_name",
-                    "root_device_type", "state_reason", "interfaces", "ebs_optimized",
-                    "instance_profile"
-                ),
-                "SPOT_CFG_FILE": "/tmp/ec_spot_config"
-            }
-            self.v = dict2(self.v )
+        self.v = {
+            "DEFAULT_INSTANCE_TYPE": "t3.small",
+            "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
+            "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
+            "AWS_KEYPAIR": keypair if keypair else "aws_ec2_oregon",
+            "AWS_REGION": "us-west-2",
+            "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
+            "EC2CWD": '/home/ubuntu/notebook/',
+            "EC2_CONN": None,
+            "EC2_FILTERS": ('id', 'ip_address'),
+            "EC2_ATTRIBUTES": (
+                "id", "instance_type", "state", "public_dns_name", "private_dns_name",
+                "state_code", "previous_state", "previous_state_code", "key_name",
+                "launch_time", "image_id", "placement", "placement_group",
+                "placement_tenancy", "kernel", "ramdisk", "architecture", "hypervisor",
+                "virtualization_type", "product_codes", "ami_launch_index", "monitored",
+                "monitoring_state", "spot_instance_request_id", "subnet_id", "vpc_id",
+                "private_ip_address", "ip_address", "platform", "root_device_name",
+                "root_device_type", "state_reason", "interfaces", "ebs_optimized",
+                "instance_profile"
+            ),
+            "SPOT_CFG_FILE": "/tmp/ec_spot_config"
+        }
         
         if ".json" in name :
             dd = json.load(name)
-            self.v = dict2(dd)
         else :
             dd = json.load( os["HOME"] + "/.awsconfig/" + name )
-            self.v = dict2( dd )
+        if dd:
+            self.v.update(dd)
+        self.v = dict2(self.v)
+        self.conn = None
 
+    def aws_accesskey_get(self):
+        """Return a tuple of AWS credentials (access key id and secret access key)"""
+        # Try from Boto Config
+        access = boto.config.get('Credentials', 'aws_access_key_id')
+        key = boto.config.get('Credentials', 'aws_secret_access_key')
 
-    @classmethod
-    def get_keypair(cls):
+        if access and key:
+            print(access, key)
+            return access, key
+
+        # Finally try the manual Config
+        with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+            dd = json.loads(aws_file.read())
+        if 'AWS_ACCESS_KEY_ID' in dd:
+            access = dd['AWS_ACCESS_KEY_ID']
+        if 'AWS_SECRET_ACCESS_KEY' in dd:
+            key = dd['AWS_SECRET_ACCESS_KEY']
+        return access, key
+
+    def ec2_keypair_get(self, keypair=""):
+        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu'
+        keypair = keypair if keypair else self.v['AWS_KEYPEM']
+        identity = '%s/%s' % (sshdir, keypair)
+        return identity
+
+    def get_keypair(self):
         """Get the current keypair used"""
-        return None, None
+        return self.v['AWS_KEYPEM'], self.v['AWS_KEYPAIR']
 
-    @classmethod
-    def set_keypair(cls, keypairname, keypairlocation):
+    def set_keypair(self, keypairname, keypairlocation):
         """Set the keypair to be used."""
-        pass
+        if keypairname and keypairlocation:
+            self.v['AWS_KEYPAIR'] = keypairname
+            self.v['AWS_KEYPEM'] = keypairlocation
 
     @classmethod
     def set_attribute(cls, key, value):
         """Add or update attribute to the class, maybe protect with a lock."""
         setattr(cls, key, value)
 
-    @classmethod
-    def get_ec2_conn(cls):
+    def get_ec2_conn(self):
         """Return the current EC2 connection."""
-        return
+        return self.conn
+
+    def aws_conn_create(self, region='', access='', key=''):
+        """ EC2 connection to AP NORTH EAST2 """
+        from boto.ec2.connection import EC2Connection
+        if not region:
+            region = self.v['APNORTHEAST2']
+        if not access or not key:
+            access, key = self.aws_accesskey_get()
+        if not access or not key:
+            return None
+        # We could have used connection from any region.
+        conn = EC2Connection(access, key)
+        regions = aws_conn_getallregions(conn)
+        for r in regions:
+            if r.name == region:
+                self.conn = EC2Connection(access, key, region=r)
+                return self.conn
+        print('Region not Found')
+        return None
+
+    def aws_conn_create_windows(self, aws_region=''):
+        """ Return ec2_conn for windows system, otherwise none."""
+        if not aws_region:
+            aws_region = self.v['AWS_REGION']
+        ec2_conn = self.conn
+        if sys.platform.find('win') > -1 and not ec2_conn:
+            dd = {}
+            with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+                dd = json.loads(aws_file.read())
+            if 'AWS_ACCESS_KEY_ID' in dd:
+                access = dd['AWS_ACCESS_KEY_ID']
+            if 'AWS_SECRET_ACCESS_KEY' in dd:
+                key = dd['AWS_SECRET_ACCESS_KEY']
+            if access and key:
+                ec2_conn = boto.ec2.connect_to_region(aws_region, aws_access_key_id=access,
+                                                      aws_secret_access_key=key)
+                print(ec2_conn)
+                # We should store this in AWS
+                self.conn = ec2_conn
+        return self.conn
 
 
-####################################################################################################
-####################################################################################################
-def aws_accesskey_get(access='', key='', mode=""):
-    """Return a tuple of AWS credentials (access key id and secret access key)"""
-    if access and key:
-        return access, key
-    # Try from Boto Config
-    access = boto.config.get('Credentials', 'aws_access_key_id')
-    key = boto.config.get('Credentials', 'aws_secret_access_key')
-
-    if access and key:
-        print(access, key)
-        return access, key
-
-    # Finally try the manual Config
-    dd = {}
-    with open(AWS.AWS_ACCESS_LOCAL) as aws_file:
-        dd = json.loads(aws_file.read())
-    if 'AWS_ACCESS_KEY_ID' in dd:
-        access = dd['AWS_ACCESS_KEY_ID']
-    if 'AWS_SECRET_ACCESS_KEY' in dd:
-        key = dd['AWS_SECRET_ACCESS_KEY']
-    return access, key
-
-
-
-
-
-####################################################################################################
 ###############StandAlone access ###################################################################
 def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
   """ Make an ssh connection using paramiko and  run the command
@@ -170,7 +203,6 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
     
     ssh.close()
     return value
-    
   except Exception as e :
     print("Error Paramiko", e)
     return None
@@ -199,20 +231,10 @@ def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
     ssh.close()
 
 
-
-
-################################################################################
-def ec2_keypair_get( keypair=""):
-  identity = "%s/.ssh/%s" % \
-            (os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu', keypair)
-  return identity
-
-
 def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
   """
-      use to update the global INSTANCE_DICT
-          "id" :  instance_type,
-          ip_address, cpu, ram, cpu_usage, ram_usage
+  use to update the global INSTANCE_DICT
+  "id" :  instance_type, ip_address, cpu, ram, cpu_usage, ram_usage
   """
   val = {}
   spot_list = ec2_spot_instance_list()
@@ -260,32 +282,21 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
   return val
 
 
-
-
-
 ################################################################################ 
 def ec2_instance_usage(instance_id=None, ipadress=None):
   """
   https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
   https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
   """
-  cpuusage = None
-  ramusage = None
+  cpuusage, ramusage, totalram = [None] * 3
   totalram = None
   if instance_id and ipadress:
-    identity = ec2_keypair_get()
-    # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
-    # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
+    identity = AWS().ec2_keypair_get()
     cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
-    # cpu = ssh.command(cmdstr)
     cpuusage = ssh_cmdrun(ipadress, identity, cmdstr)
     cpuusage = 100.0  if not cpuusage else float(cpuusage)
-
-
     cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
-    # ram = ssh.command(cmdstr)
     ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
-    
     if not ramusage:
         totalram = 0
         usageram = 100.0
@@ -293,9 +304,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
         vals = ramusage.split()
         usageram = float(vals[0]) if vals and vals[0] else 100.0
         totalram = int(vals[1]) if vals and vals[1] else 0
-    
   return cpuusage, usageram, totalram
-
 
 
 def ec2_config_build_template_cli(instance_type, amiId=None, keypair=None, 
@@ -347,11 +356,10 @@ def ec2_spot_start_cli(instance_type, spot_price, region=None, waitsec=100):
   ]
   print(cmdargs)
   cmd = ' '.join(cmdargs)
-  msg = os.system(cmd)
+  os.system(cmd)
   sleep(waitsec)  # It may not be fulfilled in 50 secs.
   ll= ec2_spot_instance_list()
   return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
-
 
 
 def ec2_spot_instance_list():
@@ -385,7 +393,6 @@ def ec2_instance_stop(instance_list) :
     return instances.split(",")
 
 
-
 def ec2_get_spot_price(instance_type):
   """ Get the spot price for instance type in us-west-2"""
   value = 0.0
@@ -393,62 +400,7 @@ def ec2_get_spot_price(instance_type):
     cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
     value = os.popen(cmdstr).read()
     value = value.replace('\n', '') if value else 0.10
-    #parsefloat(value)
   return tofloat(value)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####################################################################################################
-####################################################################################################
-def aws_conn_create_windows(aws_region=AWS.AWS_REGION):
-    """ Return ec2_conn for windows system, otherwise none."""
-    ec2_conn = AWS.EC2_CONN
-    if sys.platform.find('win') > -1 and not ec2_conn:
-        dd = {}
-        with open(AWS.AWS_ACCESS_LOCAL) as aws_file:
-            dd = json.loads(aws_file.read())
-        if 'AWS_ACCESS_KEY_ID' in dd:
-            access = dd['AWS_ACCESS_KEY_ID']
-        if 'AWS_SECRET_ACCESS_KEY' in dd:
-            key = dd['AWS_SECRET_ACCESS_KEY']
-        if access and key:
-            ec2_conn = boto.ec2.connect_to_region(aws_region, aws_access_key_id=access,
-                                                  aws_secret_access_key=key)
-            print(ec2_conn)
-            # We should store this in AWS
-            AWS.EC2_CONN = ec2_conn
-    return ec2_conn
-
-
-def aws_conn_create(region=AWS.APNORTHEAST2, access='', key=''):
-    """ EC2 connection to AP NORTH EAST2 """
-    from boto.ec2.connection import EC2Connection
-
-    if not access or not key:
-        access, key = aws_accesskey_get()
-    if not access or not key:
-        return None
-
-    # We could have used connection from any region.
-    conn = EC2Connection(access, key)
-    regions = aws_conn_getallregions(conn)
-    for r in regions:
-        if r.name == region:
-            conn = EC2Connection(access, key, region=r)
-            return conn
-    print('Region not Found')
-    return None
 
 
 def aws_conn_getallregions(conn=None):
@@ -497,9 +449,10 @@ def aws_ec2_get_instanceid(conn, filters=None):
     return None
 
 
-def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip='',
-                                region=AWS.APNORTHEAST2):
+def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip='', region=''):
     """ Allocate elastic IP in the region."""
+    if not region:
+        region = AWS().v['APNORTHEAST2']
     if conn and instance_id:
         if not elastic_ip:
             eip = conn.allocate_address()
@@ -661,60 +614,6 @@ def ec2_get_spot_price(instance_type):
   return tofloat(value)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-####################################################################################################
-####################################################################################################
-def aws_conn_create_windows(aws_region=AWS.AWS_REGION):
-    """ Return ec2_conn for windows system, otherwise none."""
-    ec2_conn = AWS.EC2_CONN
-    if sys.platform.find('win') > -1 and not ec2_conn:
-        dd = {}
-        with open(AWS.AWS_ACCESS_LOCAL) as aws_file:
-            dd = json.loads(aws_file.read())
-        if 'AWS_ACCESS_KEY_ID' in dd:
-            access = dd['AWS_ACCESS_KEY_ID']
-        if 'AWS_SECRET_ACCESS_KEY' in dd:
-            key = dd['AWS_SECRET_ACCESS_KEY']
-        if access and key:
-            ec2_conn = boto.ec2.connect_to_region(aws_region, aws_access_key_id=access,
-                                                  aws_secret_access_key=key)
-            print(ec2_conn)
-            # We should store this in AWS
-            AWS.EC2_CONN = ec2_conn
-    return ec2_conn
-
-
-def aws_conn_create(region=AWS.APNORTHEAST2, access='', key=''):
-    """ EC2 connection to AP NORTH EAST2 """
-    from boto.ec2.connection import EC2Connection
-
-    if not access or not key:
-        access, key = aws_accesskey_get()
-    if not access or not key:
-        return None
-
-    # We could have used connection from any region.
-    conn = EC2Connection(access, key)
-    regions = aws_conn_getallregions(conn)
-    for r in regions:
-        if r.name == region:
-            conn = EC2Connection(access, key, region=r)
-            return conn
-    print('Region not Found')
-    return None
-
-
 def aws_conn_getallregions(conn=None):
     """ Get the regions for the connection passed. """
     if conn:
@@ -761,9 +660,10 @@ def aws_ec2_get_instanceid(conn, filters=None):
     return None
 
 
-def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip='',
-                                region=AWS.APNORTHEAST2):
+def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip=''):
     """ Allocate elastic IP in the region."""
+    # if not region:
+    #     region = AWS().v['APNORTHEAST2']
     if conn and instance_id:
         if not elastic_ip:
             eip = conn.allocate_address()
@@ -977,7 +877,7 @@ def aws_s3_getbucketconn(s3dir):
     """ Get S3 bucket. """
     import boto.s3
     bucket_name, todir = aws_s3_url_split(s3dir)
-    access, secret = aws_accesskey_get()
+    access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
     bucket = conn.get_bucket(bucket_name)  # location=boto.s3.connection.Location.DEFAULT)
     return bucket
@@ -1055,7 +955,7 @@ def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk'):
 
 def aws_s3_folder_printtall(bucket_name='zdisk'):
     """ Print all S3 bucket folders"""
-    access, secret = aws_accesskey_get()
+    access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
     bucket = conn.create_bucket(bucket_name,
                                 location=boto.s3.connection.Location.DEFAULT)
@@ -1065,7 +965,7 @@ def aws_s3_folder_printtall(bucket_name='zdisk'):
     return folders
 
 
-def aws_s3_file_read(bucket1, filepath, isbinary=1):
+def aws_s3_file_read(bucket1, filepath):
     """
     s3_client = boto3.client('s3')
     # Download private key file from secure S3 bucket
@@ -1073,7 +973,7 @@ def aws_s3_file_read(bucket1, filepath, isbinary=1):
                             '/tmp/keyname.pem')
     """
     from boto.s3.connection import S3Connection
-    conn = S3Connection(aws_accesskey_get())
+    conn = S3Connection(AWS().aws_accesskey_get())
     response = conn.get_object(Bucket=bucket1, Key=filepath)
     file1 = response["Body"]
     return file1
@@ -1236,7 +1136,7 @@ def aws_s3_getbucketconn(s3dir):
     """ Get S3 bucket. """
     import boto.s3
     bucket_name, todir = aws_s3_url_split(s3dir)
-    access, secret = aws_accesskey_get()
+    access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
     bucket = conn.get_bucket(bucket_name)  # location=boto.s3.connection.Location.DEFAULT)
     return bucket
@@ -1314,7 +1214,7 @@ def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk'):
 
 def aws_s3_folder_printtall(bucket_name='zdisk'):
     """ Print all S3 bucket folders"""
-    access, secret = aws_accesskey_get()
+    access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
     bucket = conn.create_bucket(bucket_name,
                                 location=boto.s3.connection.Location.DEFAULT)
@@ -1332,7 +1232,7 @@ def aws_s3_file_read(bucket1, filepath, isbinary=1):
                             '/tmp/keyname.pem')
     """
     from boto.s3.connection import S3Connection
-    conn = S3Connection(aws_accesskey_get())
+    conn = S3Connection(AWS().aws_accesskey_get())
     response = conn.get_object(Bucket=bucket1, Key=filepath)
     file1 = response["Body"]
     return file1
@@ -1370,7 +1270,7 @@ class aws_ec2_ssh(object):
         # supposed to check for key in keys, but I don't much care right now to
         # find the right notation
 
-        key_file = AWS.AWS_KEY_PEM if not key_file else key_file
+        key_file = AWS().v['AWS_KEYPEM'] if not key_file else key_file
         pkey = paramiko.RSAKey.from_private_key_file(key_file)
         self.t.auth_publickey(username, pkey)
         self.sftp = paramiko.SFTPClient.from_transport(self.t)
@@ -1557,7 +1457,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
     sftp, ssh, transport = None, None, None
     try:
         if not keyfilepath:
-            keyfilepath = AWS.AWS_KEY_PEM
+            keyfilepath = AWS().v['AWS_KEYPEM']
         if keyfiletype == 'DSA':
             key = paramiko.DSSKey.from_private_key_file(keyfilepath)
         else:
@@ -1592,10 +1492,11 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
         if sftp: sftp.close()
         if transport: transport.close()
         if ssh: ssh.close()
+    return None
 
 
 def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
-                    username='ubuntu', keyfilepath=''):
+                    username='ubuntu', keyfile=''):
     """
     SSH Linux terminal Command
     ### PEM File is needed
@@ -1611,18 +1512,6 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
     https://aws.amazon.com/blogs/compute/scheduling-ssh-jobs-using-aws-lambda/
     """
 
-    if ssh is None and len(host) > 5:
-        ssh = aws_ec2_ssh_create_con(contype='ssh', host=host, port=22, username=username,
-                                     keyfilepath='')
-        print('EC2 connected')
-
-    c = cmdlist
-    if isinstance(c, str):  # Only Command to be launched
-        if c == 'python': cmfile = AWS.AWS_KEY_PEM if not key_file else key_file
-        pkey = paramiko.RSAKey.from_private_key_file(key_file)
-        self.t.auth_publickey(username, pkey)
-        self.sftp = paramiko.SFTPClient.from_transport(self.t)
-        print(self.command('ls '))
 
     def command(self, cmd):
         # Breaks the command by lines, sends and receives
@@ -1788,6 +1677,19 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
             ss = self.command(cmd)
             if verbose:
                 print(ss)
+    if ssh is None and len(host) > 5:
+        ssh = aws_ec2_ssh_create_con(contype='ssh', host=host, port=22, username=username,
+                                     keyfilepath='')
+        print('EC2 connected')
+
+    c = cmdlist
+    if isinstance(c, str):  # Only Command to be launched
+        if c == 'python': cmfile = AWS().v['AWS_KEYPEM'] if not keyfile else keyfile
+        pkey = paramiko.RSAKey.from_private_key_file(keyfile)
+        ssh.t.auth_publickey(username, pkey)
+        ssh.sftp = paramiko.SFTPClient.from_transport(ssh.t)
+        print(command('ls '))
+
 
 def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
                            username='ubuntu', keyfilepath='', password='',
@@ -1805,7 +1707,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
     sftp, ssh, transport = None, None, None
     try:
         if not keyfilepath:
-            keyfilepath = AWS.AWS_KEY_PEM
+            keyfilepath = AWS().v['AWS_KEYPEM']
         if keyfiletype == 'DSA':
             key = paramiko.DSSKey.from_private_key_file(keyfilepath)
         else:
@@ -1898,7 +1800,7 @@ def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=
       attributes: Tuple of attributes to retrieve. Default: id, ip_address
       filters={"ip_address":""}
     """
-    if not attributes: attributes = AWS.EC2_ATTRIBUTES
+    if not attributes: attributes = AWS().v['EC2_ATTRIBUTES']
     instances = con.get_only_instances(filters=filters)
     instance_list = []
     for instance in instances:
@@ -1935,9 +1837,9 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # files as they are extracted without prompting use the -o switch as follows:
     # https://www.lifewire.com/examples-linux-unzip-command-2201157
     # unzip -o filename.zip
-
+    aws = AWS().v
     folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
-    tofolderfull = AWS.EC2CWD + '/' + tofolder if tofolder.find(AWS.EC2CWD) == -1 else tofolder
+    tofolderfull = aws['EC2CWD'] + '/' + tofolder if tofolder.find(aws['EC2CWD']) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
@@ -2013,6 +1915,7 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
         isexist = True
     except Exception as e:
         print(e)
+        ss = None
     sftp.close()
     return isexist, fromfolder, tofull, ss
 
@@ -2112,54 +2015,44 @@ def os_folder_copy(fromfolder, tempfolder, pattern1="*.py") :
     pass
 
 
-
-
-
-
-
-
-
-
-
-
 ####################################################################################################
 ############################ CLI ###################################################################
-def cli_windows_start_spot():
-    # :\_devs\Python01\aws\aapackage\
-    # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
-    # aws_ec2_spot_start(EC2_CONN, "west-2", key_name="ecsInstanceRole", inst_type="cx2.2",
-    #                    ami_id="", pricemax=0.15,  elastic_ip='',
-    #                    pars={"security_group": [""], "disk_size": 25, "disk_type": "ssd",
-    #                         "volume_type": "gp2"})
-    ss  = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
-    ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
-    print(ss)
-    os.system(ss)
-    sleep2(65)
-    AWS.EC2_CONN = aws_conn_create_windows()
-    ec2_list = aws_ec2_get_instances(AWS.EC2_CONN,
-                                     csv_filename="zz_ec2_instance.csv")
-    print(ec2_list)
-    for x in ec2_list :
-        if x["state"] == "running":
-            sleep(5)
-            ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
-            ss += ' "http://' +  x[dlist = ['ps -ef | grep python ']
-    elif c == 'jupyter':
-            cmdlist = ['fuser 8888/tcp  ']
-
-    readall = []
-    for command in cmdlist:
-        print("Executing {}".format(command))
-        stdin, stdout, stderr = ssh.exec_command(command)
-        outread, erread = stdout.read(), stderr.read()
-        readall.append((outread, erread))
-        print(outread)
-        print(erread)
-    print('End of SSH Command')
-    ssh.close()
-    if doreturn:
-        return readall
+# Something wrong in this method, lot of syntactic errors, commented out.
+# def cli_windows_start_spot():
+#     # :\_devs\Python01\aws\aapackage\
+#     # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
+#     # aws_ec2_spot_start(EC2_CONN, "west-2", key_name="ecsInstanceRole", inst_type="cx2.2",
+#     #                    ami_id="", pricemax=0.15,  elastic_ip='',
+#     #                    pars={"security_group": [""], "disk_size": 25, "disk_type": "ssd",
+#     #                         "volume_type": "gp2"})
+#     ss  = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
+#     ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
+#     print(ss)
+#     os.system(ss)
+#     sleep2(65)
+#     aws_win_conn = AWS().aws_conn_create_windows()
+#     ec2_list = aws_ec2_get_instances(aws_win_conn, csv_filename="zz_ec2_instance.csv")
+#     print(ec2_list)
+#     for x in ec2_list :
+#         if x["state"] == "running":
+#             sleep(5)
+#             ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
+#             # ss += ' "http://' +  x[dlist = ['ps -ef | grep python ']
+#     elif c == 'jupyter':
+#             cmdlist = ['fuser 8888/tcp  ']
+#
+#     readall = []
+#     for command in cmdlist:
+#         print("Executing {}".format(command))
+#         stdin, stdout, stderr = ssh.exec_command(command)
+#         outread, erread = stdout.read(), stderr.read()
+#         readall.append((outread, erread))
+#         print(outread)
+#         print(erread)
+#     print('End of SSH Command')
+#     ssh.close()
+#     if doreturn:
+#         return readall
 
 
 def aws_ec2_ssh_python_script(python_path='/home/ubuntu/anaconda2/bin/ipython',
@@ -2177,7 +2070,7 @@ def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=
       attributes: Tuple of attributes to retrieve. Default: id, ip_address
       filters={"ip_address":""}
     """
-    if not attributes: attributes = AWS.EC2_ATTRIBUTES
+    if not attributes: attributes = AWS().v['EC2_ATTRIBUTES']
     instances = con.get_only_instances(filters=filters)
     instance_list = []
     for instance in instances:
@@ -2214,9 +2107,9 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # files as they are extracted without prompting use the -o switch as follows:
     # https://www.lifewire.com/examples-linux-unzip-command-2201157
     # unzip -o filename.zip
-
+    aws = AWS().v
     folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
-    tofolderfull = AWS.EC2CWD + '/' + tofolder if tofolder.find(AWS.EC2CWD) == -1 else tofolder
+    tofolderfull = aws['EC2CWD'] + '/' + tofolder if tofolder.find(aws['EC2CWD']) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
@@ -2293,7 +2186,7 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
     except Exception as e:
         print(e)
     sftp.close()
-    return isexist, fromfolder, tofull, ss
+    return isexist, fromfolder, tofull
 
 
 def sleep2(wsec):
@@ -2415,9 +2308,8 @@ def cli_windows_start_spot():
         print(ss)
         os.system(ss)
         sleep2(65)
-        AWS.EC2_CONN = aws_conn_create_windows()
-        ec2_list = aws_ec2_get_instances(AWS.EC2_CONN,
-                                         csv_filename="zz_ec2_instance.csv")
+        aws_win_conn = AWS().aws_conn_create_windows()
+        ec2_list = aws_ec2_get_instances(aws_win_conn, csv_filename="zz_ec2_instance.csv")
         print(ec2_list)
         for x in ec2_list :
             if x["state"] == "running":
@@ -2453,5 +2345,4 @@ if __name__ == '__main__':
     if args.do == "put_file":
         aws_ec2_putfile(fromfolder=args.fromfolder,
                         tofolder=args.tofolder, host=args.host)
-                        
-                        
+
