@@ -231,8 +231,7 @@ def fit(model, df, do_action):
         
         for t in range(0, len(agent.trend) - 1, agent.skip):
             action = agent.get_predicted_action(state)
-            param = { "half_window"     : agent.half_window},
-                      "starting_reward" : starting_reward }
+            param = { "half_window"     : agent.half_window,"starting_reward" : starting_reward }
             
             trend_input = agent.trend
             ######## do_action ###################################
@@ -247,14 +246,14 @@ def fit(model, df, do_action):
                           }
                           
             r = do_action(action_dict)
-            starting_reward        = r["reward"]  #### Be careful
+            starting_reward        = r["reward_t"]  #### Be careful
             
             total_reward,inventory = r["total_reward"] ,  r["inventory"]
             reward_state           = r.get("reward_state")
-            
+            next_state = agent.get_state(t + 1, reward_state= reward_state)
             ###################################################
             ep_history.append([state, action, starting_reward, next_state])
-            state = agent.get_state(t + 1, reward_state= reward_state)
+            state = next_state
 
 
         ep_history = np.array(ep_history)
@@ -274,7 +273,7 @@ def fit(model, df, do_action):
 
 def predict(model, sess, df, do_action):
     model.agent.sess = sess
-    res = model.agent.predict_sequence(do_action) #TODO needs an example function to work
+    res = model.agent.predict_sequence(df, do_action_example) #TODO needs an example function to work
     return res
 
 
@@ -356,13 +355,14 @@ def do_action_example(action_dict):
     total_reward = x.total_reward
     inventory    = x.inventory    # how much we have in stocks    
     
-    half_window      = x.param.half_window
-    starting_reward  = x.param.starting_reward  
+
+    half_window      = x.param['half_window']
+    starting_reward  = x.param['starting_reward']  
     states_sell , states_buy = [], []
-     
+    invest = 0
     #######################################################
     #### Buy
-    if x.action == 1 and starting_reward >= price and x.t < (len(x.trend) - half_window):
+    if x.action == 1 and starting_reward >= price and x.t < (len(x.history) - half_window):
         inventory.append(price)
         reward_t = 0
         starting_reward -= price
@@ -457,7 +457,7 @@ if __name__ == "__main__":
 
     # In[6]:
     model = Model(window_size, window_size, close, skip, 200, initial_money)
-    sess = fit(model, close, action_example)
+    sess = fit(model, close, do_action_example)
     agent.sess = sess
     states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
     test()
