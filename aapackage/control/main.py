@@ -26,16 +26,7 @@ parser = ArgumentParser()
 parser.add_argument("--problem_name", type=str, default='AllenCahn')
 parser.add_argument("--num_run", type=int, default=1)
 parser.add_argument("--log_dir", type=str, default='./logs')
-parser.add_argument("--framework", type=str, default='tf')
-
-FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")
-tf.app.flags.DEFINE_integer(
-    "num_run", 1, """The number of experiments to repeatedly run for the same problem."""
-)
-tf.app.flags.DEFINE_string(
-    "log_dir", "./logs", """Directory where to write event logs and output array."""
-)
+parser.add_argument("--framework", type=str, default='tch')
 
 
 def log(s):
@@ -69,10 +60,11 @@ def main():
 
     #### Loop over run
     for idx_run in range(1, FLAGS.num_run + 1):
-        tf.reset_default_graph()
+
         log("Begin to solve %s with run %d" % (FLAGS.problem_name, idx_run))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
         if FLAGS.framework == 'tf':
+            tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(config, bsde, sess)
                 model.build()
