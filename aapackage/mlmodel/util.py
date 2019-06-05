@@ -2,8 +2,6 @@
 import toml
 
 
-
-
 ##########################################################################
 def load_config(args, config_file, config_mode, verbose=0):
     ##### Load file params as dict namespace #############################
@@ -226,6 +224,3 @@ class LSTM(BaseModelDl):
         # takes a sampler as the one in datasampler class
         # in this function it should take a sampler 
 """
-
-
-

@@ -7,10 +7,10 @@
 import random
 import time
 
+import tensorflow as tf
 from scipy.spatial.distance import cdist
 from sklearn.cross_validation import train_test_split
 
-import tensorflow as tf
 from utils import *
 
 # In[2]:

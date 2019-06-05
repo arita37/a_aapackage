@@ -9,9 +9,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from matplotlib import offsetbox
-
 import tensorflow as tf
+from matplotlib import offsetbox
 from tensorflow.examples.tutorials.mnist import input_data
 
 # In[2]:

@@ -11,9 +11,8 @@ import re
 import time
 
 import numpy as np
-from sklearn.preprocessing import LabelEncoder
-
 import tensorflow as tf
+from sklearn.preprocessing import LabelEncoder
 
 # In[2]:
 

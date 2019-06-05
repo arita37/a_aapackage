@@ -1,8 +1,8 @@
 import json
 
 import numpy as np
-
 import tensorflow as tf
+
 from kafka import KafkaProducer
 
 

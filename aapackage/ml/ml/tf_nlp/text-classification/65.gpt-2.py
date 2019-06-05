@@ -8,12 +8,12 @@ import os
 import random
 import time
 
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
+from tensorflow.contrib.training import HParams
 from tqdm import tqdm
 
 import gpt_2
-import tensorflow as tf
-from tensorflow.contrib.training import HParams
 from utils import *
 
 # In[2]:

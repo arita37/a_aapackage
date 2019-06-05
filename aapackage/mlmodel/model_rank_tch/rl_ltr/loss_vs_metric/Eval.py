@@ -1,7 +1,8 @@
 from __future__ import division
+
+import math
 import os
 import re
-import math
 
 hsNdcgRelScore = {'2':3,'1':1,'0':0}
 hsPrecisionRel={'2':1,'1':1,'0':0}

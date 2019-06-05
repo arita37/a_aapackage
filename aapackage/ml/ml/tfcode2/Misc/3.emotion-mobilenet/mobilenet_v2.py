@@ -25,6 +25,7 @@ from __future__ import absolute_import, division, print_function
 import copy
 
 import tensorflow as tf
+
 from nets.mobilenet import conv_blocks as ops
 from nets.mobilenet import mobilenet as lib
 

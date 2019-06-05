@@ -1,12 +1,13 @@
-import tensorflow as tf
-from dis_model_pairwise_nn import DIS
 import cPickle
+
+import tensorflow as tf
+
 import utils as ut
+from dis_model_pairwise_nn import DIS
 from eval.map import MAP
 from eval.mrr import MRR
-from eval.precision import precision_at_k
 from eval.ndcg import ndcg_at_k
-
+from eval.precision import precision_at_k
 
 FEATURE_SIZE = 46
 HIDDEN_SIZE = 46

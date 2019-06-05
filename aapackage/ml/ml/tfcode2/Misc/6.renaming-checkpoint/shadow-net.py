@@ -7,9 +7,9 @@
 import json
 
 import numpy as np
+import tensorflow as tf
 
 import cv2
-import tensorflow as tf
 from crnn_model import crnn_model
 
 # In[2]:

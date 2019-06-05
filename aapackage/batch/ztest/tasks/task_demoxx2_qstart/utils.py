@@ -17,12 +17,12 @@ import socket
 import sys
 import time
 
+import arrow
 import numpy as np
 import pandas as pd
 import psutil
 import toml
 
-import arrow
 from aapackage import util_log
 
 ###########################################################################################

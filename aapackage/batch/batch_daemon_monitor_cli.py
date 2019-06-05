@@ -24,9 +24,8 @@ import os
 import sys
 from time import sleep
 
-import psutil
-
 import arrow
+import psutil
 
 ####################################################################################################
 from aapackage import util_log

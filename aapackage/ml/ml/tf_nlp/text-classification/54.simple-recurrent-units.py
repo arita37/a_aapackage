@@ -8,11 +8,11 @@ import os
 import random
 import time
 
-from sklearn.cross_validation import train_test_split
-
 import tensorflow as tf
+from sklearn.cross_validation import train_test_split
 from tensorflow.contrib.rnn.python.ops import core_rnn_cell
 from tensorflow.python.ops.rnn_cell import RNNCell
+
 from utils import *
 
 # In[2]:

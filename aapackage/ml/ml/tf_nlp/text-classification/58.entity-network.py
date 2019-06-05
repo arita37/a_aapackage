@@ -8,11 +8,11 @@ import os
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
 from tqdm import tqdm
 
-import tensorflow as tf
 from entity_network import EntityNetwork
 from utils import *
 

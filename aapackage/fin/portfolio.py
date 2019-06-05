@@ -24,16 +24,17 @@ import requests
 import requests.packages.urllib3
 import scipy as sci
 import sklearn as sk
-import util
 #################### Finviz  ###############################################################
 from bs4 import BeautifulSoup
-# noinspection PyUnresolvedReferences
-from fin import technical_indicator as ta
-from fin.alldata import *
 # from matplotlib.finance import quotes_historical_yahoo_ochl
 from numba import float32, float64, int32, int64, jit
 # --------------------Calculate Rank Table    ---------------------------------------
 from scipy.stats import norm
+
+import util
+# noinspection PyUnresolvedReferences
+from fin import technical_indicator as ta
+from fin.alldata import *
 from tabulate import tabulate
 from util import date_getspecificdate
 
@@ -101,9 +102,9 @@ def date_is_3rdfriday(s):
 #         else:
 #             day = 21 - (calendar.weekday(date.year, date.month + 1, 1) + 2) % 7
 #             datexp = datetime.datetime(date.year, date.month + 1, day)
-# 
+#
 #         nbday = (datexp - date).days
-# 
+#
 #     return nbday, datexp
 
 
@@ -1130,7 +1131,7 @@ def volhistorolling_fromprice(price, volrange):
 
 # Technical Indicator on Daily return
 def rsk_calc_all_TA(df="panda_dataframe"):
-    """Add All TA RMI, RSI To the """
+    """Add All TA rmi, rsi To the """
     # try :
     df = ta.MA(df, 200)
     df = ta.MA(df, 50)
@@ -1163,24 +1164,24 @@ def rsk_calc_all_TA(df="panda_dataframe"):
     df = ta.optionexpiry_dist(df)
 
     """     
-  df= ta.MACD(df, 12, 26)
-  df= ta.CCI(df, 14)
-  df= ta.STO(df, 14 )  #Stochastic 
-  df= ta.ADX(df, 14, 3)  #ADX
+  df= ta.macd(df, 12, 26)
+  df= ta.cci(df, 14)
+  df= ta.sto(df, 14 )  #Stochastic 
+  df= ta.adx(df, 14, 3)  #adx
 
-  df= ta.PPSR(df)
-  df= ta.Vortex(df, 14)
-  df= ta.TSI(df, 20, 5)
-  df= ta.ACCDIST(df, 20)
-  df= ta.Chaikin(df)
-  df= ta. MFI(df, 7)
-  df= ta.OBV(df, 5)
-  df= ta.FORCE(df,10)
-  df= ta.EOM(df, 14)
-  df= ta.COPP(df, 14)
-  df= ta.KELCH(df, 14)
-  df= ta.ULTOSC(df)
-  df= ta.DONCH(df, 14)
+  df= ta.ppsr(df)
+  df= ta.vortex(df, 14)
+  df= ta.tsi(df, 20, 5)
+  df= ta.accdist(df, 20)
+  df= ta.chaikin(df)
+  df= ta. mfi(df, 7)
+  df= ta.obv(df, 5)
+  df= ta.force(df,10)
+  df= ta.eom(df, 14)
+  df= ta.copp(df, 14)
+  df= ta.kelch(df, 14)
+  df= ta.ultosc(df)
+  df= ta.donch(df, 14)
  #except: pass 
   """
     return df
@@ -1720,8 +1721,8 @@ def folio_volta(
     cap=1.5,
     floor=0.0,
     isweight=0,
-        voltable=None,
-        volschedule=None,
+    voltable=None,
+    volschedule=None,
     tlag=0,
 ):
     # Generate Vol Target portfolio
@@ -4333,8 +4334,8 @@ class searchSimilarity:
     def __init__(
         self,
         filejpstock=r"E:/_data/stock/daily/20160616/jp",
-            sym01=None,
-            symname=None,
+        sym01=None,
+        symname=None,
         startdate=20150101,
         enddate=20160601,
         pricetype="close",
@@ -5034,9 +5035,9 @@ def imp_googleQuoteSave(symbols, date1, date2, dircsv):
 def imp_csv_dbupdate(
     indir="E:/_data/stock/intraday/intraday_google_usetf2.h5",
     outdir="E:/_data/stock/intraday/q5min/us/etf/",
-        filelist=None,
+    filelist=None,
     intype="csv",
-        refcols=None,
+    refcols=None,
 ):
 
     df1 = None
@@ -5077,7 +5078,7 @@ def imp_csv_dbupdate(
 def imp_numpy_close_fromdb(
     dbname="/aaserialize/store/yahoo.db",
     table1="",
-        symlist=None,
+    symlist=None,
     t0=20010101,
     t1=20010101,
     priceid="close",
@@ -5265,8 +5266,8 @@ def imp_csv_toext(
     fromzone="Japan",
     tozone="UTC",
     header=None,
-        cols=None,
-        coldate=None,
+    cols=None,
+    coldate=None,
 ):
     """ cols: column name,  coldate: position of date column   """
     if cols is None:
@@ -6109,9 +6110,9 @@ def calc_statestock(close2, dateref, symfull):
     #  try :
     #   res2=0
     # df= pd.read_hdf(dbfile, symfull[i])
-    # stat[i,110]= ta.RMI(close2[i,:])
-    # stat[i,111]= 100*close2[i,:] / ta.MA(close2[i,:],20)
-    # stat[i,112]= 100*close2[i,:] / ta.MA(close2[i,:],50)
+    # stat[i,110]= ta.rmi(close2[i,:])
+    # stat[i,111]= 100*close2[i,:] / ta.ma(close2[i,:],20)
+    # stat[i,112]= 100*close2[i,:] / ta.ma(close2[i,:],50)
     #  except: pass
 
     return np.array(stat, dtype=np.float16)

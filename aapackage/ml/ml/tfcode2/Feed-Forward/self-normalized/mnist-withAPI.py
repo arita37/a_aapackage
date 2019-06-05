@@ -9,7 +9,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 

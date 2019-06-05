@@ -9,12 +9,11 @@ import random
 import re
 
 import numpy as np
+import tensorflow as tf
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances_argmin_min
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
-import tensorflow as tf
 
 # In[2]:
 

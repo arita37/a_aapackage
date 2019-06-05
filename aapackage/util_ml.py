@@ -2,7 +2,6 @@
 import argparse
 import codecs
 import collections
-
 ###########################################################################################################
 import os
 import pickle
@@ -10,6 +9,7 @@ import sys
 
 import arrow
 import tensorflow as tf
+
 import util
 
 # CFG   = {'plat': sys.platform[:3]+"-"+os.path.expanduser('~').split("\\")[-1].split("/")[-1], "ver": sys.version_info.major}

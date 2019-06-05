@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def precision_at_k(r, k):
     assert k >= 1
     r = np.asarray(r)[:k]

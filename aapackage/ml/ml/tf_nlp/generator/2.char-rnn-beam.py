@@ -7,9 +7,8 @@
 import time
 
 import numpy as np
-from tqdm import tqdm
-
 import tensorflow as tf
+from tqdm import tqdm
 
 # In[2]:
 

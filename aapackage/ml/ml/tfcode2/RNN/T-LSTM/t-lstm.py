@@ -7,7 +7,6 @@
 import cPickle
 
 import numpy as np
-
 import tensorflow as tf
 
 # In[2]:

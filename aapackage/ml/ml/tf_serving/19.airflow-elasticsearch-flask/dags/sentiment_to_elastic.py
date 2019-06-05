@@ -5,8 +5,8 @@ import re
 from datetime import datetime, timedelta
 
 import numpy as np
-
 import tensorflow as tf
+
 from airflow.models import DAG
 from airflow.operators.python_operator import PythonOperator
 from elasticsearch import Elasticsearch, helpers

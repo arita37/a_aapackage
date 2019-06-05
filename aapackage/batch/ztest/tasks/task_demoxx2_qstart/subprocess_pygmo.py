@@ -11,10 +11,10 @@ hyperparams
 import os
 import sys
 
+import arrow
 import pandas as pd
 import toml
 
-import arrow
 import pygmo as pg
 from aapackage import util_log
 from utils import OUTFOLDER, load_data_session, os_chdir, os_folder_create, save_results

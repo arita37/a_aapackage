@@ -12,12 +12,10 @@ from urllib import urlretrieve
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+import tensorflow as tf
 # load MATLAB file
 from scipy.io import loadmat
 from tqdm import tqdm
-
-import tensorflow as tf
 
 # In[2]:
 

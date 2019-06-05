@@ -1,14 +1,15 @@
+import argparse
+import os
+import re
+import time
 from collections import defaultdict
 
-import re
-import torch
-import argparse
-import torch.nn as nn
-from torch.autograd import Variable
-import utils
 import numpy as np
-import os
-import time
+
+import torch
+import torch.nn as nn
+import utils
+from torch.autograd import Variable
 
 
 def get_MAP(split, iter):

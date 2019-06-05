@@ -9,9 +9,8 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import misc
-
 import tensorflow as tf
+from scipy import misc
 
 # In[2]:
 

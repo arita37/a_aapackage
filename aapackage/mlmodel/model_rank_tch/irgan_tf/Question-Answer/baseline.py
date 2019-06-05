@@ -2,17 +2,22 @@
 #! /usr/bin/env python3.4
 
 
-import numpy as np
-import os
-import time
 import datetime
-import insurance_qa_data_helpers
-import operator
-from insurance_qa_data_helpers import encode_sent
-import random
-import pickle
-
 import math
+import operator
+import os
+import pickle
+import random
+import time
+from functools import wraps
+
+import numpy as np
+import tensorflow as tf
+
+import Discriminator
+import insurance_qa_data_helpers
+from insurance_qa_data_helpers import encode_sent
+
 now = int(time.time()) 
         
 timeArray = time.localtime(now)
@@ -23,8 +28,6 @@ timeStamp = time.strftime("%Y%m%d%H%M%S", timeArray)
 # Parameters
 # ==================================================
 
-import tensorflow as tf
-import Discriminator
 # Model Hyperparameters
 tf.flags.DEFINE_integer("max_sequence_length", 200, "Max sequence length fo sentence (default: 200)")
 tf.flags.DEFINE_integer("embedding_dim", 100, "Dimensionality of character embedding (default: 128)")
@@ -77,7 +80,6 @@ precision = 'log/test1.dns'+timeStamp
 
 
 
-from functools import wraps
 def log_time_delta(func):
         @wraps(func)
         def _deco(*args, **kwargs):
@@ -225,4 +227,3 @@ def main():
 if __name__ == '__main__':
     main()
     # print (embeddings)
-                 

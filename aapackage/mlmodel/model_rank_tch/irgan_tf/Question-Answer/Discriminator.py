@@ -1,9 +1,13 @@
 #coding=utf-8
-import tensorflow as tf 
-import numpy as np 
-import time
 import pickle
-from QACNN import QACNN           
+import time
+
+import numpy as np
+import tensorflow as tf
+
+from QACNN import QACNN
+
+
 class Discriminator(QACNN):
   
 
@@ -31,4 +35,3 @@ class Discriminator(QACNN):
         grads_and_vars = optimizer.compute_gradients(self.loss)
         capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in grads_and_vars]
         self.train_op = optimizer.apply_gradients(capped_gvs, global_step=self.global_step)
-

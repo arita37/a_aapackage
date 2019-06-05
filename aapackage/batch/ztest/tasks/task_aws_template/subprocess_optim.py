@@ -16,11 +16,10 @@ Those interactions are defined in batch_sequencer.py and should be conserved amo
 import os
 import sys
 
+import arrow
 import pandas as pd
 import toml
 from scipy import optimize
-
-import arrow
 
 ###########################################################################################
 BATCH_RESULT = "../../ztest/batch_results"

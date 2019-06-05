@@ -12,5 +12,5 @@ Some of the functionalities include:
 4. Direct scraping from yahoo website on company information and company finance information.
 5. Scraping finance data from YQL.
 6. Storing data to SQLite Database.
-7. Basic stock technical analysis such as bollinger bands, MACD, volume spike etc.
+7. Basic stock technical analysis such as bollinger bands, macd, volume spike etc.
 8. Stock filter based on user defined crtieria.

@@ -12,9 +12,8 @@ import re
 import time
 
 import numpy as np
-from sklearn.cross_validation import train_test_split
-
 import tensorflow as tf
+from sklearn.cross_validation import train_test_split
 
 # In[2]:
 

@@ -106,7 +106,7 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
-    "First we concatenate the training and test data (rbind for R users) into a new dataset $XZ$, and assign labels 1 and 0 to the training and test data respectively. Then we use this to train a classifier to tell the difference between the training and test data. We'll output the ROC-AUC metric for our classifier as an estimate how much covariate shift this data has."
+    "First we concatenate the training and test data (rbind for R users) into a new dataset $XZ$, and assign labels 1 and 0 to the training and test data respectively. Then we use this to train a classifier to tell the difference between the training and test data. We'll output the roc-AUC metric for our classifier as an estimate how much covariate shift this data has."
    ]
   },
   {
@@ -193,12 +193,12 @@
      "name": "stdout",
      "output_type": "stream",
      "text": [
-      "ROC-AUC for X and Z distributions: 0.91229\n"
+      "roc-AUC for X and Z distributions: 0.91229\n"
      ]
     }
    ],
    "source": [
-    "print 'ROC-AUC for X and Z distributions:', AUC(labels, predictions)"
+    "print 'roc-AUC for X and Z distributions:', AUC(labels, predictions)"
    ]
   },
   {

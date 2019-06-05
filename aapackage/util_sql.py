@@ -2,7 +2,6 @@
 from __future__ import division
 
 import datetime
-
 ###############################################################################
 import os
 import sys
@@ -11,10 +10,11 @@ from builtins import range, str
 
 import numpy as np
 import pandas as pd
-import psycopg2
 import sqlalchemy as sql
 import sqlalchemy.orm
 from future import standard_library
+
+import psycopg2
 
 standard_library.install_aliases()
 

@@ -12,10 +12,10 @@ import time
 
 import numpy as np
 import sklearn.datasets
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-import tensorflow as tf
 from bayes_opt import BayesianOptimization
 
 # In[2]:

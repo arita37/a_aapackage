@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-import os, sys
 import argparse
-import json, math
-import pandas as pd
-import numpy as np
 import datetime
+import json
+import math
+import os
+import sys
 
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 
 # import matplotlib.pyplot as plt
 # plt.style.use('ggplot')
@@ -19,14 +22,11 @@ import datetime
 # from agents.pg import PG
 
 
-import numpy as np
-
-
-import tensorflow as tf
 
 
 
-import os
+
+
 
 os.environ
 

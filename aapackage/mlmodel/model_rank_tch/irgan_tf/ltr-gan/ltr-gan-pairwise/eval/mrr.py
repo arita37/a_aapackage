@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def cal_mrr(r):
     num = 1
     for i in r:

@@ -23,10 +23,10 @@ from __future__ import absolute_import, division, print_function
 import collections
 
 import numpy as np
+import tensorflow as tf
 
 import access
 import sonnet as snt
-import tensorflow as tf
 
 DNCState = collections.namedtuple("DNCState", ("access_output", "access_state", "controller_state"))
 

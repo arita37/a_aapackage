@@ -11,10 +11,10 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 from sklearn.utils import shuffle
 
-import tensorflow as tf
 from dnc import DNC
 
 # In[2]:

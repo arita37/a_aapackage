@@ -9,11 +9,11 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 
 import cv2
 import inception_v3
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
 
 # just remove line below if want to use GPU
 # os.environ['CUDA_VISIBLE_DEVICES'] = ''

@@ -1,50 +1,40 @@
 # -*- coding: utf-8 -*-
 
-import os
-import requests
-import sys
-
 from __future__ import division, print_function
 
 #####################################################################################
 import base64
-
+import os
 #####################################################################################################
 import re
+import sys
 from base64 import b64decode as base64_to_text
 from builtins import map, range, str, zip
-
 #####################################################################################
 from urllib.parse import parse_qs, urlparse
-
-import github
 
 ######################################################################################################
 ######################################################################################################
 import github3
 import pandas as pd
-import wget
-
+import requests
 #####################################################################################
 from bs4 import BeautifulSoup
-
-from attrdict import AttrDict as dict2
-
-# noinspection PyUnresolvedReferences
-from config import LOGIN, PASSWORD
-from config import Config
 from future import standard_library
-from github import Github
 from lxml.html import fromstring
 from requests import get
 
+import github
+import wget
+from attrdict import AttrDict as dict2
+# noinspection PyUnresolvedReferences
+from config import LOGIN, PASSWORD, Config
+from github import Github
 # -*- coding: utf-8 -*-
 ####################################################################################################
 from selenium import webdriver
-
 #######Headless PhantomJS ##############################################################################
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
 # from login_data import *
 from selenium.webdriver.common.keys import Keys
 

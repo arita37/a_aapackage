@@ -7,13 +7,13 @@
 import numbers
 import time
 
-from sklearn.cross_validation import train_test_split
-from tqdm import tqdm
-
 import tensorflow as tf
+from sklearn.cross_validation import train_test_split
 from tensorflow.contrib.layers import xavier_initializer
 from tensorflow.python.framework import ops, tensor_shape, tensor_util
 from tensorflow.python.ops import array_ops, math_ops, random_ops
+from tqdm import tqdm
+
 from utils import *
 
 # In[2]:

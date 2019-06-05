@@ -9,13 +9,12 @@ import time
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from sklearn import metrics
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tqdm import tqdm
-
-import tensorflow as tf
 
 # In[2]:
 

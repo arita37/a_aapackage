@@ -10,13 +10,13 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.utils import shuffle
 from tqdm import tqdm
 
-import tensorflow as tf
 from unidecode import unidecode
 
 # In[2]:

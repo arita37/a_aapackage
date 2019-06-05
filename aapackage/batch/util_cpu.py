@@ -21,7 +21,6 @@ from datetime import datetime
 from time import sleep, time
 
 import arrow
-
 # non-stdlib imports
 import psutil
 

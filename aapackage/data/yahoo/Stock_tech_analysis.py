@@ -27,11 +27,11 @@ Learning:
     
     adjclose = adjclose.fillna(method='backfill') --> backfill??
     
-    MACD derivation
-    First derivative: 12-day EMA and 26-day EMA
-    Second derivative: MACD (12-day EMA less the 26-day EMA)
-    Third derivative: MACD signal line (9-day EMA of MACD)
-    Fourth derivative: MACD-Histogram (MACD less MACD signal line)
+    macd derivation
+    First derivative: 12-day ema and 26-day ema
+    Second derivative: macd (12-day ema less the 26-day ema)
+    Third derivative: macd signal line (9-day ema of macd)
+    Fourth derivative: macd-Histogram (macd less macd signal line)
 
     yahoo charts download
     https://code.google.com/p/yahoo-finance-managed/wiki/miscapiImageDownload
@@ -175,15 +175,15 @@ class TechAnalysisAdd(object):
         )  # revese back to original
 
     def add_MACD_parm(self):
-        """ Include the MACD parm.
+        """ Include the macd parm.
         """
         temp_data_set = self.histdata_indiv_stock.sort("Date", ascending=True)
 
         temp_data_set["12d_exma"] = pandas.ewma(temp_data_set["Adj Close"], span=12)
         temp_data_set["26d_exma"] = pandas.ewma(temp_data_set["Adj Close"], span=26)
-        temp_data_set["MACD"] = temp_data_set["12d_exma"] - temp_data_set["26d_exma"]  # 12-26
-        temp_data_set["MACD_signalline"] = pandas.rolling_mean(temp_data_set["MACD"], window=9)
-        temp_data_set["MACD_hist"] = temp_data_set["MACD"] - temp_data_set["MACD_signalline"]
+        temp_data_set["macd"] = temp_data_set["12d_exma"] - temp_data_set["26d_exma"]  # 12-26
+        temp_data_set["MACD_signalline"] = pandas.rolling_mean(temp_data_set["macd"], window=9)
+        temp_data_set["MACD_hist"] = temp_data_set["macd"] - temp_data_set["MACD_signalline"]
 
         self.histdata_indiv_stock = temp_data_set.sort(
             "Date", ascending=False
@@ -255,11 +255,11 @@ class TechAnalysisAdd(object):
         plt.show()
 
     def MACD_plots(self):
-        """ Plot the MACD plots for each stocks.
+        """ Plot the macd plots for each stocks.
             Used self.histdata_indiv_stock for data passing.
 
         """
-        self.histdata_indiv_stock.plot(x="Date", y=["MACD", "MACD_signalline"], ylim=[-0.3, 0.3])
+        self.histdata_indiv_stock.plot(x="Date", y=["macd", "MACD_signalline"], ylim=[-0.3, 0.3])
         # self.histdata_indiv_stock.plot(x='Date', y=['MACD_hist' ],kind='bar')#problem with this plot
         plt.show()
 
@@ -282,7 +282,7 @@ class TechAnalysisAdd(object):
             Additional parm --> cross the bollinger band
             cross the 50 days ex moving avg
             Bol width - Bol 200 (percentage)
-            MACD hist (percentage)
+            macd hist (percentage)
             
         """
         self.processed_histdata_combined = (

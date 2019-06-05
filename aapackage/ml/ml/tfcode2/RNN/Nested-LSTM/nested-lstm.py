@@ -6,13 +6,13 @@
 
 import time
 
-from sklearn.cross_validation import train_test_split
-
 import tensorflow as tf
+from sklearn.cross_validation import train_test_split
 from tensorflow.python.framework import constant_op, dtypes
 from tensorflow.python.layers import base as base_layer
 from tensorflow.python.ops import array_ops, init_ops, math_ops, nn_ops, rnn_cell_impl
 from tensorflow.python.platform import tf_logging as logging
+
 from utils import *
 
 # In[2]:

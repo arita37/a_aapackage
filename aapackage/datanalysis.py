@@ -18,6 +18,7 @@ from calendar import isleap
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
+import arrow
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -31,12 +32,8 @@ from sklearn import covariance, linear_model, model_selection
 from sklearn.cluster import dbscan, k_means
 from sklearn.decomposition import PCA, pca
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
-from sklearn.ensemble import (
-    AdaBoostClassifier,
-    ExtraTreesClassifier,
-    GradientBoostingClassifier,
-    RandomForestClassifier,
-)
+from sklearn.ensemble import (AdaBoostClassifier, ExtraTreesClassifier,
+                              GradientBoostingClassifier, RandomForestClassifier)
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
@@ -45,7 +42,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-import arrow
 import datanalysis as da
 import kmodes
 import util

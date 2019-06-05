@@ -23,7 +23,6 @@ import math
 import re
 
 import six
-
 import tensorflow as tf
 
 

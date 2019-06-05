@@ -8,10 +8,10 @@ import random
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 from tqdm import tqdm
 
-import tensorflow as tf
 from utils import *
 
 # In[2]:

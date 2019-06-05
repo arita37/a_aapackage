@@ -5,6 +5,10 @@ Utilities to calculate States for Stock Selection
 import copy
 
 import numpy as np
+#####################################################################################
+####################  Pqttern Detection in Past dta #################################
+from numba import jit
+
 import portfolio as pf
 
 try:
@@ -126,7 +130,7 @@ def show(ll):
             print("LowerBand, Price, TopBand 120 days", s1[k, 91], s1[k, 45], s1[k, 90])
             print("LowerBand, Price, TopBand 200 days", s1[k, 94], s1[k, 45], s1[k, 93])
             print("LowerBand, Price, TopBand 300 days", s1[k, 97], s1[k, 45], s1[k, 96])
-            print("MA20,MA50, RMI ", s1[k, 30], s1[k, 31], s1[k, 32])
+            print("MA20,MA50, rmi ", s1[k, 30], s1[k, 31], s1[k, 32])
 
             print("Trend Max: 100d", s1[k, 74], s1[k, 75])
             print("Trend Min: 100d", s1[k, 76], s1[k, 77], "\n-----")
@@ -304,9 +308,6 @@ def export_tocsv(l1):
 #####################################################################################
 
 
-#####################################################################################
-####################  Pqttern Detection in Past dta #################################
-from numba import jit
 
 
 @jit

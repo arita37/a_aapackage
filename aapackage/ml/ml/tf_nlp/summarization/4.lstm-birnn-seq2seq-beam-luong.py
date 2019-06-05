@@ -9,13 +9,12 @@ import json
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from tqdm import tqdm
-
-import tensorflow as tf
 
 # In[2]:
 

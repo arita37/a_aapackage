@@ -1,19 +1,22 @@
 #coding=utf-8
 #! /usr/bin/env python3.4
-import numpy as np
-import os
-import time
+import copy
 import datetime
 import operator
-import random
-import tensorflow as tf
+import os
 import pickle
-import copy
+import random
+import time
+from functools import wraps
+
+import numpy as np
+import tensorflow as tf
 
 import Discriminator
 import Generator
-from insurance_qa_data_helpers import encode_sent
 import insurance_qa_data_helpers
+from insurance_qa_data_helpers import encode_sent
+
 # import dataHelper
 # Model Hyperparameters
 tf.flags.DEFINE_integer("max_sequence_length", 200, "Max sequence length fo sentence (default: 200)")
@@ -69,7 +72,6 @@ print("Load done...")
 log_precision = 'log/test1.gan_precision'+timeStamp
 loss_precision = 'log/test1.gan_loss'+timeStamp
 
-from functools import wraps
 #print( tf.__version__)
 def log_time_delta(func):
 	@wraps(func)
@@ -288,4 +290,3 @@ def main():
 if __name__ == '__main__':
 
 	main()
-

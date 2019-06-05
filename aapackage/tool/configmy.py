@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 import arrow
+
 # noinspection PyUnresolvedReferences
 from attrdict import AttrDict as dict2
 
@@ -552,11 +553,9 @@ if __name__ == "__main__":
     ppa.add_argument("--run", type=str, default="", help=" unit_test")
     arg = ppa.parse_args()
 
-
     if arg.run != "":
         print("Running Task")
         globals()[arg.run]()  # Execute command
-
 
     if arg.do == "test":
         pprint("### Unit Tests")

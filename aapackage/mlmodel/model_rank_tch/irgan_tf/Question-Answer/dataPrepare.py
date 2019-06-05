@@ -1,4 +1,6 @@
-import pickle,os
+import os
+import pickle
+
 path=""
 def load(file_name):
   return pickle.load(open(os.path.join(path, file_name), 'rb'))
@@ -80,5 +82,3 @@ def format_file(filename="insurance_dev.tsv",subset_size=1800):
 if __name__ == "__main__":
 	# parseTrain()
 	convertAll(subset_size=0)                #
-
-

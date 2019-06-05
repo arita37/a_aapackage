@@ -1,9 +1,9 @@
 import os
 
 import numpy as np
+import tensorflow as tf
 from scipy.misc import imread, imsave
 
-import tensorflow as tf
 from utils import label_map_util
 from utils import visualization_utils as vis_util
 

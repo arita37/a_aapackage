@@ -1,5 +1,4 @@
 import numpy as np
-
 import tensorflow as tf
 
 # I strictly followed the DCGAN paper

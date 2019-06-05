@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import sklearn.datasets
+import tensorflow as tf
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.manifold import TSNE
 
 import lightgbm as lgb
-import tensorflow as tf
 
 
 class Model_vec:

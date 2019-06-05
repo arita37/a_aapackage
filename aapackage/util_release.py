@@ -10,12 +10,10 @@ import sys
 from subprocess import call
 
 import six
-
 # noinspection PyUnresolvedReferences
 from future import standard_library
-from six.moves import input
-
 from github3 import login
+from six.moves import input
 
 standard_library.install_aliases()
 

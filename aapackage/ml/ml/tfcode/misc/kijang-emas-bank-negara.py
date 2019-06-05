@@ -27,12 +27,11 @@ import pandas as pd
 import requests
 import seaborn as sns
 import statsmodels.api as sm
+import tensorflow as tf
 from scipy.stats import pearsonr, spearmanr
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import MinMaxScaler
-
-import tensorflow as tf
 
 # ## Data gathering
 #

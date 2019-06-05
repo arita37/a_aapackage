@@ -9,9 +9,9 @@ import threading
 from queue import Queue
 
 import requests
+import tensorflow as tf
 
 import model
-import tensorflow as tf
 
 # In[4]:
 

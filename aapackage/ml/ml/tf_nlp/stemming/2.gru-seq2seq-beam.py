@@ -11,9 +11,8 @@ import re
 import time
 
 import numpy as np
-from sklearn.utils import shuffle
-
 import tensorflow as tf
+from sklearn.utils import shuffle
 
 # In[2]:
 

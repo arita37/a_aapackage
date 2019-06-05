@@ -1,6 +1,7 @@
-import sys
 import re
+import sys
 from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import numpy as np
 

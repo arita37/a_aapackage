@@ -10,7 +10,6 @@ from argparse import ArgumentParser
 
 import numpy as np
 import pandas as pd
-
 import tensorflow as tf
 
 EP_MAX = 1000

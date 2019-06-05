@@ -2,9 +2,8 @@ import json
 import os
 
 import numpy as np
-from flask import Flask, request
-
 import tensorflow as tf
+from flask import Flask, request
 
 with open("dictionary-test.json", "r") as fopen:
     dic = json.load(fopen)
