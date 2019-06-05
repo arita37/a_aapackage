@@ -56,6 +56,7 @@ def data_jpsector():
 
 #########################Date manipulation ##########################################
 def date_earningquater(t1):
+    qdate = quater = None
     if (t1.month == 10 and t1.day >= 14) or (t1.month == 1 and t1.day < 14) or t1.month in [11, 12]:
         if t1.month in [10, 11, 12]:
             qdate = datetime.datetime(t1.year + 1, 1, 14)
@@ -85,7 +86,7 @@ def date_is_3rdfriday(s):
 
 
 def date_option_expiry(date):
-    # day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
+    day = 21 - (calendar.weekday(date.year, date.month, 1) + 2) % 7
     if date.day <= day:
         nbday = day - date.day
         datexp = datetime.datetime(date.year, date.month, day)
@@ -112,7 +113,9 @@ def date_find_kintraday_fromdate(d1, intradaydate1, h1=9, m1=30):
     return util.np_find(d1, intradaydate1)
 
 
-def date_find_intradateid(datetimelist, stringdate=["20160420223000"]):
+def date_find_intradateid(datetimelist, stringdate=None):
+    if stringdate is None:
+        stringdate = ["20160420223000"]
     for t in stringdate:
         tt = datestring_todatetime(t)
         k = util.np_find(tt, datetimelist)
@@ -229,6 +232,7 @@ def datetime_tointhour(datelist1):
     return np.array(yy2)
 
 
+# noinspection PyTypeChecker
 def dateint_tostring(datelist1, format1="%b-%y"):
     if isinstance(datelist1, int):
         return dateint_todatetime(datelist1).strftime(format1)
@@ -612,6 +616,7 @@ def plot_price(
         tmax = sh[1]
         tt1 = np.arange(0, tmax - 1)
 
+        lband = hband = None
         try:
             lband = np.zeros(tmax)
             res = ta_lowbandtrend1(asset[0, tt1], 0)
@@ -684,6 +689,7 @@ def plot_price(
     ################### Plot Intraday Cont
 
 
+# noinspection PyTypeChecker
 def plot_priceintraday(data):
     from matplotlib.finance import candlestick
     from matplotlib.dates import num2date
@@ -696,7 +702,7 @@ def plot_priceintraday(data):
     ndays = np.unique(np.trunc(data[:, 0]), return_index=True)
     xdays = []
     for n in np.arange(len(ndays[0])):
-        xdays.append(datetime.date.isoformat(num2date(data[ndays[1], 0][n])))
+        xdays.append(datetime.date.isoformat())
 
     # creation of new data by replacing the time array with equally spaced values.
     # this will allow to remove the gap between the days, when plotting the data
@@ -725,7 +731,11 @@ def plot_priceintraday(data):
 
 
 # -----Plot Check Price
-def plot_check(close, tt0i=20140102, tt1i=20160815, dateref=[], sym=[], tickperday=120):
+def plot_check(close, tt0i=20140102, tt1i=20160815, dateref=None, sym=None, tickperday=120):
+    if dateref is None:
+        dateref = []
+    if sym is None:
+        sym = []
     t0i, t1i = util.find(tt0i, dateref), util.find(tt1i, dateref)
     print("backtest period ", tt0i, tt1i, t0i, t1i)
     close_ret = getret_fromquotes(close, 1)
@@ -863,7 +873,7 @@ def save_asset_tofile(file1, asset1, asset2=None, asset3=None, date1=None, title
 
     if (asset2 != None and tmax1 != tmax2) or (asset3 != None and tmax1 != tmax3):
         print("Time are not the same")
-        exit
+        exit()
 
     assetall = np.zeros((1 + masset1 + masset2 + masset3, tmax1))
     if date1 != None:
@@ -891,7 +901,7 @@ def save_asset_tofile(file1, asset1, asset2=None, asset3=None, date1=None, title
 
 
 def load_asset_fromfile(file1):
-    return (np.loadtxt(file1, skiprow=0, delimiter=",")).T
+    return (np.loadtxt(file1, delimiter=",")).T
 
 
 def array_todataframe(price, symbols=None, date1=None):
@@ -943,6 +953,7 @@ def correlation_mat(Xmat, type1="robust", type2="correl"):
         # x = (x - x.min(axis=0)) / (x.max(axis=0) - x.min(axis=0))   # Min-Max scaling
     # Otherwise this covariance
 
+    correl = correl_inv = partial_correl = None
     if type1 == "empirical":
         correl = np.corrcoef(x)
         correl_inv = 0
@@ -1035,7 +1046,7 @@ def cointegration(x, y):
     import statsmodels as sm
     from statsmodels.tsa.stattools import coint
 
-    res = sm.tsa.stattools.coint(x, y, regression="c")
+    res = sm.tsa.stattools.coint(x, y)
     res2 = np.zeros((3, 2), dtype=np.object)
     res2[0, 0] = "Proba_CoInte_99%_confid"
     res2[0, 1] = True if res[0] < res[2][0] else False  # Proba
@@ -1184,7 +1195,7 @@ def regression_allstocks_vs_riskfactors(symstock, pricestock, symriskfac, pricer
 
     if tmax != tmax2:
         print(("Error Tmax Stock:" + str(tmax) + " !=" + "Tmax Risk:" + str(tmax2)))
-        exit
+        exit()
     sym_riskid = np.arange(0, nrisk)
 
     open1adj = pricestock
@@ -1203,6 +1214,7 @@ def regression_allstocks_vs_riskfactors(symstock, pricestock, symriskfac, pricer
     index1 = np.arange(0, len(stocklist01) * len(nlaglist))
 
     jj = 0
+    df = None
     for ilag, nlag in enumerate(nlaglist):  # Time lag
         ret_open1 = getlogret_fromquotes(open1adj, nlag)
         ret_close2 = getlogret_fromquotes(close2adj, nlag)
@@ -1456,6 +1468,7 @@ def ta_lowbandtrend1(close2, type1=0):
 
     vmax = util.np_findlocalmin2(close2, 3)
 
+    vmax0 = vmax1 = None
     if len(vmax) > 2:
         vmax = util.sort(vmax, 0, asc=0)
         kmin1, pmin1 = util.np_find_minpos(vmax[:, 1])
@@ -1465,6 +1478,7 @@ def ta_lowbandtrend1(close2, type1=0):
         if np.abs(trend / pmax1) < 0.01:
             trend = 0
 
+        kix0 = kix1 = None
         if trend > 0.0:  # trend up
             if -kmax1 < -kmin1:
                 kix0 = kmin1 + 1
@@ -1511,6 +1525,7 @@ def ta_highbandtrend1(close2, type1=0):
 
     vmax = util.np_findlocalmax2(close2, 3)
 
+    vmax0 = vmax1 = None
     if len(vmax) > 2:
         vmax = util.sort(vmax, 0, asc=0)
         kmin1, pmin1 = util.np_find_minpos(vmax[:, 1])
@@ -1520,6 +1535,7 @@ def ta_highbandtrend1(close2, type1=0):
         if np.abs(trend / pmax1) < 0.01:
             trend = 0
 
+        kix0 = kix1 = None
         if trend > 0.0:  # trend up
             if -kmax1 < -kmin1:
                 kix0 = kmin1 + 1
@@ -1573,6 +1589,7 @@ def pd_transform_asset(q0, q1, type1="spread"):
     q0 = q0[q0.date.isin(date0)]
     q1 = q1[q1.date.isin(date0)]
     qn = util.pd_array_todataframe(q0[["date", "month", "day"]].values, ["date", "month", "day"])
+    colval = None
     if type1 == "spread":
         colval = 100 * (q0.close.values / q0.close.values[0] - q1.close.values / q1.close.values[0])
     qn = util.pd_insertcol(qn, "close", colval)
@@ -1823,7 +1840,11 @@ def folio_inverseetf(price, costpa=0.0):
     return invetf
 
 
-def folio_longshort_unit(long1, short1, ww=[1, -1], costpa=0.0, tlag=1, istable=1, wwschedule=[]):
+def folio_longshort_unit(long1, short1, ww=None, costpa=0.0, tlag=1, istable=1, wwschedule=None):
+    if ww is None:
+        ww = [1, -1]
+    if wwschedule is None:
+        wwschedule = []
     tmax = len(long1)
     folio = np.zeros(tmax)
     folio[0] = 100.0
@@ -1870,7 +1891,9 @@ def folio_longshort_unit(long1, short1, ww=[1, -1], costpa=0.0, tlag=1, istable=
         return folio
 
 
-def folio_longshort_unitfixed(long1, short1, nn=[1, -1], costpa=0.0, tlag=1, istable=1):
+def folio_longshort_unitfixed(long1, short1, nn=None, costpa=0.0, tlag=1, istable=1):
+    if nn is None:
+        nn = [1, -1]
     tmax = len(long1)
     invetf = np.zeros(tmax)
     invetf[0] = 100.0
@@ -1914,7 +1937,9 @@ def folio_longshort_unitfixed(long1, short1, nn=[1, -1], costpa=0.0, tlag=1, ist
         return invetf
 
 
-def folio_longshort_pct(long1, short1, ww=[1, -1], costpa=0.0):
+def folio_longshort_pct(long1, short1, ww=None, costpa=0.0):
+    if ww is None:
+        ww = [1, -1]
     invetf = np.zeros(len(long1))
     invetf[0] = 100.0
     for t in range(1, len(long1)):
@@ -1958,9 +1983,10 @@ def folio_histogram(close):
 
 
 def folio_voltarget(bsk, targetvol=0.11, volrange=90, expocap=1.5):
-    return folio_volta(bsk, targetvol=0.11, volrange=90, expocap=1.5)
+    return folio_volta(bsk, targetvol=0.11, volrange=90)
 
 
+# noinspection PyTypeChecker,PyTypeChecker,PyTypeChecker
 def folio_volta(
     bsk,
     targetvol=0.11,
@@ -1968,12 +1994,16 @@ def folio_volta(
     cap=1.5,
     floor=0.0,
     isweight=0,
-    voltable=[],
-    volschedule=[],
+        voltable=None,
+        volschedule=None,
     tlag=0,
 ):
     # Generate Vol Target portfolio
 
+    if voltable is None:
+        voltable = []
+    if volschedule is None:
+        volschedule = []
     istable = 0 if len(voltable) == 0 else 1
     isschedule = 0 if len(volschedule) == 0 else 1
 
@@ -2012,6 +2042,7 @@ def folio_volta(
         return bsk2
 
 
+# noinspection PyTypeChecker
 def folio_volta2(bsk, riskind, par, targetvol=0.11, volrange=90, cap=1.5, floor=0.0, costbp=0.0005):
     # Generate Vol Target portfolio
     tmax = np.shape(bsk)[0]
@@ -2805,7 +2836,9 @@ class folioRiskIndicator(object):
     # if self.nbrange < 2 : print('ERROR initperiod=2 days')
     #    if len(self.boundsasset) != self.masset *  self.nbregime:  print('error Bounds Size', len(self.boundsasset) )
 
-    def calcrisk(self, wwvec=[], initval=1):
+    def calcrisk(self, wwvec=None, initval=1):
+        if wwvec is None:
+            wwvec = []
         TMAX, tlagsignal = self.tmax, self.tlagsignal
 
         self.riskind_out[:, 0] = self.dateref
@@ -2930,6 +2963,7 @@ def calcbasket_objext(RETURN, TMAX, riskind_i, wwmat, wwasset0, ww0, nbrange, cr
         penalty = 1000000.0 * (var1 - criteria[2])  # Max Vol
 
     crit = criteria[0]
+    obj1 = None
     if crit == 0.0:
         obj1 = -(bsk - 100) ** 2 / var1 + penalty
     elif crit == 1.0:
@@ -3072,6 +3106,7 @@ class folioOptimizationF(object):
         elif self.wwtype == "regimeBoth":
             self.boundsoptim = list(self.boundsrisk) + list(self.boundsasset)
 
+    # noinspection PyTypeChecker
     def calcbasket_obj2(self, wwvec):
         masset, nbregime = self.masset, self.nbregime
         wwpenalty, concenfactor2 = self.wwpenalty, self.concenfactor
@@ -4364,6 +4399,7 @@ def np_trendtest(x, alpha=0.05):
             tp[i] = sum(unique_x[i] == x)
         var_s = (n * (n - 1) * (2 * n + 5) + np.sum(tp * (tp - 1) * (2 * tp + 5))) / 18
 
+    z = None
     if s > 0:
         z = (s - 1) / np.sqrt(var_s)
     elif s == 0:
@@ -4385,8 +4421,13 @@ def np_trendtest(x, alpha=0.05):
     return trend, h, p, z
 
 
-def correl_rankbystock(stkid=[2, 5, 6], correl=[[1, 0], [0, 1]]):
+# noinspection PyTypeChecker,PyTypeChecker
+def correl_rankbystock(stkid=None, correl=None):
     """ Ranking of stocks by correl:  Stock i, Correl_with_i, Abs_Sum_correl_i    """
+    if stkid is None:
+        stkid = [2, 5, 6]
+    if correl is None:
+        correl = [[1, 0], [0, 1]]
     avgcorrel = np.zeros((len(stkid), 3), dtype=np.float32)
     # stkid= [int(x) for x in stkid]
     for ix, i in enumerate(stkid):
@@ -4398,9 +4439,13 @@ def correl_rankbystock(stkid=[2, 5, 6], correl=[[1, 0], [0, 1]]):
 
 
 def calc_print_correlrank(
-    close2, symjp1, nlag, refindexname, toprank2=5, customnameid=[], customnameid2=[]
+    close2, symjp1, nlag, refindexname, toprank2=5, customnameid=None, customnameid2=None
 ):
     """ Most correlated/Un-correlated from One Risk Factor"""
+    if customnameid is None:
+        customnameid = []
+    if customnameid2 is None:
+        customnameid2 = []
     refindex = util.np_findfirst(refindexname, symjp1)
     rank = calc_ranktable(
         close2, symjp1, 24, refindex=refindex, funeval=similarity_correl, funargs=["empirical"]
@@ -4543,7 +4588,9 @@ rank= search01.resultrank
 
 
 #  -----      Similarity definition
-def np_similarity(x, y, wwerr=[], type1=0):
+def np_similarity(x, y, wwerr=None, type1=0):
+    if wwerr is None:
+        wwerr = []
     if type1 == 2:
         return np_distance_l1(x, y, wwerr)
     if type1 == 1:
@@ -4560,12 +4607,16 @@ class searchSimilarity:
     def __init__(
         self,
         filejpstock=r"E:/_data/stock/daily/20160616/jp",
-        sym01=["7203"],
-        symname=["Toyota"],
+            sym01=None,
+            symname=None,
         startdate=20150101,
         enddate=20160601,
         pricetype="close",
     ):
+        if sym01 is None:
+            sym01 = ["7203"]
+        if symname is None:
+            symname = ["Toyota"]
         self.symname = symname
         self.sym01 = sym01
         self.filejpstock = filejpstock
@@ -4577,6 +4628,7 @@ class searchSimilarity:
         self.nlag = None
 
     def load_quotes_fromdb(self, picklefile=""):
+        open1 = dateref = None
         if picklefile != "":
             open1 = util.load_obj(picklefile[0])
             dateref = util.load_obj(picklefile[1])
@@ -4731,7 +4783,7 @@ class searchSimilarity:
                 namefulli = self.symname[util.np_findfirst(namei, self.sym01)]
                 tit = namei + " " + namefulli + "_from_" + str(self.dateref[tstarti])
                 if filenameout != "":
-                    filenameout + "_" + tit
+                    filenameout += "_" + tit
 
                 plot_price(
                     self.px - 100,
@@ -4942,6 +4994,8 @@ def imp_quandl_quotes(symbols, start="20150101", end="20160101", source="google"
     quotes = []
     errorlist = []
     correctlist = []
+
+    df = None
     for i, symbol in enumerate(symbols):
         # if np.mod(i,400) ==0 and i != 0 :
         # print('Waiting 30s'); time.sleep(30)
@@ -5097,6 +5151,8 @@ def imp_googleIntradayQuote(symbol, freqsec=300, nday=5):
     """
     url = "http://www.google.com/finance/getprices?q={0}".format(symbol)
     url += "&i={0}&p={1}d&f=d,o,h,l,c,v".format(freqsec, nday)
+
+    csv = None
     try:
         resp = requests.post(url)
         csv = resp.text
@@ -5128,6 +5184,7 @@ def imp_googleIntradayQuote(symbol, freqsec=300, nday=5):
 
     # print(csv)
     qq = []
+    day = None
     for bar in range(7, len(csv)):
         if csv[bar].count(",") != 5:
             continue
@@ -5146,8 +5203,10 @@ def imp_googleIntradayQuote(symbol, freqsec=300, nday=5):
     return df
 
 
-def imp_googleIntradayQuoteSave(symbols=["NKE"], freqsec=300, nday=2000, dircsv="", dbname=""):
+def imp_googleIntradayQuoteSave(symbols=None, freqsec=300, nday=2000, dircsv="", dbname=""):
     """ Save Under various format: csv / db / output in Dataframe """
+    if symbols is None:
+        symbols = ["NKE"]
     if isinstance(symbols, str):
         symbols = [symbols]
     symout, qlist, sym_error = [], [], []
@@ -5219,9 +5278,12 @@ def imp_googleQuote(
     return q
 
 
+# noinspection PyTypeChecker
 def imp_googleQuoteSave(symbols, date1, date2, dircsv):
     if isinstance(symbols, str):
         symbols = [symbols]
+
+    q = None
     for sym in symbols:
         try:
             q = imp_googleQuote(sym, date1, date2)  # interval, timeframe
@@ -5248,11 +5310,17 @@ def imp_googleQuoteSave(symbols, date1, date2, dircsv):
 def imp_csv_dbupdate(
     indir="E:/_data/stock/intraday/intraday_google_usetf2.h5",
     outdir="E:/_data/stock/intraday/q5min/us/etf/",
-    filelist=[],
+        filelist=None,
     intype="csv",
-    refcols=["date", "open", "high", "low", "close", "volume", "symbol"],
+        refcols=None,
 ):
 
+    if filelist is None:
+        filelist = []
+    if refcols is None:
+        refcols = ["date", "open", "high", "low", "close", "volume", "symbol"]
+
+    df1 = None
     for file1 in filelist:
         sym = file1[: file1.find("_")]  # Clean Up name
         print(sym)
@@ -5286,7 +5354,7 @@ def imp_csv_dbupdate(
 def imp_numpy_close_fromdb(
     dbname="/aaserialize/store/yahoo.db",
     table1="",
-    symlist=[],
+        symlist=None,
     t0=20010101,
     t1=20010101,
     priceid="close",
@@ -5294,6 +5362,8 @@ def imp_numpy_close_fromdb(
     maxasset=2600,
     tmax2=2000,
 ):
+    if symlist is None:
+        symlist = []
     print("Get Numpy Matrix Close from DB SQL")
     from data import hist_data_storage as yhh
 
@@ -5309,6 +5379,8 @@ def imp_numpy_close_fromdb(
     i = 0
     nsym = len(symlist)
     nbatch = int(nsym / batchsize) + 1
+
+    dateref = None
     for j in range(0, nbatch):
         qlist, sym = dstore.get_histo(
             symlist[i : min(nsym, i + batchsize)],
@@ -5343,8 +5415,10 @@ def imp_numpy_close_fromdb(
 
 
 def imp_numpy_close_fromhdfs(
-    dbfile, symlist=[], t0=20010101, t1=20010101, priceid="close", maxasset=2600, tmax2=2000
+    dbfile, symlist=None, t0=20010101, t1=20010101, priceid="close", maxasset=2600, tmax2=2000
 ):
+    if symlist is None:
+        symlist = []
     print("Get Numpy Matrix Close from Pandas")
     close2 = np.zeros((maxasset, tmax2), dtype=np.float16)
     store = pd.HDFStore(dbfile)
@@ -5358,6 +5432,8 @@ def imp_numpy_close_fromhdfs(
     qlist = []
     sym = []
     tmax = 2000
+
+    dateref = masset = None
     for j, symbol in enumerate(store.keys()):
         symbol = symbol[1:]
 
@@ -5461,16 +5537,21 @@ def imp_csv_getname(name1, date1, inter, tframe):
     return file1
 
 
+# noinspection PyTypeChecker
 def imp_csv_toext(
     file1="SPY.csv",
     outputfile=".h5",
     fromzone="Japan",
     tozone="UTC",
     header=None,
-    cols=["date", "time", "open", "high", "low", "close", "volume", "symbol"],
-    coldate=[0],
+        cols=None,
+        coldate=None,
 ):
     """ cols: column name,  coldate: position of date column   """
+    if cols is None:
+        cols = ["date", "time", "open", "high", "low", "close", "volume", "symbol"]
+    if coldate is None:
+        coldate = [0]
     from dateutil import parser
 
     if os.path.getsize(file1) > 500:
@@ -6031,8 +6112,6 @@ def calc_statestock(close2, dateref, symfull):
         kmax, pmax = util.np_find_maxpos(close2[i, (tmax - 5) : tmax])
         stat[i, 69] = 100 * pp0 / pmax
 
-    del kmax, pmax, i, k
-
     # Regression from Min Price Time
     for i in range(0, m):
         t0 = int(stat[i, 50])
@@ -6116,7 +6195,6 @@ def calc_statestock(close2, dateref, symfull):
             stat[i, 71] = res[0][0]  # Slope
         except:
             pass
-    # del vmax
 
     # Regression from Min Values,200days
     t0 = tmax - 20 * 10
@@ -6128,7 +6206,6 @@ def calc_statestock(close2, dateref, symfull):
             stat[i, 73] = res[0][0]  # Slope
         except:
             pass
-    # del vmin
 
     # Regression from Max Values,100days
     t0 = tmax - 20 * 5
@@ -6140,7 +6217,6 @@ def calc_statestock(close2, dateref, symfull):
             stat[i, 75] = res[0][0]  # Slope
         except:
             pass
-    del vmax
 
     # Regression from Min Values,100days
     t0 = tmax - 20 * 5
@@ -6152,7 +6228,6 @@ def calc_statestock(close2, dateref, symfull):
             stat[i, 77] = res[0][0]  # Slope
         except:
             pass
-    del vmin
 
     # Upside Trend with Higher Lows detection
     t0 = tmax - 20 * 10
@@ -6342,6 +6417,7 @@ def monitor_addrecommend(string1, dbname="stock_recommend"):
             if util.find(x, symfull) > 0:
                 aux.append(x)
 
+    stock_recommend = None
     if len(aux) > 1:
         stock_recommend = util.load_obj(dbname)
         stock_recommend.append(aux)
