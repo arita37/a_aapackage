@@ -1,5 +1,5 @@
 import numpy as np
-import tensorflow as tf
+import torch
 from scipy.stats import multivariate_normal as normal
 
 
@@ -18,11 +18,11 @@ class Equation(object):
         """Sample forward SDE."""
         raise NotImplementedError
 
-    def f_tf(self, t, x, y, z):
+    def f_th(self, t, x, y, z):
         """Generator function in the PDE."""
         raise NotImplementedError
 
-    def g_tf(self, t, x):
+    def g_th(self, t, x):
         """Terminal condition of the PDE."""
         raise NotImplementedError
 
@@ -47,11 +47,27 @@ class Equation(object):
         return self._delta_t
 
 
-def get_equation(name, dim, total_time, num_time_interval):
-    try:
-        return globals()[name](dim, total_time, num_time_interval)
-    except KeyError:
-        raise KeyError("Equation for the required problem not found.")
+class AllenCahn(Equation):
+    def __init__(self, dim, total_time, num_time_interval):
+        super(AllenCahn, self).__init__(dim, total_time, num_time_interval)
+        self._x_init = np.zeros(self._dim)
+        self._sigma = np.sqrt(2.0)
+
+    def sample(self, num_sample):
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
+        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        for i in range(self._num_time_interval):
+            x_sample[:, :, i + 1] = x_sample[:, :, i] + self._sigma * dw_sample[:, :, i]
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
+
+    def f_th(self, t, x, y, z):
+        return y - torch.pow(y, 3)
+
+    def g_th(self, t, x):
+        return 0.5 / (1 + 0.2 * torch.sum(x**2, dim=1, keepdim=True))
 
 
 class HJB(Equation):
@@ -62,51 +78,20 @@ class HJB(Equation):
         self._lambda = 1.0
 
     def sample(self, num_sample):
-
-        ### All the samples
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
-
-        ### Euler Discretization
-        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
-        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
-
-        ### Euler Sequential ; Diffusion process
-        for i in range(self._num_time_interval):
-            x_sample[:, :, i + 1] = x_sample[:, :, i] + self._sigma * dw_sample[:, :, i]
-        return dw_sample, x_sample
-
-    def f_tf(self, t, x, y, z):
-        # Constraints 1
-        return -self._lambda * tf.reduce_sum(tf.square(z), 1, keepdims=True)
-
-    def g_tf(self, t, x):
-        # Constraints 2
-        return tf.log((1 + tf.reduce_sum(tf.square(x), 1, keepdims=True)) / 2)
-
-
-class AllenCahn(Equation):
-    def __init__(self, dim, total_time, num_time_interval):
-        super(AllenCahn, self).__init__(dim, total_time, num_time_interval)
-        self._x_init = np.zeros(self._dim)
-        self._sigma = np.sqrt(2.0)
-
-    def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         for i in range(self._num_time_interval):
             x_sample[:, :, i + 1] = x_sample[:, :, i] + self._sigma * dw_sample[:, :, i]
-        return dw_sample, x_sample
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        return y - tf.pow(y, 3)
+    def f_th(self, t, x, y, z):
+        return -self._lambda * torch.sum(torch.pow(z, 2), 1, keepdim=True)
 
-    def g_tf(self, t, x):
-        return 0.5 / (1 + 0.2 * tf.reduce_sum(tf.square(x), 1, keepdims=True))
+    def g_th(self, t, x):
+        return torch.log((1 + torch.sum(torch.pow(x, 2), 1, keepdim=True)) / 2)
 
 
 class PricingOption(Equation):
@@ -120,32 +105,27 @@ class PricingOption(Equation):
         self._alpha = 1.0 / self._dim
 
     def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         # for i in xrange(self._n_time):
         # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
         # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
-        factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+        factor = np.exp((self._mu_bar-(self._sigma**2)/2)*self._delta_t)
         for i in range(self._num_time_interval):
-            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[
-                :, :, i
-            ]
-        return dw_sample, x_sample
+            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[:, :, i]
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
-        return (
-            -self._rl * y
-            - (self._mu_bar - self._rl) * temp
-            + ((self._rb - self._rl) * tf.maximum(temp - y, 0))
-        )
+    def f_th(self, t, x, y, z):
+        temp = torch.sum(z, 1, keepdim=True) / self._sigma
+        return -self._rl * y - (self._mu_bar - self._rl) * temp + (
+            (self._rb - self._rl) * torch.max(temp - y, 0)[0])
 
-    def g_tf(self, t, x):
-        temp = tf.reduce_max(x, 1, keepdims=True)
-        return tf.maximum(temp - 120, 0) - 2 * tf.maximum(temp - 150, 0)
+    def g_th(self, t, x):
+        temp = torch.max(x, 1, keepdim=True)[0]
+        return torch.max(temp - 120, 0)[0] - 2 * torch.max(temp - 150, 0)[0]
 
 
 class PricingDefaultRisk(Equation):
@@ -153,7 +133,7 @@ class PricingDefaultRisk(Equation):
         super(PricingDefaultRisk, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100.0
         self._sigma = 0.2
-        self._rate = 0.02  # interest rate R
+        self._rate = 0.02   # interest rate R
         self._delta = 2.0 / 3
         self._gammah = 0.2
         self._gammal = 0.02
@@ -163,26 +143,23 @@ class PricingDefaultRisk(Equation):
         self._slope = (self._gammah - self._gammal) / (self._vh - self._vl)
 
     def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         for i in range(self._num_time_interval):
             x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
-                self._sigma * x_sample[:, :, i] * dw_sample[:, :, i]
-            )
-        return dw_sample, x_sample
+                self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        piecewise_linear = (
-            tf.nn.relu(tf.nn.relu(y - self._vh) * self._slope + self._gammah - self._gammal)
-            + self._gammal
-        )
+    def f_th(self, t, x, y, z):
+        piecewise_linear = torch.nn.functional.relu(
+            torch.nn.functional.relu(y - self._vh) * self._slope + self._gammah - self._gammal) + self._gammal
         return (-(1 - self._delta) * piecewise_linear - self._rate) * y
 
-    def g_tf(self, t, x):
-        return tf.reduce_min(x, 1, keepdims=True)
+    def g_th(self, t, x):
+        return torch.min(x, 1, keepdim=True)[0]
 
 
 class BurgesType(Equation):
@@ -193,20 +170,20 @@ class BurgesType(Equation):
         self._sigma = self._dim + 0.0
 
     def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         for i in range(self._num_time_interval):
             x_sample[:, :, i + 1] = x_sample[:, :, i] + self._sigma * dw_sample[:, :, i]
-        return dw_sample, x_sample
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        return (y - (2 + self._dim) / 2.0 / self._dim) * tf.reduce_sum(z, 1, keepdims=True)
+    def f_th(self, t, x, y, z):
+        return (y - (2 + self._dim) / 2.0 / self._dim) * torch.sum(z, 1, keepdim=True)
 
-    def g_tf(self, t, x):
-        return 1 - 1.0 / (1 + tf.exp(t + tf.reduce_sum(x, 1, keepdims=True) / self._dim))
+    def g_th(self, t, x):
+        return 1 - 1.0 / (1 + torch.exp(t + torch.sum(x, 1, keepdim=True) / self._dim))
 
 
 class QuadraticGradients(Equation):
@@ -218,40 +195,35 @@ class QuadraticGradients(Equation):
         self._y_init = np.sin(np.power(base, self._alpha))
 
     def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         for i in range(self._num_time_interval):
             x_sample[:, :, i + 1] = x_sample[:, :, i] + dw_sample[:, :, i]
-        return dw_sample, x_sample
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        x_square = tf.reduce_sum(tf.square(x), 1, keepdims=True)
+    def f_th(self, t, x, y, z):
+        x_square = torch.sum(torch.pow(x, 2), 1, keepdim=True)
         base = self._total_time - t + x_square / self._dim
-        base_alpha = tf.pow(base, self._alpha)
-        derivative = self._alpha * tf.pow(base, self._alpha - 1) * tf.cos(base_alpha)
-        term1 = tf.reduce_sum(tf.square(z), 1, keepdims=True)
+        base_alpha = torch.pow(base, self._alpha)
+        derivative = self._alpha * torch.pow(base, self._alpha - 1) * torch.cos(base_alpha)
+        term1 = torch.sum(torch.pow(z, 2), 1, keepdim=True)
         term2 = -4.0 * (derivative ** 2) * x_square / (self._dim ** 2)
         term3 = derivative
         term4 = -0.5 * (
-            2.0 * derivative
-            + 4.0
-            / (self._dim ** 2)
-            * x_square
-            * self._alpha
-            * (
-                (self._alpha - 1) * tf.pow(base, self._alpha - 2) * tf.cos(base_alpha)
-                - (self._alpha * tf.pow(base, 2 * self._alpha - 2) * tf.sin(base_alpha))
+            2.0 * derivative + 4.0 / (self._dim ** 2) * x_square * self._alpha * (
+                (self._alpha - 1) * torch.pow(base, self._alpha - 2) * torch.cos(base_alpha) - (
+                    self._alpha * torch.pow(base, 2 * self._alpha - 2) * torch.sin(base_alpha)
+                    )
+                )
             )
-        )
         return term1 + term2 + term3 + term4
 
-    def g_tf(self, t, x):
-        return tf.sin(
-            tf.pow(tf.reduce_sum(tf.square(x), 1, keepdims=True) / self._dim, self._alpha)
-        )
+    def g_th(self, t, x):
+        return torch.sin(
+            torch.pow(torch.sum(torch.pow(x, 2), 1, keepdim=True) / self._dim, self._alpha))
 
 
 class ReactionDiffusion(Equation):
@@ -260,28 +232,32 @@ class ReactionDiffusion(Equation):
         self._kappa = 0.6
         self._lambda = 1 / np.sqrt(self._dim)
         self._x_init = np.zeros(self._dim)
-        self._y_init = (
-            1
-            + self._kappa
-            + np.sin(self._lambda * np.sum(self._x_init))
-            * np.exp(-self._lambda * self._lambda * self._dim * self._total_time / 2)
-        )
+        self._y_init = 1 + self._kappa + np.sin(self._lambda * np.sum(self._x_init)) * np.exp(
+            -self._lambda * self._lambda * self._dim * self._total_time / 2)
 
     def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
+        dw_sample = normal.rvs(size=[num_sample,
+                                     self._dim,
+                                     self._num_time_interval]) * self._sqrt_delta_t
         x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
         x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
         for i in range(self._num_time_interval):
             x_sample[:, :, i + 1] = x_sample[:, :, i] + dw_sample[:, :, i]
-        return dw_sample, x_sample
+        return torch.FloatTensor(dw_sample), torch.FloatTensor(x_sample)
 
-    def f_tf(self, t, x, y, z):
-        exp_term = tf.exp((self._lambda ** 2) * self._dim * (t - self._total_time) / 2)
-        sin_term = tf.sin(self._lambda * tf.reduce_sum(x, 1, keepdims=True))
+    def f_th(self, t, x, y, z):
+        exp_term = np.exp((self._lambda ** 2) * self._dim * (t - self._total_time) / 2)
+        sin_term = torch.sin(self._lambda * torch.sum(x, 1, keepdim=True))
         temp = y - self._kappa - 1 - sin_term * exp_term
-        return tf.minimum(tf.constant(1.0, dtype=tf.float64), tf.square(temp))
+        return torch.min(torch.Tensor([1.0]), torch.pow(temp, 2))[0]
 
-    def g_tf(self, t, x):
-        return 1 + self._kappa + tf.sin(self._lambda * tf.reduce_sum(x, 1, keepdims=True))
+    def g_th(self, t, x):
+        return 1 + self._kappa + torch.sin(self._lambda * torch.sum(x, 1, keepdim=True))
+
+
+def get_equation(name, dim, total_time, num_time_interval):
+    try:
+        return globals()[name](dim, total_time, num_time_interval)
+    except KeyError:
+        raise KeyError("Equation for the required problem not found.")
+
