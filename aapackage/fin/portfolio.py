@@ -11,6 +11,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+
 # -----Multivariate regression ---------------------------------------------
 import warnings
 from datetime import datetime
@@ -20,18 +21,23 @@ import numba
 import numpy as np
 import pandas as pd
 import requests
+
 # --------------------Import Quotes Google  ------------------------------------------
 import requests.packages.urllib3
 import scipy as sci
 import sklearn as sk
 import util
+
 #################### Finviz  ###############################################################
 from bs4 import BeautifulSoup
+
 # noinspection PyUnresolvedReferences
 from fin import technical_indicator as ta
 from fin.alldata import *
+
 # from matplotlib.finance import quotes_historical_yahoo_ochl
 from numba import float32, float64, int32, int64, jit
+
 # --------------------Calculate Rank Table    ---------------------------------------
 from scipy.stats import norm
 from tabulate import tabulate
@@ -101,9 +107,9 @@ def date_is_3rdfriday(s):
 #         else:
 #             day = 21 - (calendar.weekday(date.year, date.month + 1, 1) + 2) % 7
 #             datexp = datetime.datetime(date.year, date.month + 1, day)
-# 
+#
 #         nbday = (datexp - date).days
-# 
+#
 #     return nbday, datexp
 
 
@@ -1720,8 +1726,8 @@ def folio_volta(
     cap=1.5,
     floor=0.0,
     isweight=0,
-        voltable=None,
-        volschedule=None,
+    voltable=None,
+    volschedule=None,
     tlag=0,
 ):
     # Generate Vol Target portfolio
@@ -4333,8 +4339,8 @@ class searchSimilarity:
     def __init__(
         self,
         filejpstock=r"E:/_data/stock/daily/20160616/jp",
-            sym01=None,
-            symname=None,
+        sym01=None,
+        symname=None,
         startdate=20150101,
         enddate=20160601,
         pricetype="close",
@@ -5034,9 +5040,9 @@ def imp_googleQuoteSave(symbols, date1, date2, dircsv):
 def imp_csv_dbupdate(
     indir="E:/_data/stock/intraday/intraday_google_usetf2.h5",
     outdir="E:/_data/stock/intraday/q5min/us/etf/",
-        filelist=None,
+    filelist=None,
     intype="csv",
-        refcols=None,
+    refcols=None,
 ):
 
     df1 = None
@@ -5077,7 +5083,7 @@ def imp_csv_dbupdate(
 def imp_numpy_close_fromdb(
     dbname="/aaserialize/store/yahoo.db",
     table1="",
-        symlist=None,
+    symlist=None,
     t0=20010101,
     t1=20010101,
     priceid="close",
@@ -5265,8 +5271,8 @@ def imp_csv_toext(
     fromzone="Japan",
     tozone="UTC",
     header=None,
-        cols=None,
-        coldate=None,
+    cols=None,
+    coldate=None,
 ):
     """ cols: column name,  coldate: position of date column   """
     if cols is None:

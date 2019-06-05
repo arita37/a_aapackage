@@ -830,13 +830,14 @@ def STDDEV(df, n):
 def RWI(df, nn, nATR):
     return 0
 
- # First we compute RWI for maxima:
- # RWImax = [(day‘s high - (day's low * number of days))] / [(Average True Range * number of days * square root of number of days)]
- #
- # Similarly, we compute the RWI for minima:
- # RWImin = [(day's high *number of days - (day's low))] / [(Average True Range * number of days * square root of number of days)]
- #
- # True range = higher of (day's high, previous close ) - lower of (day's low, previous close)
+
+# First we compute RWI for maxima:
+# RWImax = [(day‘s high - (day's low * number of days))] / [(Average True Range * number of days * square root of number of days)]
+#
+# Similarly, we compute the RWI for minima:
+# RWImin = [(day's high *number of days - (day's low))] / [(Average True Range * number of days * square root of number of days)]
+#
+# True range = higher of (day's high, previous close ) - lower of (day's low, previous close)
 
 
 def nbday_low(df, n):
