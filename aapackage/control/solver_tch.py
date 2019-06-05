@@ -113,13 +113,13 @@ class FeedForwardModel(nn.Module):
         return loss, self._y_init
 
 
-def train():
+def train(config, bsde):
     # build and train
     args = parser.parse_args()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     print("Training on:", device)
-    config = get_config(args.name)
-    bsde = get_equation(args.name, config.dim, config.total_time, config.num_time_interval)
+    #config = get_config(args.name)
+    #bsde = get_equation(args.name, config.dim, config.total_time, config.num_time_interval)
 
     net = FeedForwardModel(config, bsde)
     net.to(device)
@@ -148,9 +148,6 @@ def train():
         net.train()
         loss, _ = net(x_train.to(device), dw_train.to(device))
         loss.backward()
-
         optimizer.step()
 
-
-if __name__ == '__main__':
-    train()
+    return np.array(training_history)

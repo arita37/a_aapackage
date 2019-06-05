@@ -13,8 +13,20 @@ import tensorflow as tf
 ####################################################################################################
 ####################################################################################################
 from config import get_config
-from equation import get_equation
-from solver import FeedForwardModel
+from equation import get_equation as get_equation_tf
+
+from equation_tch import get_equation as get_equation_tch
+
+from solver import FeedForwardModel as FFtf
+from solver_tch import train
+
+from argparse import ArgumentParser
+
+parser = ArgumentParser()
+parser.add_argument("--problem_name", type=str, default='AllenCahn')
+parser.add_argument("--num_run", type=int, default=1)
+parser.add_argument("--log_dir", type=str, default='./logs')
+parser.add_argument("--framework", type=str, default='tf')
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")
@@ -31,15 +43,19 @@ def log(s):
 
 
 def main():
-    problem_name = FLAGS.problem_name
-    config = get_config(problem_name)
-    bsde = get_equation(problem_name, config.dim, config.total_time, config.num_time_interval)
+    FLAGS = parser.parse_args()
+    config = get_config(FLAGS.problem_name)
 
-    print("Running ", problem_name)
+    if FLAGS.framework == 'tf':
+        bsde = get_equation_tf(FLAGS.problem_name, config.dim, config.total_time, config.num_time_interval)
+    elif FLAGS.framework == 'tch':
+        bsde = get_equation_tch(FLAGS.problem_name, config.dim, config.total_time, config.num_time_interval)
+
+    print("Running ", FLAGS.problem_name, " on: ", FLAGS.framework)
 
     if not os.path.exists(FLAGS.log_dir):
         os.mkdir(FLAGS.log_dir)
-    path_prefix = os.path.join(FLAGS.log_dir, problem_name)
+    path_prefix = os.path.join(FLAGS.log_dir, FLAGS.problem_name)
     with open("{}_config.json".format(path_prefix), "w") as outfile:
         json.dump(
             dict(
@@ -54,13 +70,17 @@ def main():
     #### Loop over run
     for idx_run in range(1, FLAGS.num_run + 1):
         tf.reset_default_graph()
-        with tf.Session() as sess:
-            log("Begin to solve %s with run %d" % (problem_name, idx_run))
-            log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
+        log("Begin to solve %s with run %d" % (FLAGS.problem_name, idx_run))
+        log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
+        if FLAGS.framework == 'tf':
+            with tf.Session() as sess:
+                model = FFtf(config, bsde, sess)
+                model.build()
+                training_history = model.train()
 
-            model = FeedForwardModel(config, bsde, sess)
-            model.build()
-            training_history = model.train()
+        elif FLAGS.framework == 'tch':
+            train(config, bsde)
+
             if bsde.y_init:
                 log(
                     "relative error of Y0: %s",

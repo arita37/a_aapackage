@@ -85,7 +85,7 @@ class ReactionDiffusionConfig(Config):
     num_time_interval = 30
     lr_values = list(np.array([1e-2, 1e-2, 1e-2]))
     lr_boundaries = [8000, 16000]
-    num_iterations = 24000
+    num_iterations = 100
     num_hiddens = [dim, dim+10, dim+10, dim]
 
 def get_config(name):
