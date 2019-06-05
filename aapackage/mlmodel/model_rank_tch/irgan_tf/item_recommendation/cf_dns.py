@@ -1,8 +1,10 @@
-import tensorflow as tf
-from dis_model_dns import DIS
 import cPickle
-import numpy as np
 import multiprocessing
+
+import numpy as np
+import tensorflow as tf
+
+from dis_model_dns import DIS
 
 cores = multiprocessing.cpu_count()
 

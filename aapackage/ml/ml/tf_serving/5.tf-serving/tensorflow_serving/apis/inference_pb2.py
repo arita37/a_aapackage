@@ -9,14 +9,12 @@ from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
 
-from tensorflow_serving.apis import (
-    classification_pb2 as tensorflow__serving_dot_apis_dot_classification__pb2,
-)
+from tensorflow_serving.apis import \
+    classification_pb2 as tensorflow__serving_dot_apis_dot_classification__pb2
 from tensorflow_serving.apis import input_pb2 as tensorflow__serving_dot_apis_dot_input__pb2
 from tensorflow_serving.apis import model_pb2 as tensorflow__serving_dot_apis_dot_model__pb2
-from tensorflow_serving.apis import (
-    regression_pb2 as tensorflow__serving_dot_apis_dot_regression__pb2,
-)
+from tensorflow_serving.apis import \
+    regression_pb2 as tensorflow__serving_dot_apis_dot_regression__pb2
 
 _b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
 

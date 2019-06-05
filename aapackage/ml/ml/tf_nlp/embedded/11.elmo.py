@@ -8,11 +8,11 @@ import collections
 import os
 
 import numpy as np
+import tensorflow as tf
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 
-import tensorflow as tf
 from utils import *
 
 # In[2]:

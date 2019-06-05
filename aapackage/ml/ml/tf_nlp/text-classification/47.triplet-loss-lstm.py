@@ -10,11 +10,11 @@ import time
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+import tensorflow as tf
 from matplotlib import offsetbox
 from scipy.spatial.distance import cdist
 from sklearn.cross_validation import train_test_split
 
-import tensorflow as tf
 from utils import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""

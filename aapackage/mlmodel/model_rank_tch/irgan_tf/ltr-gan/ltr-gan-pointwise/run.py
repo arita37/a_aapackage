@@ -1,12 +1,13 @@
-import tensorflow as tf
-from gen_model_nn import GEN
 import cPickle
+
+import tensorflow as tf
+
 import utils as ut
 from eval.map import MAP
 from eval.mrr import MRR
-from eval.precision import precision_at_k
 from eval.ndcg import ndcg_at_k
-
+from eval.precision import precision_at_k
+from gen_model_nn import GEN
 
 FEATURE_SIZE = 46
 HIDDEN_SIZE = 46

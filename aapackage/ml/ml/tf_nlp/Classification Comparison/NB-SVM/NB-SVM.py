@@ -12,12 +12,8 @@ from scipy import sparse
 from sklearn import metrics
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.cross_validation import train_test_split
-from sklearn.feature_extraction.text import (
-    CountVectorizer,
-    HashingVectorizer,
-    TfidfTransformer,
-    TfidfVectorizer,
-)
+from sklearn.feature_extraction.text import (CountVectorizer, HashingVectorizer,
+                                             TfidfTransformer, TfidfVectorizer)
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedKFold

@@ -1,10 +1,12 @@
+import cPickle
+import multiprocessing
+
+import numpy as np
 import tensorflow as tf
+
+import utils as ut
 from dis_model import DIS
 from gen_model import GEN
-import cPickle
-import numpy as np
-import utils as ut
-import multiprocessing
 
 cores = multiprocessing.cpu_count()
 

@@ -9,10 +9,9 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn import metrics
 from sklearn.datasets import fetch_20newsgroups
-
-import tensorflow as tf
 
 # In[2]:
 

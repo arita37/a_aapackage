@@ -16,7 +16,6 @@ import re
 
 import numpy as np
 import sklearn.datasets
-
 # to get f1 score
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split

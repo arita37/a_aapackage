@@ -1,9 +1,9 @@
-import sys
 import re
+import sys
 from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import numpy as np
-import re
 
 # f = open(sys.argv[1], "r")
 f = open("groundtruth_random_level_1", "r")

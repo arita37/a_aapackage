@@ -11,10 +11,9 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-import tensorflow as tf
 
 # In[3]:
 

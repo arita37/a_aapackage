@@ -2,10 +2,8 @@
 # pylint: disable=C0103,W0601,E1123,W0614,F0401,E1120,E1101,E0611,W0702
 
 import argparse
-import arrow
 import copy
 import csv
-
 # stdlib imports
 import logging
 import os
@@ -19,6 +17,7 @@ from collections import namedtuple
 from datetime import datetime
 from time import sleep, time
 
+import arrow
 # non-stdlib imports
 import psutil
 

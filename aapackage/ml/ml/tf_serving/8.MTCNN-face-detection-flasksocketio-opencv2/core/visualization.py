@@ -4,10 +4,10 @@ import matplotlib.cm as mpcm
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 from scipy import misc
 
 import cv2
-import tensorflow as tf
 
 
 # =========================================================================== #

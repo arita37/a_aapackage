@@ -1,9 +1,8 @@
 import json
 
 import numpy as np
-from tornado.web import Application, RequestHandler, asynchronous
-
 import tensorflow as tf
+from tornado.web import Application, RequestHandler, asynchronous
 
 
 def load_graph(frozen_graph_filename):

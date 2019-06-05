@@ -11,9 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.preprocessing import MinMaxScaler
-
 import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
 
 sns.set()
 

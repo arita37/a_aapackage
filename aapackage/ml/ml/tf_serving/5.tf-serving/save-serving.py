@@ -9,10 +9,10 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import tensorflow as tf
 from grpc.beta import implementations
 from tensorflow.examples.tutorials.mnist import input_data
+
 from tensorflow_serving.apis import predict_pb2, prediction_service_pb2
 
 # In[2]:

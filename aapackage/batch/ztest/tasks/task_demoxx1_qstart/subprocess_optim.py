@@ -11,14 +11,13 @@ loads the file "parameters.toml", located at its same folder.
 import os
 import sys
 
+import arrow
 import pandas as pd
 import toml
-
 #########################################################################################
 ######## Custom Code ####################################################################
 from scipy import optimize
 
-import arrow
 from aapackage import util_log
 from utils import OUTFOLDER, load_data_session, os_chdir, os_folder_create, save_results
 

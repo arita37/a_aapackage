@@ -13,9 +13,9 @@ get_ipython().system("pip3 install tqdm requests dill")
 import os
 
 import requests
+import tensorflow as tf
 from tqdm import tqdm
 
-import tensorflow as tf
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 from pyspark.ml.feature import OneHotEncoder, VectorAssembler
 from pyspark.ml.pipeline import Pipeline

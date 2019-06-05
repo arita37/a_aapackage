@@ -10,12 +10,12 @@ import os
 import re
 
 import numpy as np
+import tensorflow as tf
 from scipy.spatial.distance import cdist
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import shuffle
 from tqdm import tqdm
 
-import tensorflow as tf
 from unidecode import unidecode
 from utils import *
 

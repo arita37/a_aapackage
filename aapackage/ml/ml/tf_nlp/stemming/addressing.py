@@ -18,8 +18,9 @@ from __future__ import absolute_import, division, print_function
 
 import collections
 
-import sonnet as snt
 import tensorflow as tf
+
+import sonnet as snt
 import util
 
 # Ensure values are greater than epsilon to avoid numerical instability.

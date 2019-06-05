@@ -1,5 +1,6 @@
-import tensorflow as tf
 import cPickle
+
+import tensorflow as tf
 
 
 class GEN:

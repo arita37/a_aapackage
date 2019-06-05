@@ -1,6 +1,7 @@
-import numpy as np
-import random
 import math
+import random
+
+import numpy as np
 
 
 def build_vocab():
@@ -141,4 +142,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-   

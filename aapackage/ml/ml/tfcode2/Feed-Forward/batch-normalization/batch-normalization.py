@@ -6,9 +6,8 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import tqdm
-
 import tensorflow as tf
+import tqdm
 from tensorflow.examples.tutorials.mnist import input_data
 
 get_ipython().run_line_magic("matplotlib", "inline")

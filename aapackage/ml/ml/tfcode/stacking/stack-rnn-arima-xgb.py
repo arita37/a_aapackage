@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
+import tensorflow as tf
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
@@ -19,7 +20,6 @@ from sklearn.preprocessing import MinMaxScaler
 
 import autoencoder
 import model
-import tensorflow as tf
 import xgboost as xgb
 from xgboost import plot_importance
 

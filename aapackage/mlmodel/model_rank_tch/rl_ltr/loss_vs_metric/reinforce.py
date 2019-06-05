@@ -4,17 +4,18 @@
     Date created: 5/1/17 1:10 PM
 '''
 
+import argparse
+import os
+import re
+import time
 from collections import defaultdict
 
-import re
-import torch
-import argparse
-import torch.nn as nn
-from torch.autograd import Variable
-import utils
 import numpy as np
-import os
-import time
+
+import torch
+import torch.nn as nn
+import utils
+from torch.autograd import Variable
 
 dtype = torch.FloatTensor
 
@@ -345,8 +346,3 @@ while True:
                        args.eval_output + ".valid", neg_log_sum_loss)
             model.eval(input_test_unsorted, output_test_unsorted, args.test_output, args.test_set,
                        args.eval_output + ".test", neg_log_sum_loss)
-
-
-
-
-

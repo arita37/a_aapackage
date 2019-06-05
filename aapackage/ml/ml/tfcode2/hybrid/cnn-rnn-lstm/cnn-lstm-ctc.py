@@ -9,10 +9,10 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 from scipy.misc import imresize
 
 import cv2
-import tensorflow as tf
 
 # In[2]:
 

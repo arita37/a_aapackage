@@ -1,14 +1,15 @@
 import cPickle
 import random
-import tensorflow as tf
+
 import numpy as np
-from eval.precision import precision_at_k
-from eval.ndcg import ndcg_at_k
-from eval.map import MAP
-from eval.mrr import MRR
+import tensorflow as tf
+
 import utils as ut
 from dis_model_pointwise_nn import DIS
-
+from eval.map import MAP
+from eval.mrr import MRR
+from eval.ndcg import ndcg_at_k
+from eval.precision import precision_at_k
 
 FEATURE_SIZE = 46
 HIDDEN_SIZE = 46

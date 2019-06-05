@@ -5,6 +5,10 @@ Utilities to calculate States for Stock Selection
 import copy
 
 import numpy as np
+#####################################################################################
+####################  Pqttern Detection in Past dta #################################
+from numba import jit
+
 import portfolio as pf
 
 try:
@@ -304,9 +308,6 @@ def export_tocsv(l1):
 #####################################################################################
 
 
-#####################################################################################
-####################  Pqttern Detection in Past dta #################################
-from numba import jit
 
 
 @jit

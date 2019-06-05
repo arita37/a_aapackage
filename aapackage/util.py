@@ -25,6 +25,7 @@ import sys
 import time
 import zipfile
 
+import arrow
 import IPython
 import matplotlib.pyplot as plt
 import numexpr as ne
@@ -35,18 +36,14 @@ import psutil
 import scipy as sci
 import scipy.optimize
 from bs4 import BeautifulSoup
-
 # Date Manipulation
 from dateutil import parser
-
 # noinspection PyUnresolvedReferences
 from future import standard_library
 from numba import float32, jit
-
 # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 from past.utils import old_div
 
-import arrow
 import dill
 
 standard_library.install_aliases()

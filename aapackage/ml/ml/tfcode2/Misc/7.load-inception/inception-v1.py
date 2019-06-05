@@ -8,11 +8,11 @@ import json
 import os
 
 import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 from scipy.misc import imread, imresize
 
 import inception_v1
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
 
 # just remove line below if want to use GPU
 # os.environ['CUDA_VISIBLE_DEVICES'] = ''

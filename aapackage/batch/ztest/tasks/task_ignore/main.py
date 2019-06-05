@@ -17,12 +17,11 @@ import sys
 import time
 from functools import partial
 
+import arrow
 import numpy as np
 import pandas as pd
 import psutil
 import toml
-
-import arrow
 
 ################### Generic ###############################################################
 from aapackage import util_log

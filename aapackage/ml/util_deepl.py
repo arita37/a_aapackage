@@ -5,6 +5,7 @@ import pickle
 from time import gmtime, strftime
 
 import numpy
+
 import theano
 
 rng = numpy.random

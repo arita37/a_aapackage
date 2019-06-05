@@ -31,7 +31,6 @@ Auto-Scale :
 """
 import argparse
 import copy
-
 #################################################################################
 import json
 import logging
@@ -40,13 +39,13 @@ import re
 import subprocess
 import sys
 import warnings
-from time import sleep
 from datetime import datetime
+from time import sleep
+
 import paramiko
 from aapackage import util_log
 from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
-
 ################################################################################
 from aapackage.util_log import logger_setup
 

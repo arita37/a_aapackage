@@ -1,7 +1,6 @@
 import numpy as np
-from scipy.stats import multivariate_normal as normal
-
 import tensorflow as tf
+from scipy.stats import multivariate_normal as normal
 
 
 class Equation(object):

@@ -9,11 +9,11 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import tensorflow as tf
 from scipy.misc import imresize
 from sklearn.cross_validation import train_test_split
 
 import _pickle as cPickle
-import tensorflow as tf
 from train import train
 
 

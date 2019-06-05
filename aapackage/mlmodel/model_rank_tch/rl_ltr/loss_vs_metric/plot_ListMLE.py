@@ -1,9 +1,9 @@
-import sys
 import re
+import sys
 from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import numpy as np
-import re
 
 max_vali_map_epoch_index = -1
 max_train_map_epoch_index = -1

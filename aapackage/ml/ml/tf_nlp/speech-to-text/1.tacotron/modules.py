@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from setting import embed_size
 
 

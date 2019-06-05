@@ -13,12 +13,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import sklearn.datasets
+import tensorflow as tf
 from matplotlib import offsetbox
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
 from sklearn.manifold import TSNE
-
-import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
 

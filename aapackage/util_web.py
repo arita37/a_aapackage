@@ -5,17 +5,17 @@ from __future__ import division
 # if sys.platform.find('win') > -1 :
 #  from guidata import qthelpers  #Otherwise Erro with Spyder Save
 import os
-import requests
 import sys
 from builtins import str
 
 import numpy as np
+import requests
 import urllib3
+from bs4 import BeautifulSoup
+from future import standard_library
 
 # noinspection PyUnresolvedReferences
 from attrdict import AttrDict as dict2
-from bs4 import BeautifulSoup
-from future import standard_library
 
 standard_library.install_aliases()
 

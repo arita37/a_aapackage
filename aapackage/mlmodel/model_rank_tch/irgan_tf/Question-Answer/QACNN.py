@@ -1,8 +1,11 @@
 #coding=utf-8
-import tensorflow as tf 
-import numpy as np 
-import  pickle
+import pickle
 import time
+
+import numpy as np
+import tensorflow as tf
+
+
 class QACNN():
     
     def __init__(self, sequence_length, batch_size,vocab_size, embedding_size,filter_sizes, num_filters, dropout_keep_prob=1.0,l2_reg_lambda=0.0,paras=None,learning_rate=1e-2,embeddings=None,loss="pair",trainable=True):
@@ -122,5 +125,3 @@ class QACNN():
         param = sess.run([self.Embedding_W,self.kernels])
         pickle.dump(param, open(filename, 'w'))
         return filename
-
-

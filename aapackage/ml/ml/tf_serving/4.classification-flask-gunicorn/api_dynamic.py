@@ -3,11 +3,11 @@ import pickle
 import time
 
 import numpy as np
+import tensorflow as tf
 from flask import Flask, render_template, request
 from werkzeug import secure_filename
 
 import model
-import tensorflow as tf
 from flask_cors import CORS
 
 app = Flask(__name__)

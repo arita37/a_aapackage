@@ -9,7 +9,6 @@ exec (open("D:/_devs/keypair/aws_access.py").read(), globals())
 from __future__ import division, print_function
 
 import csv
-
 ###############################################################################
 import os
 import sys

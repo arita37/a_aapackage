@@ -2,12 +2,12 @@ import os
 import time
 
 import numpy as np
+import tensorflow as tf
 from scipy import misc
 from sklearn.model_selection import train_test_split
 
 import graph
 import model
-import tensorflow as tf
 import utils
 from settings import *
 

@@ -7,21 +7,17 @@ Logic follows Scikit Learn API and simple for easy extentions.Logic
 
 
 """
+import argparse
 import glob
 import os
 import re
-import argparse
 from importlib import import_module
 
 # from aapackage.mlmodel import util
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-
-
 from util import load_config
-
-
 
 
 #################################################################################
@@ -142,6 +138,3 @@ if __name__ == "__main__":
         module, _ = create(args.modelname, None)  # '1_lstm'
         print(module)
         module.test()
-
-
-

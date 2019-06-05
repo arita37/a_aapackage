@@ -1,11 +1,13 @@
-import torch
 import argparse
-import torch.nn as nn
-from torch.autograd import Variable
-import utils
-import numpy as np
 import os
 import sys
+
+import numpy as np
+
+import torch
+import torch.nn as nn
+import utils
+from torch.autograd import Variable
 
 dtype = torch.FloatTensor
 

@@ -8,13 +8,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import tensorflow as tf
 from IPython.display import HTML
 from matplotlib import animation
 from sklearn.cross_validation import train_test_split
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-
-import tensorflow as tf
 
 sns.set()
 

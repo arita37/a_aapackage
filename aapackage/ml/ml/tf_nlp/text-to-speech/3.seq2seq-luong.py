@@ -6,10 +6,10 @@
 
 import os
 
+import tensorflow as tf
 from scipy.io.wavfile import write
 from tqdm import tqdm
 
-import tensorflow as tf
 from utils import *
 
 # In[2]:

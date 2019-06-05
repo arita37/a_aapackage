@@ -9,12 +9,12 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 from scipy.misc import imread
 
 import cv2
 import inception_v1
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
 
 # In[2]:
 

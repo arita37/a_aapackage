@@ -3,9 +3,9 @@ import random
 import time
 
 import numpy as np
+import tensorflow as tf
 
 import parse
-import tensorflow as tf
 from model import *
 
 data, vocab = parse.get_vocab('essay')

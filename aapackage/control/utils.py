@@ -1,12 +1,12 @@
-from math import sqrt, exp, log
-from scipy.linalg import cholesky
-import scipy as sp
-import numpy as np
-import numexpr as ne
-import pandas as pd
-
+from math import exp, log, sqrt
 # from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
 from timeit import default_timer as timer
+
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sp
+from scipy.linalg import cholesky
 
 
 def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):

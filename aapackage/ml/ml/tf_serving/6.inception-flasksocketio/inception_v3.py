@@ -16,8 +16,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-import inception_utils
 import tensorflow as tf
+
+import inception_utils
 
 slim = tf.contrib.slim
 trunc_normal = lambda stddev: tf.truncated_normal_initializer(0.0, stddev)

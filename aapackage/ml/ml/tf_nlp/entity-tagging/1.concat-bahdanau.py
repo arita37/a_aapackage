@@ -9,12 +9,12 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from bs4 import BeautifulSoup
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import classification_report
 from tqdm import tqdm
 
-import tensorflow as tf
 from keras.utils import to_categorical
 
 # In[2]:

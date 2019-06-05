@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
 import tensorflow as tf
 import tensorflow.contrib as tf_contrib
 from tensorflow.contrib import rnn

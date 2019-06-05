@@ -1,17 +1,17 @@
 """
 Common function used in training Learn to Rank
 """
+import os
 from argparse import ArgumentParser, ArgumentTypeError
 from collections import defaultdict
-import os
 
 import numpy as np
 import pandas as pd
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from load_mslr import get_time, DataLoader
+from load_mslr import DataLoader, get_time
 from metrics import NDCG
 
 

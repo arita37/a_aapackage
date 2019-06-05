@@ -10,11 +10,11 @@ import re
 import time
 
 import numpy as np
+import tensorflow as tf
 from sklearn.utils import shuffle
+from tensorflow.contrib.training import HParams
 
 import gpt_2
-import tensorflow as tf
-from tensorflow.contrib.training import HParams
 
 # In[2]:
 

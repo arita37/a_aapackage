@@ -7,7 +7,6 @@
 from copy import deepcopy
 
 import numpy as np
-
 import tensorflow as tf
 
 # In[2]:

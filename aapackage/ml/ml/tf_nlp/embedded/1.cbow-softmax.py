@@ -7,9 +7,9 @@
 import time
 from collections import Counter
 
+import tensorflow as tf
 from sklearn.cross_validation import train_test_split
 
-import tensorflow as tf
 from utils import *
 
 # In[2]:

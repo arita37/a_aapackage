@@ -12,10 +12,9 @@ import time
 
 import numpy as np
 import sklearn.datasets
+import tensorflow as tf
 from sklearn import metrics
 from sklearn.cross_validation import train_test_split
-
-import tensorflow as tf
 
 # In[2]:
 

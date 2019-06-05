@@ -11,7 +11,6 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-
 # -----Multivariate regression ---------------------------------------------
 import warnings
 from datetime import datetime
@@ -21,25 +20,21 @@ import numba
 import numpy as np
 import pandas as pd
 import requests
-
 # --------------------Import Quotes Google  ------------------------------------------
 import requests.packages.urllib3
 import scipy as sci
 import sklearn as sk
-import util
-
 #################### Finviz  ###############################################################
 from bs4 import BeautifulSoup
+# from matplotlib.finance import quotes_historical_yahoo_ochl
+from numba import float32, float64, int32, int64, jit
+# --------------------Calculate Rank Table    ---------------------------------------
+from scipy.stats import norm
 
+import util
 # noinspection PyUnresolvedReferences
 from fin import technical_indicator as ta
 from fin.alldata import *
-
-# from matplotlib.finance import quotes_historical_yahoo_ochl
-from numba import float32, float64, int32, int64, jit
-
-# --------------------Calculate Rank Table    ---------------------------------------
-from scipy.stats import norm
 from tabulate import tabulate
 from util import date_getspecificdate
 

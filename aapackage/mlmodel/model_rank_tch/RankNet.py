@@ -13,21 +13,13 @@ The loss function can use cross entropy loss.
 import os
 
 import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from load_mslr import get_time
-from utils import (
-    eval_cross_entropy_loss,
-    eval_ndcg_at_k,
-    get_device,
-    get_ckptdir,
-    init_weights,
-    load_train_vali_data,
-    get_args_parser,
-    save_to_ckpt,
-)
+from utils import (eval_cross_entropy_loss, eval_ndcg_at_k, get_args_parser, get_ckptdir,
+                   get_device, init_weights, load_train_vali_data, save_to_ckpt)
 
 
 class RankNet(nn.Module):

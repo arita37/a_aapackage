@@ -4,11 +4,11 @@ import json
 import time
 
 import numpy as np
+import tensorflow as tf
 
 import luigi
 import luigi.contrib.hadoop
 import luigi.contrib.hdfs
-import tensorflow as tf
 
 
 class Split_text(luigi.Task):

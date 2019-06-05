@@ -2,9 +2,9 @@ import json
 import re
 
 import numpy as np
+import tensorflow as tf
 
 import luigi
-import tensorflow as tf
 from elasticsearch import Elasticsearch, helpers
 
 

@@ -9,10 +9,10 @@ import random
 import time
 
 import numpy as np
+import tensorflow as tf
 from tqdm import tqdm
 
 import librosa
-import tensorflow as tf
 
 # In[2]:
 

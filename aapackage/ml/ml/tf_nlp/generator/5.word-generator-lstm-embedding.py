@@ -10,9 +10,8 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from tqdm import tqdm
-
 import tensorflow as tf
+from tqdm import tqdm
 
 sns.set()
 

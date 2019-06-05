@@ -8,14 +8,14 @@ import os
 from random import shuffle
 
 import numpy as np
+import tensorflow as tf
+import tensorflow.contrib.slim as slim
 from scipy.misc import imread, imresize
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder
 from tqdm import tqdm
 
 import mobilenet_v2
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
 
 tf.__version__
 

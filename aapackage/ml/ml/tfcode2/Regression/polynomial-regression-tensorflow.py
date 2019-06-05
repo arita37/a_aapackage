@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import tensorflow as tf
 from IPython.display import HTML
 from matplotlib import animation
-
-import tensorflow as tf
 
 sns.set()
 df = pd.read_csv("TempLinkoping2016.csv")

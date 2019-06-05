@@ -1,10 +1,12 @@
 import re
-import numpy as np
-from collections import defaultdict
 import sys
-from torch.autograd import Variable
-import torch
 import time
+from collections import defaultdict
+
+import numpy as np
+
+import torch
+from torch.autograd import Variable
 
 dtype = torch.FloatTensor
 

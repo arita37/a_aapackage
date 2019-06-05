@@ -10,10 +10,9 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import tensorflow as tf
 from IPython.display import HTML
 from matplotlib import animation
-
-import tensorflow as tf
 
 sns.set()
 

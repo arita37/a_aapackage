@@ -12,7 +12,6 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-
 # -----Multivariate regression ---------------------------------------------
 import warnings
 from calendar import isleap
@@ -23,18 +22,15 @@ import numba
 import numpy as np
 import pandas as pd
 import requests
-
 # --------------------Import Quotes Google  ------------------------------------------
 import requests.packages.urllib3
 import scipy as sci
 import sklearn as sk
-
 #################### Finviz  ###############################################################
 from bs4 import BeautifulSoup
 from dateutil import parser, tz
 from matplotlib.finance import quotes_historical_yahoo_ochl
 from numba import float32, float64, int32, int64, jit
-
 # --------------------Calculate Rank Table    ---------------------------------------
 from scipy.stats import norm
 

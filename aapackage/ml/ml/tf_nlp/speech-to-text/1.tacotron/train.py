@@ -6,9 +6,9 @@
 import os
 
 import numpy as np
+import tensorflow as tf
 from tqdm import tqdm
 
-import tensorflow as tf
 from model import Model
 from setting import batch_size, get_cached, idx2char, n_mels, reduction_factor, text2idx
 
