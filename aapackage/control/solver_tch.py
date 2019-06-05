@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.nn import Parameter
 
 from config import get_config
-from equation import get_equation
+from equation_tch import get_equation
 
 from argparse import ArgumentParser
 
