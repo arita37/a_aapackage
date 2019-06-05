@@ -46,6 +46,12 @@ class Equation(object):
     def delta_t(self):
         return self._delta_t
 
+def get_equation(name, dim, total_time, num_time_interval):
+    try:
+        return globals()[name](dim, total_time, num_time_interval)
+    except KeyError:
+        raise KeyError("Equation for the required problem not found.")
+
 
 class AllenCahn(Equation):
     def __init__(self, dim, total_time, num_time_interval):

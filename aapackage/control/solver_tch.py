@@ -4,8 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 
-import configs
-import equations
+import config
+import equation_tch
 
 import time
 
