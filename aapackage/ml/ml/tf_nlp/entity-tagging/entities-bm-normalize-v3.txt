@@ -7649,7 +7649,7 @@ Presiden PRN KN
 Majlis PRN KN
 Olimpik PRN KN
 Malaysia PRN KN
-(MOM), PRN KN
+(mom), PRN KN
 Datuk PRN KN
 Seri PRN KN
 Norza PRN KN
@@ -7791,7 +7791,7 @@ yang O KETERANGAN
 hadir. O KJ
 Setiausaha PRN KN
 Agung PRN KN
-MOM, PRN KN
+mom, PRN KN
 Datuk PRN KN
 Mohd PRN KN
 Nazifuddin PRN KN

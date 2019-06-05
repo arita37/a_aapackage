@@ -1402,7 +1402,7 @@ def volhistorolling_fromprice(price, volrange):
 
 # Technical Indicator on Daily return
 def rsk_calc_all_TA(df="panda_dataframe"):
-    """Add All TA RMI, RSI To the """
+    """Add All TA rmi, rsi To the """
     # try :
     df = ta.MA(df, 200)
     df = ta.MA(df, 50)
@@ -1435,24 +1435,24 @@ def rsk_calc_all_TA(df="panda_dataframe"):
     df = ta.optionexpiry_dist(df)
 
     """     
-  df= ta.MACD(df, 12, 26)
-  df= ta.CCI(df, 14)
-  df= ta.STO(df, 14 )  #Stochastic 
-  df= ta.ADX(df, 14, 3)  #ADX
+  df= ta.macd(df, 12, 26)
+  df= ta.cci(df, 14)
+  df= ta.sto(df, 14 )  #Stochastic 
+  df= ta.adx(df, 14, 3)  #adx
 
-  df= ta.PPSR(df)
-  df= ta.Vortex(df, 14)
-  df= ta.TSI(df, 20, 5)
-  df= ta.ACCDIST(df, 20)
-  df= ta.Chaikin(df)
-  df= ta. MFI(df, 7)
-  df= ta.OBV(df, 5)
-  df= ta.FORCE(df,10)
-  df= ta.EOM(df, 14)
-  df= ta.COPP(df, 14)
-  df= ta.KELCH(df, 14)
-  df= ta.ULTOSC(df)
-  df= ta.DONCH(df, 14)
+  df= ta.ppsr(df)
+  df= ta.vortex(df, 14)
+  df= ta.tsi(df, 20, 5)
+  df= ta.accdist(df, 20)
+  df= ta.chaikin(df)
+  df= ta. mfi(df, 7)
+  df= ta.obv(df, 5)
+  df= ta.force(df,10)
+  df= ta.eom(df, 14)
+  df= ta.copp(df, 14)
+  df= ta.kelch(df, 14)
+  df= ta.ultosc(df)
+  df= ta.donch(df, 14)
  #except: pass 
   """
     return df
@@ -6386,9 +6386,9 @@ def calc_statestock(close2, dateref, symfull):
     #  try :
     #   res2=0
     # df= pd.read_hdf(dbfile, symfull[i])
-    # stat[i,110]= ta.RMI(close2[i,:])
-    # stat[i,111]= 100*close2[i,:] / ta.MA(close2[i,:],20)
-    # stat[i,112]= 100*close2[i,:] / ta.MA(close2[i,:],50)
+    # stat[i,110]= ta.rmi(close2[i,:])
+    # stat[i,111]= 100*close2[i,:] / ta.ma(close2[i,:],20)
+    # stat[i,112]= 100*close2[i,:] / ta.ma(close2[i,:],50)
     #  except: pass
 
     return np.array(stat, dtype=np.float16)

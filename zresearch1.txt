@@ -6,7 +6,7 @@ raw data : time series as main factors, PCA.
 
 Feature data : combinaison of time series
    ratio1, substract,
-   1mth MA, 2mth MA.
+   1mth ma, 2mth ma.
    1 mth regression slope,
    3 mth slope.
 

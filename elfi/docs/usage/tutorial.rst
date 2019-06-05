@@ -29,11 +29,11 @@ settings.
     seed = 20170530  # this will be separately given to ELFI
     np.random.seed(seed)
 
-Inference with ELFI: case MA(2) model
+Inference with ELFI: case ma(2) model
 -------------------------------------
 
 Throughout this tutorial we will use the 2nd order moving average model
-MA(2) as an example. MA(2) is a common model used in univariate time
+ma(2) as an example. ma(2) is a common model used in univariate time
 series analysis. Assuming zero mean it can be written as
 
 .. math::
@@ -50,7 +50,7 @@ The observed data and the inference problem
 
 In this tutorial, our task is to infer the parameters
 :math:`\theta_1, \theta_2` given a sequence of 100 observations
-:math:`y` that originate from an MA(2) process. Let’s define the MA(2)
+:math:`y` that originate from an ma(2) process. Let’s define the ma(2)
 simulator as a Python function:
 
 .. code:: ipython3
@@ -204,7 +204,7 @@ one or more summary statistics and then calculates the discrepancy
 between those.
 
 Here, we will apply the intuition arising from the definition of the
-MA(2) process, and use the autocovariances with lags 1 and 2 as the
+ma(2) process, and use the autocovariances with lags 1 and 2 as the
 summary statistics. Note that since the rows of ``x`` correspond to
 independent simulations, we have to tell this numpy function to take
 row-wise means by the keyword argument ``axis=1``:
