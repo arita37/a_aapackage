@@ -2,13 +2,20 @@
 """
 Utilities to calculate States for Stock Selection 
 """
+import copy
+
+import numpy as np
+import portfolio as pf
+
 try:
+    # noinspection PyUnresolvedReferences,PyUnboundLocalVariable
     n = len(symfull)
     del n
 except:
     symfull = []
 
 try:
+    # noinspection PyUnresolvedReferences,PyUnboundLocalVariable
     n = len(dateref)
     del n
 except:
@@ -21,7 +28,7 @@ def sort(x, col, asc):
     return util.sortcol(x, col, asc)
 
 
-def perf(close, t0, t1):
+def perf(close2, t0, t1):
     return 100 * (close2[:, t1] / close2[:, t0] - 1)
 
 
@@ -86,6 +93,7 @@ def printn(ss):
 
 
 def show(ll):
+    global s1
     if type(ll) == str:
         ll = [ll]
     for x in ll:
@@ -237,7 +245,9 @@ def add_position(longlist, shortlist, name1="stock_select_history_v1"):
     return select_hist
 
 
-def add_stock(l1, type1="", comment="", name1="stock_select_history_v1", date1=dateref):
+def add_stock(l1, type1="", comment="", name1="stock_select_history_v1", date1=None):
+    if date1 is None:
+        date1 = dateref
     t1 = util.date_now()
     select_hist = util.load_obj(name1)
     kid = util.find(None, select_hist[:, 0])
@@ -261,6 +271,7 @@ def add_stock(l1, type1="", comment="", name1="stock_select_history_v1", date1=d
 
 
 def show_select_history(type1="buy"):
+    global select_hist
     aux = ""
     for vv in select_hist:
         if vv is not None:
@@ -295,7 +306,7 @@ def export_tocsv(l1):
 
 #####################################################################################
 ####################  Pqttern Detection in Past dta #################################
-from numba import float32, int32, jit
+from numba import jit
 
 
 @jit
@@ -355,7 +366,7 @@ def getprediction(Ytest, symfull):
 # return aux
 
 
-def dd(t):
+def dd2(t):
     x = util.find(t, dateref)  # 607
     if x == -1:
         print("Error date not found")
@@ -365,6 +376,7 @@ def dd(t):
 
 
 def getYpositivecase(stk_select, t, dateref):
+    global statt
     t1 = util.find(t, dateref)
     stkselect_t = stk_select[stk_select[:, 0] == t1]
     Ytrain = np.zeros(np.shape(statt)[0], dtype=np.float16)

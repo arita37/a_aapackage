@@ -17,32 +17,15 @@ Modified in hard  pypi Version number
 """
 from __future__ import absolute_import, division, print_function
 
-import ast
-import builtins
-import glob
-import inspect
-import math
-import operator
 import os
 import os.path as op
-import platform
 import re
 import sys
-from collections import OrderedDict
-from importlib import import_module
-from pkgutil import walk_packages
 from subprocess import call
 
-import future
-import past
 import six
-from six.moves import input
-
-import regex
-from attrdict import AttrDict as dict2
-from configmy.codesource import ztest
-from configmy.configmy import ztest
 from github3 import login
+from six.moves import input
 
 DIRCWD = os.getcwd()
 print(DIRCWD)
@@ -67,10 +50,12 @@ def os_cmd(cmd, system=False):
 
 
 def pypi_update_version(findStr, filePath):
-    "replaces all findStr by repStr in file filePath"
+    """replaces all findStr by repStr in file filePath"""
     import fileinput
 
+    line0 = None
     file1 = fileinput.FileInput(filePath, inplace=True, backup=".bak")
+    version_new = None
     for line in file1:
         if line.find(findStr) == 0:
             # line= '__version__ = "0.12.2"'
@@ -141,9 +126,10 @@ def _update_version(dev_n="+1", file0="__init__.py", dev=True):
 
     def func(m):
         if dev:
+            n = None
             if isinstance(dev_n, six.string_types):
                 n = int(m.group(3)) + int(dev_n)
-            assert n >= 0
+            assert n is not None and n >= 0
         else:
             n = ""
         if not m.group(2):
@@ -228,6 +214,10 @@ def _test_docker():
 
 # -----------------------------------------------------------------------------
 # Release functions
+def _upload_pypi():
+    _call("python setup.py sdist --formats=zip upload")
+
+
 def release_test():
     _increment_dev_version()
     _upload_pypi()

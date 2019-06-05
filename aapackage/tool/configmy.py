@@ -2,23 +2,14 @@
 from __future__ import absolute_import, division, print_function
 
 import ast
-import builtins
-import glob
 import inspect
-import operator
 import os
 import platform
-import re
+import subprocess
 import sys
-from collections import OrderedDict
-from importlib import import_module
-from pkgutil import walk_packages
-
-import future
-import past
 
 import arrow
-import regex
+# noinspection PyUnresolvedReferences
 from attrdict import AttrDict as dict2
 
 ####################################################################################################
@@ -32,6 +23,7 @@ __all__ = ["get_environ_details", "get_config_from_environ", "get", "set"]
 CONFIGMY_ROOT_FILE = "CONFIGMY_ROOT_FILE"
 
 try:
+    # noinspection PyUnresolvedReferences
     import configmy
 
     PACKAGE_PATH = configmy.__path__[0] + "/"
@@ -74,6 +66,7 @@ def os_grep(search, folder="/home/ubuntu/", exclude=""):
 
 
 ####################################################################################################
+# noinspection PyTypeChecker
 def get_environ_details(isprint=0):
     """
   Calculate environnment details
@@ -99,7 +92,7 @@ def get_environ_details(isprint=0):
         return CFG
 
 
-def get_config_from_environ(CFG, dd_config_all, method0=["os", "username"]):
+def get_config_from_environ(CFG, dd_config_all, method0=None):
     """
     Create unique id from method, using environnment details
     :param CFG: 
@@ -116,6 +109,8 @@ def get_config_from_environ(CFG, dd_config_all, method0=["os", "username"]):
     """
 
     # Check configmy_root_file for method0
+    if method0 is None:
+        method0 = ["os", "username"]
     method_default = "os_username"
     if "_".join(method0) == method_default:
         try:
@@ -139,12 +134,16 @@ def get_config_from_environ(CFG, dd_config_all, method0=["os", "username"]):
     return dd_config
 
 
-def get(config_file="_ROOT", method0=["os", "username"], output=["_CFG", "DIRCWD"]):
+def get(config_file="_ROOT", method0=None, output=None):
     """ Get the config dictionary.
     method0:       os, username, pythonversion  
     config_file:  _ROOT: os.environ["CONFIGMY_ROOT_FILE"]  /   CONFIGMY_ROOT_FILE.py
     outputs:      _ALL: full file, _CFG : Config File,  DIRCWD root directory 
     """
+    if method0 is None:
+        method0 = ["os", "username"]
+    if output is None:
+        output = ["_CFG", "DIRCWD"]
     try:
         if config_file == "_ROOT":
             config_file = os.environ[CONFIGMY_ROOT_FILE]
@@ -252,13 +251,18 @@ def conda_env_list():
     return ll
 
 
-def conda_install(package_list=["configmy==0.13.5"], condaenv_list=[], install_tool="pip/conda"):
+def conda_install(package_list=None, condaenv_list=None, install_tool="pip/conda"):
     """
     #  /anaconda/envs/venv_name/bin/pip install
     Cannot install on root, please install manually, No-deps, no update
     """
+    if package_list is None:
+        package_list = ["configmy==0.13.5"]
+    if condaenv_list is None:
+        condaenv_list = []
     import os, sys
 
+    DIR1 = DIR2 = DIRANA = None
     if os.__file__.find("envs") > -1:
         DIRANA = os.__file__.split("envs")[0]  # Anaconda Directory
     elif os.__file__.find("lib") > -1:
@@ -319,13 +323,18 @@ def conda_install(package_list=["configmy==0.13.5"], condaenv_list=[], install_t
                     sys.stdout.flush()
 
 
-def conda_uninstall(package_list=["configmy==0.13.5"], condaenv_list=[], install_tool="pip/conda"):
+def conda_uninstall(package_list=None, condaenv_list=None, install_tool="pip/conda"):
     """
     #  /anaconda/envs/venv_name/bin/pip install
     Cannot install on root, please install manually, No-deps, no update
     """
+    if package_list is None:
+        package_list = ["configmy==0.13.5"]
+    if condaenv_list is None:
+        condaenv_list = []
     import os, sys
 
+    DIRANA = None
     if os.__file__.find("envs") > -1:
         DIRANA = os.__file__.split("envs")[0]  # Anaconda Directory
     elif os.__file__.find("lib") > -1:
@@ -340,6 +349,7 @@ def conda_uninstall(package_list=["configmy==0.13.5"], condaenv_list=[], install
             for condaenv in condaenv_list:
                 if condaenv != "root":
 
+                    DIR1 = None
                     if os_name == "lin":
                         DIR1 = DIRANA + "/envs/" + condaenv + "/bin/"
                     elif os_name == "win":
@@ -362,6 +372,7 @@ def conda_uninstall(package_list=["configmy==0.13.5"], condaenv_list=[], install
             for condaenv in condaenv_list:
                 if condaenv != "root":
 
+                    DIR2 = None
                     if os_name == "lin":
                         DIR2 = DIRANA + "/bin/"
                     elif os_name == "win":
@@ -387,12 +398,14 @@ def conda_uninstall(package_list=["configmy==0.13.5"], condaenv_list=[], install
 
 
 def conda_path_get():
+    DIRANA = None
     if os.__file__.find("lib") > -1:
         DIRANA = os.__file__.split("lib")[0] + "/"  # Anaconda from linux
     elif os.__file__.find("Lib") > -1:
         DIRANA = os.__file__.split("Lib")[0] + "/"  # Anaconda from root
 
     os_name = sys.platform[:3]
+    DIR2 = None
     if os_name == "lin":
         DIR2 = DIRANA + "/bin/"
     elif os_name == "win":
@@ -400,11 +413,14 @@ def conda_path_get():
     return DIR2
 
 
-def conda_env_export(condaenv_list=[], folder_export="/"):
+# noinspection PyTypeChecker
+def conda_env_export(condaenv_list=None, folder_export="/"):
     """
     #  /anaconda/envs/venv_name/bin/pip install
     Export Config
     """
+    if condaenv_list is None:
+        condaenv_list = []
     os_name = sys.platform[:3]
     prefix = os_name
     prefix = prefix + "-" + os.path.expanduser("~").split("\\")[-1].split("/")[-1]
@@ -479,6 +495,7 @@ def install_on_allcondaenv(package="configmy"):
 
 ###############################################################################################
 global IIX
+# noinspection PyRedeclaration
 IIX = 0
 
 
@@ -536,16 +553,17 @@ if __name__ == "__main__":
     arg = ppa.parse_args()
 
 
-if __name__ == "__main__" and arg.run != "":
-    print("Running Task")
-    globals()[arg.run]()  # Execute command
+    if arg.run != "":
+        print("Running Task")
+        globals()[arg.run]()  # Execute command
 
 
-if __name__ == "__main__" and arg.do == "test":
-    pprint("### Unit Tests")
-    import configmy
+    if arg.do == "test":
+        pprint("### Unit Tests")
+        # noinspection PyUnresolvedReferences
+        import configmy
 
-    configmy.ztest()
+        configmy.ztest()
 
 
 ##################################################################################################################

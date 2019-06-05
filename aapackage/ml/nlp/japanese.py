@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 # --------- NLP Processing, need Python 3  and Java JPype  ----------------------------
-import datetime
-import os
 
 ################################################################################
-# -------- Japanese Utilitie--------------------------------------------------------
+# -------- Japanese Utilities --------------------------------------------------------
 import re
-import shutil
-import sys
 
-import IPython
-import numpy as np
-import pandas as pd
-import scipy as sci
-import urllib3
-from bs4 import BeautifulSoup
+# noinspection PyUnresolvedReferences
+import util_web
 
 # Regular expression unicode blocks collected from
 # http://www.localizingjapan.com/blog/2012/01/20/regular-expressions-for-japanese-text/
@@ -50,13 +42,13 @@ def ja_remove_unicode_block(unicode_block, string):
 
 
 def ja_getkanji(vv):
-    vv = remove_unicode_block(hiragana_full, vv)
-    vv = remove_unicode_block(katakana_full, vv)
-    vv = remove_unicode_block(radicals, vv)
-    vv = remove_unicode_block(katakana_half_width, vv)
-    vv = remove_unicode_block(symbols_punct, vv)
-    vv = remove_unicode_block(misc_symbols, vv)
-    vv = remove_unicode_block(alphanum_full, vv)
+    vv = ja_remove_unicode_block(hiragana_full, vv)
+    vv = ja_remove_unicode_block(katakana_full, vv)
+    vv = ja_remove_unicode_block(radicals, vv)
+    vv = ja_remove_unicode_block(katakana_half_width, vv)
+    vv = ja_remove_unicode_block(symbols_punct, vv)
+    vv = ja_remove_unicode_block(misc_symbols, vv)
+    vv = ja_remove_unicode_block(alphanum_full, vv)
     ff = vv.split(" ")
     vv = ""
     for aa in ff:
@@ -72,6 +64,7 @@ def ja_getkanji(vv):
 
 # Mode 1 : Get all the prununciation sentence
 def ja_getpronunciation_txten(txt):
+    # noinspection PyUnresolvedReferences
     import java, romkan
 
     ll = java.japanese_tokenizer_kuromoji(txt, parsermode="NORMAL")
@@ -86,15 +79,16 @@ def ja_getpronunciation_txten(txt):
 
 # Mode 2 : Get all the prununciation for each Kanji
 def ja_getpronunciation_kanji(txt, parsermode="SEARCH"):
+    # noinspection PyUnresolvedReferences
     import java, romkan
 
-    txt = remove_unicode_block(symbols_punct, txt)
-    txt = remove_unicode_block(misc_symbols, txt)
-    txt = remove_unicode_block(alphanum_full, txt)
+    txt = ja_remove_unicode_block(symbols_punct, txt)
+    txt = ja_remove_unicode_block(misc_symbols, txt)
+    txt = ja_remove_unicode_block(alphanum_full, txt)
     ll2 = java.japanese_tokenizer_kuromoji(txt, parsermode=parsermode)
     vv = ""
     for tt in ll2:
-        if "".join(extract_unicode_block(kanji, tt[0])) != "":
+        if "".join(ja_extract_unicode_block(kanji, tt[0])) != "":
             if tt[7] != "" and (tt[1] == "動詞" or tt[1] == "名詞"):
                 vv = vv + " " + tt[0] + " " + romkan.to_roma(tt[8]) + "\n"
     return vv
@@ -115,17 +109,18 @@ def ja_importKanjiDict(file2):
 kanjidictfile = r"E:/_data/japanese/edictnewF.py"
 
 # Mode 2 : Get all the prununciation for each Kanji
+# noinspection PyUnresolvedReferences
 def ja_getpronunciation_kanji3(txt, parsermode="SEARCH"):
     import java, romkan
 
-    txt = remove_unicode_block(symbols_punct, txt)
-    txt = remove_unicode_block(misc_symbols, txt)
-    txt = remove_unicode_block(alphanum_full, txt)
+    txt = ja_remove_unicode_block(symbols_punct, txt)
+    txt = ja_remove_unicode_block(misc_symbols, txt)
+    txt = ja_remove_unicode_block(alphanum_full, txt)
     ll2 = java.japanese_tokenizer_kuromoji(txt, parsermode=parsermode)
     vv = ""
-    kanjidict = importKanjiDict(kanjidictfile)
+    kanjidict = ja_importKanjiDict(kanjidictfile)
     for tt in ll2:
-        if "".join(extract_unicode_block(kanji, tt[0])) != "":
+        if "".join(ja_extract_unicode_block(kanji, tt[0])) != "":
             if tt[7] != "":
                 name = tt[0]
                 try:
@@ -146,10 +141,11 @@ def ja_getpronunciation_kanji3(txt, parsermode="SEARCH"):
 
 # Mode 3 : Get all the prununciation sentence
 def ja_gettranslation_textenja(txt):
+    # noinspection PyUnresolvedReferences
     import java
 
     ll = java.japanese_tokenizer_kuromoji(txt, parsermode="SEARCH")
-    kanjidict = importKanjiDict(kanjidictfile)
+    kanjidict = ja_importKanjiDict(kanjidictfile)
     vv = ""
     vv2 = ""
     xx = ""
@@ -171,6 +167,7 @@ def ja_gettranslation_textenja(txt):
 
 # Mode 3 : Get all the prununciation sentence
 def ja_getpronunciation_textenja(txt):
+    # noinspection PyUnresolvedReferences
     import java, romkan
 
     ll = java.japanese_tokenizer_kuromoji(txt, parsermode="NORMAL")
@@ -190,17 +187,17 @@ def ja_getpronunciation_textenja(txt):
 
 # Send Text Pronunciation by email
 def ja_send_textpronunciation(url1, email1):
-    aa = web_gettext_fromurl(url1)
+    aa = util_web.web_gettext_fromurl(url1)
     kk = ja_getpronunciation_kanji3(aa)
     mm = ja_getpronunciation_textenja(aa)
     mm2 = ja_gettranslation_textenja(aa)
     mm = mm + "\n\n\n" + kk + "\n\n\n" + mm2
-    send_email("Kevin", email1, "JapaneseText:" + mm[0:20], mm)
+    util_web.web_send_email("Kevin", email1, "JapaneseText:" + mm[0:20], mm)
 
 
 # Send Text Pronunciation by email
-def ja_sendjp(url1):
-    ja_send_textpronunciation(url1)
+def ja_sendjp(url1, email1):
+    ja_send_textpronunciation(url1, email1)
 
 
 def ja_weblio():
@@ -247,10 +244,6 @@ class Weblio:
     def examples(self, term, number=4, portion=4, tuples=False):
         """
         Fetches examples from Weblio
-        :param term:    word or phrase to lookup
-        :param number:  number of examples to fetch
-        :param portion: portion of examples to use (e.g., 1/2 -> from the middle)
-        :returns:       list of touples (example, translation)
         """
         data = self.process(self.examples_url, term)
         examples = [] if tuples else {}

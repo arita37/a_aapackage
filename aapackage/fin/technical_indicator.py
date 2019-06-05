@@ -29,6 +29,7 @@ def np_find_maxpos(values):
 
 
 def date_earningquater(t1):  # JP Morgan Qearing date
+    quater = qdate = None
     if (t1.month == 10 and t1.day >= 14) or (t1.month == 1 and t1.day < 14) or t1.month in [11, 12]:
         if t1.month in [10, 11, 12]:
             qdate = datetime(t1.year + 1, 1, 14)
@@ -135,6 +136,7 @@ def np_findlocalmin(v):
 
 #####################################################################################
 # Finviz Style Support and Resistance
+# noinspection PyTypeChecker,PyUnresolvedReferences
 def supportmaxmin1(df1):
     df = df1.close.values
     qmax = np_findlocalmax(df)
@@ -331,23 +333,6 @@ def nbtime_reachtop(df, n, trigger=0.005):
     return df
 
 
-def nbday_high(df, n):
-    """nb of days from 1 year low """
-    close = df["close"].values
-    ndaylow = np.zeros(len(close))
-    distlow = np.zeros(len(close))
-    for i in range(n, len(close)):
-        kid, min1 = np_find_maxpos(close[i - n : i])
-        ndaylow[i] = n - kid
-        distlow[i] = close[i] - min1
-
-    smin1 = pd.Series(ndaylow, name="ndayhigh_" + str(n))
-    smin2 = pd.Series(distlow, name="ndisthigh_" + str(n))
-    df = df.join(smin1)
-    df = df.join(smin2)
-    return df
-
-
 def distance_day(df, tk, tkname):
     tk = datetime.date(tk)
     date1 = df["date"].values
@@ -412,6 +397,7 @@ def ATR(df, n):
 
 
 # Bollinger Bands
+# noinspection PyTypeChecker
 def BBANDS(df, n):
     MA = pd.Series(pd.rolling_mean(df["close"], n))
     MSD = pd.Series(pd.rolling_std(df["close"], n))
@@ -425,6 +411,7 @@ def BBANDS(df, n):
 
 
 # Pivot Points, Supports and Resistances
+# noinspection PyTypeChecker
 def PPSR(df):
     PP = pd.Series((df["high"] + df["low"] + df["close"]) / 3)
     R1 = pd.Series(2 * PP - df["low"])
@@ -658,6 +645,7 @@ def RMI(df, n=14, m=10):
     PosDI = pd.Series(pd.ewma(UpI, span=n, min_periods=n - 1))
     NegDI = pd.Series(pd.ewma(DoI, span=n, min_periods=n - 1))
 
+    # noinspection PyTypeChecker
     RSI = pd.Series(100 * PosDI / (PosDI + NegDI), name="RMI_" + str(n) + "_" + str(m))
     df = df.join(RSI)
     return df
@@ -698,6 +686,7 @@ def Chaikin(df):
 
 
 # Money Flow Index and Ratio
+# noinspection PyTypeChecker
 def MFI(df, n):
     PP = (df["high"] + df["low"] + df["close"]) / 3
     i = 0
@@ -840,15 +829,14 @@ def STDDEV(df, n):
 
 def RWI(df, nn, nATR):
     return 0
-    """ 
- First we compute RWI for maxima:
- RWImax = [(day‘s high - (day's low * number of days))] / [(Average True Range * number of days * square root of number of days)]
 
- Similarly, we compute the RWI for minima:
- RWImin = [(day's high *number of days - (day's low))] / [(Average True Range * number of days * square root of number of days)]
-
- True range = higher of (day's high, previous close ) - lower of (day's low, previous close)
- """
+ # First we compute RWI for maxima:
+ # RWImax = [(day‘s high - (day's low * number of days))] / [(Average True Range * number of days * square root of number of days)]
+ #
+ # Similarly, we compute the RWI for minima:
+ # RWImin = [(day's high *number of days - (day's low))] / [(Average True Range * number of days * square root of number of days)]
+ #
+ # True range = higher of (day's high, previous close ) - lower of (day's low, previous close)
 
 
 def nbday_low(df, n):
