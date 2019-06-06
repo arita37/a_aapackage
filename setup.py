@@ -5,14 +5,12 @@ import subprocess
 import sys
 from setuptools import setup, find_packages
 
+######################################################################################
 root = os.path.abspath(os.path.dirname(__file__))
 
 
 
-root = os.path.abspath(os.path.dirname(__file__))
-
-
-##### check if GPU available
+##### check if GPU available  #######################################################
 p = subprocess.Popen(['command -v nvidia-smi'], stdout=subprocess.PIPE, shell=True)
 out = p.communicate()[0].decode('utf8')
 gpu_available = len(out) > 0
@@ -33,7 +31,7 @@ with open("README.txt", "r") as fh:
     long_description = fh.read()
 
 
-### Packages
+### Packages  ####################################################
 packages = ["aapackage"] + ["aapackage." + p for p in find_packages("aapackage")]
 
 
