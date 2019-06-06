@@ -2,14 +2,41 @@
 """
 ---------AWS utilities--------------------------------------------------------
 ### Usage
-import util_aws
-util_aws.AWS()
-OR
-util_aws.AWS(name="mycred.json")
-OR
-util_aws.AWS(name="awskeypair_name")  ---> ./awsconfig/awskeypair_name
-
-
+# AWS is class that defines all the configuration like access key or secret or pem key,
+# which can be used  both by ec2, s3, rds connections. At this point, it has been used for
+# ec2 and s3 connections.
+# AWS object can be populated from a file containing a json object, a json extension is assumed
+# as a json file.
+# from util_aws import AWS
+# aws = AWS(name='myconfig.json')
+# To access the PEM KEY, use it as aws.v['AWS_KEYPEM']
+# For default configuration populated from the code, a simpler approach is:
+# aws = AWS()
+# AWS Access key and secret are first read from the boto config file i.e $HOME/.boto
+# If not found will search them in aws.v['AWS_ACCESS_LOCAL'], so to access the functionality
+# in the AWS object, the correct configuration json has to be passed.
+#
+# The pem file is looked in aws.v['AWS_KEYPEM'] in the $HOME/.ssh directory
+# The keypair is the name of the PEM file represented.
+# On creation of AWS() object the connection to ec2, s3 is not created. It has to be explicitly
+# invoked to create the type of the connection as supported by the AWS() object.
+#
+# For creating a connection call AWS().aws_conn_create(refion=<region name>)
+# For a windows specific connection, call AWS().aws_conn_create_windows()
+#
+# Utility methods:
+# ssh_cmdrun(): Runs a specific command using ssh library called paramiko and pem key file.
+# ssh_put(): Puts the content of filename to a remotefile, using pem key for the hostname.
+# ec2_instance_getallstate_cli(): For a instance type, fetch ram, cpu usage as an array
+# ec2_instance_usage(): Used by ec2_instance_getallstate_cli() for each instance.
+# ec2_config_build_template_cli(): Build a template for a spot request and store in /tmp/
+#   as per the config in AWS
+# ec2_spot_start_cli(): Actual spot request, uses ec2_config_build_template_cli() method.
+# ec2_spot_instance_list(): Current list of spot instances.
+# ec2_instance_stop(): Stop the spot instance based on the instanceid
+# ec2_get_spot_price(): For a given instance type, run a shell script to make a http call
+#  and grep the price for the same.
+#
 
 
 
@@ -31,33 +58,14 @@ from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from future import standard_library
 
 import paramiko
-# from attrdict import AttrDict as dict2
-# from pprint import pprint
-# from aapackage.globals import AWS
 from aapackage import util  # want to remove after refactor
-
 standard_library.install_aliases()
-
-
-
-###############################################################################
-
 
 
 ###############################################################################
 class AWS:
     """
     All the globals for AWS utility functionalities.
-    AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
-    AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
-    AWS_REGION = "us-west-2"
-    APNORTHEAST2 = 'ap-northeast-2'   ### Not good.. HARD coded  APNORTHEAST2 
-    EC2CWD = '/home/ubuntu/notebook/'
-    EC2_CONN = None
-    EC2_FILTERS = ('id', 'ip_address')
-    EC2_ATTRIBUTES = (
-        "id", "instance_type", "state", "public_dns_name", "private_dns_name",
-    )
     """
 
     def __init__(self, name=None, keypair=None, keypem=None):
