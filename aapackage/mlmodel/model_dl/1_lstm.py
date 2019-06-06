@@ -1,19 +1,14 @@
-#!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
 
 
 from datetime import datetime, timedelta
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
-sns.set()
+
 
 
 class Model:
@@ -51,49 +46,51 @@ class Model:
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
 
 
-def fit(model, data_frame):
+
+def fit(model, df):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
     for i in range(model.epoch):
 
         init_value = np.zeros((1, model.hidden_layer_size))
         total_loss = 0
-        for k in range(0, data_frame.shape[0] - 1, model.timestep):
-            index = min(k + model.timestep, data_frame.shape[0] - 1)
-            batch_x = np.expand_dims(data_frame.iloc[k:index, :].values, axis=0)
-            batch_y = data_frame.iloc[k + 1 : index + 1, :].values
+        for k in range(0, df.shape[0] - 1, model.timestep):
+            index = min(k + model.timestep, df.shape[0] - 1)
+            batch_x = np.expand_dims(df.iloc[k:index, :].values, axis=0)
+            batch_y = df.iloc[k + 1 : index + 1, :].values
             last_state, _, loss = sess.run(
                 [model.last_state, model.optimizer, model.cost],
                 feed_dict={model.X: batch_x, model.Y: batch_y, model.hidden_layer: init_value},
             )
             init_value = last_state
             total_loss += loss
-        total_loss /= data_frame.shape[0] // model.timestep
+        total_loss /= df.shape[0] // model.timestep
         if (i + 1) % 100 == 0:
             print("epoch:", i + 1, "avg loss:", total_loss)
     return sess
 
 
-def predict(model, sess, data_frame, get_hidden_state=False, init_value=None):
+
+def predict(model, sess, df, get_hidden_state=False, init_value=None):
     if init_value is None:
         init_value = np.zeros((1, model.hidden_layer_size))
-    output_predict = np.zeros((data_frame.shape[0], data_frame.shape[1]))
-    upper_b = (data_frame.shape[0] // model.timestep) * model.timestep
+    output_predict = np.zeros((df.shape[0], df.shape[1]))
+    upper_b = (df.shape[0] // model.timestep) * model.timestep
 
     if upper_b == model.timestep:
         out_logits, init_value = sess.run(
             [model.logits, model.last_state],
             feed_dict={
-                model.X: np.expand_dims(data_frame.values, axis=0),
+                model.X: np.expand_dims(df.values, axis=0),
                 model.hidden_layer: init_value,
             },
         )
     else:
-        for k in range(0, (data_frame.shape[0] // model.timestep) * model.timestep, model.timestep):
+        for k in range(0, (df.shape[0] // model.timestep) * model.timestep, model.timestep):
             out_logits, last_state = sess.run(
                 [model.logits, model.last_state],
                 feed_dict={
-                    model.X: np.expand_dims(data_frame.iloc[k : k + model.timestep].values, axis=0),
+                    model.X: np.expand_dims(df.iloc[k : k + model.timestep].values, axis=0),
                     model.hidden_layer: init_value,
                 },
             )
@@ -126,7 +123,7 @@ def test(filename="dataset/GOOG-year.csv"):
     sys.path.insert(0, parent_dir)
 
     from models import create, fit, predict
-
+    
     df = pd.read_csv(filename)
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
     print(df.head(5))
@@ -136,7 +133,7 @@ def test(filename="dataset/GOOG-year.csv"):
     df_log = pd.DataFrame(df_log)
 
     module, model = create(
-        "1_lstm",
+        "model_dl.1_lstm",
         {
             "learning_rate": 0.001,
             "num_layers": 1,
@@ -153,9 +150,19 @@ def test(filename="dataset/GOOG-year.csv"):
     print(predictions)
 
 
+
+
+
 ####################################################################################################
 ####################################################################################################
 if __name__ == "__main__":
+    
+    test()
+    
+    """
+    import seaborn as sns
+    sns.set()
+    import matplotlib.pyplot as plt
 
     num_layers = 1
     size_layer = 128
@@ -339,3 +346,4 @@ if __name__ == "__main__":
     plt.show()
 
     # In[ ]:
+    """

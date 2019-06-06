@@ -162,7 +162,7 @@ def test(filename="dataset/GOOG-year.csv"):
     df_log = pd.DataFrame(df_log)
 
     module, model = create(
-        "3_bidirectional_lstm.py",
+        "model_dl.3_bidirectional_lstm.py",
         {
             "learning_rate": 0.001,
             "num_layers": 1,

@@ -28,7 +28,7 @@ def load_config(args, config_file, config_mode, verbose=0):
           if x is not None:  # only values NOT set by CLI
              pars[key] = x
 
-       # print(pars)
+       print(pars)
        pars = to_namespace(pars)  #  like object/namespace pars.instance
        return pars
        

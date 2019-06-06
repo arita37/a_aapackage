@@ -48,7 +48,7 @@ def create(modelname="", params=None):
     try :
       module = import_module("{a}".format(a=modelname))
     except Exception as e :
-      raise NameError("Module {} notfound".format(modelname))    
+      raise NameError("Module {} notfound, {}".format(modelname, e))    
 
     if params:
         model = module.Model(**params)
@@ -82,7 +82,7 @@ def fit_file(model, foldername=None, fileprefix=None):
 
 
 
-###############################################################################
+#################################################################################
 def test_all(parent_folder="model_dl"):
     module_names = get_recursive_files(parent_folder, r"[0-9]+_.+\.py$")
 
@@ -100,26 +100,23 @@ def test_all(parent_folder="model_dl"):
 
 
 
-
-
-
-
 ###############################################################################
 def load_arguments(config_file= None ):
     """
         Load CLI input, load config.toml , overwrite config.toml by CLI Input
     """
-    if config_file :
+    if config_file is None  :
       cur_path = os.path.dirname(os.path.realpath(__file__))
       config_file = os.path.join(cur_path, "config.toml")
+    print(config_file)
 
     p = argparse.ArgumentParser()
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help="test/ prod /uat")
     p.add_argument("--log_file", help="log.log")  
 
-    p.add_argument("--do", help="test") 
-    p.add_argument("--modelname", help=".")  
+    p.add_argument("--do", default="test", help="test") 
+    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help=".")  
 
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
@@ -128,13 +125,13 @@ def load_arguments(config_file= None ):
 
 
 if __name__ == "__main__":
-
     # test_all() # tot test all te modules inside model_dl
-
     args = load_arguments()
+
 
     # still not supported yet
     if args.do == "test"  :
+        print(args.do)
         module, _ = create(args.modelname, None)  # '1_lstm'
         print(module)
         module.test()
