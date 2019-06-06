@@ -71,7 +71,7 @@ def main():
                 training_history = model.train()
 
         elif FLAGS.framework == 'tch':
-            train(config, bsde)
+            training_history = train(config, bsde)
 
         if bsde.y_init:
             log(
