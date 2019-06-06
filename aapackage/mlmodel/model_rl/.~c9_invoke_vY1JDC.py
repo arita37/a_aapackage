@@ -28,7 +28,7 @@ class Model:
 class Agent:
     LEARNING_RATE = 1e-4
     LAYER_SIZE = 256
-    GAMMA = 0.9
+    GAMMA = 0.9 # Discount
     OUTPUT_SIZE = 3
 
     def __init__(self, state_size, window_size, trend, skip):
@@ -43,37 +43,49 @@ class Agent:
         self.X = tf.placeholder(tf.float32, (None, self.state_size))
         self.REWARDS = tf.placeholder(tf.float32, (None))
         self.ACTIONS = tf.placeholder(tf.int32, (None))
+  
+  
         feed_forward = tf.layers.dense(self.X, self.LAYER_SIZE, activation = tf.nn.relu)
         self.logits = tf.layers.dense(feed_forward, self.OUTPUT_SIZE, activation = tf.nn.softmax)
         input_y = tf.one_hot(self.ACTIONS, self.OUTPUT_SIZE)
         loglike = tf.log((input_y * (input_y - self.logits) + (1 - input_y) * (input_y + self.logits)) + 1)
+  
+  
         rewards = tf.tile(tf.reshape(self.REWARDS, (-1,1)), [1, self.OUTPUT_SIZE])
+  
+  
+  
+  
         self.cost = -tf.reduce_mean(loglike * (rewards + 1)) 
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.LEARNING_RATE).minimize(self.cost)
         self.sess = tf.InteractiveSession()
         self.sess.run(tf.global_variables_initializer())
     
+    
+    ## ok
     def predict(self, inputs):
-        # Predict action_i
+        # Predict probabiulity of all actions
         return self.sess.run(self.logits, feed_dict={self.X: inputs})
 
 
-    def get_state(self, t, reward_state=None):
+    def get_predicted_action(self, sequence):
+        prediction = self.predict(np.array(sequence))[0]  #Proba vector for each action
+        return np.argmax(prediction)
+    
+    
+
+    ## ok
+    def get_state(self, t, state=None, history=None):
         """
          Action ---> ENV -->  Reward +Change in State== reward state 
          In this particular case, there is no rewaed state
          State is difference in price over window
         
         """
-        window_size = self.window_size + 1
-        d = t - window_size + 1
-        block = self.trend[d : t + 1] if d >= 0 else -d * [self.trend[0]] + self.trend[0 : t + 1]
-        res = []
-        for i in range(window_size - 1):
-            res.append(block[i + 1] - block[i])
-        return np.array([res])
-    
-    
+        state = {}
+        return state
+        
+        
     def discount_rewards(self, r):
         discounted_r = np.zeros_like(r)
         running_add = 0
@@ -83,142 +95,68 @@ class Agent:
         return discounted_r
     
     
-    def get_predicted_action(self, sequence):
-        prediction = self.predict(np.array(sequence))[0]  #Proba vector for each action
-        return np.argmax(prediction)
-    
-    
-    def predict_sequence(self, trend_input, do_action , param=None):
+    def run_sequence(self, history, do_action , 
+                     state_initial=None, 
+                     reward_initial=None, step=1):
         """
           Generate the states, and get action result intoList
         
-          trend_input :  timeseries of state
-          do_action   :  action to be done
+          history     :  timeseries of FIXED data
+          do_action   :  action to be done 
           param       :  parameters into dict
 
         """
-        # state          = self.get_state(0)
-        # starting_reward = param["initial_reward"]   
-        
-        state = param["initial_state"]
-
-        action_history = []
-        ep_history     = []
-        total_reward   = 0
-        inventory      = [] # passed by reference
-     
-        for t in range(0, len(trend_input) - 1, self.skip):
-            action    = self.get_predicted_action(state)
+        state      = state_initial
+        reward     = reward_initial
+        ep_history = []
+        for t in range(0, len(history) - 1, step):
+            action_t    = self.get_predicted_action(t + 1, state, history)
        
             action_dict = {"t": t, 
-                           "action": action,             
-            
-                           "param":  param,    
-                           # { "half_window": agent.half_window},
-                           # "starting_reward": starting_reward, 
-                           
-                           "history"      : trend_input,    #History price
-                           "total_reward" : total_reward,
-                           "inventory"    : inventory
+                           "action":   action_t,             
+                           "state":    state,    
+                           "history":  history,           
+                           "reward" :  reward,
                           }
        
             d            = do_action( action_dict )  
             
-            inventory    = d["inventory"]
-            total_reward = d["total_reward"]
-            reward_t     = d["reward"]
-            reward_state = d.get("reward_state") # None is ok
+            state        = merge_state(state, d)
+            reward       = d["reward"]
             
-            next_state  = self.get_state(t + 1, reward_state)  # can be None
-            action_history.append( d )
-            ep_history.append([state, action, reward_t ,next_state])
-            
+            next_state  = self.get_state(t + 1, state, history)  # can be None
+            ep_history.append([state, action_t, reward["reward_t"], next_state])
             state = next_state
 
 
         ep_history      = np.array(ep_history)
         ep_history[:,2] = agent.discount_rewards(ep_history[:,2])
-        return ep_history, action_history
-        
-
+        return ep_history
+   
+   
     
-    def buy(self, initial_money):
-        starting_money = initial_money
-        states_sell    = []
-        states_buy     = []
-        inventory      = []
-        
-        
-        state = self.get_state(0)
-        for t in range(0, len(self.trend) - 1, self.skip):
-            action     = self.get_predicted_action(state)
-            
-            ###### do_action ########################################
-            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
-                inventory.append(self.trend[t])
-                initial_money -= self.trend[t]
-                states_buy.append(t)
-                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
-                
-                
-            elif action == 2 and len(inventory):
-                bought_price = inventory.pop(0)
-                initial_money += self.trend[t]
-                states_sell.append(t)
-                try:
-                    invest = ((close[t] - bought_price) / bought_price) * 100
-                except:
-                    invest = 0
-                print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, close[t], invest, initial_money)
-                )
-            ########################################################
-            next_state = self.get_state(t + 1)
-            state = next_state
-            
-        invest = ((initial_money - starting_money) / starting_money) * 100
-        total_gains = initial_money - starting_money
-        return states_buy, states_sell, total_gains, invest
-        
-    
-    def train(self, iterations, checkpoint, initial_money):
+    def train(self, n_iters, n_log_freq, state_initial, reward_initial):
         # Old version
-        for i in range(iterations):
+        step = self.skip
+        
+        for i in range(n_iters):
             ep_history = []
-            total_profit = 0
-            inventory = []
-            state = self.get_state(0)
-            starting_money = initial_money
+            state      = state_initial
+            reward     = reward_initial
+
+            ep_history = predict_sequence(history, do_action , 
+                                          state_initial=state_initial, 
+                                          reward_initial=reward_initial, 
+                                          step=step)
+                        
+            cost, _ = self.sess.run([self.cost, self.optimizer], 
+                                     feed_dict={self.X:       np.vstack(ep_history[:,0]),
+                                                self.REWARDS: ep_history[:,2],
+                                                self.ACTIONS: ep_history[:,1]})
             
-            
-            for t in range(0, len(self.trend) - 1, self.skip):
-                action = self.get_predicted_action(state)
-                next_state = self.get_state(t + 1)
-                
-                
-                ######## do_action ###################################
-                if action == 1 and starting_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
-                    inventory.append(self.trend[t])
-                    starting_money -= close[t]
-                
-                elif action == 2 and len(inventory):
-                    bought_price = inventory.pop(0)
-                    total_profit += self.trend[t] - bought_price
-                    starting_money += self.trend[t]
-                ###################################################
-                
-                
-                ep_history.append([state,action,starting_money,next_state])
-                state = next_state
-            ep_history = np.array(ep_history)
-            ep_history[:,2] = self.discount_rewards(ep_history[:,2])
-            cost, _ = self.sess.run([self.cost, self.optimizer], feed_dict={self.X:np.vstack(ep_history[:,0]),
-                                                    self.REWARDS:ep_history[:,2],
-                                                    self.ACTIONS:ep_history[:,1]})
-            if (i+1) % checkpoint == 0:
-                print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, total_profit, cost,
-                                                                                  starting_money))
+            if (i+1) % n_log_freq == 0:
+                print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, 
+                      total_profit, cost, starting_money))
     
     
 
@@ -405,23 +343,6 @@ def do_action_example(action_dict):
       
       
 
-def test(filename= 'dataset/GOOG-year.csv'):
-    df = pd.read_csv('../dataset/GOOG-year.csv')
-    close = df.Close.values.tolist()
-    
-    ###  Train
-    model = Model(window_size, window_size, close, skip, 200, initial_money)
-    sess = fit(model, close, do_action_example)
-    
-    
-    ### Predict
-    agent.sess = sess
-    # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
-    res_list = predict(model, sess, close, do_action_example)
-
-
-
-
 
 
 
@@ -434,16 +355,8 @@ def test(filename= 'dataset/GOOG-year.csv'):
 ################################################################################################
 ################################################################################################
 if __name__ == "__main__":
-
-
-    # In[2]:
-
-
     df = pd.read_csv('../dataset/GOOG-year.csv')
     df.head()
-
-
-    # In[4]:
 
 
     close = df.Close.values.tolist()
@@ -457,25 +370,12 @@ if __name__ == "__main__":
     #agent.train(iterations = 200, checkpoint = 10, initial_money = initial_money)
 
 
-    # In[5]:
 
-
-    
-
-    # In[6]:
     model = Model(window_size, window_size, close, skip, 200, initial_money)
     sess = fit(model, close, do_action_example)
     agent.sess = sess
     states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
     test()
-    fig = plt.figure(figsize = (15,5))
-    plt.plot(close, color='r', lw=2.)
-    plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
-    plt.plot(close, 'v', markersize=10, color='k', label = 'selling signal', markevery = states_sell)
-    plt.title('total gains %f, total investment %f%%'%(total_gains, invest))
-    plt.legend()
-    plt.show()
+
     
 
-
-    # In[ ]:
