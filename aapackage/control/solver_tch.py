@@ -14,6 +14,9 @@ EPSILON = 1e-6
 DELTA_CLIP = 50.0
 
 
+def tch_to_device():
+   torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")    
+
 
 class Dense(nn.Module):
 
@@ -112,7 +115,7 @@ class FeedForwardModel(nn.Module):
 def train(config, bsde):
     # build and train
     #args = parser.parse_args()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    device = tch_to_device()
     print("Training on:", device)
     #config = get_config(args.name)
     #bsde = get_equation(args.name, config.dim, config.total_time, config.num_time_interval)
