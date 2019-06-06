@@ -4,11 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 
-from config import get_config
-from equation_tch import get_equation
-
-from argparse import ArgumentParser
-
 import time
 
 
@@ -17,10 +12,6 @@ TH_DTYPE = torch.float32
 MOMENTUM = 0.99
 EPSILON = 1e-6
 DELTA_CLIP = 50.0
-
-parser = ArgumentParser()
-parser.add_argument("--name", type=str, default='ReactionDiffusion')
-
 
 class Dense(nn.Module):
 
@@ -115,7 +106,7 @@ class FeedForwardModel(nn.Module):
 
 def train(config, bsde):
     # build and train
-    args = parser.parse_args()
+    #args = parser.parse_args()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     print("Training on:", device)
     #config = get_config(args.name)
