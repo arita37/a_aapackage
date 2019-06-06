@@ -97,9 +97,7 @@ def main():
 
 
         if bsde.y_init:
-            log(
-                "relative error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),
-            )
+            log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),)
 
             # save training history
             np.savetxt(

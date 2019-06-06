@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
 
-import time
+from time import time
 
 
 TH_DTYPE = torch.float32
@@ -12,6 +12,8 @@ TH_DTYPE = torch.float32
 MOMENTUM = 0.99
 EPSILON = 1e-6
 DELTA_CLIP = 50.0
+
+
 
 class Dense(nn.Module):
 
@@ -80,6 +82,7 @@ class FeedForwardModel(nn.Module):
 
         z = torch.matmul(all_one_vec, z_init)
 
+        #Backward
         for t in range(0, self._num_time_interval - 1):
             # print('y qian', y.max())
             y = y - self._bsde.delta_t * (
@@ -91,6 +94,7 @@ class FeedForwardModel(nn.Module):
             y = y + add
             z = self._subnetworkList[t](x[:, :, t + 1]) / self._dim
             # print('z value', z.max())
+            
         # terminal time
         y = y - self._bsde.delta_t * self._bsde.f_th( \
             time_stamp[-1], x[:, :, -2], y, z \
@@ -102,6 +106,7 @@ class FeedForwardModel(nn.Module):
         loss = torch.mean(torch.where(torch.abs(delta) < DELTA_CLIP, delta ** 2,
                                       2 * DELTA_CLIP * torch.abs(delta) - DELTA_CLIP ** 2))
         return loss, self._y_init
+
 
 
 def train(config, bsde):
@@ -116,29 +121,36 @@ def train(config, bsde):
     net.to(device)
 
     optimizer = torch.optim.Adam(net.parameters(), config.lr_values[0])
-    start_time = time.time()
-    # to save iteration results
-    training_history = []
-    # for validation
-    dw_valid, x_valid = bsde.sample(config.valid_size)
+    t0 = time()
+    
+    training_history = []  # to save iteration results
+    dw_valid, x_valid = bsde.sample(config.valid_size)      # for validation accuracy
 
     # begin sgd iteration
     for step in range(config.num_iterations + 1):
         if step % config.logging_frequency == 0:
+            ### Accuracy on Volidation set
             net.eval()
             loss, init = net(x_valid.to(device), dw_valid.to(device))
+            training_history.append([step, loss, init.item(), time() - t0])
+            print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u" % (
+                    step, loss, init.item(), time() - t0))
 
-            elapsed_time = time.time() - start_time
-            training_history.append([step, loss, init.item(), elapsed_time])
-            if config.verbose:
-                print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u" % (
-                    step, loss, init.item(), elapsed_time))
-
+        ### MC sample
         dw_train, x_train = bsde.sample(config.batch_size)
+        
+        ### Forward compute
         optimizer.zero_grad()
         net.train()
+        
+        ### Backward Loss with gradient
         loss, _ = net(x_train.to(device), dw_train.to(device))
         loss.backward()
         optimizer.step()
 
     return np.array(training_history)
+    
+    
+    
+
+
