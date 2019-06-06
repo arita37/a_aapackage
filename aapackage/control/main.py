@@ -12,8 +12,6 @@ from argparse import ArgumentParser
 import numpy as np
 
 
-
-####################################################################################################
 ####################################################################################################
 from config import get_config
 
@@ -30,19 +28,25 @@ def load_argument() :
    arg = p.parse_args()
    return arg
 
-# arg = tf.app.arg.arg
-# tf.app.arg.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")
-# tf.app.arg.DEFINE_integer(
-#    "num_run", 1, """The number of experiments to repeatedly run for the same problem."""
-#)
-#tf.app.arg.DEFINE_string(
-#    "log_dir", "./logs", """Directory where to write event logs and output array."""
-#)
 
 
 def log(s):
     logging.info(s)
 
+
+def log_init(log_dir):
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)    
+    
+
+def config_dump(conf, path_prefix):
+    with open(path_prefix + ".json", "w") as outfile:
+        json.dump(
+            dict( (name, getattr(conf, name)) for name in dir(conf) if not name.startswith("__")),
+            outfile, indent=2,
+        )    
+    
+    
 
 def main():
     arg = load_argument() 
@@ -50,15 +54,9 @@ def main():
     c = get_config(arg.problem_name)
 
 
-    if not os.path.exists(arg.log_dir):
-        os.mkdir(arg.log_dir)
-
+    log_init(arg.log_dir)
     path_prefix = os.path.join(arg.log_dir, arg.problem_name)
-    with open(path_prefix + ".json", "w") as outfile:
-        json.dump(
-            dict( (name, getattr(c, name)) for name in dir(c) if not name.startswith("__")),
-            outfile, indent=2,
-        )
+    config_dump(c, path_prefix)     
 
 
     if arg.framework == 'tf':
@@ -76,15 +74,13 @@ def main():
         bsde = get_equation_tch(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
 
 
-
     print("Running ", arg.problem_name, " on: ", arg.framework)
     print(bsde)
     logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
     
     #### Loop over run
-    for idx_run in range(1, arg.num_run + 1):
-
-        log("Begin to solve %s with run %d" % (arg.problem_name, idx_run))
+    for k in range(1, arg.num_run + 1):
+        log("Begin to solve %s with run %d" % (arg.problem_name, k))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
         if arg.framework == 'tf':
             tf.reset_default_graph()
@@ -101,7 +97,7 @@ def main():
 
         # save training history
         np.savetxt(
-          "{}_training_history_{}.csv".format(path_prefix, idx_run),
+          "{}_training_history_{}.csv".format(path_prefix, k),
           training_history,
           fmt=["%d", "%.5e", "%.5e", "%d"],
           delimiter=",",
@@ -114,3 +110,23 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+# arg = tf.app.arg.arg
+# tf.app.arg.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")
+# tf.app.arg.DEFINE_integer(
+#    "num_run", 1, """The number of experiments to repeatedly run for the same problem."""
+#)
+#tf.app.arg.DEFINE_string(
+#    "log_dir", "./logs", """Directory where to write event logs and output array."""
+#)
+
+
+
+
+
