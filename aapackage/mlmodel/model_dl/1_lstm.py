@@ -151,13 +151,46 @@ def test(filename="dataset/GOOG-year.csv"):
 
 
 
+def test2(filename="dataset/GOOG-year.csv"):
+    import os, sys, inspect
+
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    sys.path.insert(0, parent_dir)
+
+    from models import create, fit, predict
+    
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print(df.head(5))
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
+    df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
+    df_log = pd.DataFrame(df_log)
+
+    p = {
+            "learning_rate": 0.001,
+            "num_layers": 1,
+            "size": df_log.shape[1],
+            "size_layer": 128,
+            "output_size": df_log.shape[1],
+            "timestep": 5,
+            "epoch": 5,
+        },
+        
+    model = Model(**p)
+    sess  = fit(model, df_log)
+    predictions = predict(model, sess, df_log)
+    print(predictions)
 
 
 ####################################################################################################
 ####################################################################################################
 if __name__ == "__main__":
     
-    test()
+    test2()
+    
+    
     
     """
     import seaborn as sns
