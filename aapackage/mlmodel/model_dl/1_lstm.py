@@ -4,6 +4,7 @@ python  model_dl/1_lstm.py
 
 
 """
+import os, sys, inspect
 
 from datetime import datetime, timedelta
 
@@ -14,7 +15,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 
-
+####################################################################################################
 class Model:
     def __init__(
         self,
@@ -105,80 +106,61 @@ def predict(model, sess, df, get_hidden_state=False, init_value=None):
     return output_predict
 
 
-def get_params(choice=None):
+
+def get_params(choice="test", ncol_input=1, ncol_output=1):
     # output parms
-    if choice is None or choice==0:
-        return {
+    if choice=="test":
+        return         {
             "learning_rate": 0.001,
             "num_layers": 1,
-            "size": df_log.shape[1],
+            "size": ncol_input,
             "size_layer": 128,
-            "output_size": df_log.shape[1],
+            "output_size": ncol_output,
             "timestep": 5,
             "epoch": 5,
         }
 
 
-def test(filename="dataset/GOOG-year.csv"):
-    import os, sys, inspect
 
+def set_root_dir() :
     current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     parent_dir = os.path.dirname(current_dir)
     sys.path.insert(0, parent_dir)
+    return parent_dir
+    
 
-    from models import create, fit, predict
+def get_dataset(filename="dataset/GOOG-year.csv"):
+    set_root_dir()
     
     df = pd.read_csv(filename)
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( filename )
     print(df.head(5))
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
     df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
-    df_log = pd.DataFrame(df_log)
+    df_log = pd.DataFrame(df_log)    
+    return df_log
 
+
+def test(filename="dataset/GOOG-year.csv"):
+    set_root_dir()
+    df = get_dataset(filename)
+    
+    from models import create, fit, predict
     module, model = create(
         "model_dl.1_lstm",
-        {
-            "learning_rate": 0.001,
-            "num_layers": 1,
-            "size": 6,
-            "size_layer": 128,
-            "output_size": 6,
-            "timestep": 5,
-            "epoch": 5,
-        },
+        get_params("test", ncol_input= df.shape[1], ncol_output= df.shape[1] )
     )
 
-    sess = fit(model, module, df_log)
-    predictions = predict(model, module, sess, df_log)
+    sess = fit(model, module, df)
+    predictions = predict(model, module, sess, df)
     print(predictions)
 
 
-
 def test2(filename="dataset/GOOG-year.csv"):
-    import os, sys, inspect
-
-    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    parent_dir = os.path.dirname(current_dir)
-    sys.path.insert(0, parent_dir)
-
-    df = pd.read_csv(parent_dir +"/" + filename)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    print(df.head(5))
-
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
-    df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
-    df_log = pd.DataFrame(df_log)
-
-    p = {
-            "learning_rate": 0.001,
-            "num_layers": 1,
-            "size": df_log.shape[1],
-            "size_layer": 128,
-            "output_size": df_log.shape[1],
-            "timestep": 5,
-            "epoch": 5,
-        }
+    df_log = get_dataset(filename)
+    p      = get_params("test", ncol_input=df_log.shape[1], ncol_output=df_log.shape[1] )
         
     model = Model(**p)
     sess  = fit(model, df_log)
@@ -186,13 +168,11 @@ def test2(filename="dataset/GOOG-year.csv"):
     print(predictions)
 
 
+
 ####################################################################################################
 ####################################################################################################
 if __name__ == "__main__":
-    
     test2()
-    
-    
     
     """
     import seaborn as sns
