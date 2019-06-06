@@ -1,3 +1,11 @@
+"""
+
+
+python   distri_model_tch.py   --model model_dl_tch.mlp
+
+
+"""
+
 from __future__ import print_function
 
 import argparse
@@ -7,13 +15,16 @@ import toml
 
 import data
 import horovod.torch as hvd
-import models
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torch.utils.data.distributed
 from torchvision import datasets, transforms
+
+
 from util import load_config
+from distri_model_tch  import models_instance
+
 
 
 #####################################################################################
@@ -31,7 +42,7 @@ def load_arguments():
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help=" test/ prod /uat")
 
-    p.add_argument("--model", default="net", help=" net")
+    p.add_argument("--model", default="model_dl_tch.mlp.py", help=" net")
     p.add_argument("--data", default="mnist", help=" mnist")
 
     p.add_argument("--batch-size", type=int, default=64, metavar="N", help="batchsize training")
@@ -69,7 +80,7 @@ train_dataset = data.import_data(name=args.data, mode="train", node_id=hvd.rank(
 test_dataset = data.import_data(name=args.data, mode="test", node_id=hvd.rank())
 
 
-model = models.models_instance(args.model)  # Net()
+model = models_instance(args.model)  # Net()
 
 
 #####################################################################################

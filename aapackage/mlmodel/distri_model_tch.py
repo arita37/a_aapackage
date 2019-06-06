@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 
 import torch.nn as nn
@@ -7,9 +8,41 @@ import torch.utils.data.distributed
 from torchvision import datasets, transforms
 
 
-def models_instance(name="net"):
+import argparse
+import glob
+import os
+import re
+from importlib import import_module
+
+
+
+
+def create(modelname="", params=None, modelonly=1):
+    """
+      modelname:  model_dl_tch.mlp.py
+      
+      
+    """
+    modelname = modelname.replace(".py", "")
+    print(modelname)
+    try :
+      module = import_module("{a}".format(a=modelname))
+    except Exception as e :
+      raise NameError("Module {} notfound, {}".format(modelname, e))    
+
+    model = module.Model(**params)
+    return  model
+
+
+def models_instance(name="net", params={}):
     if name == "net":
         return Net()
+    else  :
+        return create(name, params)
+         
+
+
+
 
 
 class Net(nn.Module):
@@ -29,6 +62,9 @@ class Net(nn.Module):
         x = F.dropout(x, training=self.training)
         x = self.fc2(x)
         return F.log_softmax(x)
+
+
+
 
 
 # model = Net()
