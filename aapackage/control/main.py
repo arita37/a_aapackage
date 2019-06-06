@@ -81,11 +81,11 @@ def main():
     print(bsde)
 
     #### Loop over run
-    for idx_run in range(1, c.num_run + 1):
+    for idx_run in range(1, arg.num_run + 1):
 
-        log("Begin to solve %s with run %d" % (c.problem_name, idx_run))
+        log("Begin to solve %s with run %d" % (arg.problem_name, idx_run))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
-        if c.framework == 'tf':
+        if arg.framework == 'tf':
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess)
@@ -95,30 +95,23 @@ def main():
         elif arg.framework == 'tch':
             training_history = train(c, bsde)
 
+
         if bsde.y_init:
-                log(
-                    "relative error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),
-                )
+            log(
+                "relative error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),
+            )
 
-        # save training history
-        np.savetxt(
-                "{}_training_history_{}.csv".format(path_prefix, idx_run),
-                training_history,
-                fmt=["%d", "%.5e", "%.5e", "%d"],
-                delimiter=",",
-                header="step,loss_function,target_value,elapsed_time",
-                comments="",
-        )
+            # save training history
+            np.savetxt(
+              "{}_training_history_{}.csv".format(path_prefix, idx_run),
+              training_history,
+              fmt=["%d", "%.5e", "%.5e", "%d"],
+              delimiter=",",
+              header="step,loss_function,target_value,elapsed_time",
+              comments="",
+            )
 
-        # save training history
-        np.savetxt(
-            "{}_training_history_{}.csv".format(path_prefix, idx_run),
-            training_history,
-            fmt=["%d", "%.5e", "%.5e", "%d"],
-            delimiter=",",
-            header="step,loss_function,target_value,elapsed_time",
-            comments="",
-        )
+
 
 
 if __name__ == "__main__":
