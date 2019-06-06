@@ -6,46 +6,46 @@
 
 # License: 3-clause BSD
 
-set -e
+set -e  # Exit on error.
 
 python --version
-python -c "import numpy; print('numpy %s' % numpy.__version__)"
-python -c "import scipy; print('scipy %s' % scipy.__version__)"
-python -c "\
+python -c 'import numpy; print("numpy %s" % numpy.__version__)'
+python -c 'import scipy; print("scipy %s" % scipy.__version__)'
+python -c '
 try:
     import pandas
-    print('pandas %s' % pandas.__version__)
+    print("pandas %s" % pandas.__version__)
 except ImportError:
     pass
-"
-python -c "import multiprocessing as mp; print('%d CPUs' % mp.cpu_count())"
+'
+python -c 'import multiprocessing as mp; print("%d CPUs" % mp.cpu_count())'
 
 run_tests() {
     TEST_CMD="pytest --showlocals --durations=20 --pyargs"
 
     # Get into a temp directory to run test from the installed scikit-learn and
-    # check if we do not leave artifacts
-    mkdir -p $TEST_DIR
+    # check if we do not leave artifacts.
+    mkdir -p "${TEST_DIR}"
     # We need the setup.cfg for the pytest settings
-    cp setup.cfg $TEST_DIR
-    cd $TEST_DIR
+    cp setup.cfg "${TEST_DIR}"
+    cd "${TEST_DIR}"
 
     # Skip tests that require large downloads over the network to save bandwidth
     # usage as travis workers are stateless and therefore traditional local
     # disk caching does not work.
     export SKLEARN_SKIP_NETWORK_TESTS=1
 
-    if [[ "$COVERAGE" == "true" ]]; then
-        TEST_CMD="$TEST_CMD --cov sklearn"
+    if [[ "${COVERAGE}" == true ]]; then
+        TEST_CMD="${TEST_CMD} --cov sklearn"
     fi
 
-    if [[ -n "$CHECK_WARNINGS" ]]; then
-        TEST_CMD="$TEST_CMD -Werror::DeprecationWarning -Werror::FutureWarning"
+    if [[ -n "${CHECK_WARNINGS}" ]]; then
+        TEST_CMD="${TEST_CMD} -Werror::DeprecationWarning -Werror::FutureWarning"
     fi
 
-    set -x  # print executed commands to the terminal
+    set -x  # Print executed commands to the terminal.
 
-    $TEST_CMD sklearn
+    ${TEST_CMD} sklearn  # Left unquoted on purpose.
 }
 
 run_tests

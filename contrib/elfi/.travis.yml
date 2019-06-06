@@ -26,5 +26,4 @@ install:
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ipcluster start -n 2 --daemon ; fi
-  #- travis_wait 20 make test
   - make test
