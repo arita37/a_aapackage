@@ -7,17 +7,14 @@ import logging
 import os
 
 import numpy as np
-import tensorflow as tf
+
 
 ####################################################################################################
 ####################################################################################################
 from config import get_config
-from equation import get_equation as get_equation_tf
 
-from equation_tch import get_equation as get_equation_tch
 
-from solver import FeedForwardModel as FFtf
-from solver_tch import train
+
 
 from argparse import ArgumentParser
 
@@ -33,19 +30,29 @@ def log(s):
 
 
 def main():
-    FLAGS = parser.parse_args()
-    config = get_config(FLAGS.problem_name)
+    args = parser.parse_args()
+    config = get_config(args.problem_name)
 
-    if FLAGS.framework == 'tf':
-        bsde = get_equation_tf(FLAGS.problem_name, config.dim, config.total_time, config.num_time_interval)
-    elif FLAGS.framework == 'tch':
-        bsde = get_equation_tch(FLAGS.problem_name, config.dim, config.total_time, config.num_time_interval)
+    if args.framework == 'tf':
+        import tensorflow as tf
+        from equation import get_equation as get_equation_tf
+        from solver import FeedForwardModel as FFtf
+        bsde = get_equation_tf(args.problem_name, config.dim, config.total_time, config.num_time_interval)
 
-    print("Running ", FLAGS.problem_name, " on: ", FLAGS.framework)
 
-    if not os.path.exists(FLAGS.log_dir):
-        os.mkdir(FLAGS.log_dir)
-    path_prefix = os.path.join(FLAGS.log_dir, FLAGS.problem_name)
+    elif args.framework == 'tch':
+        from equation_tch import get_equation as get_equation_tch
+        from solver_tch import train
+        
+        bsde = get_equation_tch(args.problem_name, config.dim, config.total_time, config.num_time_interval)
+
+
+
+    print("Running ", args.problem_name, " on: ", args.framework)
+
+    if not os.path.exists(args.log_dir):
+        os.mkdir(args.log_dir)
+    path_prefix = os.path.join(args.log_dir, args.problem_name)
     with open("{}_config.json".format(path_prefix), "w") as outfile:
         json.dump(
             dict(
@@ -58,18 +65,18 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
 
     #### Loop over run
-    for idx_run in range(1, FLAGS.num_run + 1):
+    for idx_run in range(1, args.num_run + 1):
 
-        log("Begin to solve %s with run %d" % (FLAGS.problem_name, idx_run))
+        log("Begin to solve %s with run %d" % (args.problem_name, idx_run))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
-        if FLAGS.framework == 'tf':
+        if args.framework == 'tf':
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(config, bsde, sess)
                 model.build()
                 training_history = model.train()
 
-        elif FLAGS.framework == 'tch':
+        elif args.framework == 'tch':
             training_history = train(config, bsde)
 
         if bsde.y_init:

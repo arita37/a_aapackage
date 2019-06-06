@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 
 
 import numpy as np
-import tensorflow as tf
+
 
 
 ####################################################################################################
@@ -18,22 +18,12 @@ import tensorflow as tf
 from config import get_config
 
 
-#### TF
-from equation import get_equation as get_equation_tf
-from solver import FeedForwardModel as FFtf
-
-
-#### PYTORCH
-from equation_tch import get_equation as get_equation_tch
-from solver_tch import train
-
-
 
 
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='HJB')
+   p.add_argument("--problem_name", type=str, default='AllenCahn')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
@@ -72,14 +62,25 @@ def main():
 
 
     if arg.framework == 'tf':
+        import tensorflow as tf
+        from equation import get_equation as get_equation_tf 
+        from solver import FeedForwardModel as FFtf
+
         bsde = get_equation_tf(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
 
+
     elif arg.framework == 'tch':
+        from equation_tch import get_equation as get_equation_tch
+        from solver_tch import train
+
         bsde = get_equation_tch(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
+
+
 
     print("Running ", arg.problem_name, " on: ", arg.framework)
     print(bsde)
-
+    logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
+    
     #### Loop over run
     for idx_run in range(1, arg.num_run + 1):
 
