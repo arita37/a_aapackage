@@ -1,81 +1,69 @@
 # coding: utf-8
+"""
+RF framework
+https://github.com/google/dopamine/tree/master/docs
+https://github.com/deepmind/trfl
 
-import matplotlib.pyplot as plt
+
+""""
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import tensorflow as tf
 
-sns.set()
 
-
-
+class to_name(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
+    
+    
+    
+def val(x,y) :
+  return x if x is not None else y
+	
 
 class Model:
-    def __init__(self,
-        state_size,
-        window_size,
-        trend,
-        skip,
-        iterations,
-        initial_reward
-    ):
-        self.agent = Agent(state_size, window_size, trend, skip)
-        self.iterations = iterations
-        self.initial_reward = initial_reward
-
+    def __init__(self, history, params={}):
+        p = to_name(params)
+        self.agent = Agent(history, params)
+        self.n_iter = p.n_iter
+        self.initial_reward = p.initial_reward
+        ##
 
 class Agent:
-    LEARNING_RATE = 1e-4
-    LAYER_SIZE = 256
-    GAMMA = 0.9 # Discount
-    OUTPUT_SIZE = 3
-
-    def __init__(self, state_size, window_size, trend, skip):
-        self.state_size = state_size
-        self.window_size = window_size
-        self.half_window = window_size // 2
-        self.trend = trend  # history
-        self.skip = skip    # time step
+    def __init__(self, history, do_action, params={}):
+        p = to_name(params)
+        self.LEARNING_RATE = p.learning_rate
+        self.OUTPUT_SIZE   = p.output_size
+        self.GAMMA   = p.GAMMA
         
-        
-        ### RL models
-        self.X = tf.placeholder(tf.float32, (None, self.state_size))
-        self.REWARDS = tf.placeholder(tf.float32, (None))
-        self.ACTIONS = tf.placeholder(tf.int32, (None))
-  
-  
-        feed_forward = tf.layers.dense(self.X, self.LAYER_SIZE, activation = tf.nn.relu)
-        self.logits = tf.layers.dense(feed_forward, self.OUTPUT_SIZE, activation = tf.nn.softmax)
-        input_y = tf.one_hot(self.ACTIONS, self.OUTPUT_SIZE)
-        loglike = tf.log((input_y * (input_y - self.logits) + (1 - input_y) * (input_y + self.logits)) + 1)
-  
-  
-        rewards = tf.tile(tf.reshape(self.REWARDS, (-1,1)), [1, self.OUTPUT_SIZE])
-  
-  
-  
-  
-        self.cost = -tf.reduce_mean(loglike * (rewards + 1)) 
+        self.history = history
+ 
+ 
+        ### State, reward, action
+        self.X       = None   # n_timestep x n_statesize
+        self.REWARDS = None 
+        self.ACTIONS = None
+       
+       
+        self.logits = None
+       
+        self.cost = None
         self.optimizer = tf.train.AdamOptimizer(learning_rate = self.LEARNING_RATE).minimize(self.cost)
         self.sess = tf.InteractiveSession()
         self.sess.run(tf.global_variables_initializer())
-    
-    
-    ## ok
-    def predict(self, inputs):
+
+
+    def predict_action(self, inputs):
         # Predict probabiulity of all actions
         return self.sess.run(self.logits, feed_dict={self.X: inputs})
 
 
     def get_predicted_action(self, sequence):
-        prediction = self.predict(np.array(sequence))[0]  #Proba vector for each action
+        prediction = self.predict_action(np.array(sequence))[0]  #Proba vector for each action
         return np.argmax(prediction)
     
     
-
-    ## ok
-    def get_state(self, t, state=None, history=None):
+    def get_state(self, t, state=None, history=None, reward=None):
         """
          Action ---> ENV -->  Reward +Change in State== reward state 
          In this particular case, there is no rewaed state
@@ -95,9 +83,7 @@ class Agent:
         return discounted_r
     
     
-    def run_sequence(self, history, do_action , 
-                     state_initial=None, 
-                     reward_initial=None, step=1):
+    def run_sequence(self, history, do_action, params):
         """
           Generate the states, and get action result intoList
         
@@ -106,11 +92,14 @@ class Agent:
           param       :  parameters into dict
 
         """
-        state      = state_initial
-        reward     = reward_initial
+        p = params
+        state      = p.get("state_initial")
+        reward     = p.get("reward_initial")
+        step = p["step"]
         ep_history = []
+        
         for t in range(0, len(history) - 1, step):
-            action_t    = self.get_predicted_action(t + 1, state, history)
+            action_t    = self.get_predicted_action(t + 1, state, history, reward)
        
             action_dict = {"t": t, 
                            "action":   action_t,             
@@ -124,8 +113,8 @@ class Agent:
             state        = merge_state(state, d)
             reward       = d["reward"]
             
-            next_state  = self.get_state(t + 1, state, history)  # can be None
-            ep_history.append([state, action_t, reward["reward_t"], next_state])
+            next_state  = self.get_state(t + 1, state, history, reward)  # can be None
+            ep_history.append([state, action_t, reward, next_state])
             state = next_state
 
 
@@ -134,20 +123,17 @@ class Agent:
         return ep_history
    
    
-    
-    def train(self, n_iters, n_log_freq, state_initial, reward_initial):
+    def train(self, n_iters=1, n_log_freq=1, state_initial=None, reward_initial=None):
         # Old version
-        step = self.skip
-        
         for i in range(n_iters):
             ep_history = []
             state      = state_initial
             reward     = reward_initial
 
-            ep_history = predict_sequence(history, do_action , 
-                                          state_initial=state_initial, 
-                                          reward_initial=reward_initial, 
-                                          step=step)
+            ep_history = run_sequence(self.history, do_action , 
+                                          {"state_initial" :  self.state_initial, 
+                                           "reward_initial" : self.reward_initial, 
+                                           "step" : self.step})
                         
             cost, _ = self.sess.run([self.cost, self.optimizer], 
                                      feed_dict={self.X:       np.vstack(ep_history[:,0]),
@@ -155,66 +141,21 @@ class Agent:
                                                 self.ACTIONS: ep_history[:,1]})
             
             if (i+1) % n_log_freq == 0:
-                print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, 
-                      total_profit, cost, starting_money))
+                print('epoch: %d, cost: %f'%(i + 1, cost))
+
     
-    
-
-def fit(model, df, do_action):
-    agent = model.agent
-    for i in range(model.iterations):
-        ep_history = []
-        total_reward = 0
-        inventory = [] # passed by reference
-        state = agent.get_state(0)
-        starting_reward = model.initial_reward
-        
-        
-        for t in range(0, len(agent.trend) - 1, agent.skip):
-            action = agent.get_predicted_action(state)
-            param = { "half_window"     : agent.half_window,"starting_reward" : starting_reward }
-            
-            trend_input = agent.trend
-            ######## do_action ###################################
-            action_dict = {"t": t, 
-                           "action": action,             
-            
-                           "param":  param,    
-                           
-                           "history": trend_input, 
-                           "total_reward": total_reward,
-                           "inventory"   : inventory
-                          }
-                          
-            r = do_action(action_dict)
-            starting_reward        = r["reward_t"]  #### Be careful
-            
-            total_reward,inventory = r["total_reward"] ,  r["inventory"]
-            reward_state           = r.get("reward_state")
-            next_state = agent.get_state(t + 1, reward_state= reward_state)
-            ###################################################
-            ep_history.append([state, action, starting_reward, next_state])
-            state = next_state
-
-
-        ep_history = np.array(ep_history)
-        ep_history[:,2] = agent.discount_rewards(ep_history[:,2])
-        cost, _ = agent.sess.run([agent.cost, agent.optimizer], 
-                                 feed_dict= {agent.X:np.vstack(ep_history[:,0]),
-                                 agent.REWARDS:ep_history[:,2],
-                                 agent.ACTIONS:ep_history[:,1]})
-
-        if (i+1) % 10 == 0:
-            print('epoch: %d, total rewards: %f.3, cost: %f, total money: %f'%(i + 1, 
-            total_reward, cost, starting_reward))
-
+ 
+def fit(model, df, do_action, state_initial=None, reward_initial=None, params=None):
+    agent = model.agent(history=df.values, do_action=do_action,
+                        params= params)
+    agent.train()
     return agent.sess
 
 
 
-def predict(model, sess, df, do_action):
+def predict(model, sess, df, do_action=None,  params= params) :
     model.agent.sess = sess
-    res = model.agent.predict_sequence(df, do_action_example) #TODO needs an example function to work
+    res = model.agent.run_sequence(df.values, do_action, params= params) #TODO needs an example function to work
     return res
 
 
@@ -222,55 +163,8 @@ def predict(model, sess, df, do_action):
 
 ################################################################################################
 ################################################################################################
-#https://stackoverflow.com/questions/2597278/python-load-variables-in-a-dict-into-namespace
-class to_name(object):
-  def __init__(self, adict):
-    self.__dict__.update(adict)
-
-
-
 def do_action_example(action_dict):
     """
-        starting_money = initial_money
-        states_sell    = []
-        states_buy     = []
-        inventory      = []
-        
-        state = self.get_state(0)
-        for t in range(0, len(self.trend) - 1, self.skip):
-            action     = self.get_predicted_action(state)
-            
-            ###### do_action ########################################
-            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
-                inventory.append(self.trend[t])
-                initial_money -= self.trend[t]
-                states_buy.append(t)
-                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
-                
-                
-            elif action == 2 and len(inventory):
-                bought_price = inventory.pop(0)
-                initial_money += self.trend[t]
-                states_sell.append(t)
-                try:
-                    invest = ((close[t] - bought_price) / bought_price) * 100
-                except:
-                    invest = 0
-                print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, close[t], invest, initial_money)
-                )
-            ########################################################
-            next_state = self.get_state(t + 1)
-            state = next_state
-            
-        invest = ((initial_money - starting_money) / starting_money) * 100
-        total_gains = initial_money - starting_money
-        return states_buy, states_sell, total_gains, invest    
-    
-    
-
-    
     
     """
     x         = to_name(action_dict)
@@ -278,49 +172,20 @@ def do_action_example(action_dict):
     ########## Mapping ####################################
     t            = x.t # time step
     action       = x.action  #selectec action
-    price        = x.history[x.t]   # current price from history price
-    total_reward = x.total_reward
-    inventory    = x.inventory    # how much we have in stocks    
+    Ht           = x.history[x.t]   # current price from history price
+    reward       = x.reward
     
-    
-    initial_money = x.current_state_val
-    starting_money = initial_money
-    
-    half_window      = x.param['half_window']
-    starting_reward  = x.param['starting_reward']  
-    states_sell , states_buy = [], []
+
     
     #######################################################
     #### Buy
-    if action == 1 and starting_reward >= price and t < (len(x.history) - half_window):
-        inventory.append(price)
-        initial_money  = initial_money - price
-        states_buy.appent(t)
-        print('day %d: buy 1 unit at price %f, total balance %f'% (t, price, initial_money))
-        reward_t = 0
+    if action == 1 :
+      reward = 1
 
-        
     ### Sell    
-    elif action == 2 and len(inventory):
-        bought_price     = inventory.pop(0)
-        initial_money    = initial_money + price
-        states_sell.appent(t)       
-        
-        
-        reward_t         = price - bouginitial_money + priceht_price
-        total_reward    += reward_t
-        starting_reward += price
+    elif action == 2 :
+      reward = 0
 
-        try:
-                    invest = ((price - bought_price) / bought_price) * 100
-        except:
-                    invest = 0
- 
-        print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, price, invest, initial_money)
-        )   
-    
     ##### Mapping Back #################################
     invest = ((initial_money - starting_money) / starting_money) * 100
     total_gains = initial_money - starting_money
@@ -332,8 +197,7 @@ def do_action_example(action_dict):
           "total_reward"   : total_gains,
           "reward_state"   : None, 
           
-          "states_buy"     : states_buy,
-          "states_sell"    : states_sell,
+
         } 
         
     return d
