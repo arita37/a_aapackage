@@ -72,8 +72,11 @@ class FeedForwardModel(nn.Module):
 
         self._y_init = Parameter(torch.Tensor([1]))
         self._y_init.data.uniform_(self._config.y_init_range[0], self._config.y_init_range[1])
+
         self._subnetworkList = nn.ModuleList([Subnetwork(config) for _ in range(self._num_time_interval - 1)])
+
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 
     def forward(self, x, dw):
         time_stamp = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t

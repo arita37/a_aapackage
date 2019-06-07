@@ -18,7 +18,7 @@ import numpy as np
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='AllenCahn')
+   p.add_argument("--problem_name", type=str, default='HJB')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
@@ -42,6 +42,12 @@ def config_dump(conf, path_prefix):
         )    
     
 
+def get_config(name):
+    try:
+        return globals()[name+'Config']
+    except KeyError:
+        raise KeyError("Config for the required problem not found.")
+
 
 
 import numpy as np
@@ -53,18 +59,18 @@ class Config(object):
     valid_size = 256
     step_boundaries = [2000, 4000]
     num_iterations = 6000
-    logging_frequency = 100
+    logging_frequency = 10
     verbose = True
     y_init_range = [0, 1]
 
 
 class HJBConfig(Config):
     # Y_0 is about 4.5901.
-    dim = 100
+    dim = 2
     total_time = 1.0
-    num_time_interval = 20
+    num_time_interval = 10
     lr_boundaries = [400]
-    num_iterations = 10000
+    num_iterations = 20
     lr_values = list(np.array([1e-2, 1e-2]))
     num_hiddens = [dim, dim+10, dim+10, dim]
     y_init_range = [0, 1]
@@ -131,6 +137,12 @@ def get_equation(name, dim, total_time, num_time_interval):
 
 
 class HJB(Equation):
+    """
+       nsample x VecDim x dT
+       
+      
+    
+    """
     def __init__(self, dim, total_time, num_time_interval):
         super(HJB, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.zeros(self._dim)
@@ -199,7 +211,7 @@ class FeedForwardModel(object):
         # self._train_ops = None  # Gradient, Vale,
 
     def train(self):
-        start_time = time.time()
+        t0 = time.time()
         training_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
@@ -209,23 +221,24 @@ class FeedForwardModel(object):
         self._sess.run(tf.global_variables_initializer())  # initialization
         # begin sgd iteration
         for step in range(self._config.num_iterations + 1):
-            ### Validation Data Eval.
-            if step % self._config.logging_frequency == 0:
-                loss, init = self._sess.run([self._loss, self._y_init], feed_dict=feed_dict_valid)
-
-                elapsed_time = time.time() - start_time + self._t_build
-                training_history.append([step, loss, init, elapsed_time])
-                log(
-                    "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                    % (step, loss, init, elapsed_time)
-                )
-
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
             self._sess.run(
                 self._train_ops,
-                feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
+                feed_dict={self._dw: dw_train, 
+                           self._x : x_train, 
+                           self._is_training: True},
             )
+            
+            
+            ### Validation Data Eval.
+            if step % self._config.logging_frequency == 0:
+                dt= time.time() - t0 + self._t_build
+                loss, init = self._sess.run([self._loss, self._y_init], feed_dict=feed_dict_valid)
+                training_history.append([step, loss, init, dt])
+                log("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"% (step, loss, init, dt)  )
+
+
         return np.array(training_history)
 
     def build(self):
@@ -235,7 +248,7 @@ class FeedForwardModel(object):
            z : variance
 
         """
-        start_time = time.time()
+        t0 = time.time()
         time_stamp = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         ### dim X Ntime_interval for Stochastic Process
@@ -305,15 +318,18 @@ class FeedForwardModel(object):
             global_step, self._config.lr_boundaries, self._config.lr_values
         )
 
+        ##### Loss is specific 
         trainable_variables = tf.trainable_variables()
         grads = tf.gradients(self._loss, trainable_variables)
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         apply_op = optimizer.apply_gradients(
-            zip(grads, trainable_variables), global_step=global_step, name="train_step"
+            zip(grads, trainable_variables), 
+            global_step=global_step, name="train_step"
         )
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
-        self._t_build = time.time() - start_time
+        self._t_build = time.time() - t0
+
 
     def _subnetwork(self, x, name):
         """
@@ -430,13 +446,6 @@ def main():
         bsde = get_equation_tf(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
 
 
-    elif arg.framework == 'tch':
-        from equation_tch import get_equation as get_equation_tch
-        from solver_tch import train
-
-        bsde = get_equation_tch(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
-
-
     print("Running ", arg.problem_name, " on: ", arg.framework)
     print(bsde)
     logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
@@ -452,9 +461,6 @@ def main():
                 model.build()
                 training_history = model.train()
 
-        elif arg.framework == 'tch':
-            training_history = train(c, bsde)
-
         if bsde.y_init:
             log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),)
 
@@ -464,7 +470,7 @@ def main():
           training_history,
           fmt=["%d", "%.5e", "%.5e", "%d"],
           delimiter=",",
-          header="step,loss_function,target_value,elapsed_time",
+          header="step,loss_function,target_value,dt",
           comments="",
         )
 

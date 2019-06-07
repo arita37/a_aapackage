@@ -1,6 +1,13 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
+
+source activate 
+
+
+
+
+
 """
 
 import json
