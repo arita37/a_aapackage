@@ -6,13 +6,14 @@ import toml
 def load_config(args, config_file, config_mode, verbose=0):
     ##### Load file params as dict namespace #############################
     import toml
-
     class to_namespace(object):
         def __init__(self, adict):
             self.__dict__.update(adict)
+            
+        def get(self, key):
+            return self.__dict__.get(key)
 
-    if verbose:
-        print(config_file)
+    print(config_file) if verbose else None
 
     try:
        pars = toml.load(config_file)
@@ -20,8 +21,7 @@ def load_config(args, config_file, config_mode, verbose=0):
 
 
        pars = pars[config_mode]  # test / prod
-       if verbose:
-          print(config_file, pars)
+       print(config_file, pars) if verbose else None
 
        ### Overwrite params from CLI input and merge with toml file
        for key, x in vars(args).items():

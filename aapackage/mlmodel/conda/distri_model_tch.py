@@ -16,11 +16,10 @@ from importlib import import_module
 
 
 
-
 def create(modelname="", params=None, modelonly=1):
     """
       modelname:  model_dl_tch.mlp.py
-      
+      model_dl_tch/****
       
     """
     modelname = modelname.replace(".py", "")
@@ -34,7 +33,7 @@ def create(modelname="", params=None, modelonly=1):
     return  model
 
 
-def models_instance(name="net", params={}):
+def model_instance(name="net", params={}):
     if name == "net":
         return Net()
     else  :
@@ -44,7 +43,7 @@ def models_instance(name="net", params={}):
 
 
 
-
+####################################################################################################
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()

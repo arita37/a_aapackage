@@ -15,7 +15,6 @@ from importlib import import_module
 
 # from aapackage.mlmodel import util
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 from util import load_config
 
@@ -33,28 +32,54 @@ def get_recursive_files(folderPath, ext):
     return outFiles
 
 
-def create(modelname="", params=None):
+
+def module_load(modelname=""):
     """
       modelname:  model_dl.1_lstm.py
-      
+      model_*****/      
       
     """
-    modelname = modelname.replace(".py", "")
-    # module_path = glob.glob("{}.py".format(modelname))
-    #if len(module_path) == 0:
-    #    raise NameError("Module {} notfound".format(modelname))
-
     print(modelname)
+    modelname = modelname.replace(".py", "")
+    
     try :
       module = import_module("{a}".format(a=modelname))
     except Exception as e :
       raise NameError("Module {} notfound, {}".format(modelname, e))    
+    
+    return module
 
-    if params:
-        model = module.Model(**params)
-        return module, model
-    else:
-        return module, None
+
+
+def create(modelname="", params=None, choice=['module', "model"]):
+    """
+      modelname:  model_dl.1_lstm.py
+      model_*****/      
+      
+    """
+    module = module_load(modelname=modelname)  
+    model = module.Model(**params)
+    return module, model
+    
+
+
+def create_instance_tch(name="net", params={}):
+    _, model = create(name, params)
+    return model   
+       
+
+
+
+
+
+def fit(model, module, X):
+    return module.fit(model, X)
+
+
+def predict(model, module, sess=None, X=None):
+    return module.predict(model, sess, X)
+
+
 
 
 def load(folder, filename):
@@ -65,12 +90,6 @@ def save(model, folder, saveformat=""):
     pass
 
 
-def fit(model, module, X):
-    return module.fit(model, X)
-
-
-def predict(model, module, sess=None, X=None):
-    return module.predict(model, sess, X)
 
 
 def predict_file(model, foldername=None, fileprefix=None):
@@ -85,7 +104,9 @@ def fit_file(model, foldername=None, fileprefix=None):
 #################################################################################
 def test_all(parent_folder="model_dl"):
     module_names = get_recursive_files(parent_folder, r"[0-9]+_.+\.py$")
-
+    module_names.sort()
+    print(module_names)
+    
     failed_scripts = []
     import tensorflow as tf
 
@@ -93,11 +114,13 @@ def test_all(parent_folder="model_dl"):
         print("#######################")
         print(module_name)
         print("######################")
-        module = import_module("{}.{}".format(parent_folder, module_name.replace(".py", "")))
-        module.test()
-        tf.reset_default_graph()
-        del module
-
+        try :
+          module = import_module("{}.{}".format(parent_folder, module_name.replace(".py", "")))
+          module.test()
+          tf.reset_default_graph()
+          del module
+        except Exception as e:
+          print("Failed", e)
 
 
 ###############################################################################
@@ -129,9 +152,16 @@ if __name__ == "__main__":
     args = load_arguments()
 
 
-    # still not supported yet
+    if args.do == "testall"  :
+        print(args.do)
+        test_all()
+
+
     if args.do == "test"  :
         print(args.do)
-        module, _ = create(args.modelname, None)  # '1_lstm'
+        module = module_load(args.modelname)  # '1_lstm'
         print(module)
         module.test()
+
+
+

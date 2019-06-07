@@ -16,6 +16,7 @@ else
 model="net"
 fi
 
+# echo "Nnodes" $n_node  $model`
 
 
 

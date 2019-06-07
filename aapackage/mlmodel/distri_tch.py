@@ -13,7 +13,6 @@ import os
 
 import toml
 
-import data
 import horovod.torch as hvd
 import torch.nn as nn
 import torch.nn.functional as F
@@ -22,9 +21,11 @@ import torch.utils.data.distributed
 from torchvision import datasets, transforms
 
 
-from util import load_config
-from distri_model_tch  import models_instance
 
+from data import import_data
+from util import load_config
+from models  import create_instance_tch
+# from models  import create
 
 
 #####################################################################################
@@ -54,6 +55,11 @@ def load_arguments():
     p.add_argument("--seed", type=int, default=42, metavar="S", help="random seed ")
     p.add_argument("--log-interval", type=int, default=10, metavar="N", help="log intervl")
     p.add_argument("--fp16-allreduce", action="store_true", default=False, help="fp16 in allreduce")
+
+    ### Should be store in toml file
+    p.add_argument("--model_params",  default=None, help="model params as Dict")
+
+
     args = p.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -76,11 +82,14 @@ if args.cuda:
 
 #####################################################################################
 ########### User Specific ###########################################################
-train_dataset = data.import_data(name=args.data, mode="train", node_id=hvd.rank())
-test_dataset = data.import_data(name=args.data, mode="test", node_id=hvd.rank())
+train_dataset = import_data(name=args.data, mode="train", node_id=hvd.rank())
+test_dataset =  import_data(name=args.data, mode="test", node_id=hvd.rank())
 
 
-model = models_instance(args.model)  # Net()
+params = args.get("model_params") if args.get("model_params") is not None else {} 
+model = create_instance_tch(args.model, params=params)  # Net()
+
+
 
 
 #####################################################################################
