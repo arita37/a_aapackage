@@ -40,21 +40,39 @@ ssh_cmdrun(): Runs a specific command using ssh library called paramiko and pem 
   cmdstr = "ls -lrt"
   reverselisting = ssh_cmdrun(ipadress, identity, cmdstr)
 
-# ec2_instance_getallstate_cli(): For a instance type, fetch ram, cpu usage as an array
-# ec2_instance_usage(): Used by ec2_instance_getallstate_cli() for each instance.
-# ec2_config_build_template_cli(): Build a template for a spot request and store in /tmp/
-#   as per the config in AWS
-# ec2_spot_start_cli(): Actual spot request, uses ec2_config_build_template_cli() method.
-# ec2_spot_instance_list(): Current list of spot instances.
-# ec2_instance_stop(): Stop the spot instance based on the instanceid
-# ec2_get_spot_price(): For a given instance type, run a shell script to make a http call
-#  and grep the price for the same.
-#
+For a instance type, fetch ram, cpu usage as an array for spot requests only
+  ec2_instance_getallstate_cli('t2.small')
+
+Each instance usage details
+  spot_requestid = '<spot request id>'
+  ipaddr = '12.30.15.25'
+  cpuusage, usageram, totalram = ec2_instance_usage(spot_requestid, ipaddr)
+
+Build a template for a spot request and store in default location(/tmp/ec_spot_config)
+  ec2_config_build_template_cli('t2.medium')
 
 
+Request spot instance.
+  instance = 't3.small'
+  spot_price = 0.59
+  region = 'us-east-1'
+  ec2_spot_start_cli(instance, spot_price, region)
 
+Current list of spot instances.
+  spot_list = ec2_spot_instance_list()
+
+
+Stop the spot instance based on the instanceid
+  spot_request_id = '<Req Id>'
+  ec2_instance_stop(spot_request_id)
+
+For a given instance type, run a shell script to make a http call
+and grep the price for the same.
+  instance_type = 't3.medium'
+  ec2_get_spot_price(instance_type)
 
 """
+
 from __future__ import division, print_function
 
 import csv
@@ -359,6 +377,8 @@ def ec2_config_build_template_cli(instance_type, amiId=None, keypair=None,
       }
     ]
   }
+  if not spot_cfg_file:
+      spot_cfg_file = AWS().v['SPOT_CFG_FILE']
   with open(spot_cfg_file, 'w') as spot_file:
     spot_file.write(json.dumps(spot_config))
 
