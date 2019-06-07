@@ -1,8 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-Lightweight Functional interface to wrap access
-to Deep Learning, RLearning models.
+Lightweight Functional interface to wrap access to Deep Learning, RLearning models.
 Logic follows Scikit Learn API and simple for easy extentions.Logic
+
+
+from models import create
+model = create_instance("model_dl.1_lstm.py", params=params_dict)  # Net
+
+
+
+### RL model
+python  models.py  --modelname model_rl.4_policygradient  --do test
+
+
+### TF DNN model
+python  models.py  --modelname model_dl.1_lstm.py  --do test
+
+
+## PyTorch models
+python  models.py  --modelname model_dl_tch.mlp.py  --do test
 
 
 
@@ -101,6 +117,8 @@ def fit_file(model, foldername=None, fileprefix=None):
 
 
 
+
+#################################################################################
 #################################################################################
 def test_all(parent_folder="model_dl"):
     module_names = get_recursive_files(parent_folder, r"[0-9]+_.+\.py$")
@@ -140,7 +158,9 @@ def load_arguments(config_file= None ):
 
     p.add_argument("--do", default="test", help="test") 
     p.add_argument("--modelname", default="model_dl.1_lstm.py",  help=".")  
-
+    p.add_argument("--dataname", default="model_dl.1_lstm.py",  help=".") 
+    p.add_argument("--data", default="model_dl.1_lstm.py",  help=".")     
+    
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
@@ -150,7 +170,6 @@ def load_arguments(config_file= None ):
 if __name__ == "__main__":
     # test_all() # tot test all te modules inside model_dl
     args = load_arguments()
-
 
     if args.do == "testall"  :
         print(args.do)
@@ -163,5 +182,14 @@ if __name__ == "__main__":
         print(module)
         module.test()
 
+
+    if args.do == "fit"  :
+        module = module_load(args.modelname)  # '1_lstm'
+        module.fit()
+        
+        
+    if args.do == "predict"  :
+        module = module_load(args.modelname)  # '1_lstm'
+        module.predict()        
 
 

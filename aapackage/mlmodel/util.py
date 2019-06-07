@@ -38,6 +38,14 @@ def load_config(args, config_file, config_mode, verbose=0):
 
 
 
+def val(x,xdefault) :
+  try :
+   return x if x is not None  else xdefault
+  except :
+      return xdefault
+      
+      
+
 """
 from datetime import datetime, timedelta
 

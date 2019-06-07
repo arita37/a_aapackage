@@ -1,11 +1,13 @@
 """
+Pytorch distributed
+### Distributed with OPENMPI with 2 nodes,  model_dl_tch.mlp
+./distri_run.sh  2    model_dl_tch.mlp
 
 
 python   distri_model_tch.py   --model model_dl_tch.mlp
 
 
 """
-
 from __future__ import print_function
 
 import argparse
@@ -21,10 +23,9 @@ import torch.utils.data.distributed
 from torchvision import datasets, transforms
 
 
-
-from data import import_data
-from util import load_config
-from models  import create_instance_tch
+from util import load_config, val
+from data import import_data_tch as import_data
+from models  import create_instance_tch as create_instance
 # from models  import create
 
 
@@ -57,7 +58,7 @@ def load_arguments():
     p.add_argument("--fp16-allreduce", action="store_true", default=False, help="fp16 in allreduce")
 
     ### Should be store in toml file
-    p.add_argument("--model_params",  default=None, help="model params as Dict")
+    p.add_argument("--model_params_name",  default='test', help="model params as Dict")
 
 
     args = p.parse_args()
@@ -86,8 +87,9 @@ train_dataset = import_data(name=args.data, mode="train", node_id=hvd.rank())
 test_dataset =  import_data(name=args.data, mode="test", node_id=hvd.rank())
 
 
-params = args.get("model_params") if args.get("model_params") is not None else {} 
-model = create_instance_tch(args.model, params=params)  # Net()
+params_dict = args.get( args.get("model_params_name")  )
+params_dict = params_dict if params_dict is not None else {} 
+model = create_instance(args.model, params=params_dict)  # Net()
 
 
 
