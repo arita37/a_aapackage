@@ -1,32 +1,45 @@
 # -*- coding: utf-8 -*-
 """
 ---------AWS utilities--------------------------------------------------------
-### Usage
-# AWS is class that defines all the configuration like access key or secret or pem key,
-# which can be used  both by ec2, s3, rds connections. At this point, it has been used for
-# ec2 and s3 connections.
-# AWS object can be populated from a file containing a json object, a json extension is assumed
-# as a json file.
-# from util_aws import AWS
-# aws = AWS(name='myconfig.json')
-# To access the PEM KEY, use it as aws.v['AWS_KEYPEM']
-# For default configuration populated from the code, a simpler approach is:
-# aws = AWS()
-# AWS Access key and secret are first read from the boto config file i.e $HOME/.boto
-# If not found will search them in aws.v['AWS_ACCESS_LOCAL'], so to access the functionality
-# in the AWS object, the correct configuration json has to be passed.
-#
-# The pem file is looked in aws.v['AWS_KEYPEM'] in the $HOME/.ssh directory
-# The keypair is the name of the PEM file represented.
-# On creation of AWS() object the connection to ec2, s3 is not created. It has to be explicitly
-# invoked to create the type of the connection as supported by the AWS() object.
-#
-# For creating a connection call AWS().aws_conn_create(refion=<region name>)
-# For a windows specific connection, call AWS().aws_conn_create_windows()
-#
-# Utility methods:
-# ssh_cmdrun(): Runs a specific command using ssh library called paramiko and pem key file.
-# ssh_put(): Puts the content of filename to a remotefile, using pem key for the hostname.
+Usage:
+AWS is class that defines all the configuration like access key or secret or pem key,
+which can be used  both by ec2, s3, rds connections. At this point, it has been used for
+ec2 and s3 connections.
+AWS object can be populated from a file containing a json object
+Eg: Use pem file to make ssh connection
+    import socket, paramiko
+    from util_aws import AWS
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(hostname, 22)
+    transport = paramiko.Transport(self.sock)
+    transport.start_client()
+    pemfile = AWS().v['AWS_KEYPEM'] # Get the private key pem file
+    privatekey = paramiko.RSAKey.from_private_key_file(pemfile)
+    transport.auth_publickey(username, privatekey)
+
+Eg: Get the keypair stored in the AWS for running a command using SSH
+    identity = AWS().ec2_keypair_get()  # Get the key pair
+    cmdstr = "df -k | grep swap"
+    swapspace = ssh_cmdrun(ipadress, identity, cmdstr)
+
+Eg: Get the access and secret key for accessing AWS
+    access, secret = AWS().aws_accesskey_get()
+    conn = boto.connect_s3(access, secret)
+    bucket = conn.get_bucket(bucket_name)
+
+Eg: Create a conn for us-east-2
+    east2-conn = AWS().aws_conn_create(region='us-east-2')
+
+Eg: Create windows conn for us-east-1
+    east1-win-conn = AWS().aws_conn_create_windows(aws_region='us-east-1')
+
+Utility methods:
+ssh_cmdrun(): Runs a specific command using ssh library called paramiko and pem key file.
+  ipaddress = '12.30.24.21'
+  identity = AWS().ec2_keypair_get()
+  cmdstr = "ls -lrt"
+  reverselisting = ssh_cmdrun(ipadress, identity, cmdstr)
+
 # ec2_instance_getallstate_cli(): For a instance type, fetch ram, cpu usage as an array
 # ec2_instance_usage(): Used by ec2_instance_getallstate_cli() for each instance.
 # ec2_config_build_template_cli(): Build a template for a spot request and store in /tmp/
@@ -1015,7 +1028,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import paramiko, socket
+        import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
@@ -1274,7 +1287,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import paramiko, socket
+        import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
