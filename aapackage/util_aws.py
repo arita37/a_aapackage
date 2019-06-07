@@ -1,20 +1,78 @@
 # -*- coding: utf-8 -*-
 """
 ---------AWS utilities--------------------------------------------------------
-### Usage
-import util_aws
-util_aws.AWS()
-OR
-util_aws.AWS(name="mycred.json")
-OR
-util_aws.AWS(name="awskeypair_name")  ---> ./awsconfig/awskeypair_name
+Usage:
+AWS is class that defines all the configuration like access key or secret or pem key,
+which can be used  both by ec2, s3, rds connections. At this point, it has been used for
+ec2 and s3 connections.
+AWS object can be populated from a file containing a json object
+Eg: Use pem file to make ssh connection
+    import socket, paramiko
+    from util_aws import AWS
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect(hostname, 22)
+    transport = paramiko.Transport(self.sock)
+    transport.start_client()
+    pemfile = AWS().v['AWS_KEYPEM'] # Get the private key pem file
+    privatekey = paramiko.RSAKey.from_private_key_file(pemfile)
+    transport.auth_publickey(username, privatekey)
+
+Eg: Get the keypair stored in the AWS for running a command using SSH
+    identity = AWS().ec2_keypair_get()  # Get the key pair
+    cmdstr = "df -k | grep swap"
+    swapspace = ssh_cmdrun(ipadress, identity, cmdstr)
+
+Eg: Get the access and secret key for accessing AWS
+    access, secret = AWS().aws_accesskey_get()
+    conn = boto.connect_s3(access, secret)
+    bucket = conn.get_bucket(bucket_name)
+
+Eg: Create a conn for us-east-2
+    east2-conn = AWS().aws_conn_create(region='us-east-2')
+
+Eg: Create windows conn for us-east-1
+    east1-win-conn = AWS().aws_conn_create_windows(aws_region='us-east-1')
+
+Utility methods:
+ssh_cmdrun(): Runs a specific command using ssh library called paramiko and pem key file.
+  ipaddress = '12.30.24.21'
+  identity = AWS().ec2_keypair_get()
+  cmdstr = "ls -lrt"
+  reverselisting = ssh_cmdrun(ipadress, identity, cmdstr)
+
+For a instance type, fetch ram, cpu usage as an array for spot requests only
+  ec2_instance_getallstate_cli('t2.small')
+
+Each instance usage details
+  spot_requestid = '<spot request id>'
+  ipaddr = '12.30.15.25'
+  cpuusage, usageram, totalram = ec2_instance_usage(spot_requestid, ipaddr)
+
+Build a template for a spot request and store in default location(/tmp/ec_spot_config)
+  ec2_config_build_template_cli('t2.medium')
 
 
+Request spot instance.
+  instance = 't3.small'
+  spot_price = 0.59
+  region = 'us-east-1'
+  ec2_spot_start_cli(instance, spot_price, region)
+
+Current list of spot instances.
+  spot_list = ec2_spot_instance_list()
 
 
+Stop the spot instance based on the instanceid
+  spot_request_id = '<Req Id>'
+  ec2_instance_stop(spot_request_id)
 
+For a given instance type, run a shell script to make a http call
+and grep the price for the same.
+  instance_type = 't3.medium'
+  ec2_get_spot_price(instance_type)
 
 """
+
 from __future__ import division, print_function
 
 import csv
@@ -31,33 +89,14 @@ from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from future import standard_library
 
 import paramiko
-# from attrdict import AttrDict as dict2
-# from pprint import pprint
-# from aapackage.globals import AWS
 from aapackage import util  # want to remove after refactor
-
 standard_library.install_aliases()
-
-
-
-###############################################################################
-
 
 
 ###############################################################################
 class AWS:
     """
     All the globals for AWS utility functionalities.
-    AWS_ACCESS_LOCAL = 'D:/_devs/keypair/aws_access.py'
-    AWS_KEY_PEM = "D:/_devs/keypair/oregon/aws_ec2_oregon.pem"
-    AWS_REGION = "us-west-2"
-    APNORTHEAST2 = 'ap-northeast-2'   ### Not good.. HARD coded  APNORTHEAST2 
-    EC2CWD = '/home/ubuntu/notebook/'
-    EC2_CONN = None
-    EC2_FILTERS = ('id', 'ip_address')
-    EC2_ATTRIBUTES = (
-        "id", "instance_type", "state", "public_dns_name", "private_dns_name",
-    )
     """
 
     def __init__(self, name=None, keypair=None, keypem=None):
@@ -338,6 +377,8 @@ def ec2_config_build_template_cli(instance_type, amiId=None, keypair=None,
       }
     ]
   }
+  if not spot_cfg_file:
+      spot_cfg_file = AWS().v['SPOT_CFG_FILE']
   with open(spot_cfg_file, 'w') as spot_file:
     spot_file.write(json.dumps(spot_config))
 
@@ -1007,7 +1048,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import paramiko, socket
+        import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
@@ -1266,7 +1307,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import paramiko, socket
+        import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
