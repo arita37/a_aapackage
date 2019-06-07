@@ -92,7 +92,7 @@ class Agent:
     
     
     def predict_sequence(self,  pars, trend_history=None):
-        initial_money  = pars["initial_money"]
+        initial_money
         starting_money = pars["initial_money"]
         states_sell    = []
         states_buy     = []
