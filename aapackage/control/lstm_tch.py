@@ -7,136 +7,107 @@ https://github.com/pytorch/examples/blob/master/time_sequence_prediction/train.p
 
 
 
+https://discuss.pytorch.org/t/correct-way-to-declare-hidden-and-cell-states-of-lstm/15745/2
+
+
+
 """
-
-
-
+from __future__ import print_function
 import torch
 import torch.nn as nn
-from generate_data import *
+import torch.optim as optim
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-#####################
-# Set parameters
-#####################
+class Sequence(nn.Module):
+    def __init__(self):
+        super(Sequence, self).__init__()
+        self.lstm1 = nn.LSTMCell(1, 51)
+        self.lstm2 = nn.LSTMCell(51, 51)
+        self.linear = nn.Linear(51, 1)
 
-# Data params
-noise_var = 0
-num_datapoints = 100
-test_size = 0.2
-num_train = int((1-test_size) * num_datapoints)
-
-# Network params
-input_size = 20
-# If `per_element` is True, then LSTM reads in one timestep at a time.
-per_element = True
-if per_element:
-    lstm_input_size = 1
-else:
-    lstm_input_size = input_size
-# size of hidden layers
-h1 = 32
-output_dim = 1
-num_layers = 2
-learning_rate = 1e-3
-num_epochs = 500
-dtype = torch.float
-
-#####################
-# Generate data
-#####################
-data = ARData(num_datapoints, num_prev=input_size, test_size=test_size, noise_var=noise_var, coeffs=fixed_ar_coefficients[input_size])
-
-# make training and test sets in torch
-X_train = torch.from_numpy(data.X_train).type(torch.Tensor)
-X_test = torch.from_numpy(data.X_test).type(torch.Tensor)
-y_train = torch.from_numpy(data.y_train).type(torch.Tensor).view(-1)
-y_test = torch.from_numpy(data.y_test).type(torch.Tensor).view(-1)
-
-X_train = X_train.view([input_size, -1, 1])
-X_test = X_test.view([input_size, -1, 1])
-
-#####################
-# Build model
-#####################
-
-# Here we define our model as a class
-class LSTM(nn.Module):
-
-    def __init__(self, input_dim, hidden_dim, batch_size, output_dim=1,
-                    num_layers=2):
-        super(LSTM, self).__init__()
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-        self.batch_size = batch_size
-        self.num_layers = num_layers
-
-        # Define the LSTM layer
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
-
-        # Define the output layer
-        self.linear = nn.Linear(self.hidden_dim, output_dim)
-
-    def init_hidden(self):
-        # This is what we'll initialise our hidden state as
-        return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim),
-                torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
-
-    def forward(self, input):
-        # Forward pass through LSTM layer
-        # shape of lstm_out: [input_size, batch_size, hidden_dim]
-        # shape of self.hidden: (a, b), where a and b both 
-        # have shape (num_layers, batch_size, hidden_dim).
-        lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))
+    def forward(self, input, future = 0):
+        outputs = []
+        h_t = torch.zeros(input.size(0), 51, dtype=torch.double)
+        c_t = torch.zeros(input.size(0), 51, dtype=torch.double)
         
-        # Only take the output from the final timetep
-        # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[-1].view(self.batch_size, -1))
-        return y_pred.view(-1)
+        
+        h_t2 = torch.zeros(input.size(0), 51, dtype=torch.double)
+        c_t2 = torch.zeros(input.size(0), 51, dtype=torch.double)
 
-model = LSTM(lstm_input_size, h1, batch_size=num_train, output_dim=output_dim, num_layers=num_layers)
+        for i, input_t in enumerate(input.chunk(input.size(1), dim=1)):
+            h_t, c_t = self.lstm1(input_t, (h_t, c_t))
+            h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
+            output = self.linear(h_t2)
+            outputs += [output]
+            
+            
+        for i in range(future):# if we should predict the future
+            h_t, c_t = self.lstm1(output, (h_t, c_t))
+            h_t2, c_t2 = self.lstm2(h_t, (h_t2, c_t2))
+            output = self.linear(h_t2)
+            outputs += [output]
+        outputs = torch.stack(outputs, 1).squeeze(2)
+        return outputs
 
-loss_fn = torch.nn.MSELoss(size_average=False)
 
-optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-#####################
-# Train model
-#####################
-
-hist = np.zeros(num_epochs)
-
-for t in range(num_epochs):
-    # Initialise hidden state
-    # Don't do this if you want your LSTM to be stateful
-    model.hidden = model.init_hidden()
+if __name__ == '__main__':
+    # set random seed to 0
+    np.random.seed(0)
+    torch.manual_seed(0)
     
-    # Forward pass
-    y_pred = model(X_train)
-
-    loss = loss_fn(y_pred, y_train)
-    if t % 100 == 0:
-        print("Epoch ", t, "MSE: ", loss.item())
-    hist[t] = loss.item()
-
-    # Zero out gradient, else they will accumulate between epochs
-    optimiser.zero_grad()
-
-    # Backward pass
-    loss.backward()
-
-    # Update parameters
-    optimiser.step()
-
-#####################
-# Plot preds and performance
-#####################
-
-plt.plot(y_pred.detach().numpy(), label="Preds")
-plt.plot(y_train.detach().numpy(), label="Data")
-plt.legend()
-plt.show()
-
-plt.plot(hist, label="Training loss")
-plt.legend()
-plt.show()
+    # load data and make training set
+    data = torch.load('traindata.pt')
+    input = torch.from_numpy(data[3:, :-1])
+    target = torch.from_numpy(data[3:, 1:])
+    test_input = torch.from_numpy(data[:3, :-1])
+    test_target = torch.from_numpy(data[:3, 1:])
+    
+    
+    # build the model
+    seq = Sequence()
+    seq.double()
+    criterion = nn.MSELoss()
+    
+    # use LBFGS as optimizer since we can load the whole data to train
+    optimizer = optim.LBFGS(seq.parameters(), lr=0.8)
+    
+    #begin to train
+    for i in range(15):
+        print('STEP: ', i)
+        def closure():
+            optimizer.zero_grad()
+            out = seq(input)
+            loss = criterion(out, target)
+            print('loss:', loss.item())
+            loss.backward()
+            return loss
+        optimizer.step(closure)
+        
+        # begin to predict, no need to track gradient here
+        with torch.no_grad():
+            future = 1000
+            pred = seq(test_input, future=future)
+            loss = criterion(pred[:, :-future], test_target)
+            print('test loss:', loss.item())
+            y = pred.detach().numpy()
+            
+            
+            
+        # draw the result
+        plt.figure(figsize=(30,10))
+        plt.title('Predict future values for time sequences\n(Dashlines are predicted values)', fontsize=30)
+        plt.xlabel('x', fontsize=20)
+        plt.ylabel('y', fontsize=20)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        def draw(yi, color):
+            plt.plot(np.arange(input.size(1)), yi[:input.size(1)], color, linewidth = 2.0)
+            plt.plot(np.arange(input.size(1), input.size(1) + future), yi[input.size(1):], color + ':', linewidth = 2.0)
+        draw(y[0], 'r')
+        draw(y[1], 'g')
+        draw(y[2], 'b')
+        plt.savefig('predict%d.pdf'%i)
+        plt.close()

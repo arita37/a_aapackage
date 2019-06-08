@@ -40,7 +40,10 @@ class Model:
 
         self.X = tf.placeholder(tf.float32, (None, None, size))
         self.Y = tf.placeholder(tf.float32, (None, output_size))
-        drop = tf.contrib.rnn.DropoutWrapper(rnn_cells, output_keep_prob=forget_bias)
+        
+        drop = tf.contrib.rnn.DropoutWrapper( rnn_cells, 
+                                              output_keep_prob=forget_bias)
+                                              
         self.hidden_layer = tf.placeholder(tf.float32, (None, self.hidden_layer_size))
         self.outputs, self.last_state = tf.nn.dynamic_rnn(
             drop, self.X, initial_state=self.hidden_layer, dtype=tf.float32
@@ -64,7 +67,9 @@ def fit(model, df):
             batch_y = df.iloc[k + 1 : index + 1, :].values
             last_state, _, loss = sess.run(
                 [model.last_state, model.optimizer, model.cost],
-                feed_dict={model.X: batch_x, model.Y: batch_y, model.hidden_layer: init_value},
+                feed_dict={model.X: batch_x, 
+                           model.Y: batch_y, 
+                           model.hidden_layer: init_value},
             )
             init_value = last_state
             total_loss += loss

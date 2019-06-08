@@ -71,6 +71,13 @@ and grep the price for the same.
   instance_type = 't3.medium'
   ec2_get_spot_price(instance_type)
 
+
+TODO :
+ - 
+ -
+ -
+ -
+ 
 """
 
 from __future__ import division, print_function
