@@ -38,8 +38,8 @@ class Model:
             [lstm_cell(size_layer) for _ in range(num_layers)], state_is_tuple=False
         )
 
-        self.X = tf.placeholder(tf.float32, (None, None, size))  # Input
-        self.Y = tf.placeholder(tf.float32, (None, output_size)) # Output 
+        self.X = tf.placeholder(tf.float32, (None, None, size))
+        self.Y = tf.placeholder(tf.float32, (None, output_size))
         
         drop = tf.contrib.rnn.DropoutWrapper( rnn_cells, 
                                               output_keep_prob=forget_bias)
@@ -55,37 +55,25 @@ class Model:
 
 
 def fit(model, df):
-    """
-      df : Multivariate time series  T, Xdim
-      X : df.shape[1] = Xdim
-      Y : output dim : same than input
-    
-    """
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
-    T = df.shape[0]
-    dt = model.timestep
     for i in range(model.epoch):
 
         init_value = np.zeros((1, model.hidden_layer_size))
         total_loss = 0
-        
-        # for t=0... T, calculate Hidden_t, loss, to feed next.
-        for t in range(0, T - 1, dt):
-            
-            tnext   = min(t + dt, T - 1)
-            batch_x = np.expand_dims(df.iloc[t:tnext, :].values, axis=0) #Input
-            batch_y = df.iloc[t + 1 : tnext + 1, :].values  #Output values
+        for k in range(0, df.shape[0] - 1, model.timestep):
+            index = min(k + model.timestep, df.shape[0] - 1)
+            batch_x = np.expand_dims(df.iloc[k:index, :].values, axis=0)
+            batch_y = df.iloc[k + 1 : index + 1, :].values
             last_state, _, loss = sess.run(
                 [model.last_state, model.optimizer, model.cost],
                 feed_dict={model.X: batch_x, 
                            model.Y: batch_y, 
                            model.hidden_layer: init_value},
             )
-            init_value = last_state  # Input = PredictState
+            init_value = last_state
             total_loss += loss
-            
-        total_loss /= T // dt  # Avg all timeSteps
+        total_loss /= df.shape[0] // model.timestep
         if (i + 1) % 100 == 0:
             print("epoch:", i + 1, "avg loss:", total_loss)
     return sess
@@ -95,14 +83,10 @@ def fit(model, df):
 def predict(model, sess, df, get_hidden_state=False, init_value=None):
     if init_value is None:
         init_value = np.zeros((1, model.hidden_layer_size))
+    output_predict = np.zeros((df.shape[0], df.shape[1]))
+    upper_b = (df.shape[0] // model.timestep) * model.timestep
 
-    
-    T  = df.shape[0]
-    dt =  model.timestep
-    output_predict = np.zeros((T, df.shape[1]))
-    upper_b = (T // dt) * dt
-
-    if upper_b == dt: # 1 step prediction
+    if upper_b == model.timestep:
         out_logits, init_value = sess.run(
             [model.logits, model.last_state],
             feed_dict={
@@ -111,23 +95,19 @@ def predict(model, sess, df, get_hidden_state=False, init_value=None):
             },
         )
     else:
-        for k in range(0, (T // dt) * dt, dt):
+        for k in range(0, (df.shape[0] // model.timestep) * model.timestep, model.timestep):
             out_logits, last_state = sess.run(
                 [model.logits, model.last_state],
                 feed_dict={
-                    model.X: np.expand_dims(df.iloc[k : k + dt].values, axis=0),
+                    model.X: np.expand_dims(df.iloc[k : k + model.timestep].values, axis=0),
                     model.hidden_layer: init_value,
                 },
             )
             init_value = last_state
-            output_predict[k + 1 : k + dt + 1] = out_logits
-            
+            output_predict[k + 1 : k + model.timestep + 1] = out_logits
     if get_hidden_state:
         return output_predict, init_value
     return output_predict
-
-
-
 
 
 def get_params(choice=None):
