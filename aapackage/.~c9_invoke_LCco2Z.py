@@ -72,12 +72,17 @@ and grep the price for the same.
   ec2_get_spot_price(instance_type)
 
 
-All in one file util_aws.py  : Top priority
 
 
 TODO :
+  All in one file util_aws.py  : Top priority
+
+ - Create/check  /USER/.aws/ folder to put all the HARD CODE values. 
+    .ssh : for SSH keys.
+
  - AWS: the default values should be in a default file, not in code
         This default json file should be in the same directory as this file.
+
  - boto.config.get in lines 148 and 149 are not working, they need to be fixed.
  - Have imports at the top unless dependencies issues are to be resolved.
  
@@ -147,13 +152,15 @@ class AWS:
     def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
         self.v = {
-            "DEFAULT_INSTANCE_TYPE": "t3.small",
+            "AWS_CONFIG_FOLDER" : ".aws",
             "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
             "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
             "AWS_KEYPAIR": keypair if keypair else "aws_ec2_oregon",
             "AWS_REGION": "us-west-2",
-            "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
-            "EC2CWD": '/home/ubuntu/notebook/',
+            # "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
+
+            "DEFAULT_INSTANCE_TYPE": "t3.small",
+            "EC2CWD": '/home/ubuntu/',
             "EC2_CONN": None,
             "EC2_FILTERS": ('id', 'ip_address'),
             "EC2_ATTRIBUTES": (
