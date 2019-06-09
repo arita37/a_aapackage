@@ -73,11 +73,36 @@ and grep the price for the same.
 
 
 TODO :
- - 
+ - AWS: the default values should be in a default file, not in code
+        This default json file should be in the same directory as this file.
+ - boto.config.get in lines 148 and 149 are not working, they need to be fixed.
+ - Have imports at the top unless dependencies issues are to be resolved.
+ - json.load(<filename>) is notorius to fail, so have a json_utils.py and have a
+        try-catch block with fallback of returning a empty dict.
+ - Have all these constants in a separate file constants.py and import
+   only required constants like
+   from constants import AWS_ACCESS_LOCAL
+   This way we bring structure to the code and anybody can update and maintain it.
+ - AWS.v is not good descriptive name for a instance variable, could be AWS.constant_values
+    or AWS.global_values.
+ - Lines 206-212, optimize as EC2Connection(access, key, region=r), if it fails then check
+    if it is a valid region. Anyway as of now 16 valid regions are there and they can be
+    statically checked, why fetch them?
+ - Dont see a difference between a  windows and a non-windows EC2 connection.
+ - ssh_cmdrun, ssh_put  methods to be moved to a separate file, can be used by other files,
+    which do not require other AWS functionality. Platform check for Windows machine and
+    return a False. Also adapt it to run a list of commands as it saves making connection
+    multiple times. In lines 366-388, 2 commands are run on the same host and the connections
+    are made twice.
+ - os.system does not return output, os.popen does return.  For all aws ec2 commands, it is
+    json output, so always good to capture it.
+ - aws_ec2_get_instanceid, this will need pagination support, an account may have more than
+    one page of instances.
+ - aws_ec2_allocate_elastic_ip and aws_ec2_allocate_eip are same code set, need a merge. Multiple
+    times defined (Lines 535 and 746)
+ - aws_ec2_spot_start and aws_ec2_spot_start_cli are same, one uses boto and the other aws ec2.
+     the code should switch between these two calls based on configuration ( global or individual calls)
  -
- -
- -
- 
 """
 
 from __future__ import division, print_function
@@ -132,9 +157,9 @@ class AWS:
             "SPOT_CFG_FILE": "/tmp/ec_spot_config"
         }
         
-        if ".json" in name :
+        if ".json" in name:
             dd = json.load(name)
-        else :
+        else:
             dd = json.load( os["HOME"] + "/.awsconfig/" + name )
         if dd:
             self.v.update(dd)
