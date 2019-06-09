@@ -31,7 +31,7 @@ Auto-Scale :
 """
 import argparse
 import copy
-#################################################################################
+
 import json
 import logging
 import os
@@ -41,12 +41,14 @@ import sys
 import warnings
 from datetime import datetime
 from time import sleep
+################################################################################
 
 import paramiko
+################################################################################
 from aapackage import util_log
 from aapackage.batch import util_cpu
 from aapackage.util_aws import aws_ec2_ssh
-################################################################################
+
 from aapackage.util_log import logger_setup
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
@@ -69,10 +71,10 @@ amiId = "ami-090b189f0e2ffe4df"  # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60
 spot_cfg_file = "/tmp/ec_spot_config"
 
 
+HOME = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
+
 ### Record the running/done tasks on S3 DRIVE, Global File system  #############
-global_task_file_default = "%s/zs3drive/ztest_global_task.json" % (
-    os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
-)
+global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
 
 
 ################################################################################
@@ -85,8 +87,6 @@ INSTANCE_DICT = {
 
 ################################################################################
 logger = None
-
-
 def log(*argv):
     logger.info(",".join([str(x) for x in argv]))
 
