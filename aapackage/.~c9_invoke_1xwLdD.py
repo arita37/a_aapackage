@@ -152,7 +152,7 @@ class AWS:
     def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
         self.v = {
-            "AWS_CONFIG_FOLDER" : ".aws",
+            "AWS_CONFIG_FOLDER" : "/.aws/",
             "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
             "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
             "AWS_KEYPAIR": keypair if keypair else "aws_ec2_oregon",
@@ -174,7 +174,7 @@ class AWS:
                 "root_device_type", "state_reason", "interfaces", "ebs_optimized",
                 "instance_profile"
             ),
-            "SPOT_CFG_FILE": "/tmp/ec_spot_config"
+            "SPOT_CFG_FILE": ".aws/ec_spot_config"
         }
         
         if ".json" in name:

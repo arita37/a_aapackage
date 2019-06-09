@@ -174,7 +174,7 @@ class AWS:
                 "root_device_type", "state_reason", "interfaces", "ebs_optimized",
                 "instance_profile"
             ),
-            "SPOT_CFG_FILE": "/tmp/ec_spot_config"
+            "SPOT_CFG_FILE": ".aws/ec_spot_config"
         }
         
         if ".json" in name:
