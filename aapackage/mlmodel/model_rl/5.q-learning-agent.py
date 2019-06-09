@@ -6,6 +6,7 @@
 
 import random
 from collections import deque
+import copy 
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,15 +14,21 @@ import pandas as pd
 import seaborn as sns
 import tensorflow as tf
 
-sns.set()
 
-
-# In[2]:
-
-
-df = pd.read_csv("../dataset/GOOG-year.csv")
-df.head()
-
+class Model:
+    def __init__(self,
+        state_size,
+        window_size,
+        trend,
+        skip,
+        iterations,
+        initial_reward,
+        checkpoint = 10
+    ):
+        self.agent = Agent(state_size, window_size, trend, skip, 32)
+        self.iterations = iterations
+        self.initial_reward = initial_reward
+        self.checkpoint = checkpoint
 
 # In[3]:
 
@@ -92,29 +99,28 @@ class Agent:
             self.epsilon *= self.epsilon_decay
         return cost
 
-    def buy(self, initial_money):
-        starting_money = initial_money
-        states_sell = []
-        states_buy = []
-        inventory = []
+    def predict_sequence(self,  pars, trend_history=None):
+        initial_money  = pars["initial_money"]
+        starting_money = pars["initial_money"]
+        states_sell    = []
+        states_buy     = []
+        inventory      = []
+        trend_backup = copy.deepcopy( self.trend)        
+        self.trend = trend_history  if trend_history is not None  else self.trend
+
+        
         state = self.get_state(0)
         for t in range(0, len(self.trend) - 1, self.skip):
-            action = self.act(state)
-            next_state = self.get_state(t + 1)
-
-            if (
-                action == 1
-                and initial_money >= self.trend[t]
-                and t < (len(self.trend) - self.half_window)
-            ):
+            action     = self.act(state)
+            
+            ###### do_action ########################################
+            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
                 inventory.append(self.trend[t])
                 initial_money -= self.trend[t]
                 states_buy.append(t)
-                print(
-                    "day %d: buy 1 unit at price %f, total balance %f"
-                    % (t, self.trend[t], initial_money)
-                )
-
+                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
+                
+                
             elif action == 2 and len(inventory):
                 bought_price = inventory.pop(0)
                 initial_money += self.trend[t]
@@ -124,15 +130,19 @@ class Agent:
                 except:
                     invest = 0
                 print(
-                    "day %d, sell 1 unit at price %f, investment %f %%, total balance %f,"
+                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
                     % (t, close[t], invest, initial_money)
                 )
-
+            ########################################################
+            next_state = self.get_state(t + 1)
             state = next_state
+            
         invest = ((initial_money - starting_money) / starting_money) * 100
         total_gains = initial_money - starting_money
+        
+        self.trend = copy.deepcopy( trend_backup )
         return states_buy, states_sell, total_gains, invest
-
+    
     def train(self, iterations, checkpoint, initial_money):
         for i in range(iterations):
             total_profit = 0
@@ -169,37 +179,82 @@ class Agent:
                     % (i + 1, total_profit, cost, starting_money)
                 )
 
-
-# In[4]:
-
-
-close = df.Close.values.tolist()
-initial_money = 10000
-window_size = 30
-skip = 1
-batch_size = 32
-agent = Agent(
-    state_size=window_size, window_size=window_size, trend=close, skip=skip, batch_size=batch_size
-)
-agent.train(iterations=200, checkpoint=10, initial_money=initial_money)
+def fit(model, dftrain,  params={}):
+    agent = model.agent
+    agent.trend = dftrain
+    agent.train(model.iterations, model.checkpoint, params['initial_money'])
+    return agent.sess
 
 
-# In[5]:
+
+def predict(model, sess, dftest, params={}):
+    model.agent.sess = sess
+    res = model.agent.predict_sequence(params ,dftest ) #TODO needs an example function to work
+    return res
 
 
-states_buy, states_sell, total_gains, invest = agent.buy(initial_money=initial_money)
+################################################################################################
+################################################################################################
+#https://stackoverflow.com/questions/2597278/python-load-variables-in-a-dict-into-namespace
+class to_name(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
 
 
-# In[6]:
+def test(filename= '../dataset/GOOG-year.csv'):
+    df = pd.read_csv(filename)
+    close = df.Close.values.tolist()
+    initial_money = 10000
+    
+    ###  Train
+    model = Model(window_size, window_size, close, skip, 200, initial_money)
+    sess = fit(model, close, {'initial_money': initial_money})
+    
+    
+    ### Predict
+    agent.sess = sess
+    # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
+    res_list = predict(model, sess, close, {'initial_money': initial_money})
 
 
-fig = plt.figure(figsize=(15, 5))
-plt.plot(close, color="r", lw=2.0)
-plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
-plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
-plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
-plt.legend()
-plt.show()
+if __name__ == "__main__":
+    sns.set()
 
 
-# In[ ]:
+    # In[2]:
+
+
+    df = pd.read_csv("../dataset/GOOG-year.csv")
+    df.head()
+
+    # In[4]:
+
+
+    close = df.Close.values.tolist()
+    initial_money = 10000
+    window_size = 30
+    skip = 1
+    batch_size = 32
+    agent = Agent(
+        state_size=window_size, window_size=window_size, trend=close, skip=skip, batch_size=batch_size
+    )
+    model = Model(window_size, window_size, close, skip, 200, initial_money)
+    sess = fit(model, close, {'initial_money': initial_money})
+    agent.sess = sess
+    states_buy, states_sell, total_gains, invest = predict(model, sess, close, {'initial_money': initial_money})
+    test()
+
+
+    # In[6]:
+
+
+    fig = plt.figure(figsize=(15, 5))
+    plt.plot(close, color="r", lw=2.0)
+    plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
+    plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
+    plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
+    plt.legend()
+    plt.show()
+
+
+    # In[ ]:

@@ -20,11 +20,13 @@ class Model:
         trend,
         skip,
         iterations,
-        initial_reward
+        initial_reward,
+        checkpoint = 10
     ):
         self.agent = Agent(state_size, window_size, trend, skip)
         self.iterations = iterations
         self.initial_reward = initial_reward
+        self.checkpoint = checkpoint
 
 
 class Agent:
@@ -177,15 +179,15 @@ class Agent:
     
 def fit(model, dftrain,  params={}):
     agent = model.agent
-    agent.trend = dftrain.values
-    agent.train()
+    agent.trend = dftrain
+    agent.train(model.iterations, model.checkpoint, params['initial_money'])
     return agent.sess
 
 
 
 def predict(model, sess, dftest, params={}):
     model.agent.sess = sess
-    res = model.agent.predict_sequence(params ,dftest.values ) #TODO needs an example function to work
+    res = model.agent.predict_sequence(params ,dftest ) #TODO needs an example function to work
     return res
 
 
@@ -197,33 +199,28 @@ class to_name(object):
     self.__dict__.update(adict)
 
 
-def test(filename= '../dataset/GOOG-year.csv'):
+def test(filename= 'dataset/GOOG-year.csv'):
     df = pd.read_csv(filename)
     close = df.Close.values.tolist()
+    initial_money = 10000
+    window_size = 30
+    skip = 1
     
     ###  Train
     model = Model(window_size, window_size, close, skip, 200, initial_money)
-    sess = fit(model, close, do_action_example)
+    sess = fit(model, close, {'initial_money': initial_money})
     
     
     ### Predict
     agent.sess = sess
     # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
-    res_list = predict(model, sess, close, do_action_example)
-
+    res_list = predict(model, sess, close, {'initial_money': initial_money})
+    return res_list
 
 
 ################################################################################################
 ################################################################################################
 if __name__ == "__main__":
-
-
-
-
-
-
-
-
 
 
 
@@ -250,10 +247,15 @@ if __name__ == "__main__":
 
     # In[6]:
     model = Model(window_size, window_size, close, skip, 200, initial_money)
-    sess = fit(model, close, do_action_example)
+    sess = fit(model, close, {'initial_money': initial_money})
     agent.sess = sess
-    states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
-    test()
+    states_buy, states_sell, total_gains, invest = predict(model, sess, close, {'initial_money': initial_money})
+    
+    
+    #test()
+    
+    
+    
     fig = plt.figure(figsize = (15,5))
     plt.plot(close, color='r', lw=2.)
     plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
@@ -269,117 +271,3 @@ if __name__ == "__main__":
 
 
 
-
-
-def do_action_example(action_dict):
-    """
-        starting_money = initial_money
-        states_sell    = []
-        states_buy     = []
-        inventory      = []
-        
-        state = self.get_state(0)
-        for t in range(0, len(self.trend) - 1, self.skip):
-            action     = self.get_predicted_action(state)
-            
-            ###### do_action ########################################
-            if action == 1 and initial_money >= self.trend[t] and t < (len(self.trend) - self.half_window):
-                inventory.append(self.trend[t])
-                initial_money -= self.trend[t]
-                states_buy.append(t)
-                print('day %d: buy 1 unit at price %f, total balance %f'% (t, self.trend[t], initial_money))
-                
-                
-            elif action == 2 and len(inventory):
-                bought_price = inventory.pop(0)
-                initial_money += self.trend[t]
-                states_sell.append(t)
-                try:
-                    invest = ((close[t] - bought_price) / bought_price) * 100
-                except:
-                    invest = 0
-                print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, close[t], invest, initial_money)
-                )
-            ########################################################
-            next_state = self.get_state(t + 1)
-            state = next_state
-            
-        invest = ((initial_money - starting_money) / starting_money) * 100
-        total_gains = initial_money - starting_money
-        return states_buy, states_sell, total_gains, invest    
-    
-    
-
-    
-    
-    """
-    x         = to_name(action_dict)
-
-    ########## Mapping ####################################
-    t            = x.t # time step
-    action       = x.action  #selectec action
-    price        = x.history[x.t]   # current price from history price
-    total_reward = x.total_reward
-    inventory    = x.inventory    # how much we have in stocks    
-    
-    
-    initial_money = x.current_state_val
-    starting_money = initial_money
-    
-    half_window      = x.param['half_window']
-    starting_reward  = x.param['starting_reward']  
-    states_sell , states_buy = [], []
-    
-    #######################################################
-    #### Buy
-    if action == 1 and starting_reward >= price and t < (len(x.history) - half_window):
-        inventory.append(price)
-        initial_money  = initial_money - price
-        states_buy.appent(t)
-        print('day %d: buy 1 unit at price %f, total balance %f'% (t, price, initial_money))
-        reward_t = 0
-
-        
-    ### Sell    
-    elif action == 2 and len(inventory):
-        bought_price     = inventory.pop(0)
-        initial_money    = initial_money + price
-        states_sell.appent(t)       
-        
-        
-        reward_t         = price - bouginitial_money + priceht_price
-        total_reward    += reward_t
-        starting_reward += price
-
-        try:
-                    invest = ((price - bought_price) / bought_price) * 100
-        except:
-                    invest = 0
- 
-        print(
-                    'day %d, sell 1 unit at price %f, investment %f %%, total balance %f,'
-                    % (t, price, invest, initial_money)
-        )   
-    
-    ##### Mapping Back #################################
-    invest = ((initial_money - starting_money) / starting_money) * 100
-    total_gains = initial_money - starting_money
-    
-    
-    d = { "inventory"      : inventory,
-          
-          "reward_t"       : invest, 
-          "total_reward"   : total_gains,
-          "reward_state"   : None, 
-          
-          "states_buy"     : states_buy,
-          "states_sell"    : states_sell,
-        } 
-        
-    return d
-      
-      
-      
-      

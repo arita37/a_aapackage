@@ -1,6 +1,19 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
+
+Global LSTM, hidden state share
+at each time steps Input hidden --> 
+
+Output of LSTM goes to FeedFoward local to time step ti, 
+to Collapse into y function
+
+
+
+
+
+
+
 """
 
 import json
@@ -133,6 +146,10 @@ def get_equation(name, dim, total_time, num_time_interval):
 
 class HJB(Equation):
     """
+      x_sample and dw are MultiVariate Time Series
+    
+      x_sample(Nsample, Nb_timeSeries, timePeriod)
+      
        nsample x VecDim x dT
        
       
@@ -187,6 +204,18 @@ DELTA_CLIP = 50.0
 def tch_to_device():
     torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+
+
+"""
+ for t in range(0, T) :
+   pred_t = LSTM(X[t].  hiddenstate)
+   zt = FeedFoward(t,  pred_t)
+   yt =  Euler(xt, dWt, zt)  # Graident
+
+
+
+
+"""
 
 class Dense(nn.Module):
 
@@ -294,21 +323,21 @@ class FeedForwardModel(nn.Module):
         # Backward
         for t in range(0, self._num_time_interval - 1):
             # print('y qian', y.max())
-            y = y - self._bsde.delta_t * (
-                self._bsde.f_th(time_stamp[t], x[:, :, t], y, z)
-            )
+            y = y - self._bsde.delta_t * (self._bsde.f_th(time_stamp[t], x[:, :, t], y, z))
             # print('y hou', y.max())
+            
             add = torch.sum(z * dw[:, :, t], dim=1, keepdim=True)
             # print('add', add.max())
+            
             y = y + add
             z = self._subnetworkList[t](x[:, :, t + 1]) / self._dim
             # print('z value', z.max())
 
         # terminal time
-        y = y - self._bsde.delta_t * self._bsde.f_th( \
-            time_stamp[-1], x[:, :, -2], y, z \
-            ) + torch.sum(z * dw[:, :, -1], dim=1, keepdim=True)
+        y = y - self._bsde.delta_t * self._bsde.f_th(  time_stamp[-1], x[:, :, -2], y, z) \
+            + torch.sum(z * dw[:, :, -1], dim=1, keepdim=True)
 
+        # Error at terminal Value
         delta = y - self._bsde.g_th(self._total_time, x[:, :, -1])
 
         # use linear approximation outside the clipped range

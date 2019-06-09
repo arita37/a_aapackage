@@ -224,7 +224,7 @@ def test(filename="dataset/GOOG-year.csv"):
     df_log = pd.DataFrame(df_log)
 
     module, model = create(
-        "17_lstm_seq2seq_bidirectional_attention.py",
+        "model_dl.17_lstm_seq2seq_bidirectional_attention.py",
         {
             "learning_rate": 0.01,
             "num_layers": 1,
