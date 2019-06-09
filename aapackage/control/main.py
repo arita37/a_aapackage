@@ -28,10 +28,11 @@ from config import get_config
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='AllenCahn')
+   p.add_argument("--problem_name", type=str, default='HJB')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
-   p.add_argument("--framework", type=str, default='tf')
+   p.add_argument("--framework", type=str, default='tch')
+   p.add_argument("--usemodel", type=str, default='lstm')
    arg = p.parse_args()
    return arg
 
@@ -51,8 +52,7 @@ def config_dump(conf, path_prefix):
         json.dump(
             dict( (name, getattr(conf, name)) for name in dir(conf) if not name.startswith("__")),
             outfile, indent=2,
-        )    
-    
+        )
     
 
 def main():
@@ -97,7 +97,7 @@ def main():
                 training_history = model.train()
 
         elif arg.framework == 'tch':
-            training_history = train(c, bsde)
+            training_history = train(c, bsde, arg.usemodel)
 
         if bsde.y_init:
             log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),)
@@ -111,8 +111,6 @@ def main():
           header="step,loss_function,target_value,elapsed_time",
           comments="",
         )
-
-
 
 
 if __name__ == "__main__":

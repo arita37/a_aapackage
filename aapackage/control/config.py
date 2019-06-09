@@ -16,9 +16,10 @@ class AllenCahnConfig(Config):
     total_time = 0.3
     num_time_interval = 10
     dim = 10
+    n_hidden_lstm = 10
     lr_values = list(np.array([5e-4, 5e-4]))
     lr_boundaries = [2000]
-    num_iterations = 100
+    num_iterations = 4000
     num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [0.3, 0.6]
 
@@ -27,6 +28,7 @@ class HJBConfig(Config):
     # Y_0 is about 4.5901.
     dim = 100
     total_time = 1.0
+    n_hidden_lstm = 50
     num_time_interval = 20
     lr_boundaries = [400]
     num_iterations = 10000
@@ -38,6 +40,7 @@ class HJBConfig(Config):
 class PricingOptionConfig(Config):
     dim = 100
     total_time = 0.5
+    n_hidden_lstm = 100
     num_time_interval = 20
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
@@ -49,6 +52,7 @@ class PricingOptionConfig(Config):
 class PricingDefaultRiskConfig(Config):
     dim = 100
     total_time = 1
+    n_hidden_lstm = 100
     num_time_interval = 40
     lr_values = list(np.array([8e-3, 8e-3]))
     lr_boundaries = [3000]
@@ -60,6 +64,7 @@ class PricingDefaultRiskConfig(Config):
 class BurgesTypeConfig(Config):
     dim = 50
     total_time = 0.2
+    n_hidden_lstm = 100
     num_time_interval = 30
     lr_values = list(np.array([1e-2, 1e-3, 1e-4]))
     lr_boundaries = [15000, 25000]
@@ -71,6 +76,7 @@ class BurgesTypeConfig(Config):
 class QuadraticGradientsConfig(Config):
     dim = 100
     total_time = 1.0
+    n_hidden_lstm = 100
     num_time_interval = 30
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
@@ -82,11 +88,13 @@ class QuadraticGradientsConfig(Config):
 class ReactionDiffusionConfig(Config):
     dim = 100
     total_time = 1.0
+    n_hidden_lstm = 100
     num_time_interval = 30
     lr_values = list(np.array([1e-2, 1e-2, 1e-2]))
     lr_boundaries = [8000, 16000]
     num_iterations = 100
     num_hiddens = [dim, dim+10, dim+10, dim]
+
 
 def get_config(name):
     try:
