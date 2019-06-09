@@ -199,10 +199,12 @@ class to_name(object):
     self.__dict__.update(adict)
 
 
-def test(filename= '../dataset/GOOG-year.csv'):
+def test(filename= 'dataset/GOOG-year.csv'):
     df = pd.read_csv(filename)
     close = df.Close.values.tolist()
     initial_money = 10000
+    window_size = 30
+    skip = 1
     
     ###  Train
     model = Model(window_size, window_size, close, skip, 200, initial_money)
@@ -213,12 +215,16 @@ def test(filename= '../dataset/GOOG-year.csv'):
     agent.sess = sess
     # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
     res_list = predict(model, sess, close, {'initial_money': initial_money})
-
+    return res_list
 
 
 ################################################################################################
 ################################################################################################
 if __name__ == "__main__":
+
+
+
+
 
     df = pd.read_csv('../dataset/GOOG-year.csv')
     df.head()
@@ -244,7 +250,12 @@ if __name__ == "__main__":
     sess = fit(model, close, {'initial_money': initial_money})
     agent.sess = sess
     states_buy, states_sell, total_gains, invest = predict(model, sess, close, {'initial_money': initial_money})
-    test()
+    
+    
+    #test()
+    
+    
+    
     fig = plt.figure(figsize = (15,5))
     plt.plot(close, color='r', lw=2.)
     plt.plot(close, '^', markersize=10, color='m', label = 'buying signal', markevery = states_buy)
