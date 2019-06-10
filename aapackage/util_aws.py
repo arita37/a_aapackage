@@ -76,7 +76,8 @@ and grep the price for the same.
 
 TODO :
   All in one file util_aws.py  : Top priority
-
+ - Remove Dependance from util.py
+ 
  - Create/check  /USER/.aws/ folder to put all the HARD CODE values. 
     .ssh : for SSH keys.
 
@@ -180,7 +181,7 @@ class AWS:
         if ".json" in name:
             dd = json.load(name)
         else:
-            dd = json.load( os["HOME"] + "/.awsconfig/" + name )
+            dd = json.load( os["HOME"] + "/.aws/" + name )
         if dd:
             self.v.update(dd)
         self.v = dict2(self.v)
