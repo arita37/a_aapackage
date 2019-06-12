@@ -38,15 +38,15 @@ class HJBConfig(Config):
 
 
 class PricingOptionConfig(Config):
-    dim = 100
-    total_time = 0.5
+    dim = 2
+    total_time = 1.0
     n_hidden_lstm = 100
-    num_time_interval = 20
+    num_time_interval = 50
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
-    num_iterations = 4000
+    num_iterations = 40000
     num_hiddens = [dim, dim+10, dim+10, dim]
-    y_init_range = [15, 18]
+    y_init_range = [1, 10 ]
 
 
 class PricingDefaultRiskConfig(Config):

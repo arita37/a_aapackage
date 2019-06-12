@@ -113,8 +113,8 @@ class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
-        self._sigma = 0.2
-        self._mu_bar = 0.06
+        self._sigma = 0.01
+        self._mu_bar = 0.1
         self._rl = 0.04
         self._rb = 0.06
         self._alpha = 1.0 / self._dim

@@ -91,7 +91,6 @@ class SubNetworkLSTM(nn.Module):
         return x
 
 
-
 class FeedForwardModel(nn.Module):
     """The fully connected neural network model."""
 

@@ -1,9 +1,14 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
-
 source activate 
 
+
+
+python  main.py  --problem_name PricingOption  --usemodel ff 
+
+
+python  main.py  --problem_name PricingOption  --usemodel lstm
 
 
 
