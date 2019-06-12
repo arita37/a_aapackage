@@ -28,7 +28,7 @@ from config import get_config
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='HJB')
+   p.add_argument("--problem_name", type=str, default='PricingOption')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tch')
@@ -92,7 +92,7 @@ def main():
         if arg.framework == 'tf':
             tf.reset_default_graph()
             with tf.Session() as sess:
-                model = FFtf(c, bsde, sess)
+                model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build()
                 training_history = model.train()
 
