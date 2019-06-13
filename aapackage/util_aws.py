@@ -129,18 +129,25 @@ from __future__ import division, print_function
 import csv
 ###############################################################################
 import json
+import socket
 import os
 import re
 import sys
-from time import sleep
-
+import subprocess
+import errno
+import fnmatch
+import shutil
+import zipfile
+from stat import S_ISDIR
 import boto
 from boto import ec2
+from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
+from boto.s3.connection import S3Connection
 from future import standard_library
-
+from time import sleep
+from tqdm import tqdm
 import paramiko
-from aapackage import util  # want to remove after refactor
 import ntpath
 standard_library.install_aliases()
 
@@ -180,22 +187,16 @@ class AWS:
     """
     All the globals for AWS utility functionalities.
     """
-    AWSFOLDER = '.aws'
-    T3SMALL = 't3.small'
-    USWEST2 = 'us-west-2'
-    DEFHOME = '/home/ubuntu/'
-    DEFKEYPAIR = 'aws_ec2_oregon'
-
     def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
         self.v = {
-            "AWS_CONFIG_FOLDER": "/%s/" % self.AWSFOLDER,
+            "AWS_CONFIG_FOLDER": "/.aws/",
             "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
-            "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
-            "AWS_KEYPAIR": keypair if keypair else self.DEFKEYPAIR,
-            "AWS_REGION": self.USWEST2,
-            "DEFAULT_INSTANCE_TYPE": self.T3SMALL,
-            "EC2CWD": self.DEFHOME,
+            "AWS_KEYPEM": keypem if keypem else "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
+            "AWS_KEYPAIR": keypair if keypair else 'aws_ec2_oregon',
+            "AWS_REGION": 'us-west-2',
+            "DEFAULT_INSTANCE_TYPE": 't3.small',
+            "EC2CWD": '/home/ubuntu/',
             "EC2_CONN": None,
             "EC2_FILTERS": ('id', 'ip_address'),
             "EC2_ATTRIBUTES": (
@@ -209,13 +210,13 @@ class AWS:
                 "root_device_type", "state_reason", "interfaces", "ebs_optimized",
                 "instance_profile"
             ),
-            "SPOT_CFG_FILE": "%s/ec_spot_config" % self.AWSFOLDER
+            "SPOT_CFG_FILE": ".aws/ec_spot_config"
         }
         
         if ".json" in name:
             dd = json_from_file(name, {})
         else:
-            dd = json_from_file(os["HOME"] + "/%s/" % self.AWSFOLDER + name, {})
+            dd = json_from_file(os["HOME"] + "/.aws/" + name, {})
         if dd:
             self.v.update(dd)
         self.v = dict2(self.v)
@@ -242,7 +243,7 @@ class AWS:
         return access, key
 
     def ec2_keypair_get(self, keypair=""):
-        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else self.DEFHOME
+        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu/'
         keypair = keypair if keypair else self.v['AWS_KEYPEM']
         identity = '%s/%s' % (sshdir, keypair)
         return identity
@@ -268,7 +269,6 @@ class AWS:
 
     def aws_conn_create(self, region='', access='', key=''):
         """ EC2 connection to specified region or  AWS.v['AWS_REGION']"""
-        from boto.ec2.connection import EC2Connection
         if not region:
             region = self.v['AWS_REGION']
         if not access or not key:
@@ -798,7 +798,7 @@ def aws_s3_url_split(url):
 
 def aws_s3_getbucketconn(s3dir):
     """ Get S3 bucket. """
-    import boto.s3
+    # import boto.s3
     bucket_name, todir = aws_s3_url_split(s3dir)
     access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
@@ -816,7 +816,7 @@ def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2'):
     def percent_cb(complete, total):
         sys.stdout.write('.'); sys.stdout.flush()
 
-    import boto.s3
+    # import boto.s3
     bucket = aws_s3_getbucketconn(todir)
     bucket_name, todir = aws_s3_url_split(todir)
 
@@ -896,7 +896,7 @@ def aws_s3_file_read(bucket1, filepath):
     s3_client.download_file('s3-key-bucket','keys/keyname.pem',
                             '/tmp/keyname.pem')
     """
-    from boto.s3.connection import S3Connection
+    # from boto.s3.connection import S3Connection
     conn = S3Connection(AWS().aws_accesskey_get())
     response = conn.get_object(Bucket=bucket1, Key=filepath)
     file1 = response["Body"]
@@ -921,7 +921,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import socket
+        # import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
@@ -991,7 +991,6 @@ class aws_ec2_ssh(object):
         self.sftp.get(remotefile, localfile)
 
     def sftp_walk(self, remotepath):
-        from stat import S_ISDIR
         # Kindof a stripped down  version of os.walk, implemented for
         # sftp.  Tried running it flat without the yields, but it really
         # chokes on big directories.
@@ -1093,8 +1092,8 @@ class aws_ec2_ssh(object):
         zipath = tmpfolder + zipname
 
         print("zipping")
-        filezip = util.os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
-                                    dir_prefix=True, iscompress=True)
+        filezip = os_zipfolder(dir_tozip=fromfolder, zipname=zipath, dir_prefix=True,
+                               iscompress=True)
         print("ssh on remote")
         remote_zipath = os.path.join(tofolder, zipname).replace('\\', '/')
         self.put(filezip, remote_zipath)
@@ -1118,7 +1117,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
     sftp.put('testfile.txt', 'remote_testfile.txt')
     http://docs.paramiko.org/en/2.1/api/sftp.html
     """
-    import paramiko
+    # import paramiko
     sftp, ssh, transport = None, None, None
     try:
         if not keyfilepath:
@@ -1228,7 +1227,6 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
         self.sftp.get(remotefile, localfile)
 
     def sftp_walk(self, remotepath):
-        from stat import S_ISDIR
         # Kindof a stripped down  version of os.walk, implemented for
         # sftp.  Tried running it flat without the yields, but it really
         # chokes on big directories.
@@ -1330,8 +1328,8 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
         zipath = tmpfolder + zipname
 
         print("zipping")
-        filezip = util.os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
-                                    dir_prefix=True, iscompress=True)
+        filezip = os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
+                               dir_prefix=True, iscompress=True)
         print("ssh on remote")
         remote_zipath = os.path.join(tofolder, zipname).replace('\\', '/')
         self.put(filezip, remote_zipath)
@@ -1394,7 +1392,7 @@ def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=
 def aws_ec2_getfrom_ec2(fromfolder, tofolder, host):
     sftp = aws_ec2_ssh_create_con(contype='sftp', host=host)
     if fromfolder.find('.') > -1:  # file
-        folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1] == '/' else fromfolder)
+        folder1, file1 = z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1] == '/' else fromfolder)
         tofolder2 = tofolder if tofolder.find(".") > -1 else  tofolder + '/' + file1
         sftp.get(fromfolder, tofolder2)
     else:  # Pass the Folder in Loop
@@ -1409,12 +1407,12 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # https://www.lifewire.com/examples-linux-unzip-command-2201157
     # unzip -o filename.zip
     aws = AWS().v
-    folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
+    folder1, file1 = z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
     tofolderfull = aws['EC2CWD'] + '/' + tofolder if tofolder.find(aws['EC2CWD']) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
-    util.os_zipfolder(fromfolder, file2)
+    os_zipfolder(fromfolder, file2)
     res = aws_ec2_putfile(file2, tofolder=tofolderfull, host=host)
     print(res)
 
@@ -1441,9 +1439,9 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
             # foldername = fromfolder
             # fromfolder = DIRCWD+ '/' + foldername
             tempfolder = DIRCWD + '/ztemp/' + fromfolder
-            # TODO os_folder_delete to be added in util.py
-            util.os_folder_delete(tempfolder)
-            util.os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
+            # TODO os_folder_delete to be added.
+            os_folder_delete(tempfolder)
+            os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
             sftp.put(tempfolder, tofolder)
             return 1
         if typecopy == 'all':
@@ -1451,9 +1449,10 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
                 print('Please put absolute path')
                 return 0
             if fromfolder.find('.') > -1:  #1 file
-                fromfolder, file1 = util.os_split_dir_file(fromfolder)
+                fromfolder, file1 = os_split_dir_file(fromfolder)
                 tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
-                tofolder, file2 = util.os_split_dir_file(tofull)
+                # Not used so commented.
+                # tofolder, file2 = util.os_split_dir_file(tofull)
             sftp.put(fromfolder + '/' + file1, tofull)
             try:
                 sftp.stat(tofull)
@@ -1476,7 +1475,7 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
         if fromfolder.find(':') == -1:
             print('Please put absolute path')
             return 0
-    fromfolder2, file1 = util.z_key_splitinto_dir_name(fromfolder)
+    fromfolder2, file1 = z_key_splitinto_dir_name(fromfolder)
     tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
     print("from: %s, to: %s" % (fromfolder, tofull))
     isexist = False
@@ -1492,14 +1491,13 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
 
 
 def sleep2(wsec):
-    from time import sleep
-    from tqdm import tqdm
-    for i in tqdm(range(wsec)):
+    # from time import sleep
+    # from tqdm import tqdm
+    for _ in tqdm(range(wsec)):
         sleep(1)
 
 
 def sftp_isdir(path, sftp):
-    from stat import S_ISDIR
     try:
         return S_ISDIR(sftp.stat(path).st_mode)
     except IOError:
@@ -1508,9 +1506,7 @@ def sftp_isdir(path, sftp):
 
 
 def aws_ec2_getfolder(remotepath, sftp):
-    import paramiko, os
     paramiko.util.log_to_file('/tmp/paramiko.log')
-    from stat import S_ISDIR
     def sftp_walk(remotepath):
         path = remotepath
         files = []
@@ -1532,36 +1528,32 @@ def aws_ec2_getfolder(remotepath, sftp):
             sftp.get(os.path.join(os.path.join(path, file1)), '/local/path/')
 
 
-
-####################################################################################################
-############################ UTILS #################################################################
+############################ UTILS ################################################################
 class dict2(object):
     # {} INTO   mydict.key1   ,  mydict.key2 ,   mydict.key4
     def __init__(self, adict):
        self.__dict__.update(adict)
 
-def os_system(cmds, stdout_only=1) :
-  #   Get print output from command line
-  import subprocess
-  cmds = cmds.split(" ")
-  p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.stdout.read(),  p.stderr.read()
 
-  if stdout_only :
-        return out
-  return out, err
+def os_system(cmds, stdout_only=1):
+    # Get print output from command line
+    cmds = cmds.split(" ")
+    p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    outdata, errdata = p.stdout.read(),  p.stderr.read()
+    if stdout_only:
+        return outdata
+    return outdata, errdata
 
 
 def tofloat(value, default=0.0):
-  #  Parse the float value.
-  try:
-    return float(value)
-  except:
-    return default
+    #  Parse the float value.
+    try:
+        return float(value)
+    except:
+        return default
 
 
-
-### Remove util dependencies
+# util dependencies
 def os_file_getname(path) :
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
@@ -1572,19 +1564,94 @@ def os_file_getpath(path):
     return head
 
 
-def os_zipfolder(dir_tozip="", zipname="", dir_prefix=True, iscompress=True) :
+def os_zipfolder(dir_tozip="", zipname="", dir_prefix=True, iscompress=True):
+    """
+     shutil.make_archive('/zdisks3/results/output', 'zip', root_dir=/zdisks3/results/',
+                         base_dir='output')
+     os_zipfolder('zdisk/test/aapackage', 'zdisk/test/aapackage.zip', 'zdisk/test')
+     """
+    dir_tozip = dir_tozip if dir_tozip[-1] != "/" else dir_tozip[:-1]
+    # dir_prefix= dir_prefix if dir_prefix[-1] != '/' else dir_prefix[:-1]
+
+    if dir_prefix:
+        dir_tozip, dir_prefix = "/".join(dir_tozip.split("/")[:-1]), dir_tozip.split("/")[-1]
+    else:
+        dir_tozip, dir_prefix = dir_tozip, "/"
+
+    shutil.make_archive(zipname.replace(".zip", ""), "zip", dir_tozip, base_dir=dir_prefix)
+    r = os_zip_checkintegrity(zipname)
+    if r:
+        return zipname
+    else:
+        print("Corrupt File")
+        return False
     pass
 
+def os_zip_checkintegrity(filezip1):
+    zip_file = zipfile.ZipFile(filezip1)
+    try:
+        ret = zip_file.testzip()
+        if ret is not None:
+            print("First bad file in zip: %s" % ret)
+            return False
+        else:
+            return True
+    except RuntimeError:
+        return False
 
-def  z_key_splitinto_dir_name(key) :
+
+def z_key_splitinto_dir_name(keyname):
+    lkey = keyname.split("/")
+    if len(lkey) == 1:
+        dir1 = ""
+    else:
+        dir1 = "/".join(lkey[:-1])
+        keyname = lkey[-1]
+    return dir1, keyname
+
+
+def os_folder_delete(tempfolder):
     pass
 
+def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=None):
+    """
+    callable(src, names) -> ignored_names
+    'src' parameter, which is the directory being visited by copytree(),
+    'names' which is the list of `src` contents, as returned by os.listdir():
 
-def os_folder_delete(tempfolder) :
-    pass
+    Since copytree() is called recursively, the callable will be called once
+     for each directory that is copied.
+    It returns a  list of names relative to the `src` directory that should not be copied.
+    """
 
-def os_folder_copy(fromfolder, tempfolder, pattern1="*.py") :
-    pass
+    def _default_fun_file_toignore(src, names):
+        _ = src
+
+        pattern = "!" + pattern1
+        file_toignore = fnmatch.filter(names, pattern)
+        return file_toignore
+
+    if fun_file_toignore is None:
+        fun_file_toignore = _default_fun_file_toignore
+
+    try:
+        shutil.copytree(src, dst, symlinks=symlinks, ignore=fun_file_toignore)
+    except OSError as exc:  # python >2.5
+        if exc.errno == errno.ENOTDIR:
+            shutil.copy(src, dst, follow_symlinks=False)
+        else:
+            #raise
+            pass
+
+
+def os_split_dir_file(dirfile):
+    lkey = dirfile.split("/")
+    if len(lkey) == 1:
+        dir1 = ""
+    else:
+        dir1 = "/".join(lkey[:-1])
+        dirfile = lkey[-1]
+    return dir1, dirfile
 
 
 ####################################################################################################
@@ -1596,7 +1663,7 @@ def cli_windows_start_spot():
         #                    ami_id="", pricemax=0.15,  elastic_ip='',
         #                    pars={"security_group": [""], "disk_size": 25, "disk_type": "ssd",
         #                         "volume_type": "gp2"})
-        ss  = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
+        ss = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
         ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
         print(ss)
         os.system(ss)
