@@ -33,10 +33,10 @@ from config import get_config
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='PricingOption')
+   p.add_argument("--problem_name", type=str, default='HJB')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
-   p.add_argument("--framework", type=str, default='tch')
+   p.add_argument("--framework", type=str, default='tf')
    p.add_argument("--usemodel", type=str, default='lstm')
    arg = p.parse_args()
    return arg
@@ -99,6 +99,7 @@ def main():
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build()
+                file_writer = tf.summary.FileWriter('./logs', sess.graph)
                 training_history = model.train()
 
         elif arg.framework == 'tch':

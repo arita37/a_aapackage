@@ -117,6 +117,10 @@ class FeedForwardModel(nn.Module):
 
 
     def forward(self, x, dw):
+
+        if self.usemodel == 'lstm':
+            self._subnetworkList.init_hidden()
+
         time_stamp = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         z_init = torch.zeros([1, self._dim]).uniform_(-.1, .1).to(TH_DTYPE).to(self.device)
@@ -153,8 +157,7 @@ class FeedForwardModel(nn.Module):
         # use linear approximation outside the clipped range
         loss = torch.mean(torch.where(torch.abs(delta) < DELTA_CLIP, delta ** 2,
                                       2 * DELTA_CLIP * torch.abs(delta) - DELTA_CLIP ** 2))
-        if self.usemodel == 'lstm':
-            self._subnetworkList.init_hidden()
+
         return loss, self._y_init
 
 
@@ -169,7 +172,7 @@ def train(config, bsde, usemodel):
 
     net = FeedForwardModel(config, bsde, usemodel)
     net.to(device)
-
+    print(net)
     optimizer = torch.optim.Adam(net.parameters(), config.lr_values[0])
     t0 = time()
     
