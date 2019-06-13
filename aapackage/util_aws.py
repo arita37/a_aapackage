@@ -87,8 +87,8 @@ TODO :
  - boto.config.get in lines 148 and 149 are not working, they need to be fixed.
  - Have imports at the top unless dependencies issues are to be resolved.
  
- Short name is better - AWS.v is not good descriptive name for a instance variable, could be AWS.constant_values
-    or AWS.global_values.
+ Short name is better - AWS.v is not good descriptive name for a instance variable, could be
+   AWS.constant_values or AWS.global_values.
 
  - Lines 206-212, optimize as EC2Connection(access, key, region=r), if it fails then check
     if it is a valid region. Anyway as of now 16 valid regions are there and they can be
@@ -141,7 +141,38 @@ from future import standard_library
 
 import paramiko
 from aapackage import util  # want to remove after refactor
+import ntpath
 standard_library.install_aliases()
+
+
+def exists_file(fname):
+    """Check if path exists and is a file"""
+    if fname and os.path.exists(fname) and os.path.isfile(fname):
+        return True
+    return False
+
+
+def json_from_string(json_str, defval=None):
+    """Get json from the string."""
+    jsondata = defval
+    try:
+        jsondata = json.loads(json_str)
+    except:
+        print('Failed to load json data: %s', json_str)
+    return jsondata
+
+
+def json_from_file(jsonfile, defval=None):
+    """ Get json data from the file."""
+    jsondata = defval
+    try:
+        if exists_file(jsonfile):
+            with open(jsonfile) as infile:
+                data = infile.read()
+                jsondata = json.loads(data)
+    except Exception as ex:
+        print('Failed to load json from file: %s, exception: %s' % (jsonfile, ex))
+    return jsondata
 
 
 ###############################################################################
@@ -149,19 +180,22 @@ class AWS:
     """
     All the globals for AWS utility functionalities.
     """
+    AWSFOLDER = '.aws'
+    T3SMALL = 't3.small'
+    USWEST2 = 'us-west-2'
+    DEFHOME = '/home/ubuntu/'
+    DEFKEYPAIR = 'aws_ec2_oregon'
 
     def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
         self.v = {
-            "AWS_CONFIG_FOLDER" : "/.aws/",
+            "AWS_CONFIG_FOLDER": "/%s/" % self.AWSFOLDER,
             "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
             "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
-            "AWS_KEYPAIR": keypair if keypair else "aws_ec2_oregon",
-            "AWS_REGION": "us-west-2",
-            # "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
-
-            "DEFAULT_INSTANCE_TYPE": "t3.small",
-            "EC2CWD": '/home/ubuntu/',
+            "AWS_KEYPAIR": keypair if keypair else self.DEFKEYPAIR,
+            "AWS_REGION": self.USWEST2,
+            "DEFAULT_INSTANCE_TYPE": self.T3SMALL,
+            "EC2CWD": self.DEFHOME,
             "EC2_CONN": None,
             "EC2_FILTERS": ('id', 'ip_address'),
             "EC2_ATTRIBUTES": (
@@ -175,13 +209,13 @@ class AWS:
                 "root_device_type", "state_reason", "interfaces", "ebs_optimized",
                 "instance_profile"
             ),
-            "SPOT_CFG_FILE": ".aws/ec_spot_config"
+            "SPOT_CFG_FILE": "%s/ec_spot_config" % self.AWSFOLDER
         }
         
         if ".json" in name:
-            dd = json.load(name)
+            dd = json_from_file(name, {})
         else:
-            dd = json.load( os["HOME"] + "/.aws/" + name )
+            dd = json_from_file(os["HOME"] + "/%s/" % self.AWSFOLDER + name, {})
         if dd:
             self.v.update(dd)
         self.v = dict2(self.v)
@@ -198,8 +232,9 @@ class AWS:
             return access, key
 
         # Finally try the manual Config
-        with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
-            dd = json.loads(aws_file.read())
+        # with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+        #     dd = json.loads(aws_file.read())
+        dd = json_from_file(self.v['AWS_ACCESS_LOCAL'], {})
         if 'AWS_ACCESS_KEY_ID' in dd:
             access = dd['AWS_ACCESS_KEY_ID']
         if 'AWS_SECRET_ACCESS_KEY' in dd:
@@ -207,7 +242,7 @@ class AWS:
         return access, key
 
     def ec2_keypair_get(self, keypair=""):
-        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu'
+        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else self.DEFHOME
         keypair = keypair if keypair else self.v['AWS_KEYPEM']
         identity = '%s/%s' % (sshdir, keypair)
         return identity
@@ -232,21 +267,25 @@ class AWS:
         return self.conn
 
     def aws_conn_create(self, region='', access='', key=''):
-        """ EC2 connection to AP NORTH EAST2 """
+        """ EC2 connection to specified region or  AWS.v['AWS_REGION']"""
         from boto.ec2.connection import EC2Connection
         if not region:
-            region = self.v['APNORTHEAST2']
+            region = self.v['AWS_REGION']
         if not access or not key:
             access, key = self.aws_accesskey_get()
         if not access or not key:
             return None
         # We could have used connection from any region.
-        conn = EC2Connection(access, key)
-        regions = aws_conn_getallregions(conn)
-        for r in regions:
-            if r.name == region:
-                self.conn = EC2Connection(access, key, region=r)
-                return self.conn
+        conn = EC2Connection(access, key, region=region)
+        if conn:
+            self.conn = conn
+            return self.conn
+        else:
+            regions = aws_conn_getallregions(conn)
+            for r in regions:
+                if r.name == region:
+                    self.conn = EC2Connection(access, key, region=r)
+                    return self.conn
         print('Region not Found')
         return None
 
@@ -256,9 +295,10 @@ class AWS:
             aws_region = self.v['AWS_REGION']
         ec2_conn = self.conn
         if sys.platform.find('win') > -1 and not ec2_conn:
-            dd = {}
-            with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
-                dd = json.loads(aws_file.read())
+            # dd = {}
+            # with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+            #     dd = json.loads(aws_file.read())
+            dd = json_from_file(self.v['AWS_ACCESS_LOCAL'], {})
             if 'AWS_ACCESS_KEY_ID' in dd:
                 access = dd['AWS_ACCESS_KEY_ID']
             if 'AWS_SECRET_ACCESS_KEY' in dd:
@@ -351,7 +391,8 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
     cmd     = ' '.join(cmdargs)
     value   = os.popen(cmd).read()
-    inst    = json.loads(value)
+    inst = json_from_string(value)
+    # inst    = json.loads(value)
     ncpu    = 0
     ipaddr  = None
     instance_type = default_instance_type
@@ -359,13 +400,10 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
       reserves = inst['Reservations'][0]
       if 'Instances' in reserves and reserves['Instances']:
         instance = reserves['Instances'][0]
-        
         if 'CpuOptions' in instance and 'CoreCount' in instance['CpuOptions']:
           ncpu = instance['CpuOptions']['CoreCount']
-          
         if 'PublicIpAddress' in instance and instance['PublicIpAddress']:
           ipaddr = instance['PublicIpAddress']
-        
         instance_type = instance['InstanceType']
     
     if ipaddr:
@@ -472,12 +510,7 @@ def ec2_spot_instance_list():
   ]
   cmd = ' '.join(cmdargs)
   value = os.popen(cmd).read()
-  try:
-    instance_list = json.loads(value)
-  except:
-    instance_list = {
-      "SpotInstanceRequests": []
-    }
+  instance_list = json_from_string(value, {"SpotInstanceRequests": []})
   return instance_list
 
 
@@ -488,8 +521,7 @@ def ec2_instance_stop(instance_list) :
     if isinstance(instance_list, list) :
         instances = ','.join(instance_list)
     cmdargs = [
-      'aws', 'ec2', 'terminate-instances',
-      '--instance-ids', instances
+      'aws', 'ec2', 'terminate-instances', '--instance-ids', instances
     ]
     cmd = ' '.join(cmdargs)
     os.system(cmd)
@@ -792,8 +824,8 @@ def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2'):
     PART_SIZE = 6 * 1000 * 1000
 
     if fromdir_file.find('.') > -1:   # Case of Single File
-        filename = util.os_file_getname(fromdir_file)
-        fromdir_file = util.os_file_getpath(fromdir_file) + '/'
+        filename = os_file_getname(fromdir_file)
+        fromdir_file = os_file_getpath(fromdir_file) + '/'
         uploadFileNames = [filename]
     else:
         uploadFileNames = []
@@ -832,7 +864,8 @@ def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk'):
 
     for l in bucket_list:
         key1 = str(l.key)
-        file1, path2 = util.os_file_getname(key1), util.os_file_getpath(key1)
+        file1 = os_file_getname(key1)
+        path2 = os_file_getpath(key1)
         # Remove prefix path of S3 to machine
         path1 = os.path.relpath(path2, dirs3).replace('.', '')
         d = todir + '/' + path1
@@ -1529,15 +1562,17 @@ def tofloat(value, default=0.0):
 
 
 ### Remove util dependencies
-def os_file_getname(fromdir_file) :
-    pass
+def os_file_getname(path) :
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
 
 
-def os_file_getpath(fromdir_file) :
-    pass
+def os_file_getpath(path):
+    head, _ = ntpath.split(path)
+    return head
 
 
-def os_zipfolder(dir_tozip="", zipname="",       dir_prefix=True, iscompress=True) :
+def os_zipfolder(dir_tozip="", zipname="", dir_prefix=True, iscompress=True) :
     pass
 
 
