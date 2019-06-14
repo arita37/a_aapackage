@@ -30,29 +30,19 @@ Auto-Scale :
     Out for tasks : /home/ubuntu/zs3drive/tasks_out/
 """
 import argparse
-import copy
-
+import toml
 import json
-import logging
 import os
 import re
-import subprocess
-import sys
 import warnings
 from datetime import datetime
 from time import sleep
-################################################################################
-
-import paramiko
-################################################################################
 from aapackage import util_log
-from aapackage.batch import util_cpu
-from aapackage.util_aws import aws_ec2_ssh
-
 from aapackage.util_log import logger_setup
+from aapackage.util_aws import os_system, json_from_file, tofloat, json_from_string,\
+    ssh_cmdrun
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
-
 
 ############### Input  #########################################################
 ISTEST = True  ### For test the code
@@ -78,7 +68,7 @@ global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
 
 
 ################################################################################
-### Maintain infos on all instances  ###########################################
+# Maintain infos on all instances
 # global INSTANCE_DICT
 INSTANCE_DICT = {
     "id": {"id": "", "cpu": 0, "ip_address": "", "ram": 0, "cpu_usage": 0, "ram_usage": 0}
@@ -104,10 +94,8 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
         # Conditions of copy
         if os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f:
             if not os.path.exists(to_f) or isoverwrite:
-
-                os.system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f))
+                os_system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f))
                 print("Copy", from_f, to_f)
-
                 if os.path.exists(to_f):
                     task_list_added.append(to_f)
                     task_list.append(from_f)
@@ -116,6 +104,7 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
     return task_list, task_list_added
 
 
+################################################################################
 def task_get_from_github(repourl, reponame="tasks", branch="dev",
                          to_task_folder="/home/ubuntu/zs3drive/tasks/",
                          tmp_folder="/home/ubuntu/data/ztmp/"):
@@ -128,7 +117,7 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     for folder1 in subfolder:
         cp folder1 folder_s3
     """
-    ### Git pull  ########################################################################
+    # Git pull
     if not os.path.exists(tmp_folder):
         os.mkdir(tmp_folder)
 
@@ -136,31 +125,30 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     if to_task_folder and not to_task_folder.endswith(os.sep):
         to_task_folder = os.path.join(to_task_folder, os.sep)
 
-    os.system("rm -rf " + repo_folder)
-    # cmds = " cd {a} && git clone {b}  {c}".format(a=tmp_folder, b=repourl, c=reponame)
-    # cmds += " && cd {a}  && git checkout {b}".format(a=reponame, b=branch)
+    os_system("rm -rf " + repo_folder)
     cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
     print(cmds)
-    os.system(cmds)
+    os_system(cmds)
 
-    ### Copy  ##########################################################################
+    # Copy
     task_list, task_list_added = os_folder_copy(repo_folder, to_task_folder)
 
-    ### Rename folder to ignore and commit #############################################
+    # Rename folder to ignore and commit
     for f in task_list:
         os.rename(f, f + "_ignore" if f[-1] != "/" else f[:-1] + "_ignore")
 
     cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
     cmds += " &&  git push --all --force "
     print(cmds)
-    os.system(cmds)
+    os_system(cmds)
     return task_list, task_list_added
 
 
-def task_put_to_github(repourl, reponame="tasks", branch="dev",
+################################################################################
+def task_put_to_github(repourl, branch="dev",
                        from_taskout_folder="/home/ubuntu/zs3drive/tasks_out/",
                        repo_folder="/home/ubuntu/data/github_tasks_out/"):
     """
@@ -174,14 +162,14 @@ def task_put_to_github(repourl, reponame="tasks", branch="dev",
         cmds = " cd {a} && git pull --all ".format(a=repo_folder)
         cmds += " && git checkout {b}".format(b=branch)
         print("Git Pull results", cmds)
-        os.system(cmds)
+        os_system(cmds)
     else:
         print("Git clone")
         cmds = "git clone {a} {b}".format(a=repourl, b=repo_folder)
         if branch:
             # Checkout the branch directly.
             cmds = "{a} --branch {b}".format(a=cmds, b=branch)
-        os.system(cmds)
+        os_system(cmds)
 
     ### Copy with OVERWRITE
     task_list, task_list_added = os_folder_copy(from_taskout_folder, repo_folder,
@@ -192,7 +180,7 @@ def task_put_to_github(repourl, reponame="tasks", branch="dev",
     cmds += " && git commit -m 'oo{b}'".format(b=",".join(task_list_added))
     cmds += " && git push --all   --force "
     print("Git push task resut", cmds)
-    os.system(cmds)
+    os_system(cmds)
     return task_list, task_list_added
 
 
@@ -215,18 +203,15 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
     return valid_folders
 
 
+################################################################################
 def task_get_list_valid_folder_new(folder_main):
-    """ Why was this added  /
-    --->  S3 disk drive /zs3drive/  DOES NOT SUPPORT FOLDER RENAMING !! due to S3 limitation.
-    --->  Solution is to have a Global File global_task_dict which maintains current
-    "running tasks/done tasks"
-    Different logic should be applied ,  see code in batch_daemon_launch.py
+    """
+    Solution is to have a Global File global_task_dict which maintains current running tasks/done
+    tasks
     """
     # task already started
-    folder_check = json.load(open(global_task_file, mode="r"))
-    task_started = {k for k in folder_check}
-    # There could be problem here, if none of them is a directory, so it
-    # becomes a dict, difference  betn a set and dict will not work.
+    folder_check = json_from_file(global_task_file)
+    task_started = {k for k in folder_check} if folder_check else set()
     task_all = {x for x in os.listdir(folder_main) if os.path.isdir("%s/%s" % (folder_main, x))}
     folders = list(task_all.difference(task_started))
     valid_folders = []
@@ -238,6 +223,7 @@ def task_get_list_valid_folder_new(folder_main):
     return valid_folders
 
 
+################################################################################
 def task_isvalid_folder(folder_main, folder, folder_check):
     # Invalid cases
     if os.path.isfile(os.path.join(folder_main, folder)) or \
@@ -249,23 +235,26 @@ def task_isvalid_folder(folder_main, folder, folder_check):
         return True
 
 
+################################################################################
 def task_getcount(folder_main):
     """ Number of tasks remaining to be scheduled for run """
     return len(task_get_list_valid_folder_new(folder_main))
 
 
-def os_system(cmds, stdout_only=1):
-    """
-     Get print output from command line
-    """
-    cmds = cmds.split(" ")
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.stdout.read(), p.stderr.read()
-    if stdout_only:
-        return out
-    return out, err
+################################################################################
+# def os_system(cmds, stdout_only=1):
+#     """
+#      Get print output from command line
+#     """
+#     cmds = cmds.split(" ")
+#     p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#     out, err = p.stdout.read(), p.stderr.read()
+#     if stdout_only:
+#         return out
+#     return out, err
 
 
+################################################################################
 def task_getcount_cpurequired(folder_main):
     """  
     ncpu_required defined in task_config.py
@@ -275,7 +264,7 @@ def task_getcount_cpurequired(folder_main):
     for f in task_list:
         cmds = "python  {a}/task_config.py --do ncpu_required   ".format(a=folder_main + "/" + f)
         msg = os_system(cmds)
-        ncpu = parsefloat(msg, default=1.0)
+        ncpu = tofloat(msg, default=1.0)
         ncpu_all += ncpu
     return ncpu_all
 
@@ -288,16 +277,16 @@ def ec2_get_spot_price(instance_type):
         cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
         value = os.popen(cmdstr).read()
         value = value.replace("\n", "") if value else 0.10
-        # parsefloat(value)
-    return parsefloat(value)
+    return tofloat(value)
 
 
-def parsefloat(value, default=0.0):
-    """ Parse the float value. """
-    try:
-        return float(value)
-    except:
-        return default
+##################################################################################
+# def parsefloat(value, default=0.0):
+#     """ Parse the float value. """
+#     try:
+#         return float(value)
+#     except:
+#         return default
 
 
 ################################################################################
@@ -316,7 +305,7 @@ def ec2_instance_getallstate():
       use to update the global INSTANCE_DICT
           "id" :  instance_type,
           ip_address, cpu, ram, cpu_usage, ram_usage
-  """
+    """
     val = {}
     spot_list = ec2_spot_instance_list()
     spot_instances = []
@@ -329,7 +318,7 @@ def ec2_instance_getallstate():
         cmdargs = ["aws", "ec2", "describe-instances", "--instance-id", spot]
         cmd = " ".join(cmdargs)
         value = os.popen(cmd).read()
-        inst = json.loads(value)
+        inst = json_from_string(value)
         ncpu = 0
         ipaddr = None
         instance_type = default_instance_type
@@ -337,13 +326,10 @@ def ec2_instance_getallstate():
             reserves = inst["Reservations"][0]
             if "Instances" in reserves and reserves["Instances"]:
                 instance = reserves["Instances"][0]
-
                 if "CpuOptions" in instance and "CoreCount" in instance["CpuOptions"]:
                     ncpu = instance["CpuOptions"]["CoreCount"]
-
                 if "PublicIpAddress" in instance and instance["PublicIpAddress"]:
                     ipaddr = instance["PublicIpAddress"]
-
                 instance_type = instance["InstanceType"]
 
         if ipaddr:
@@ -363,6 +349,7 @@ def ec2_instance_getallstate():
 
 
 ################################################################################
+# Use this read from AWS(), should config.toml be read for this?
 def ec2_keypair_get():
     identity = "%s/.ssh/%s" % (
         os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu",
@@ -380,17 +367,11 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
     cpuusage, ramusage, totalram = (None,) * 3
     if instance_id and ipadress:
         identity = ec2_keypair_get()
-        # ssh = aws_ec2_ssh(hostname=ipadress, key_file=identity)
-        # cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'NR==3{ print($2)}'"
         cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
-        # cpu = ssh.command(cmdstr)
         cpuusage = ssh_cmdrun(ipadress, identity, cmdstr)
         cpuusage = 100.0 if not cpuusage else float(cpuusage)
-
         cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
-        # ram = ssh.command(cmdstr)
         ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
-
         if not ramusage:
             totalram = 0
             usageram = 100.0
@@ -398,7 +379,6 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
             vals = ramusage.split()
             usageram = float(vals[0]) if vals and vals[0] else 100.0
             totalram = int(vals[1]) if vals and vals[1] else 0
-
     return cpuusage, usageram, totalram
 
 
@@ -415,6 +395,7 @@ def ec2_config_build_template(instance_type):
             {"DeviceName": "/dev/sda1", "Ebs": {"DeleteOnTermination": True, "VolumeSize": 60}}
         ],
     }
+    # read spot_cfg_file from config.toml or AWS()
     with open(spot_cfg_file, "w") as spot_file:
         spot_file.write(json.dumps(spot_config))
 
@@ -446,12 +427,13 @@ def ec2_spot_start(instance_type, spot_price, waitsec=100):
     ]
     print(cmdargs)
     cmd = " ".join(cmdargs)
-    os.system(cmd)
+    os_system(cmd)
     sleep(waitsec)  # It may not be fulfilled in 50 secs.
     ll = ec2_spot_instance_list()
     return ll["SpotInstanceRequests"] if "SpotInstanceRequests" in ll else []
 
 
+##################################################################################
 def ec2_spot_instance_list():
     """ Get the list of current spot instances. """
     cmdargs = ["aws", "ec2", "describe-spot-instance-requests"]
@@ -473,7 +455,7 @@ def ec2_instance_stop(instance_list):
             instances = ",".join(instance_list)
         cmdargs = ["aws", "ec2", "terminate-instances", "--instance-ids", instances]
         cmd = " ".join(cmdargs)
-        os.system(cmd)
+        os_system(cmd)
         return instances.split(",")
 
 
@@ -496,7 +478,7 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
         for f in folder_list:
             # fname = f.split("/")[-1]
             cmds = "cp -r {a} {b}".format(a=f, b=target_folder)
-            msg = os.system(cmds)
+            msg = os_system(cmds)
             print(cmds, msg)
 
         """
@@ -542,7 +524,7 @@ def instance_start_rule(task_folder):
         spotprice = 0.15
         return {"type": "t3.2xlarge", "spotprice": spotprice}
 
-    ##### Minimal instance  ###################################################
+    # Minimal instance
     if ntask > 0 and ncpu == 0:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
         # 2 CPU / 0.02 / hour
@@ -552,14 +534,15 @@ def instance_start_rule(task_folder):
     return None
 
 
+################################################################################
 def instance_stop_rule(task_folder):
     """
     If spot instance usage is ZERO CPU%  and RAM is low --> close instances.
     """
     global INSTANCE_DICT
-    # ntask              = task_getcount(task_folder)
+    # ntask = task_getcount(task_folder)
     ntask = task_getcount_cpurequired(task_folder)
-    INSTANCE_DICT_prev = copy.deepcopy(INSTANCE_DICT)
+    # INSTANCE_DICT_prev = copy.deepcopy(INSTANCE_DICT)
     INSTANCE_DICT = ec2_instance_getallstate()
     log("Stop rules", "ntask", ntask, INSTANCE_DICT)
 
@@ -586,65 +569,66 @@ def instance_stop_rule(task_folder):
     """
 
 
-def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
-    """ Make an ssh connection using paramiko and  run the command
-    http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-    https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-    https://github.com/paramiko/paramiko/issues/501
-    https://unix.stackexchange.com/questions/30400/
-    execute-remote-commands-completely-detaching-from-the-ssh-connection
-    """
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname, key_filename=key_file, timeout=5)
-        stdin, stdout, stderr = ssh.exec_command(cmdstr)  # No Blocking  , get_pty=False
+################################################################################
+# def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
+#     """ Make an ssh connection using paramiko and  run the command
+#     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+#     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+#     https://github.com/paramiko/paramiko/issues/501
+#     https://unix.stackexchange.com/questions/30400/
+#     execute-remote-commands-completely-detaching-from-the-ssh-connection
+#     """
+#     try:
+#         ssh = paramiko.SSHClient()
+#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#         ssh.connect(hostname, key_filename=key_file, timeout=5)
+#         stdin, stdout, stderr = ssh.exec_command(cmdstr)  # No Blocking  , get_pty=False
+#
+#         """
+#         if not isblocking :
+#            # Buggy code, use Screen instead
+#            sleep(10) # To let run the script
+#            ssh.close()
+#            return None
+#         """
+#
+#         #### Can be Blocking for long running process  screen -d -m YOURBASH
+#         data = stdout.readlines()  # Blocking code
+#         value = "".join(data).replace("\n", "") if remove_newline else "".join(data)
+#
+#         err_msg = stderr.readlines()
+#         if len(err_msg) > 0:
+#             print(err_msg)
+#
+#         ssh.close()
+#         return value
+#
+#     except Exception as e:
+#         print("Error Paramiko", e)
+#         return None
+#
 
-        """
-        if not isblocking :
-           # Buggy code, use Screen instead
-           sleep(10) # To let run the script
-           ssh.close()
-           return None
-        """
-
-        #### Can be Blocking for long running process  screen -d -m YOURBASH
-        data = stdout.readlines()  # Blocking code
-        value = "".join(data).replace("\n", "") if remove_newline else "".join(data)
-
-        err_msg = stderr.readlines()
-        if len(err_msg) > 0:
-            print(err_msg)
-
-        ssh.close()
-        return value
-
-    except Exception as e:
-        print("Error Paramiko", e)
-        return None
-
-
-def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
-    """
-    Make an ssh connection using paramiko and  run the command
-    http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-    https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-    https://github.com/paramiko/paramiko/issues/501
-    """
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, key_filename=key_file, timeout=5)
-    # stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking
-
-    if filename is not None:
-        msg = open(filename, mode="r").readlines()
-
-    ftp = ssh.open_sftp()
-    file = ftp.file(remote_file, "a", -1)
-    file.write(msg)
-    file.flush()
-    ftp.close()
-    ssh.close()
+# def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
+#     """
+#     Make an ssh connection using paramiko and  run the command
+#     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
+#     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
+#     https://github.com/paramiko/paramiko/issues/501
+#     """
+#     ssh = paramiko.SSHClient()
+#     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#     ssh.connect(hostname, key_filename=key_file, timeout=5)
+#     # stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking
+#
+#     if filename is not None:
+#         msg = open(filename, mode="r").readlines()
+#
+#     ftp = ssh.open_sftp()
+#     file = ftp.file(remote_file, "a", -1)
+#     file.write(msg)
+#     file.flush()
+#     ftp.close()
+#     ssh.close()
 
 
 def ec2_instance_initialize_ssh(args):
@@ -679,7 +663,7 @@ def ec2_instance_initialize_ssh(args):
         msg = ssh_cmdrun(ipx, key_file, cmds, isblocking=True)
         log(ipx, "ssh zbatch_cleanup", msg)
 
-        #### MAJOR BUG : CANNOT USE bash script on S3 Folder ,due to Permission ISSUES on S#
+        #### MAJOR BUG : CANNOT USE bash script on S3 Folder, due to Permission ISSUES on S3
         #### Neeed to add anaconda into the path
         if "test" in args.param_mode:
             cmds = " screen -d -m bash /home/ubuntu/zbatch_test.sh && sleep 5  && screen -ls "
@@ -698,6 +682,7 @@ def ec2_instance_initialize_ssh(args):
             ec2_instance_stop(instance_list=[instance_id])
 
 
+################################################################################
 def task_globalfile_reset(global_task_file=None):
     with open(global_task_file, "w") as f:
         json.dump({}, f)
@@ -707,30 +692,21 @@ def task_globalfile_reset(global_task_file=None):
 def load_arguments():
     """
      Load CLI input, load config.toml , overwrite config.toml by CLI Input
-  """
+    """
     cur_path = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(cur_path, "config.toml")
 
     p = argparse.ArgumentParser()
     p.add_argument("--param_file", default=config_file, help="Params File")
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
-
     p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
-
     p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
-
-    p.add_argument(
-        "--global_task_file", help="global task file"
-    )  #  default=global_task_file_default,
+    p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
     p.add_argument("--task_folder", help="path to task folder.")  # default=TASK_FOLDER_DEFAULT,
     p.add_argument("--reset_global_task_file", help="global task file Reset File")
-
-    p.add_argument(
-        "--task_repourl", help="repo for task"
-    )  # default="https://github.com/arita37/tasks.git"
+    p.add_argument("--task_repourl", help="repo for task")  # default="https://github.com/arita37/tasks.git"
     p.add_argument("--task_reponame", help="repo for task")  # default="tasks",
     p.add_argument("--task_repobranch", help="repo for task")  #  default="dev",
-
     p.add_argument("--ami", help="AMI used for spot")  #  default=amiId,
     p.add_argument("--instance", help="Type of soot instance")  # default=default_instance_type,
     p.add_argument("--spotprice", type=float, help="Actual price offered by us.")
@@ -738,9 +714,7 @@ def load_arguments():
     p.add_argument("--max_instance", type=int, help="")
     p.add_argument("--max_cpu", type=int, help="")
     args = p.parse_args()
-
-    ##### Load file params as dict namespace #########################
-    import toml
+    # Load file params as dict namespace
 
     class to_namespace(object):
         def __init__(self, adict):
@@ -764,35 +738,28 @@ def load_arguments():
 
 ###################################################################################
 if __name__ == "__main__":
+    global INSTANCE_DICT
     ### Variable initialization #####################################################
     args = load_arguments()
-
-    logger = logger_setup(
-        __name__, log_file=args.log_file, formatter=util_log.FORMATTER_4, isrotate=True
-    )
+    logger = logger_setup(__name__, log_file=args.log_file, formatter=util_log.FORMATTER_4,
+                          isrotate=True)
     # print("args input", args)
     key_file = ec2_keypair_get()
-
     global_task_file = args.global_task_file
     if args.reset_global_task_file:
         task_globalfile_reset(global_task_file)
-
     log("Daemon", "start: ", os.getpid(), global_task_file)
     ii = 0
     while True:
         log("Daemon", "tasks folder: ", args.task_folder)
-
-        ### Retrieve tasks from github ##############################################
+        # Retrieve tasks from github
         if ii % 5 == 0:
-            task_new, task_added = task_get_from_github(
-                repourl=args.task_repourl,
-                reponame=args.task_reponame,
-                branch=args.task_repobranch,
-                to_task_folder=args.task_s3_folder,  # r"/home/ubuntu/zs3drive/tasks/",
-                tmp_folder=args.task_local_folder,
-            )  # r"/home/ubuntu/data/ztmp_github/")
+            task_new, task_added = task_get_from_github(repourl=args.task_repourl,
+                                                        reponame=args.task_reponame,
+                                                        branch=args.task_repobranch,
+                                                        to_task_folder=args.task_s3_folder,
+                                                        tmp_folder=args.task_local_folder,)
             log("task", "new from github", task_added)
-
         # Keep Global state of running instances
         INSTANCE_DICT = ec2_instance_getallstate()
 
@@ -816,7 +783,6 @@ if __name__ == "__main__":
         log("Instances to be stopped", stop_instances)
         if stop_instances:
             stop_instances_list = [v["id"] for v in stop_instances]
-
             ec2_instance_backup(
                 stop_instances_list,
                 folder_list=args.folder_to_backup,  # ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
@@ -831,7 +797,6 @@ if __name__ == "__main__":
         if ii % 10 == 0:  # 10 mins Freq
             task_new, task_added = task_put_to_github(
                 repourl=args.taskout_repourl,  # "https://github.com/arita37/tasks_out.git"
-                reponame=args.taskout_reponame,
                 branch=args.taskout_repobranch,  # "tasks_out", branch="dev",
                 from_taskout_folder=args.taskout_s3_folder,  # "/home/ubuntu/zs3drive/tasks_out/"
                 repo_folder=args.taskout_local_folder,
