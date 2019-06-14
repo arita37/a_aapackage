@@ -242,19 +242,6 @@ def task_getcount(folder_main):
 
 
 ################################################################################
-# def os_system(cmds, stdout_only=1):
-#     """
-#      Get print output from command line
-#     """
-#     cmds = cmds.split(" ")
-#     p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#     out, err = p.stdout.read(), p.stderr.read()
-#     if stdout_only:
-#         return out
-#     return out, err
-
-
-################################################################################
 def task_getcount_cpurequired(folder_main):
     """  
     ncpu_required defined in task_config.py
@@ -278,15 +265,6 @@ def ec2_get_spot_price(instance_type):
         value = os.popen(cmdstr).read()
         value = value.replace("\n", "") if value else 0.10
     return tofloat(value)
-
-
-##################################################################################
-# def parsefloat(value, default=0.0):
-#     """ Parse the float value. """
-#     try:
-#         return float(value)
-#     except:
-#         return default
 
 
 ################################################################################
@@ -570,67 +548,6 @@ def instance_stop_rule(task_folder):
 
 
 ################################################################################
-# def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True):
-#     """ Make an ssh connection using paramiko and  run the command
-#     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-#     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-#     https://github.com/paramiko/paramiko/issues/501
-#     https://unix.stackexchange.com/questions/30400/
-#     execute-remote-commands-completely-detaching-from-the-ssh-connection
-#     """
-#     try:
-#         ssh = paramiko.SSHClient()
-#         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#         ssh.connect(hostname, key_filename=key_file, timeout=5)
-#         stdin, stdout, stderr = ssh.exec_command(cmdstr)  # No Blocking  , get_pty=False
-#
-#         """
-#         if not isblocking :
-#            # Buggy code, use Screen instead
-#            sleep(10) # To let run the script
-#            ssh.close()
-#            return None
-#         """
-#
-#         #### Can be Blocking for long running process  screen -d -m YOURBASH
-#         data = stdout.readlines()  # Blocking code
-#         value = "".join(data).replace("\n", "") if remove_newline else "".join(data)
-#
-#         err_msg = stderr.readlines()
-#         if len(err_msg) > 0:
-#             print(err_msg)
-#
-#         ssh.close()
-#         return value
-#
-#     except Exception as e:
-#         print("Error Paramiko", e)
-#         return None
-#
-
-# def ssh_put(hostname, key_file, remote_file, msg=None, filename=None):
-#     """
-#     Make an ssh connection using paramiko and  run the command
-#     http://sebastiandahlgren.se/2012/10/11/using-paramiko-to-send-ssh-commands/
-#     https://gist.github.com/kdheepak/c18f030494fea16ffd92d95c93a6d40d
-#     https://github.com/paramiko/paramiko/issues/501
-#     """
-#     ssh = paramiko.SSHClient()
-#     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#     ssh.connect(hostname, key_filename=key_file, timeout=5)
-#     # stdin, stdout, stderr = ssh.exec_command(cmdstr, get_pty=False) #No Blocking
-#
-#     if filename is not None:
-#         msg = open(filename, mode="r").readlines()
-#
-#     ftp = ssh.open_sftp()
-#     file = ftp.file(remote_file, "a", -1)
-#     file.write(msg)
-#     file.flush()
-#     ftp.close()
-#     ssh.close()
-
-
 def ec2_instance_initialize_ssh(args):
     """
     Many issues with S3 and ssh, Very sensitive code...
