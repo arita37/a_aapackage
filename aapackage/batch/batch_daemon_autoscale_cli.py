@@ -2,12 +2,16 @@
 """
 ##### Daemon mode
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
+
 #### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+
 #### Test with reset of task files
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+
 #### Test with reset of task files and test p
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/config_batch.toml  
+
 #### Prod setup of task files
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1 --param_file zs3drive/config_batch.toml  --param_mode prod
 ###########################################################################################
@@ -22,6 +26,7 @@ Auto-Scale :
     Stop Rule:
       nb_task_remaining = 0 for last 5mins : 
         stop instance by AWS CLI.
+        
     keypair: ec2_linux_instance
     Oregon West - us-west-2
     AMI :  ami-0491a657e7ed60af7
@@ -618,33 +623,36 @@ def load_arguments():
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
     p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
     p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
+    
     p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
     p.add_argument("--task_folder", help="path to task folder.")  # default=TASK_FOLDER_DEFAULT,
     p.add_argument("--reset_global_task_file", help="global task file Reset File")
+    
     p.add_argument("--task_repourl", help="repo for task")  # default="https://github.com/arita37/tasks.git"
     p.add_argument("--task_reponame", help="repo for task")  # default="tasks",
     p.add_argument("--task_repobranch", help="repo for task")  #  default="dev",
+    
     p.add_argument("--ami", help="AMI used for spot")  #  default=amiId,
     p.add_argument("--instance", help="Type of soot instance")  # default=default_instance_type,
     p.add_argument("--spotprice", type=float, help="Actual price offered by us.")
     p.add_argument("--waitsec", type=int, help="wait sec")
     p.add_argument("--max_instance", type=int, help="")
     p.add_argument("--max_cpu", type=int, help="")
-    args = p.parse_args()
+    arg = p.parse_args()
     # Load file params as dict namespace
 
     class to_namespace(object):
         def __init__(self, adict):
             self.__dict__.update(adict)
 
-    print(args.param_file)
-    pars = toml.load(args.param_file)
-    # print(args.param_file, pars)
-    pars = pars[args.param_mode]  # test / prod
-    print(args.param_file, pars)
+    print(arg.param_file)
+    pars = toml.load(arg.param_file)
+    # print(arg.param_file, pars)
+    pars = pars[arg.param_mode]  # test / prod
+    print(arg.param_file, pars)
 
     ### Overwrite params by CLI input and merge with toml file
-    for key, x in vars(args).items():
+    for key, x in vars(arg).items():
         if x is not None:  # only values NOT set by CLI
             pars[key] = x
 
@@ -657,31 +665,32 @@ def load_arguments():
 if __name__ == "__main__":
     global INSTANCE_DICT
     ### Variable initialization #####################################################
-    args = load_arguments()
-    logger = logger_setup(__name__, log_file=args.log_file, formatter=util_log.FORMATTER_4,
+    arg = load_arguments()
+    logger = logger_setup(__name__, log_file=arg.log_file, formatter=util_log.FORMATTER_4,
                           isrotate=True)
-    # print("args input", args)
+    # print("arg input", arg)
     key_file = ec2_keypair_get()
-    global_task_file = args.global_task_file
-    if args.reset_global_task_file:
+    
+    global_task_file = arg.global_task_file
+    if arg.reset_global_task_file:
         task_globalfile_reset(global_task_file)
     log("Daemon", "start: ", os.getpid(), global_task_file)
     ii = 0
     while True:
-        log("Daemon", "tasks folder: ", args.task_folder)
-        # Retrieve tasks from github
+        log("Daemon", "tasks folder: ", arg.task_folder)
+        # Retrieve tasks from github  ##############################################
         if ii % 5 == 0:
-            task_new, task_added = task_get_from_github(repourl=args.task_repourl,
-                                                        reponame=args.task_reponame,
-                                                        branch=args.task_repobranch,
-                                                        to_task_folder=args.task_s3_folder,
-                                                        tmp_folder=args.task_local_folder,)
+            task_new, task_added = task_get_from_github(repourl=arg.task_repourl,
+                                                        reponame=arg.task_reponame,
+                                                        branch=arg.task_repobranch,
+                                                        to_task_folder=arg.task_s3_folder,
+                                                        tmp_folder=arg.task_local_folder,)
             log("task", "new from github", task_added)
         # Keep Global state of running instances
         INSTANCE_DICT = ec2_instance_getallstate()
 
         ### Start instance by rules ###############################################
-        start_instance = instance_start_rule(args.task_folder)
+        start_instance = instance_start_rule(arg.task_folder)
         log("Instances to start", start_instance)
         if start_instance:
             # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
@@ -692,18 +701,18 @@ if __name__ == "__main__":
             log("Instances running", INSTANCE_DICT)
 
             ##### Launch Batch system by No Blocking SSH  #########################
-            ec2_instance_initialize_ssh(args)
+            ec2_instance_initialize_ssh(arg)
             sleep(10)
 
         ### Stop instance by rules ################################################
-        stop_instances = instance_stop_rule(args.task_folder)
+        stop_instances = instance_stop_rule(arg.task_folder)
         log("Instances to be stopped", stop_instances)
         if stop_instances:
             stop_instances_list = [v["id"] for v in stop_instances]
             ec2_instance_backup(
                 stop_instances_list,
-                folder_list=args.folder_to_backup,  # ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
-                folder_backup=args.backup_s3_folder,
+                folder_list=arg.folder_to_backup,  # ["/home/ubuntu/zlog/", "/home/ubuntu/tasks_out/" ],
+                folder_backup=arg.backup_s3_folder,
             )  # "/home/ubuntu/zs3drive/backup/"
 
             ec2_instance_stop(stop_instances_list)
@@ -713,19 +722,19 @@ if __name__ == "__main__":
         ii = ii + 1
         if ii % 10 == 0:  # 10 mins Freq
             task_new, task_added = task_put_to_github(
-                repourl=args.taskout_repourl,  # "https://github.com/arita37/tasks_out.git"
-                branch=args.taskout_repobranch,  # "tasks_out", branch="dev",
-                from_taskout_folder=args.taskout_s3_folder,  # "/home/ubuntu/zs3drive/tasks_out/"
-                repo_folder=args.taskout_local_folder,
+                repourl=arg.taskout_repourl,  # "https://github.com/arita37/tasks_out.git"
+                branch=arg.taskout_repobranch,  # "tasks_out", branch="dev",
+                from_taskout_folder=arg.taskout_s3_folder,  # "/home/ubuntu/zs3drive/tasks_out/"
+                repo_folder=arg.taskout_local_folder,
             )  # "/home/ubuntu/data/github_tasks_out/"
             log("task", "Add results to github", task_added)
 
         ### No Daemon mode  ######################################################
-        if args.mode != "daemon":
+        if arg.mode != "daemon":
             log("Daemon", "No Daemon mode", "terminated daemon")
             break
 
-        sleep(args.waitsec)
+        sleep(arg.waitsec)
 
 
 """

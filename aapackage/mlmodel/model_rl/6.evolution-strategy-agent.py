@@ -32,23 +32,6 @@ def get_imports():
         yield name
 
 
-imports = list(set(get_imports()))
-requirements = []
-for m in pkg_resources.working_set:
-    if m.project_name in imports and m.project_name != "pip":
-        requirements.append((m.project_name, m.version))
-
-for r in requirements:
-    print("{}=={}".format(*r))
-
-
-# In[3]:
-
-
-df = pd.read_csv("../dataset/GOOG-year.csv")
-df.head()
-
-
 # In[ ]:
 
 
@@ -104,12 +87,17 @@ class Deep_Evolution_Strategy:
 
 
 class Model:
-    def __init__(self, input_size, layer_size, output_size):
+    def __init__(self, input_size, layer_size, output_size, window_size, skip, initial_money,iterations=500, checkpoint=10):
         self.weights = [
             np.random.randn(input_size, layer_size),
             np.random.randn(layer_size, output_size),
             np.random.randn(1, layer_size),
         ]
+        self.iterations = iterations
+        self.checkpoint = checkpoint
+        self.agent = Agent(
+            model=self, window_size=window_size,trend=None, skip=skip, initial_money=initial_money
+        )
 
     def predict(self, inputs):
         feed = np.dot(inputs, self.weights[0]) + self.weights[-1]
@@ -185,29 +173,29 @@ class Agent:
     def fit(self, iterations, checkpoint):
         self.es.train(iterations, print_every=checkpoint)
 
-    def buy(self):
+    def run_sequence(self, df_test):
         initial_money = self.initial_money
         state = self.get_state(0)
         starting_money = initial_money
         states_sell = []
         states_buy = []
         inventory = []
-        for t in range(0, len(self.trend) - 1, self.skip):
+        for t in range(0, len(df_test) - 1, self.skip):
             action = self.act(state)
             next_state = self.get_state(t + 1)
 
-            if action == 1 and initial_money >= self.trend[t]:
-                inventory.append(self.trend[t])
-                initial_money -= self.trend[t]
+            if action == 1 and initial_money >= df_test[t]:
+                inventory.append(df_test[t])
+                initial_money -= df_test[t]
                 states_buy.append(t)
                 print(
                     "day %d: buy 1 unit at price %f, total balance %f"
-                    % (t, self.trend[t], initial_money)
+                    % (t, df_test[t], initial_money)
                 )
 
             elif action == 2 and len(inventory):
                 bought_price = inventory.pop(0)
-                initial_money += self.trend[t]
+                initial_money += df_test[t]
                 states_sell.append(t)
                 try:
                     invest = ((close[t] - bought_price) / bought_price) * 100
@@ -223,38 +211,90 @@ class Agent:
         total_gains = initial_money - starting_money
         return states_buy, states_sell, total_gains, invest
 
-
-# In[6]:
-
-
-close = df.Close.values.tolist()
-window_size = 30
-skip = 1
-initial_money = 10000
-
-model = Model(input_size=window_size, layer_size=500, output_size=3)
-agent = Agent(
-    model=model, window_size=window_size, trend=close, skip=skip, initial_money=initial_money
-)
-agent.fit(iterations=500, checkpoint=10)
+def fit(model, dftrain,  params={}):
+    agent = model.agent
+    agent.trend = dftrain
+    agent.fit(model.iterations, model.checkpoint)
+    return None
 
 
-# In[8]:
+
+def predict(model, sess, dftest, params={}):
+    res = model.agent.run_sequence(dftest ) #TODO needs an example function to work
+    return res
 
 
-states_buy, states_sell, total_gains, invest = agent.buy()
+################################################################################################
+################################################################################################
+#https://stackoverflow.com/questions/2597278/python-load-variables-in-a-dict-into-namespace
+class to_name(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
 
 
-# In[9]:
+def test(filename= '../dataset/GOOG-year.csv'):
+    df = pd.read_csv(filename)
+    close = df.Close.values.tolist()
+    
+    ###  Train
+    window_size = 30
+    skip = 1
+    initial_money = 10000
+
+    model = Model(input_size=window_size, layer_size=500, output_size=3,window_size=window_size, skip=skip, initial_money=initial_money)
+
+    sess = fit(model, close, {'initial_money': initial_money})
+    
+    
+    # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
+    res_list = predict(model, sess, close, {'initial_money': initial_money})
+
+if __name__ == "__main__":
+
+    imports = list(set(get_imports()))
+    requirements = []
+    for m in pkg_resources.working_set:
+        if m.project_name in imports and m.project_name != "pip":
+            requirements.append((m.project_name, m.version))
+
+    for r in requirements:
+        print("{}=={}".format(*r))
 
 
-fig = plt.figure(figsize=(15, 5))
-plt.plot(close, color="r", lw=2.0)
-plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
-plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
-plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
-plt.legend()
-plt.show()
+    # In[3]:
 
 
-# In[ ]:
+    df = pd.read_csv("../dataset/GOOG-year.csv")
+    df.head()
+    # In[6]:
+
+
+    close = df.Close.values.tolist()
+    window_size = 30
+    skip = 1
+    initial_money = 10000
+
+    model = Model(input_size=window_size, layer_size=500, output_size=3,window_size=window_size, skip=skip, initial_money=initial_money)
+
+    sess = fit(model, close)
+
+
+    # In[8]:
+
+
+    states_buy, states_sell, total_gains, invest = predict(model, sess, close)
+
+
+    # In[9]:
+
+
+    fig = plt.figure(figsize=(15, 5))
+    plt.plot(close, color="r", lw=2.0)
+    plt.plot(close, "^", markersize=10, color="m", label="buying signal", markevery=states_buy)
+    plt.plot(close, "v", markersize=10, color="k", label="selling signal", markevery=states_sell)
+    plt.title("total gains %f, total investment %f%%" % (total_gains, invest))
+    plt.legend()
+    plt.show()
+
+
+    # In[ ]:

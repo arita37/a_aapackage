@@ -119,6 +119,7 @@ class PricingOption(Equation):
         self._rb = 0.06
         self._alpha = 1.0 / self._dim
 
+
     def sample(self, num_sample):
         dw_sample = (
             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
@@ -135,17 +136,19 @@ class PricingOption(Equation):
             ]
         return dw_sample, x_sample
 
+
     def f_tf(self, t, x, y, z):
         temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
         return (
-            -self._rl * y
+            - self._rl * y
             - (self._mu_bar - self._rl) * temp
             + ((self._rb - self._rl) * tf.maximum(temp - y, 0))
         )
 
+
     def g_tf(self, t, x):
         temp = tf.reduce_max(x, 1, keepdims=True)
-        return tf.maximum(temp - 120, 0) - 2 * tf.maximum(temp - 150, 0)
+        return tf.maximum(temp - 100, 0)  
 
 
 class PricingDefaultRisk(Equation):
