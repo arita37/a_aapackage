@@ -45,10 +45,12 @@ class FeedForwardModel(object):
 
         self._sess.run(tf.global_variables_initializer())  # initialization
         # begin sgd iteration
+        val_writer = tf.summary.FileWriter('logs', self._sess.graph)
+        merged = tf.summary.merge_all()
         for step in range(self._config.num_iterations + 1):
             ### Validation Data Eval.
             if step % self._config.logging_frequency == 0:
-                loss, init = self._sess.run([self._loss, self._y_init], feed_dict=feed_dict_valid)
+                loss, init, summary = self._sess.run([self._loss, self._y_init, merged], feed_dict=feed_dict_valid)
 
                 elapsed_time = time.time() - start_time + self._t_build
                 training_history.append([step, loss, init, elapsed_time])
@@ -56,6 +58,7 @@ class FeedForwardModel(object):
                     "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
                     % (step, loss, init, elapsed_time)
                 )
+                val_writer.add_summary(summary, step)
 
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
@@ -131,6 +134,7 @@ class FeedForwardModel(object):
                     2 * DELTA_CLIP * tf.abs(delta) - DELTA_CLIP ** 2,
                 )
             )
+        tf.summary.scalar('loss', self._loss)
 
         # train operations
         global_step = tf.get_variable(

@@ -159,16 +159,6 @@ def exists_file(fname):
     return False
 
 
-def json_from_string(json_str, defval=None):
-    """Get json from the string."""
-    jsondata = defval
-    try:
-        jsondata = json.loads(json_str)
-    except:
-        print('Failed to load json data: %s', json_str)
-    return jsondata
-
-
 def json_from_file(jsonfile, defval=None):
     """ Get json data from the file."""
     jsondata = defval
