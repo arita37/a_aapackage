@@ -28,7 +28,7 @@ import glob
 import os
 import re
 from importlib import import_module
-
+import json
 
 import optuna
 
@@ -48,8 +48,12 @@ def optim(modelname="model_dl.1_lstm.py",
        for hyperparameter optimization
      
    
-          weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
-         optimizer_name = trial.suggest_categorical('optimizer', ['Adam', 'MomentumSGD'])
+       return Best Parameters 
+   
+   
+   
+   weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
+    optimizer_name = trial.suggest_categorical('optimizer', ['Adam', 'MomentumSGD'])
     # Categorical parameter
     optimizer = trial.suggest_categorical('optimizer', ['MomentumSGD', 'Adam'])
 
@@ -67,29 +71,38 @@ def optim(modelname="model_dl.1_lstm.py",
     
          
          
-         
-        pars=  {
-            "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
-            "num_layers":  {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
-            "size_layer": {"type" : 'categorical', "value": [128, 256 ] }
-            "output_size": {"type" : 'categorical', "value": [100] },
-            "timestep":  {"type" : 'categorical', "value": [5] },
-            "epoch":  {"type" : 'categorical', "value": [100] },
-        }  
+
     
     
     
     
     """
     pass
-    module = module_load(args.modelname)  # '1_lstm'
-    module.fit()
+    module = module_load(modelname)  # '1_lstm'
+    # module.fit()
     
+    pars =  {
+        "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
+        "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
+        "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
+        "output_size":   {"type" : 'categorical', "value": [100] },
+        "timestep":      {"type" : 'categorical', "value": [5] },
+        "epoch":        {"type" : 'categorical', "value": [100] },
+    }      
     
           	
+    res = optuna
+    return res
+
+
+
+
     
-    
-    
+
+
+
+
+
 
 
 ###############################################################################
