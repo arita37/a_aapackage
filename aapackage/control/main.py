@@ -99,7 +99,6 @@ def main():
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build()
-                file_writer = tf.summary.FileWriter('./logs', sess.graph)
                 training_history = model.train()
                 if not os.path.exists('ckpt'):
                     os.makedirs('ckpt')
