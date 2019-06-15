@@ -94,7 +94,8 @@ import socket
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
-import arrow
+# import arrow
+import datetime
 
 ################### Logs #################################################################
 APP_ID = __file__ + "," + str(os.getpid()) + "," + str(socket.gethostname())
@@ -127,7 +128,8 @@ def create_logfilename(filename):
 
 
 def create_uniqueid():
-    return arrow.utcnow().to("Japan").format("_YYYYMMDDHHmmss_") + str(random.randint(1000, 9999))
+    return datetime.datetime.now().strftime(  "_%Y%m%d%H%M%S_"  )   + str(random.randint(1000, 9999))
+    # return arrow.utcnow().to("Japan").format("_YYYYMMDDHHmmss_") + str(random.randint(1000, 9999))
 
 
 ########################################################################################
@@ -223,9 +225,9 @@ def printlog(
 ):
     try:
         if app_id != "":
-            prefix = app_id + "," + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
+            prefix = app_id + "," + datetime.datetime.now().strftime(  "_%Y%m%d%H%M%S_"  ) 
         else:
-            prefix = APP_ID + "," + arrow.utcnow().to("Japan").format("YYYYMMDD_HHmmss,")
+            prefix = APP_ID + "," + datetime.datetime.now().strftime(  "_%Y%m%d%H%M%S_"  ) 
         s = ",".join(
             [
                 prefix,
@@ -256,3 +258,32 @@ def writelog(m="", f=None):
     f = LOG_FILE if f is None else f
     with open(f, "a") as _log:
         _log.write(m + "\n")
+
+
+
+
+
+
+
+
+##########################################################################################
+################### TFLOG ################################################################
+class Tflog():
+    """
+       tflog.log()
+    
+    """
+    
+    def __init__(self, logdir):
+      import tensorflow as tf
+      pass
+  
+    def log(self, *argv ) :
+      pass
+
+
+
+
+
+
+

@@ -14,6 +14,7 @@ batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --para
 
 #### Prod setup of task files
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1 --param_file zs3drive/config_batch.toml  --param_mode prod
+
 ###########################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
@@ -44,8 +45,7 @@ from datetime import datetime
 from time import sleep
 from aapackage import util_log
 from aapackage.util_log import logger_setup
-from aapackage.util_aws import os_system, json_from_file, tofloat, json_from_string,\
-    ssh_cmdrun
+from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 
@@ -301,7 +301,7 @@ def ec2_instance_getallstate():
         cmdargs = ["aws", "ec2", "describe-instances", "--instance-id", spot]
         cmd = " ".join(cmdargs)
         value = os.popen(cmd).read()
-        inst = json_from_string(value)
+        inst = json.loads(value)
         ncpu = 0
         ipaddr = None
         instance_type = default_instance_type
@@ -735,6 +735,7 @@ if __name__ == "__main__":
             break
 
         sleep(arg.waitsec)
+
 
 
 """
