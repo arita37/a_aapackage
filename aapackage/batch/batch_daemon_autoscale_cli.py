@@ -39,8 +39,7 @@ from datetime import datetime
 from time import sleep
 from aapackage import util_log
 from aapackage.util_log import logger_setup
-from aapackage.util_aws import os_system, json_from_file, tofloat, json_from_string,\
-    ssh_cmdrun
+from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 
@@ -296,7 +295,7 @@ def ec2_instance_getallstate():
         cmdargs = ["aws", "ec2", "describe-instances", "--instance-id", spot]
         cmd = " ".join(cmdargs)
         value = os.popen(cmd).read()
-        inst = json_from_string(value)
+        inst = json.loads(value)
         ncpu = 0
         ipaddr = None
         instance_type = default_instance_type
