@@ -10,9 +10,8 @@ from argparse import ArgumentParser
 
 
 import numpy as np
-
-
 ####################################################################################################
+
 
 
 ####################################################################################################
@@ -264,8 +263,7 @@ class FeedForwardModel(object):
 
         with tf.variable_scope("forward"):
             for t in range(0, self._num_time_interval - 1):
-                y = (
-                        y
+                y = (   y
                         - self._bsde.delta_t * (self._bsde.f_tf(time_stamp[t], self._x[:, :, t], y, z))
                         + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True)
                 )
@@ -274,8 +272,7 @@ class FeedForwardModel(object):
                 z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
 
             # Terminal time
-            y = (
-                    y
+            y = (   y
                     - self._bsde.delta_t * self._bsde.f_tf(time_stamp[-1], self._x[:, :, -2], y, z)
                     + tf.reduce_sum(z * self._dw[:, :, -1], 1, keepdims=True)
             )
@@ -284,18 +281,14 @@ class FeedForwardModel(object):
             delta = y - self._bsde.g_tf(self._total_time, self._x[:, :, -1])
 
             # use linear approximation outside the clipped range
-            self._loss = tf.reduce_mean(
-                tf.where(
-                    tf.abs(delta) < DELTA_CLIP,
-                    tf.square(delta),
-                    2 * DELTA_CLIP * tf.abs(delta) - DELTA_CLIP ** 2,
+            self._loss = tf.reduce_mean(  tf.where( tf.abs(delta) < DELTA_CLIP,
+                                          tf.square(delta),
+                                          2 * DELTA_CLIP * tf.abs(delta) - DELTA_CLIP ** 2,
                 )
             )
 
         # train operations
-        global_step = tf.get_variable(
-            "global_step",
-            [],
+        global_step = tf.get_variable(  "global_step",  [],
             initializer=tf.constant_initializer(0),
             trainable=False,
             dtype=tf.int32,
