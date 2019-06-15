@@ -1,8 +1,34 @@
-title = "batch configuration "
+title = "batch auto scale configuration "
+[doc]
+x = """
+###########################################################################################
+Daemon for auto-scale.
+Only launch in master instance 
+### S3 does NOT support folder rename, bash shell to replance rename
+Auto-Scale :  
+    batch_daemon_autoscale_cli.py(ONLY on master instance) - how to check this ?
+    Start Rule:
+      nb_task_remaining > 10 AND nb_CPU_available < 10 
+        start new spot Instance by AWS CLI from spot template
+        
+    Stop Rule:
+      nb_task_remaining = 0 for last 5mins : 
+        stop instance by AWS CLI.
+        
+    keypair: ec2_linux_instance
+    Oregon West - us-west-2
+    AMI :  
+    Instance spot :  t3.small
+    Common Drive is Task Folders: /home/ubuntu/zs3drive/tasks/
+    Out for tasks : /home/ubuntu/zs3drive/tasks_out/
+
+
+
+"""
 
 
 ####################################################################################################
-#####################   Batch Launch  ##############################################################
+#####################  batch_daemon_launch_cli.py ##################################################
 [launch_test]
 task_folder   =   "/home/ubuntu/zs3drive/ztest/tasks/"
 log_file      =   "/home/ubuntu/zlog/test_batchdaemon.log"
@@ -30,7 +56,7 @@ global_task_file= "/home/ubuntu/zs3drive/global_task.json"
 
 
 ####################################################################################################
-######################## Auto Scale Batch ##########################################################
+######################## batch_daemon_autoscale_cli.py #############################################
 [prod]
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
@@ -82,8 +108,8 @@ log_file = "/home/ubuntu/zlog/batch_autoscale.log"
 
 
 
-
-
+####################################################################################################
+######################## batch_daemon_autoscale_cli.py #############################################
 [test]
 
 keypair = 'aws_ec2_ajey'  # remote spot instance

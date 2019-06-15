@@ -38,6 +38,7 @@ class HJBConfig(Config):
 
 
 class PricingOptionConfig(Config):
+    # 6.5 option price by formulae
     dim = 2
     total_time = 1.0
     n_hidden_lstm = 100

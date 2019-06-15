@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-##### Daemon mode
-batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
-
 #### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 #### Test with reset of task files
 batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
-#### Test with reset of task files and test p
+#### Test with reset of task files and test 
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/config_batch.toml  
+
 
 #### Prod setup of task files
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1 --param_file zs3drive/config_batch.toml  --param_mode prod
 
-###########################################################################################
+
+##### Daemon mode
+batch_daemon_autoscale_cli.py --mode daemon  --task_folder zs3drive/tasks/  --log_file zlog/batchautoscale.log   --param_mode prod
+
+
+####################################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
 ### S3 does NOT support folder rename, bash shell to replance rename
@@ -30,7 +33,6 @@ Auto-Scale :
         
     keypair: ec2_linux_instance
     Oregon West - us-west-2
-    AMI :  ami-0491a657e7ed60af7
     Instance spot :  t3.small
     Common Drive is Task Folders: /home/ubuntu/zs3drive/tasks/
     Out for tasks : /home/ubuntu/zs3drive/tasks_out/
