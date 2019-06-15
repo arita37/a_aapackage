@@ -113,11 +113,12 @@ class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
-        self._sigma = 0.2
-        self._mu_bar = 0.06
+        self._sigma = 0.01
+        self._mu_bar = 0.1
         self._rl = 0.04
         self._rb = 0.06
         self._alpha = 1.0 / self._dim
+
 
     def sample(self, num_sample):
         dw_sample = (
@@ -135,17 +136,19 @@ class PricingOption(Equation):
             ]
         return dw_sample, x_sample
 
+
     def f_tf(self, t, x, y, z):
         temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
         return (
-            -self._rl * y
+            - self._rl * y
             - (self._mu_bar - self._rl) * temp
             + ((self._rb - self._rl) * tf.maximum(temp - y, 0))
         )
 
+
     def g_tf(self, t, x):
         temp = tf.reduce_max(x, 1, keepdims=True)
-        return tf.maximum(temp - 120, 0) - 2 * tf.maximum(temp - 150, 0)
+        return tf.maximum(temp - 100, 0)  
 
 
 class PricingDefaultRisk(Equation):

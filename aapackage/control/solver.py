@@ -18,10 +18,11 @@ def log(s):
 class FeedForwardModel(object):
     """The fully connected neural network model."""
 
-    def __init__(self, config, bsde, sess):
+    def __init__(self, config, bsde, sess, usemodel):
         self._config = config
         self._bsde = bsde  # BSDE Equation
         self._sess = sess  # TF session
+        self._usemodel = usemodel
 
         # make sure consistent with FBSDE equation
         self._dim = bsde.dim
@@ -107,7 +108,10 @@ class FeedForwardModel(object):
                 )
 
                 ## Neural Network per Time Step, Calculate Gradient
-                z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
+                if self._usemodel == 'lstm':
+                    z = self._subnetworklstm([self._x[:, :, t + 1]], t) / self._dim
+                elif self._usemodel == 'ff':
+                    z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
 
             # Terminal time
             y = (
@@ -150,6 +154,13 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - start_time
+
+    def _subnetworklstm(self, x, i):
+        with tf.variable_scope('Global_RNN', reuse=i > 0):
+            lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
+            x, s = tf.nn.static_rnn(lstm, x, dtype=TF_DTYPE)
+            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1], name='dense_out', reuse=i > 0)
+            return x
 
     def _subnetwork(self, x, name):
         """

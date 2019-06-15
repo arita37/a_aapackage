@@ -1,6 +1,18 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
+source activate 
+
+
+
+python  main.py  --problem_name PricingOption  --usemodel ff 
+
+
+python  main.py  --problem_name PricingOption  --usemodel lstm
+
+
+
+
 """
 
 import json
@@ -21,10 +33,11 @@ from config import get_config
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
-   p.add_argument("--problem_name", type=str, default='AllenCahn')
+   p.add_argument("--problem_name", type=str, default='PricingOption')
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
+   p.add_argument("--usemodel", type=str, default='lstm')
    arg = p.parse_args()
    return arg
 
@@ -44,8 +57,7 @@ def config_dump(conf, path_prefix):
         json.dump(
             dict( (name, getattr(conf, name)) for name in dir(conf) if not name.startswith("__")),
             outfile, indent=2,
-        )    
-    
+        )
     
 
 def main():
@@ -85,12 +97,18 @@ def main():
         if arg.framework == 'tf':
             tf.reset_default_graph()
             with tf.Session() as sess:
-                model = FFtf(c, bsde, sess)
+                model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build()
+                file_writer = tf.summary.FileWriter('./logs', sess.graph)
                 training_history = model.train()
+                if not os.path.exists('ckpt'):
+                    os.makedirs('ckpt')
+                saver = tf.train.Saver()
+                save_path = saver.save(sess, os.path.join('ckpt', "model.ckpt"))
+                print("TensorFlow Checkpoints saved in {}".format(save_path))
 
         elif arg.framework == 'tch':
-            training_history = train(c, bsde)
+            training_history = train(c, bsde, arg.usemodel)
 
         if bsde.y_init:
             log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),)
@@ -104,8 +122,6 @@ def main():
           header="step,loss_function,target_value,elapsed_time",
           comments="",
         )
-
-
 
 
 if __name__ == "__main__":

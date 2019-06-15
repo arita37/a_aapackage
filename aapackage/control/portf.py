@@ -28,6 +28,8 @@ import tensorflow as tf
 
 
 
+
+
 os.environ
 
 
@@ -35,6 +37,28 @@ os.environ
 
 
 """
+Multivariate Garch
+    over a time step
+    
+    
+    p. w1 +  (1-p).W2
+    
+    
+    dS/S 
+    
+    
+    dS1/S1 . dS2/S2 = Correl
+   
+   
+    Projection of S1 over Browninan
+    S1 is variable.
+    
+    Use Variance sigma(t) as input.
+
+    W2 = variance
+
+
+
 Simulate Path
 Correlated path
 Brownian Motions

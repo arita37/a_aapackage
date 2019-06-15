@@ -71,6 +71,57 @@ and grep the price for the same.
   instance_type = 't3.medium'
   ec2_get_spot_price(instance_type)
 
+
+
+
+TODO :
+  All in one file util_aws.py  : Top priority
+ - Remove Dependance from util.py
+ 
+ - Create/check  /USER/.aws/ folder to put all the HARD CODE values. 
+    .ssh : for SSH keys.
+
+ - AWS: the default values should be in a default file, not in code
+        This default json file should be in the same directory as this file.
+
+ - boto.config.get in lines 148 and 149 are not working, they need to be fixed.
+ - Have imports at the top unless dependencies issues are to be resolved.
+ 
+ Short name is better - AWS.v is not good descriptive name for a instance variable, could be
+   AWS.constant_values or AWS.global_values.
+
+ - Lines 206-212, optimize as EC2Connection(access, key, region=r), if it fails then check
+    if it is a valid region. Anyway as of now 16 valid regions are there and they can be
+    statically checked, why fetch them?
+
+ - Dont see a difference between a  windows and a non-windows EC2 connection.
+
+ - ssh_cmdrun, ssh_put  methods to be moved to a separate file, can be used by other files,
+    which do not require other AWS functionality. Platform check for Windows machine and
+    return a False. Also adapt it to run a list of commands as it saves making connection
+    multiple times. In lines 366-388, 2 commands are run on the same host and the connections
+    are made twice.
+ - os.system does not return output, os.popen does return.  For all aws ec2 commands, it is
+    json output, so always good to capture it.
+ - aws_ec2_get_instanceid, this will need pagination support, an account may have more than
+    one page of instances.
+ - aws_ec2_allocate_elastic_ip and aws_ec2_allocate_eip are same code set, need a merge. Multiple
+    times defined (Lines 535 and 746)
+
+
+
+NG - json.load(<filename>) is notorius to fail, so have a json_utils.py and have a
+        try-catch block with fallback of returning a empty dict.  
+
+NG - Have all these constants in a separate file constants.py and import
+   only required constants like
+   from constants import AWS_ACCESS_LOCAL
+   This way we bring structure to the code and anybody can update and maintain it.
+
+NG -  Keep CLI and boto version separate.separate
+      aws_ec2_spot_start and aws_ec2_spot_start_cli are same, one uses boto and the other aws ec2.
+     the code should switch between these two calls based on configuration ( global or individual calls)
+ -
 """
 
 from __future__ import division, print_function
@@ -78,19 +129,57 @@ from __future__ import division, print_function
 import csv
 ###############################################################################
 import json
+import socket
 import os
 import re
 import sys
-from time import sleep
-
+import subprocess
+import errno
+import fnmatch
+import shutil
+import zipfile
+from stat import S_ISDIR
 import boto
 from boto import ec2
+from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
+from boto.s3.connection import S3Connection
 from future import standard_library
-
+from time import sleep
+from tqdm import tqdm
 import paramiko
-from aapackage import util  # want to remove after refactor
+import ntpath
 standard_library.install_aliases()
+
+
+def exists_file(fname):
+    """Check if path exists and is a file"""
+    if fname and os.path.exists(fname) and os.path.isfile(fname):
+        return True
+    return False
+
+
+def json_from_string(json_str, defval=None):
+    """Get json from the string."""
+    jsondata = defval
+    try:
+        jsondata = json.loads(json_str)
+    except:
+        print('Failed to load json data: %s', json_str)
+    return jsondata
+
+
+def json_from_file(jsonfile, defval=None):
+    """ Get json data from the file."""
+    jsondata = defval
+    try:
+        if exists_file(jsonfile):
+            with open(jsonfile) as infile:
+                data = infile.read()
+                jsondata = json.loads(data)
+    except Exception as ex:
+        print('Failed to load json from file: %s, exception: %s' % (jsonfile, ex))
+    return jsondata
 
 
 ###############################################################################
@@ -98,17 +187,16 @@ class AWS:
     """
     All the globals for AWS utility functionalities.
     """
-
     def __init__(self, name=None, keypair=None, keypem=None):
         """Nothing to be constructed """
         self.v = {
-            "DEFAULT_INSTANCE_TYPE": "t3.small",
+            "AWS_CONFIG_FOLDER": "/.aws/",
             "AWS_ACCESS_LOCAL": 'D:/_devs/keypair/aws_access.py',
-            "AWS_KEYPEM": keypem if keypem else  "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
-            "AWS_KEYPAIR": keypair if keypair else "aws_ec2_oregon",
-            "AWS_REGION": "us-west-2",
-            "APNORTHEAST2": 'ap-northeast-2',   ## Not good.. HARD coded  APNORTHEAST2
-            "EC2CWD": '/home/ubuntu/notebook/',
+            "AWS_KEYPEM": keypem if keypem else "D:/_devs/keypair/oregon/aws_ec2_oregon.pem",
+            "AWS_KEYPAIR": keypair if keypair else 'aws_ec2_oregon',
+            "AWS_REGION": 'us-west-2',
+            "DEFAULT_INSTANCE_TYPE": 't3.small',
+            "EC2CWD": '/home/ubuntu/',
             "EC2_CONN": None,
             "EC2_FILTERS": ('id', 'ip_address'),
             "EC2_ATTRIBUTES": (
@@ -122,13 +210,13 @@ class AWS:
                 "root_device_type", "state_reason", "interfaces", "ebs_optimized",
                 "instance_profile"
             ),
-            "SPOT_CFG_FILE": "/tmp/ec_spot_config"
+            "SPOT_CFG_FILE": ".aws/ec_spot_config"
         }
         
-        if ".json" in name :
-            dd = json.load(name)
-        else :
-            dd = json.load( os["HOME"] + "/.awsconfig/" + name )
+        if ".json" in name:
+            dd = json_from_file(name, {})
+        else:
+            dd = json_from_file(os["HOME"] + "/.aws/" + name, {})
         if dd:
             self.v.update(dd)
         self.v = dict2(self.v)
@@ -145,8 +233,9 @@ class AWS:
             return access, key
 
         # Finally try the manual Config
-        with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
-            dd = json.loads(aws_file.read())
+        # with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+        #     dd = json.loads(aws_file.read())
+        dd = json_from_file(self.v['AWS_ACCESS_LOCAL'], {})
         if 'AWS_ACCESS_KEY_ID' in dd:
             access = dd['AWS_ACCESS_KEY_ID']
         if 'AWS_SECRET_ACCESS_KEY' in dd:
@@ -154,7 +243,7 @@ class AWS:
         return access, key
 
     def ec2_keypair_get(self, keypair=""):
-        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu'
+        sshdir = "%s/.ssh" % os.environ['HOME'] if 'HOME' in os.environ else '/home/ubuntu/'
         keypair = keypair if keypair else self.v['AWS_KEYPEM']
         identity = '%s/%s' % (sshdir, keypair)
         return identity
@@ -179,21 +268,24 @@ class AWS:
         return self.conn
 
     def aws_conn_create(self, region='', access='', key=''):
-        """ EC2 connection to AP NORTH EAST2 """
-        from boto.ec2.connection import EC2Connection
+        """ EC2 connection to specified region or  AWS.v['AWS_REGION']"""
         if not region:
-            region = self.v['APNORTHEAST2']
+            region = self.v['AWS_REGION']
         if not access or not key:
             access, key = self.aws_accesskey_get()
         if not access or not key:
             return None
         # We could have used connection from any region.
-        conn = EC2Connection(access, key)
-        regions = aws_conn_getallregions(conn)
-        for r in regions:
-            if r.name == region:
-                self.conn = EC2Connection(access, key, region=r)
-                return self.conn
+        conn = EC2Connection(access, key, region=region)
+        if conn:
+            self.conn = conn
+            return self.conn
+        else:
+            regions = aws_conn_getallregions(conn)
+            for r in regions:
+                if r.name == region:
+                    self.conn = EC2Connection(access, key, region=r)
+                    return self.conn
         print('Region not Found')
         return None
 
@@ -203,9 +295,10 @@ class AWS:
             aws_region = self.v['AWS_REGION']
         ec2_conn = self.conn
         if sys.platform.find('win') > -1 and not ec2_conn:
-            dd = {}
-            with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
-                dd = json.loads(aws_file.read())
+            # dd = {}
+            # with open(self.v['AWS_ACCESS_LOCAL']) as aws_file:
+            #     dd = json.loads(aws_file.read())
+            dd = json_from_file(self.v['AWS_ACCESS_LOCAL'], {})
             if 'AWS_ACCESS_KEY_ID' in dd:
                 access = dd['AWS_ACCESS_KEY_ID']
             if 'AWS_SECRET_ACCESS_KEY' in dd:
@@ -298,7 +391,8 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
     cmd     = ' '.join(cmdargs)
     value   = os.popen(cmd).read()
-    inst    = json.loads(value)
+    inst = json_from_string(value)
+    # inst    = json.loads(value)
     ncpu    = 0
     ipaddr  = None
     instance_type = default_instance_type
@@ -306,13 +400,10 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
       reserves = inst['Reservations'][0]
       if 'Instances' in reserves and reserves['Instances']:
         instance = reserves['Instances'][0]
-        
         if 'CpuOptions' in instance and 'CoreCount' in instance['CpuOptions']:
           ncpu = instance['CpuOptions']['CoreCount']
-          
         if 'PublicIpAddress' in instance and instance['PublicIpAddress']:
           ipaddr = instance['PublicIpAddress']
-        
         instance_type = instance['InstanceType']
     
     if ipaddr:
@@ -383,7 +474,6 @@ def ec2_config_build_template_cli(instance_type, amiId=None, keypair=None,
     spot_file.write(json.dumps(spot_config))
 
 
-
 def ec2_spot_start_cli(instance_type, spot_price, region=None, waitsec=100):
   """
   Request a spot instance based on the price for the instance type
@@ -420,12 +510,7 @@ def ec2_spot_instance_list():
   ]
   cmd = ' '.join(cmdargs)
   value = os.popen(cmd).read()
-  try:
-    instance_list = json.loads(value)
-  except:
-    instance_list = {
-      "SpotInstanceRequests": []
-    }
+  instance_list = json_from_string(value, {"SpotInstanceRequests": []})
   return instance_list
 
 
@@ -436,8 +521,7 @@ def ec2_instance_stop(instance_list) :
     if isinstance(instance_list, list) :
         instances = ','.join(instance_list)
     cmdargs = [
-      'aws', 'ec2', 'terminate-instances',
-      '--instance-ids', instances
+      'aws', 'ec2', 'terminate-instances', '--instance-ids', instances
     ]
     cmd = ' '.join(cmdargs)
     os.system(cmd)
@@ -592,218 +676,6 @@ def aws_ec2_spot_start(conn, region, key_name="ecsInstanceRole", inst_type="cx2.
         pass
 
 
-def ec2_spot_start_cli(instance_type, spot_price, region=None, waitsec=100):
-  """
-  Request a spot instance based on the price for the instance type
-  # Need a check if this request has been successful.
-  
-  100 sec to be provisionned and started.
-  """
-  aws = AWS()
-  if not instance_type:
-    instance_type = aws.v['DEFAULT_INSTANCE_TYPE']
-  if not region:
-      region = aws.v['AWS_REGION']
-  ec2_config_build_template_cli(instance_type)
-  cmdargs = [
-    'aws', 'ec2', 'request-spot-instances',
-    '--region', region,
-    '--spot-price', str(spot_price),
-    '--instance-count', "1",
-    ' --type', 'one-time',
-    '--launch-specification', 'file://%s' % aws.v['SPOT_CFG_FILE']
-  ]
-  print(cmdargs)
-  cmd = ' '.join(cmdargs)
-  msg = os.system(cmd)
-  sleep(waitsec)  # It may not be fulfilled in 50 secs.
-  ll= ec2_spot_instance_list()
-  return ll['SpotInstanceRequests'] if 'SpotInstanceRequests' in ll else []
-
-
-
-def ec2_spot_instance_list():
-  """ Get the list of current spot instances. """
-  cmdargs = [
-    'aws', 'ec2', 'describe-spot-instance-requests'
-  ]
-  cmd = ' '.join(cmdargs)
-  value = os.popen(cmd).read()
-  try:
-    instance_list = json.loads(value)
-  except:
-    instance_list = {
-      "SpotInstanceRequests": []
-    }
-  return instance_list
-
-
-def ec2_instance_stop(instance_list) :
-  """ Stop the spot instances ainstances u stop any other instance, this should work"""
-  instances = instance_list
-  if instances:
-    if isinstance(instance_list, list) :
-        instances = ','.join(instance_list)
-    cmdargs = [
-      'aws', 'ec2', 'terminate-instances',
-      '--instance-ids', instances
-    ]
-    cmd = ' '.join(cmdargs)
-    os.system(cmd)
-    return instances.split(",")
-
-
-
-def ec2_get_spot_price(instance_type):
-  """ Get the spot price for instance type in us-west-2"""
-  value = 0.0
-  if os.path.exists('./aws_spot_price.sh') and os.path.isfile('./aws_spot_price.sh'):
-    cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
-    value = os.popen(cmdstr).read()
-    value = value.replace('\n', '') if value else 0.10
-    #parsefloat(value)
-  return tofloat(value)
-
-
-def aws_conn_getallregions(conn=None):
-    """ Get the regions for the connection passed. """
-    if conn:
-        return conn.get_all_regions()
-    return []  # Fail safe, caller may not check.
-
-
-def aws_conn_getinfo(conn):
-    """ Connection region name """
-    region_name = None
-    if conn:
-        print(conn.region.name)
-        region_name = conn.region.name
-    return region_name
-
-
-def aws_ec2_ami_create(conn, ip_address='', ami_name=''):
-    """ Createan an AMI for the instance represented by the ipadress"""
-    if conn and ip_address:
-        instance_list = conn.get_all_instances(
-            filters={
-                "ip_address": ip_address
-            }
-        )
-        instance = instance_list[0].instances[0] if instance_list else None
-        if instance:
-            ami_id = instance.create_image(ami_name)
-            print("Image creation(%s) for AMI ID %s started...." % (ami_name, ami_id))
-            return True
-    return False
-
-
-def aws_ec2_get_instanceid(conn, filters=None):
-    """ Get Instance Id based on the filters. """
-    if not filters:
-        filters = {
-            "ip_address": ""
-        }
-    if conn:
-        instance_list = conn.get_all_instances(filters=filters)
-        instance = instance_list[0].instances[0] if instance_list else None
-        if instance:
-            return instance.id
-    return None
-
-
-def aws_ec2_allocate_elastic_ip(conn, instance_id='', elastic_ip=''):
-    """ Allocate elastic IP in the region."""
-    # if not region:
-    #     region = AWS().v['APNORTHEAST2']
-    if conn and instance_id:
-        if not elastic_ip:
-            eip = conn.allocate_address()
-            elastic_ip = eip.public_ip
-        if elastic_ip:
-            conn.associate_address(instance_id=instance_id, public_ip=elastic_ip)
-            print('Elastic assigned Public IP: %s,Instance_ID: %s' % (elastic_ip, instance_id))
-            return elastic_ip
-    return None
-
-
-def aws_ec2_allocate_eip(instance_id, conn=None, eip_allocation_id=None, eip_public_ip=None,
-                         allow_reassociation=False):
-    """
-    Assign an Elastic IP to an instance. Works with either by specifying the
-    connection: EC2Connection object
-    instance_id: Desired EC2 instance's ID
-    eip_allocation_id: ID of Elastic IP to assign (Required if no public_ip)
-    eip_public_ip: Elastic IP to assign (Required if no allocation_id)
-    allow_reassociation: Option to turn off reassociation (check caveats below)
-    """
-    if conn:
-        if eip_public_ip:
-            conn.associate_address(instance_id=instance_id, public_ip=eip_public_ip,
-                                   allow_reassociation=allow_reassociation)
-            return True
-        elif eip_allocation_id:
-            conn.associate_address(instance_id=instance_id, allocation_id=eip_allocation_id,
-                                   allow_reassociation=allow_reassociation)
-            return True
-        else:
-            raise ValueError("eip_public_ip and eip_allocation_id cannot be both None!")
-
-
-def aws_ec2_spot_start(conn, region, key_name="ecsInstanceRole", inst_type="cx2.2", ami_id="",
-                       pricemax=0.15, elastic_ip='', pars=None):
-    """
-    :param conn: Connector to Boto
-    :param region: AWS region (us-east-1,..)
-    :param key_name: AWS SSH Key Name(in EC2 webspage )
-    :param security_group: AWS security group id
-    :param inst_type:  AWS EC2 instance type(t1.micro, m1.small ...)
-    :param ami_id: AWS AMI ID
-    :param pars: Disk Size, Volume type (General Purpose SSD - gp2, Magnetic etc)
-    :param pricemax: minmum spot instance bid price
-    """
-    if not conn:
-        return None
-    if not pars:
-        pars = {
-            "security_group": [""],
-            "disk_size": 25,
-            "disk_type": "ssd",
-            "volume_type": "gp2"
-        }
-    pars = dict2(pars)   #Dict to Attribut Dict
-    print("starting EC2 Spot Instance")
-
-    try:
-        block_map = BlockDeviceMapping()
-        device = EBSBlockDeviceType()
-        device.size = int(pars.disk_size)  # size in GB
-        device.volume_type = pars.volume_type  # [ standard | gp2 | io1 ]
-        device.delete_on_termination = False
-        block_map["/dev/xvda"] = device
-        print("created a block device")
-
-        req = conn.request_spot_instances(price=pricemax, image_id=ami_id, instance_type=inst_type,
-                                          key_name=key_name, security_groups=pars.security_group,
-                                          block_device_map=block_map)
-        print("Spot instance request created, status: %s" % (req[0].status))
-        print("Waiting for spot instance provisioning")
-        while True:
-            current_req = conn.get_all_spot_instance_requests([req[0].id])[0]
-            if current_req.state == "active":
-                print("Spot instance provisioning successful.")
-                instance = conn.get_all_instances([current_req.instance_id])[0].instances[0]
-                aws_ec2_allocate_elastic_ip(conn, current_req.instance_id, elastic_ip, region)
-                # Print Instance details : ID, IP adress
-                print('IP Addess:%s, instance_id: %s' % (getattr(instance, "ip_address"),
-                                                         getattr(instance, 'id')))
-                return instance
-            # print('.', end='')
-            sleep(15)
-    except Exception as e:
-        print("Error : %s " % (str(e)))
-    return None
-
-
 def aws_ec2_spot_stop(conn, ipadress="", instance_id=""):
     """
     :param conn: connector
@@ -926,7 +798,7 @@ def aws_s3_url_split(url):
 
 def aws_s3_getbucketconn(s3dir):
     """ Get S3 bucket. """
-    import boto.s3
+    # import boto.s3
     bucket_name, todir = aws_s3_url_split(s3dir)
     access, secret = AWS().aws_accesskey_get()
     conn = boto.connect_s3(access, secret)
@@ -944,7 +816,7 @@ def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2'):
     def percent_cb(complete, total):
         sys.stdout.write('.'); sys.stdout.flush()
 
-    import boto.s3
+    # import boto.s3
     bucket = aws_s3_getbucketconn(todir)
     bucket_name, todir = aws_s3_url_split(todir)
 
@@ -952,8 +824,8 @@ def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2'):
     PART_SIZE = 6 * 1000 * 1000
 
     if fromdir_file.find('.') > -1:   # Case of Single File
-        filename = util.os_file_getname(fromdir_file)
-        fromdir_file = util.os_file_getpath(fromdir_file) + '/'
+        filename = os_file_getname(fromdir_file)
+        fromdir_file = os_file_getpath(fromdir_file) + '/'
         uploadFileNames = [filename]
     else:
         uploadFileNames = []
@@ -992,7 +864,8 @@ def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk'):
 
     for l in bucket_list:
         key1 = str(l.key)
-        file1, path2 = util.os_file_getname(key1), util.os_file_getpath(key1)
+        file1 = os_file_getname(key1)
+        path2 = os_file_getpath(key1)
         # Remove prefix path of S3 to machine
         path1 = os.path.relpath(path2, dirs3).replace('.', '')
         d = todir + '/' + path1
@@ -1023,7 +896,7 @@ def aws_s3_file_read(bucket1, filepath):
     s3_client.download_file('s3-key-bucket','keys/keyname.pem',
                             '/tmp/keyname.pem')
     """
-    from boto.s3.connection import S3Connection
+    # from boto.s3.connection import S3Connection
     conn = S3Connection(AWS().aws_accesskey_get())
     response = conn.get_object(Bucket=bucket1, Key=filepath)
     file1 = response["Body"]
@@ -1048,266 +921,7 @@ class aws_ec2_ssh(object):
     """
 
     def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import socket
-        # Accepts a file-like object (anything with a readlines() function)
-        # in either dss_key or rsa_key with a private key.  Since I don't
-        # ever intend to leave a server open to a password auth.
-        self.host = hostname
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((hostname,22))
-        self.t = paramiko.Transport(self.sock)
-        self.t.start_client()
-        # keys = paramiko.load_host_keys(os.path.expanduser('~/.ssh/known_hosts'))
-        # key = self.t.get_remote_server_key()
-        # supposed to check for key in keys, but I don't much care right now to
-        # find the right notation
-
-
-def aws_ec2_spot_stop(conn, ipadress="", instance_id=""):
-    """
-    :param conn: connector
-    :param ipadress:   of the instance  to Identify the instance.
-    :param instance_id:  OR use instance ID....
-    :return:
-    """
-    if not conn:
-        return False
-    if not instance_id:
-        instance_id=  aws_ec2_get_instanceid(conn, ipadress)  # Get ID from IP Adresss
-    try:
-        print("Terminating Spot Instance : %s" % (str(instance_id)))
-        conn.terminate_instances(instance_ids = [instance_id])
-        print ("Terminating spot instance Successful!")
-        return True
-    except Exception as e:
-        print ("Error : Failed to terminate. %s" % (str(e)))
-    return False
-
-
-def aws_ec2_res_start(conn, region, key_name, ami_id, inst_type="cx2.2",
-                      min_count =1, max_count=1, pars=None):
-    """
-    normal instance start
-    :param conn: Connector to Boto
-    :param region: AWS region (us-east-1,..)
-    :param key_name: AWS  SSH Key Name
-    :param security_group: AWS security group id
-    :param inst_type:  AWS EC2 instance type (t1.micro, m1.small ...)
-    :param ami_id:  AWS AMI ID
-    :param min_count: Minumum number of instances
-    :param max_count : Maximum number of instances
-    :param pars: Disk Size, Volume type (General Purpose SSD - gp2,Magnetic etc)
-    :return
-    """
-    if not conn:
-        return None
-    if not pars:
-        pars = {
-            "security_group": [""],
-            "disk_size": 25,
-            "disk_type": "ssd",
-            "volume_type": "gp2"
-        }
-    pars = dict2(pars)   #Dict to Attribut Dict
-    try: 
-        block_map = BlockDeviceMapping()
-        device = EBSBlockDeviceType()
-        device.size = int(pars.disk_size)  # size in GB
-        device.volume_type = pars.volume_type  # [ standard | gp2 | io1 ]
-        device.delete_on_termination = False
-        block_map["/dev/xvda"] = device
-        print("created a block device")
-        req = conn.run_instances(image_id=ami_id, min_count=min_count,
-                                 max_count=max_count,
-                                 instance_type=inst_type, key_name=key_name,
-                                 security_groups= pars.security_group,
-                                 block_device_map=block_map)
-        instance_id = req.instances[0].id
-        print("EC2 instance has been created. Instance ID : %s" % instance_id)
-        print("Waiting for EC2 instance provisioning")
-        while True:
-            print('.', end='')
-            current_req = conn.get_all_instances(instance_id)
-            if current_req[0].instances[0].state.lower() == "running":
-                print("EC2 instance provisioning successful and the instance is running.")
-                aws_ec2_printinfo(current_req[0].instances[0])
-                return current_req[0].instances[0]
-            print('.'),
-            sleep(30)
-    except Exception as e:
-        print("Error : %s " % (str(e)))
-    return None
-
-
-def aws_ec2_res_stop(conn, ipadress="", instance_id=""):
-    """
-    :param conn: connector
-    :param ipadress:     Of the instance  to Identify the instance.
-    :param instance_id:  OR use instance ID....
-    """
-    if not conn:
-        return False
-    if not instance_id:
-        instance_id = aws_ec2_get_instanceid(conn, ipadress)
-    try:
-        print("Stopping EC2 Instance : %s" % (str(instance_id)))
-        req = conn.stop_instances(instance_ids=[instance_id])
-        print("EC2 instance has been stopped successfully. %s" % req)
-        return True
-    except Exception as e:
-        print("Error : Failed to stop EC2 instance. %s" % str(e))
-    return False
-
-
-def aws_ec2_printinfo(instance=None, ipadress="", instance_id=""):
-    """
-    Idenfiy instnance of
-    :param instance: ipadress
-    :param instance_id:
-    :return: return info on the instance : ip, ip_adress,
-    """
-    if not ipadress:
-        print("")
-    if not instance_id:
-        pass
-
-
-def aws_ec2_get_folder(ipadress, fromfolder1, tofolder1):
-    """Copy Folder from remote to  EC2 folder"""
-    pass
-
-
-def aws_s3_url_split(url):
-    """Split into Bucket, url."""
-    url_parts = url.split("/")
-    return url_parts[0], "/".join(url_parts[1:])
-
-
-def aws_s3_getbucketconn(s3dir):
-    """ Get S3 bucket. """
-    import boto.s3
-    bucket_name, todir = aws_s3_url_split(s3dir)
-    access, secret = AWS().aws_accesskey_get()
-    conn = boto.connect_s3(access, secret)
-    bucket = conn.get_bucket(bucket_name)  # location=boto.s3.connection.Location.DEFAULT)
-    return bucket
-
-
-def aws_s3_put(fromdir_file='dir/file.zip', todir='bucket/folder1/folder2'):
-    """
-    Copy File or Folder to S3
-    "aws s3 cp s3://s3-bucket/scripts/HelloWorld.sh /home/ec2-user/HelloWorld.sh",
-    "chmod 700 /home/ec2-user/HelloWorld.sh",
-    "/home/ec2-user/HelloWorld.sh"
-    """
-    def percent_cb(complete, total):
-        sys.stdout.write('.'); sys.stdout.flush()
-
-    import boto.s3
-    bucket = aws_s3_getbucketconn(todir)
-    bucket_name, todir = aws_s3_url_split(todir)
-
-    MAX_SIZE = 20 * 1000 * 1000
-    PART_SIZE = 6 * 1000 * 1000
-
-    if fromdir_file.find('.') > -1:   # Case of Single File
-        filename = util.os_file_getname(fromdir_file)
-        fromdir_file = util.os_file_getpath(fromdir_file) + '/'
-        uploadFileNames = [filename]
-    else:
-        uploadFileNames = []
-    for (fromdir_file, dirname, filename) in os.walk(fromdir_file):
-        uploadFileNames.extend(filename)
-        break
-
-    for filename in uploadFileNames:
-        sourcepath = os.path.join(fromdir_file + filename)
-        destpath = os.path.join(todir, filename)
-        print("Uploading %s to Amazon S3 bucket %s" % (sourcepath, bucket_name))
-        filesize = os.path.getsize(sourcepath)
-        if filesize > MAX_SIZE:
-            print("multipart upload")
-            mp = bucket.initiate_multipart_upload(destpath)
-            fp = open(sourcepath, 'rb')
-            fp_num = 0
-            while fp.tell() < filesize:
-                fp_num += 1
-                print("uploading part %i" %fp_num)
-                mp.upload_part_from_file(fp, fp_num, cb=percent_cb, num_cb=10,
-                                         size=PART_SIZE)
-            mp.complete_upload()
-        else:
-            print("singlepart upload: " + fromdir_file + ' TO ' + todir)
-            k = boto.s3.key.Key(bucket)
-            k.key = destpath
-            k.set_contents_from_filename(sourcepath, cb=percent_cb, num_cb=10)
-
-
-def aws_s3_get(froms3dir='task01/', todir='', bucket_name='zdisk'):
-    """Get from S3 file/folder"""
-    bucket_name, dirs3 = aws_s3_url_split(froms3dir)
-    bucket = aws_s3_getbucketconn(froms3dir)
-    bucket_list = bucket.list(prefix=dirs3)  # /DIRCWD/dir2/dir3
-
-    for l in bucket_list:
-        key1 = str(l.key)
-        file1, path2 = util.os_file_getname(key1), util.os_file_getpath(key1)
-        # Remove prefix path of S3 to machine
-        path1 = os.path.relpath(path2, dirs3).replace('.', '')
-        d = todir + '/' + path1
-        if not os.path.exists(d):
-            os.makedirs(d)
-        try:
-            l.get_contents_to_filename(d+ '/'+ file1)
-        except OSError:
-            pass
-
-
-def aws_s3_folder_printtall(bucket_name='zdisk'):
-    """ Print all S3 bucket folders"""
-    access, secret = AWS().aws_accesskey_get()
-    conn = boto.connect_s3(access, secret)
-    bucket = conn.create_bucket(bucket_name,
-                                location=boto.s3.connection.Location.DEFAULT)
-    folders = bucket.list("", "/")
-    for folder in folders:
-        print(folder.name)
-    return folders
-
-
-def aws_s3_file_read(bucket1, filepath, isbinary=1):
-    """
-    s3_client = boto3.client('s3')
-    # Download private key file from secure S3 bucket
-    s3_client.download_file('s3-key-bucket','keys/keyname.pem',
-                            '/tmp/keyname.pem')
-    """
-    from boto.s3.connection import S3Connection
-    conn = S3Connection(AWS().aws_accesskey_get())
-    response = conn.get_object(Bucket=bucket1, Key=filepath)
-    file1 = response["Body"]
-    return file1
-
-
-class aws_ec2_ssh(object):
-    """
-    ssh= aws_ec2_ssh(host)
-    print ssh.command('ls ')
-    ssh.put_all( DIRCWD +'linux/batch/task/elvis_prod_20161220', EC2CWD + '/linux/batch/task' )
-    ssh.get_all(  EC2CWD + '/linux/batch/task',  DIRCWD +'/zdisks3/fromec2' )
-    # Detects DSA or RSA from key_file, either as a string filename or a file object.
-    # Password auth is possible, but I will judge you for
-    # ssh=SSHSession('targetserver.com','root',key_file=open('mykey.pem','r'))
-    # ssh=SSHSession('targetserver.com','root',key_file='/home/me/mykey.pem')
-    # ssh=SSHSession('targetserver.com','root','mypassword')
-    # ssh.put('filename','/remote/file/destination/path')
-    # ssh.put_all('/path/to/local/source/dir','/path/to/remote/destination')
-    # ssh.get_all('/path/to/remote/source/dir','/path/to/local/destination')
-    # ssh.command('echo "Command to execute"')
-    """
-
-    def __init__(self, hostname, username='ubuntu', key_file=None, password=None):
-        import socket
+        # import socket
         # Accepts a file-like object (anything with a readlines() function)
         # in either dss_key or rsa_key with a private key.  Since I don't
         # ever intend to leave a server open to a password auth.
@@ -1377,7 +991,6 @@ class aws_ec2_ssh(object):
         self.sftp.get(remotefile, localfile)
 
     def sftp_walk(self, remotepath):
-        from stat import S_ISDIR
         # Kindof a stripped down  version of os.walk, implemented for
         # sftp.  Tried running it flat without the yields, but it really
         # chokes on big directories.
@@ -1479,8 +1092,8 @@ class aws_ec2_ssh(object):
         zipath = tmpfolder + zipname
 
         print("zipping")
-        filezip = util.os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
-                                    dir_prefix=True, iscompress=True)
+        filezip = os_zipfolder(dir_tozip=fromfolder, zipname=zipath, dir_prefix=True,
+                               iscompress=True)
         print("ssh on remote")
         remote_zipath = os.path.join(tofolder, zipname).replace('\\', '/')
         self.put(filezip, remote_zipath)
@@ -1504,7 +1117,7 @@ def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
     sftp.put('testfile.txt', 'remote_testfile.txt')
     http://docs.paramiko.org/en/2.1/api/sftp.html
     """
-    import paramiko
+    # import paramiko
     sftp, ssh, transport = None, None, None
     try:
         if not keyfilepath:
@@ -1614,7 +1227,6 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
         self.sftp.get(remotefile, localfile)
 
     def sftp_walk(self, remotepath):
-        from stat import S_ISDIR
         # Kindof a stripped down  version of os.walk, implemented for
         # sftp.  Tried running it flat without the yields, but it really
         # chokes on big directories.
@@ -1716,8 +1328,8 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
         zipath = tmpfolder + zipname
 
         print("zipping")
-        filezip = util.os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
-                                    dir_prefix=True, iscompress=True)
+        filezip = os_zipfolder(dir_tozip=fromfolder, zipname=zipath,
+                               dir_prefix=True, iscompress=True)
         print("ssh on remote")
         remote_zipath = os.path.join(tofolder, zipname).replace('\\', '/')
         self.put(filezip, remote_zipath)
@@ -1742,100 +1354,6 @@ def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
         print(command('ls '))
 
 
-def aws_ec2_ssh_create_con(contype='sftp/ssh', host='ip', port=22,
-                           username='ubuntu', keyfilepath='', password='',
-                           keyfiletype='RSA', isprint=1):
-    """
-    Transfert File  host = '52.79.79.1'
-    keyfilepath = 'D:/_devs/aws/keypairs/ec2_instanc'
-    # List files in the default directory on the remote computer.
-    dirlist = sftp.listdir('.')
-    sftp.get('remote_file.txt', 'downloaded_file.txt')
-    sftp.put('testfile.txt', 'remote_testfile.txt')
-    http://docs.paramiko.org/en/2.1/api/sftp.html
-    """
-    import paramiko
-    sftp, ssh, transport = None, None, None
-    try:
-        if not keyfilepath:
-            keyfilepath = AWS().v['AWS_KEYPEM']
-        if keyfiletype == 'DSA':
-            key = paramiko.DSSKey.from_private_key_file(keyfilepath)
-        else:
-            key = paramiko.RSAKey.from_private_key_file(keyfilepath)
-
-        if contype == 'sftp':
-            # Create Transport object using supplied method of authentication.
-            transport = paramiko.Transport((host, port))
-            transport.add_server_key(key)
-            transport.connect(None, username, pkey=key)
-            sftp = paramiko.SFTPClient.from_transport(transport)
-            if isprint:
-                print('Root Directory : %s\n' % sftp.listdir())
-            return sftp
-
-        if contype == 'ssh':
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(hostname=host, username=username, pkey=key)
-
-            # Test
-            if isprint:
-                stdin, stdout, stderr = ssh.exec_command("uptime;ls -l")
-                stdin.flush()   #Execute
-                data = stdout.read().splitlines()   #Get data
-                print('Test Print Directory ls :')
-                for line in data: print(line)
-                return ssh
-
-    except Exception as e:
-        print('An error occurred creating client: %s: %s' % (e.__class__, e))
-        if sftp: sftp.close()
-        if transport: transport.close()
-        if ssh: ssh.close()
-
-
-def aws_ec2_ssh_cmd(cmdlist=["ls "], host='ip', doreturn=0, ssh=None,
-                    username='ubuntu', keyfilepath=''):
-    """
-    SSH Linux terminal Command
-    ### PEM File is needed
-    aws_ec2_ssh_cmd(cmdlist=["ls " ], host='52.26.181.200', doreturn=1,
-                    username='ubuntu', keyfilepath='')
-    fuser 8888/tcp - Check if Jupyter is running
-    ps -ef | grep python : List of  PID Python process
-    kill -9 PID_number (i.e. the pid returned)
-    top: CPU usage
-
-    Run nohup python bgservice.py & to get the script to ignore the hangup signal and keep running.
-    Output will be put in nohup.out.
-    https://aws.amazon.com/blogs/compute/scheduling-ssh-jobs-using-aws-lambda/
-    """
-
-    if ssh is None and len(host) > 5:
-        ssh = aws_ec2_ssh_create_con(contype='ssh', host=host, port=22, username=username,
-                                     keyfilepath='')
-        print('EC2 connected')
-
-    c = cmdlist
-    if isinstance(c, str):  # Only Command to be launched
-        if c == 'python': cmdlist = ['ps -ef | grep python ']
-        elif c == 'jupyter': cmdlist = ['fuser 8888/tcp  ']
-
-    readall = []
-    for command in cmdlist:
-        print("Executing {}".format(command))
-        stdin, stdout, stderr = ssh.exec_command(command)
-        outread, erread = stdout.read(), stderr.read()
-        readall.append((outread, erread))
-        print(outread)
-        print(erread)
-    print('End of SSH Command')
-    ssh.close()
-    if doreturn:
-        return readall
-
-
 def aws_ec2_ssh_python_script(python_path='/home/ubuntu/anaconda2/bin/ipython',
                               script_path="", args1="", host=""):
    # No space after ipython
@@ -1874,7 +1392,7 @@ def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=
 def aws_ec2_getfrom_ec2(fromfolder, tofolder, host):
     sftp = aws_ec2_ssh_create_con(contype='sftp', host=host)
     if fromfolder.find('.') > -1:  # file
-        folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1] == '/' else fromfolder)
+        folder1, file1 = z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1] == '/' else fromfolder)
         tofolder2 = tofolder if tofolder.find(".") > -1 else  tofolder + '/' + file1
         sftp.get(fromfolder, tofolder2)
     else:  # Pass the Folder in Loop
@@ -1889,12 +1407,12 @@ def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host
     # https://www.lifewire.com/examples-linux-unzip-command-2201157
     # unzip -o filename.zip
     aws = AWS().v
-    folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
+    folder1, file1 = z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
     tofolderfull = aws['EC2CWD'] + '/' + tofolder if tofolder.find(aws['EC2CWD']) == -1 else tofolder
 
     # Zip folder before sending it
     file2 = folder1 + '/' + file1 + '.zip'
-    util.os_zipfolder(fromfolder, file2)
+    os_zipfolder(fromfolder, file2)
     res = aws_ec2_putfile(file2, tofolder=tofolderfull, host=host)
     print(res)
 
@@ -1921,9 +1439,9 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
             # foldername = fromfolder
             # fromfolder = DIRCWD+ '/' + foldername
             tempfolder = DIRCWD + '/ztemp/' + fromfolder
-            # TODO os_folder_delete to be added in util.py
-            util.os_folder_delete(tempfolder)
-            util.os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
+            # TODO os_folder_delete to be added.
+            os_folder_delete(tempfolder)
+            os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
             sftp.put(tempfolder, tofolder)
             return 1
         if typecopy == 'all':
@@ -1931,9 +1449,10 @@ def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
                 print('Please put absolute path')
                 return 0
             if fromfolder.find('.') > -1:  #1 file
-                fromfolder, file1 = util.os_split_dir_file(fromfolder)
+                fromfolder, file1 = os_split_dir_file(fromfolder)
                 tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
-                tofolder, file2 = util.os_split_dir_file(tofull)
+                # Not used so commented.
+                # tofolder, file2 = util.os_split_dir_file(tofull)
             sftp.put(fromfolder + '/' + file1, tofull)
             try:
                 sftp.stat(tofull)
@@ -1956,7 +1475,7 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
         if fromfolder.find(':') == -1:
             print('Please put absolute path')
             return 0
-    fromfolder2, file1 = util.z_key_splitinto_dir_name(fromfolder)
+    fromfolder2, file1 = z_key_splitinto_dir_name(fromfolder)
     tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
     print("from: %s, to: %s" % (fromfolder, tofull))
     isexist = False
@@ -1972,14 +1491,13 @@ def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackag
 
 
 def sleep2(wsec):
-    from time import sleep
-    from tqdm import tqdm
-    for i in tqdm(range(wsec)):
+    # from time import sleep
+    # from tqdm import tqdm
+    for _ in tqdm(range(wsec)):
         sleep(1)
 
 
 def sftp_isdir(path, sftp):
-    from stat import S_ISDIR
     try:
         return S_ISDIR(sftp.stat(path).st_mode)
     except IOError:
@@ -1988,9 +1506,7 @@ def sftp_isdir(path, sftp):
 
 
 def aws_ec2_getfolder(remotepath, sftp):
-    import paramiko, os
     paramiko.util.log_to_file('/tmp/paramiko.log')
-    from stat import S_ISDIR
     def sftp_walk(remotepath):
         path = remotepath
         files = []
@@ -2012,337 +1528,130 @@ def aws_ec2_getfolder(remotepath, sftp):
             sftp.get(os.path.join(os.path.join(path, file1)), '/local/path/')
 
 
-
-####################################################################################################
-############################ UTILS #################################################################
+############################ UTILS ################################################################
 class dict2(object):
     # {} INTO   mydict.key1   ,  mydict.key2 ,   mydict.key4
     def __init__(self, adict):
        self.__dict__.update(adict)
 
 
-def os_system(cmds, stdout_only=1) :
-  #   Get print output from command line
-  import subprocess
-  cmds = cmds.split(" ")
-  p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.stdout.read(),  p.stderr.read()
-
-  if stdout_only :
-        return out
-  return out, err
+def os_system(cmds, stdout_only=1):
+    # Get print output from command line
+    cmds = cmds.split(" ")
+    p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    outdata, errdata = p.stdout.read(),  p.stderr.read()
+    if stdout_only:
+        return outdata
+    return outdata, errdata
 
 
 def tofloat(value, default=0.0):
-  #  Parse the float value. 
-  try:
-    return float(value)
-  except:
-    return default
-
-
-
-### Remove util dependencies
-def os_file_getname(fromdir_file) :
-    pass
-
-
-def os_file_getpath(fromdir_file) :
-    pass
-
-
-def os_zipfolder(dir_tozip="", zipname="",       dir_prefix=True, iscompress=True) :
-    pass                                    
-
-
-def  z_key_splitinto_dir_name(key) :
-    pass
-
-
-def os_folder_delete(tempfolder) :
-    pass
-
-def os_folder_copy(fromfolder, tempfolder, pattern1="*.py") :
-    pass
-
-
-####################################################################################################
-############################ CLI ###################################################################
-# Something wrong in this method, lot of syntactic errors, commented out.
-# def cli_windows_start_spot():
-#     # :\_devs\Python01\aws\aapackage\
-#     # D:\_devs\Python01\ana27\python D:\_devs\Python01\aws\aapackage\util_aws.py --do start_spot
-#     # aws_ec2_spot_start(EC2_CONN, "west-2", key_name="ecsInstanceRole", inst_type="cx2.2",
-#     #                    ami_id="", pricemax=0.15,  elastic_ip='',
-#     #                    pars={"security_group": [""], "disk_size": 25, "disk_type": "ssd",
-#     #                         "volume_type": "gp2"})
-#     ss  = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
-#     ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
-#     print(ss)
-#     os.system(ss)
-#     sleep2(65)
-#     aws_win_conn = AWS().aws_conn_create_windows()
-#     ec2_list = aws_ec2_get_instances(aws_win_conn, csv_filename="zz_ec2_instance.csv")
-#     print(ec2_list)
-#     for x in ec2_list :
-#         if x["state"] == "running":
-#             sleep(5)
-#             ss = ' start "Chrome" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" '
-#             # ss += ' "http://' +  x[dlist = ['ps -ef | grep python ']
-#     elif c == 'jupyter':
-#             cmdlist = ['fuser 8888/tcp  ']
-#
-#     readall = []
-#     for command in cmdlist:
-#         print("Executing {}".format(command))
-#         stdin, stdout, stderr = ssh.exec_command(command)
-#         outread, erread = stdout.read(), stderr.read()
-#         readall.append((outread, erread))
-#         print(outread)
-#         print(erread)
-#     print('End of SSH Command')
-#     ssh.close()
-#     if doreturn:
-#         return readall
-
-
-def aws_ec2_ssh_python_script(python_path='/home/ubuntu/anaconda2/bin/ipython',
-                              script_path="", args1="", host=""):
-   # No space after ipython
-    cmd1 = python_path + ' ' + script_path + ' ' + '"' + args1 + '"'
-    aws_ec2_ssh_cmd(cmdlist=[cmd1], ssh=None, host=host, username='ubuntu')
-
-
-def aws_ec2_get_instances(con=None, attributes=None, filters=None, csv_filename=".csv"):
-    """
-    Fetch all EC2 instances and write selected attributes into a csv file.
-    Parameters:
-      connection: EC2Connection object
-      attributes: Tuple of attributes to retrieve. Default: id, ip_address
-      filters={"ip_address":""}
-    """
-    if not attributes: attributes = AWS().v['EC2_ATTRIBUTES']
-    instances = con.get_only_instances(filters=filters)
-    instance_list = []
-    for instance in instances:
-        # attribute is a python keyword.
-        x = {attr: getattr(instance, attr) for attr in attributes}
-        instance_list.append(x)
+    #  Parse the float value.
     try:
-        if len(csv_filename) > 4:
-            with open(csv_filename, 'a') as csvfile:
-                csvwriter = csv.writer(csvfile, delimiter=",")
-                csvwriter.writerow(list(attributes))
-                for xi in instance_list:
-                    csvwriter.writerow([xi[t] for t in attributes])
-            print("EC2 instance", csv_filename)
-    except Exception as e:
-        print(e)
-    return instance_list
+        return float(value)
+    except:
+        return default
 
 
-def aws_ec2_getfrom_ec2(fromfolder, tofolder, host):
-    sftp = aws_ec2_ssh_create_con(contype='sftp', host=host)
-    if fromfolder.find('.') > -1:  # file
-        folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1] == '/' else fromfolder)
-        tofolder2 = tofolder if tofolder.find(".") > -1 else  tofolder + '/' + file1
-        sftp.get(fromfolder, tofolder2)
-    else:  # Pass the Folder in Loop
-        pass
+# util dependencies
+def os_file_getname(path) :
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
 
 
-def aws_ec2_putfolder(fromfolder='D:/_d20161220/', tofolder='/linux/batch', host=''):
-    # fromfolder= DIRCWD +'/linux/batch/task/elvis_prod_20161220/'
-    # tofolder=   '/linux/batch/'
-    # If you don't care whether the file already exists and you always want to overwrite the
-    # files as they are extracted without prompting use the -o switch as follows:
-    # https://www.lifewire.com/examples-linux-unzip-command-2201157
-    # unzip -o filename.zip
-    aws = AWS().v
-    folder1, file1 = util.z_key_splitinto_dir_name(fromfolder[:-1] if fromfolder[-1]=='/' else fromfolder)
-    tofolderfull = aws['EC2CWD'] + '/' + tofolder if tofolder.find(aws['EC2CWD']) == -1 else tofolder
-
-    # Zip folder before sending it
-    file2 = folder1 + '/' + file1 + '.zip'
-    util.os_zipfolder(fromfolder, file2)
-    res = aws_ec2_putfile(file2, tofolder=tofolderfull, host=host)
-    print(res)
-
-    # Need install sudo apt-get install zip unzip
-    cmd1 = '/usr/bin/unzip '+ tofolderfull + '/' + file1 + '.zip ' + ' -d ' +  tofolderfull + '/'
-    aws_ec2_ssh_cmd(cmdlist=[cmd1], host=host)
+def os_file_getpath(path):
+    head, _ = ntpath.split(path)
+    return head
 
 
-def aws_ec2_put(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/', host='',
-                typecopy='code'):
+def os_zipfolder(dir_tozip="", zipname="", dir_prefix=True, iscompress=True):
     """
-    Copy python code, copy specific file, copy all folder content
-    :param fromfolder: 1 file or 1 folder
-    :param tofolder:
-    :param host:
-    """
-    DIRCWD  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if fromfolder.find('.') > -1:  # Copy 1 file
-        aws_ec2_putfile(fromfolder=fromfolder, tofolder=tofolder, host=host)
-    else:  # Copy Folder to
-        sftp = aws_ec2_ssh_create_con('sftp', host, isprint=1)
-        # Local folder and code folder
-        if typecopy == 'code' and fromfolder.find('.') == -1:
-            # foldername = fromfolder
-            # fromfolder = DIRCWD+ '/' + foldername
-            tempfolder = DIRCWD + '/ztemp/' + fromfolder
-            # TODO os_folder_delete to be added in util.py
-            util.os_folder_delete(tempfolder)
-            util.os_folder_copy(fromfolder, tempfolder, pattern1="*.py")
-            sftp.put(tempfolder, tofolder)
-            return 1
-        if typecopy == 'all':
-            if fromfolder.find(':') == -1:
-                print('Please put absolute path')
-                return 0
-            if fromfolder.find('.') > -1:  #1 file
-                fromfolder, file1 = util.os_split_dir_file(fromfolder)
-                tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
-                tofolder, file2 = util.os_split_dir_file(tofull)
-            sftp.put(fromfolder + '/' + file1, tofull)
-            try:
-                sftp.stat(tofull)
-                isexist = True
-            except:
-                isexist = False
-            print(isexist, tofull)
+     shutil.make_archive('/zdisks3/results/output', 'zip', root_dir=/zdisks3/results/',
+                         base_dir='output')
+     os_zipfolder('zdisk/test/aapackage', 'zdisk/test/aapackage.zip', 'zdisk/test')
+     """
+    dir_tozip = dir_tozip if dir_tozip[-1] != "/" else dir_tozip[:-1]
+    # dir_prefix= dir_prefix if dir_prefix[-1] != '/' else dir_prefix[:-1]
 
+    if dir_prefix:
+        dir_tozip, dir_prefix = "/".join(dir_tozip.split("/")[:-1]), dir_tozip.split("/")[-1]
+    else:
+        dir_tozip, dir_prefix = dir_tozip, "/"
 
-def aws_ec2_putfile(fromfolder='d:/file1.zip', tofolder='/home/notebook/aapackage/',
-                    host=''):
-    """
-    Copy python code, copy specific file, copy all folder content
-    :param fromfolder: 1 file or 1 folder
-    :param tofolder:
-    :param host:
-    """
-    sftp = aws_ec2_ssh_create_con('sftp', host, isprint=1)
-    if fromfolder.find('.') > -1:  # Copy 1 file
-        if fromfolder.find(':') == -1:
-            print('Please put absolute path')
-            return 0
-    fromfolder2, file1 = util.z_key_splitinto_dir_name(fromfolder)
-    tofull = tofolder + '/' + file1 if tofolder.find('.') == -1 else tofolder
-    print("from: %s, to: %s" % (fromfolder, tofull))
-    isexist = False
+    shutil.make_archive(zipname.replace(".zip", ""), "zip", dir_tozip, base_dir=dir_prefix)
+    r = os_zip_checkintegrity(zipname)
+    if r:
+        return zipname
+    else:
+        print("Corrupt File")
+        return False
+    pass
+
+def os_zip_checkintegrity(filezip1):
+    zip_file = zipfile.ZipFile(filezip1)
     try:
-        sftp.put(fromfolder, tofull)
-        ss = sftp.stat(tofull)
-        isexist = True
-    except Exception as e:
-        print(e)
-    sftp.close()
-    return isexist, fromfolder, tofull
-
-
-def sleep2(wsec):
-    from time import sleep
-    from tqdm import tqdm
-    for i in tqdm(range(wsec)):
-        sleep(1)
-
-
-def sftp_isdir(path, sftp):
-    from stat import S_ISDIR
-    try:
-        return S_ISDIR(sftp.stat(path).st_mode)
-    except IOError:
-        #Path does not exist, so by definition not a directory
+        ret = zip_file.testzip()
+        if ret is not None:
+            print("First bad file in zip: %s" % ret)
+            return False
+        else:
+            return True
+    except RuntimeError:
         return False
 
 
-def aws_ec2_getfolder(remotepath, sftp):
-    import paramiko, os
-    paramiko.util.log_to_file('/tmp/paramiko.log')
-    from stat import S_ISDIR
-    def sftp_walk(remotepath):
-        path = remotepath
-        files = []
-        folders = []
-        for f in sftp.listdir_attr(remotepath):
-            if S_ISDIR(f.st_mode):
-                folders.append(f.filename)
-            else:
-                files.append(f.filename)
-        if files:
-            yield path, files
-        for folder in folders:
-            new_path = os.path.join(remotepath, folder)
-            for x in sftp_walk(new_path):
-                yield x
-    for path, files in sftp_walk("." or '/remotepath/'):
-        for file1 in files:
-            #sftp.get(remote, local) line for dowloading.
-            sftp.get(os.path.join(os.path.join(path, file1)), '/local/path/')
+def z_key_splitinto_dir_name(keyname):
+    lkey = keyname.split("/")
+    if len(lkey) == 1:
+        dir1 = ""
+    else:
+        dir1 = "/".join(lkey[:-1])
+        keyname = lkey[-1]
+    return dir1, keyname
 
 
-
-####################################################################################################
-############################ UTILS #################################################################
-class dict2(object):
-    # {} INTO   mydict.key1   ,  mydict.key2 ,   mydict.key4
-    def __init__(self, adict):
-       self.__dict__.update(adict)
-
-
-def os_system(cmds, stdout_only=1) :
-  #   Get print output from command line
-  import subprocess
-  cmds = cmds.split(" ")
-  p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = p.stdout.read(),  p.stderr.read()
-
-  if stdout_only :
-        return out
-  return out, err
-
-
-def tofloat(value, default=0.0):
-  #  Parse the float value. 
-  try:
-    return float(value)
-  except:
-    return default
-
-
-
-### Remove util dependencies
-def os_file_getname(fromdir_file) :
+def os_folder_delete(tempfolder):
     pass
 
+def os_folder_copy(src, dst, symlinks=False, pattern1="*.py", fun_file_toignore=None):
+    """
+    callable(src, names) -> ignored_names
+    'src' parameter, which is the directory being visited by copytree(),
+    'names' which is the list of `src` contents, as returned by os.listdir():
 
-def os_file_getpath(fromdir_file) :
-    pass
+    Since copytree() is called recursively, the callable will be called once
+     for each directory that is copied.
+    It returns a  list of names relative to the `src` directory that should not be copied.
+    """
+
+    def _default_fun_file_toignore(src, names):
+        _ = src
+
+        pattern = "!" + pattern1
+        file_toignore = fnmatch.filter(names, pattern)
+        return file_toignore
+
+    if fun_file_toignore is None:
+        fun_file_toignore = _default_fun_file_toignore
+
+    try:
+        shutil.copytree(src, dst, symlinks=symlinks, ignore=fun_file_toignore)
+    except OSError as exc:  # python >2.5
+        if exc.errno == errno.ENOTDIR:
+            shutil.copy(src, dst, follow_symlinks=False)
+        else:
+            #raise
+            pass
 
 
-def os_zipfolder(dir_tozip="", zipname="",       dir_prefix=True, iscompress=True) :
-    pass                                    
-
-
-def  z_key_splitinto_dir_name(key) :
-    pass
-
-
-def os_folder_delete(tempfolder) :
-    pass
-
-def os_folder_copy(fromfolder, tempfolder, pattern1="*.py") :
-    pass
-
-
-
-
-
-
-
-
-
-
+def os_split_dir_file(dirfile):
+    lkey = dirfile.split("/")
+    if len(lkey) == 1:
+        dir1 = ""
+    else:
+        dir1 = "/".join(lkey[:-1])
+        dirfile = lkey[-1]
+    return dir1, dirfile
 
 
 ####################################################################################################
@@ -2354,7 +1663,7 @@ def cli_windows_start_spot():
         #                    ami_id="", pricemax=0.15,  elastic_ip='',
         #                    pars={"security_group": [""], "disk_size": 25, "disk_type": "ssd",
         #                         "volume_type": "gp2"})
-        ss  = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
+        ss = 'aws ec2 request-spot-instances --region us-west-2 --spot-price "0.55" --instance-count 1 '
         ss += ' --type "one-time" --launch-specification "file://D:\_devs\Python01\\awsdoc\\ec_config2.json" '
         print(ss)
         os.system(ss)
@@ -2396,3 +1705,7 @@ if __name__ == '__main__':
     if args.do == "put_file":
         aws_ec2_putfile(fromfolder=args.fromfolder,
                         tofolder=args.tofolder, host=args.host)
+
+
+
+

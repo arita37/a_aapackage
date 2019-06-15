@@ -57,13 +57,48 @@ class Subnetwork(nn.Module):
         return x
 
 
+class globalNN(nn.Module):
+    def __init__(self, config):
+        super(globalNN, self).__init__()
+        self._config = config
+        self.lstm = nn.LSTM(config.dim, config.n_hidden_lstm)
+        self.hidden = (torch.randn(1, config.batch_size, config.n_hidden_lstm),
+                       torch.randn(1, config.batch_size, config.n_hidden_lstm))
+
+    def init_hidden(self):
+        self.hidden = (torch.randn(1, self._config.batch_size, self._config.n_hidden_lstm),
+                       torch.randn(1, self._config.batch_size, self._config.n_hidden_lstm))
+
+    def forward(self, x):
+        x, self.hidden = self.lstm(x.view(1, x.shape[0], -1), self.hidden)
+        return x
+
+
+class SubNetworkLSTM(nn.Module):
+
+    def __init__(self, config):
+        super(SubNetworkLSTM, self).__init__()
+        self._config = config
+        self.gnn = globalNN(config)
+        self.linear = Dense(config.n_hidden_lstm, config.num_hiddens[-1], batch_norm=False, activate=False)
+
+    def init_hidden(self):
+        self.gnn.init_hidden()
+
+    def forward(self, x):
+        x = self.gnn(x)
+        x = self.linear(x)
+        return x
+
+
 class FeedForwardModel(nn.Module):
     """The fully connected neural network model."""
 
-    def __init__(self, config, bsde):
+    def __init__(self, config, bsde, usemodel):
         super(FeedForwardModel, self).__init__()
         self._config = config
         self._bsde = bsde
+        self.usemodel = usemodel
 
         # make sure consistent with FBSDE equation
         self._dim = bsde.dim
@@ -72,10 +107,20 @@ class FeedForwardModel(nn.Module):
 
         self._y_init = Parameter(torch.Tensor([1]))
         self._y_init.data.uniform_(self._config.y_init_range[0], self._config.y_init_range[1])
-        self._subnetworkList = nn.ModuleList([Subnetwork(config) for _ in range(self._num_time_interval - 1)])
+
+        if usemodel == 'lstm':
+            self._subnetworkList = SubNetworkLSTM(config)
+        elif usemodel == 'ff':
+            self._subnetworkList = nn.ModuleList([Subnetwork(config) for _ in range(self._num_time_interval - 1)])
+
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+
     def forward(self, x, dw):
+
+        if self.usemodel == 'lstm':
+            self._subnetworkList.init_hidden()
+
         time_stamp = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         z_init = torch.zeros([1, self._dim]).uniform_(-.1, .1).to(TH_DTYPE).to(self.device)
@@ -95,7 +140,11 @@ class FeedForwardModel(nn.Module):
             add = torch.sum(z * dw[:, :, t], dim=1, keepdim=True)
             # print('add', add.max())
             y = y + add
-            z = self._subnetworkList[t](x[:, :, t + 1]) / self._dim
+
+            if self.usemodel == 'lstm':
+                z = self._subnetworkList(x[:, :, t + 1]) / self._dim
+            elif self.usemodel == 'ff':
+                z = self._subnetworkList[t](x[:, :, t + 1]) / self._dim
             # print('z value', z.max())
             
         # terminal time
@@ -108,11 +157,12 @@ class FeedForwardModel(nn.Module):
         # use linear approximation outside the clipped range
         loss = torch.mean(torch.where(torch.abs(delta) < DELTA_CLIP, delta ** 2,
                                       2 * DELTA_CLIP * torch.abs(delta) - DELTA_CLIP ** 2))
+
         return loss, self._y_init
 
 
 
-def train(config, bsde):
+def train(config, bsde, usemodel):
     # build and train
     #args = parser.parse_args()
     device = tch_to_device()
@@ -120,15 +170,17 @@ def train(config, bsde):
     #config = get_config(args.name)
     #bsde = get_equation(args.name, config.dim, config.total_time, config.num_time_interval)
 
-    net = FeedForwardModel(config, bsde)
+    net = FeedForwardModel(config, bsde, usemodel)
     net.to(device)
-
+    print(net)
     optimizer = torch.optim.Adam(net.parameters(), config.lr_values[0])
     t0 = time()
     
     training_history = []  # to save iteration results
-    dw_valid, x_valid = bsde.sample(config.valid_size)      # for validation accuracy
-
+    if usemodel == 'ff':
+        dw_valid, x_valid = bsde.sample(config.valid_size)      # for validation accuracy
+    elif usemodel == 'lstm':
+        dw_valid, x_valid = bsde.sample(config.batch_size)
     # begin sgd iteration
     for step in range(config.num_iterations + 1):
         if step % config.logging_frequency == 0:
