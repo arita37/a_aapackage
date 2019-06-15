@@ -30,15 +30,11 @@ import re
 from importlib import import_module
 
 
-
-import pandas as pd
 import optuna
 
 from util import load_config
-
-
-import models
-
+from models import create, module_load
+###############################################################################
 
 
 
@@ -48,11 +44,13 @@ def optim(modelname="model_dl.1_lstm.py",
           optim_methhod="normal/prune",
           save_folder="/mymodel/", log_folder="") :
     """
-    
+       Interface layer to Optuna 
+       for hyperparameter optimization
+     
    
           weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
          optimizer_name = trial.suggest_categorical('optimizer', ['Adam', 'MomentumSGD'])
-        # Categorical parameter
+    # Categorical parameter
     optimizer = trial.suggest_categorical('optimizer', ['MomentumSGD', 'Adam'])
 
     # Int parameter
@@ -72,7 +70,7 @@ def optim(modelname="model_dl.1_lstm.py",
          
         pars=  {
             "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
-            "num_layers": 1,
+            "num_layers":  {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
             "size_layer": {"type" : 'categorical', "value": [128, 256 ] }
             "output_size": {"type" : 'categorical', "value": [100] },
             "timestep":  {"type" : 'categorical', "value": [5] },
@@ -84,107 +82,14 @@ def optim(modelname="model_dl.1_lstm.py",
     
     """
     pass
-    
-    
-    
-          	
-    
-    
+    module = module_load(args.modelname)  # '1_lstm'
+    module.fit()
     
     
           	
-
-
-
-
-
-#################################################################################
-def get_recursive_files(folderPath, ext):
-    results = os.listdir(folderPath)
-    outFiles = []
-    for file in results:
-        if os.path.isdir(os.path.join(folderPath, file)):
-            outFiles += get_recursive_files(os.path.join(folderPath, file), ext)
-        elif re.match(ext, file):
-            outFiles.append(file)
-
-    return outFiles
-
-
-
-def module_load(modelname=""):
-    """
-      modelname:  model_dl.1_lstm.py
-      model_*****/      
-      
-    """
-    print(modelname)
-    modelname = modelname.replace(".py", "")
     
-    try :
-      module = import_module("{a}".format(a=modelname))
-    except Exception as e :
-      raise NameError("Module {} notfound, {}".format(modelname, e))    
     
-    return module
-
-
-
-def create(modelname="", params=None, choice=['module', "model"]):
-    """
-      modelname:  model_dl.1_lstm.py
-      model_*****/      
-      
-    """
-    module = module_load(modelname=modelname)  
-    model = module.Model(**params)
-    return module, model
     
-
-
-def create_instance_tch(name="net", params={}):
-    _, model = create(name, params)
-    return model   
-       
-
-
-
-
-
-def fit(model, module, X):
-    return module.fit(model, X)
-
-
-def predict(model, module, sess=None, X=None):
-    return module.predict(model, sess, X)
-
-
-
-
-
-
-
-#################################################################################
-#################################################################################
-def test_all(parent_folder="model_dl"):
-    module_names = get_recursive_files(parent_folder, r"[0-9]+_.+\.py$")
-    module_names.sort()
-    print(module_names)
-    
-    failed_scripts = []
-    import tensorflow as tf
-
-    for module_name in module_names:
-        print("#######################")
-        print(module_name)
-        print("######################")
-        try :
-          module = import_module("{}.{}".format(parent_folder, module_name.replace(".py", "")))
-          module.test()
-          tf.reset_default_graph()
-          del module
-        except Exception as e:
-          print("Failed", e)
 
 
 ###############################################################################
@@ -217,10 +122,6 @@ if __name__ == "__main__":
     # test_all() # tot test all te modules inside model_dl
     args = load_arguments()
 
-    if args.do == "testall"  :
-        print(args.do)
-        test_all()
-
 
     if args.do == "test"  :
         print(args.do)
@@ -229,13 +130,8 @@ if __name__ == "__main__":
         module.test()
 
 
-    if args.do == "fit"  :
-        module = module_load(args.modelname)  # '1_lstm'
-        module.fit()
+    if args.do == "search"  :
+        d = json.load(args.optim_config)
+        res = optim(args.modelname, d)  # '1_lstm'
+        print(res)
         
-        
-    if args.do == "predict"  :
-        module = module_load(args.modelname)  # '1_lstm'
-        module.predict()        
-
-
