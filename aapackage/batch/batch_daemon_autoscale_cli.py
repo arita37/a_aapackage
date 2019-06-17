@@ -608,6 +608,7 @@ def load_arguments():
     config_file = os.path.join(cur_path, "config.toml")
 
     p = argparse.ArgumentParser()
+    p.add_argument("--prod", action='store_true', default=False, help="Prod/Test")
     p.add_argument("--param_file", default=config_file, help="Params File")
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
     p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
@@ -654,6 +655,7 @@ def load_arguments():
 if __name__ == "__main__":
     ### Variable initialization #####################################################
     arg = load_arguments()
+    # ISTEST = not arg.prod
     logger = logger_setup(__name__, log_file=arg.log_file, formatter=util_log.FORMATTER_4,
                           isrotate=True)
     # print("arg input", arg)
