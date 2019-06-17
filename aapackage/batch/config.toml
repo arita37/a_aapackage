@@ -61,7 +61,7 @@ global_task_file= "/home/ubuntu/zs3drive/global_task.json"
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
 
-ami = "ami-090b189f0e2ffe4df"  #'ami-0491a657e7ed60af7'
+ami = "ami-0e6190554d1b5eac4"  #'ami-0491a657e7ed60af7'
 instance = 't3.small'
 spotprice = 0.05
 waitsec = 60
@@ -115,7 +115,7 @@ log_file = "/home/ubuntu/zlog/batch_autoscale.log"
 keypair = 'aws_ec2_ajey'  # remote spot instance
 region  = 'us-west-2'     # oregon west
 
-ami = "ami-090b189f0e2ffe4df" # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+ami = "ami-0e6190554d1b5eac4" # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
 instance = 't3.small'
 spotprice = 0.05
 waitsec = 20
