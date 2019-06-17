@@ -1,7 +1,7 @@
 title = "batch auto scale configuration "
 [doc]
 x = """
-###########################################################################################
+####################################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
 ### S3 does NOT support folder rename, bash shell to replance rename

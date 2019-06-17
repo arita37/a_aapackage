@@ -19,6 +19,12 @@ batch_daemon_autoscale_cli.py --mode daemon  --task_folder zs3drive/tasks/  --lo
 
 
 ####################################################################################################
+Folder naming :
+    _qstart|_qdone|_ignore
+
+
+
+####################################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
 ### S3 does NOT support folder rename, bash shell to replance rename
