@@ -213,7 +213,7 @@ class FeedForwardModel(object):
 
 
     def train(self):
-        start_time = time.time()
+        t0 = time.time()
         training_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
@@ -227,14 +227,12 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             ### Validation Data Eval.
             if step % self._config.logging_frequency == 0:
-                loss, init, summary = self._sess.run([self._loss, self._y_init, merged], feed_dict=feed_dict_valid)
-
-                dt0 = time.time() - start_time + self._t_build
+                loss, init, summary = self._sess.run([self._loss, self._y_init, merged], 
+                                                     feed_dict=feed_dict_valid)
+                dt0 = time.time() - t0 + self._t_build
                 training_history.append([step, loss, init, dt0])
-                log(
-                    "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                    % (step, loss, init, dt0)
-                )
+                log(  "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
+                      % (step, loss, init, dt0))
                 val_writer.add_summary(summary, step)
 
             # Generate MC sample AS the training input
@@ -253,7 +251,7 @@ class FeedForwardModel(object):
            z : variance
 
         """
-        start_time = time.time()
+        t0 = time.time()
         time_stamp = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         ### dim X Ntime_interval for Stochastic Process
@@ -296,7 +294,7 @@ class FeedForwardModel(object):
                     
                 elif self._usemodel == 'ff':
                     # z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
-                    z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+                    z = self.subnetwork.build([self._x[:, :, t + 1]], t+1) / self._dim
                     
                 elif self._usemodel == 'attn':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
@@ -343,7 +341,16 @@ class FeedForwardModel(object):
         )
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
-        self._t_build = time.time() - start_time
+        self._t_build = time.time() - t0
+
+
+
+
+
+
+
+
+
 
 
     def _subnetworklstm(self, x, i):
