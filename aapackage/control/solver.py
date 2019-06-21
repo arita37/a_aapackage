@@ -5,6 +5,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.training import moving_averages
 
+from lstm_attention import ModelAttn
+
 TF_DTYPE = tf.float64
 MOMENTUM = 0.99
 EPSILON = 1e-6
@@ -31,6 +33,9 @@ class FeedForwardModel(object):
 
         # ops for statistics update of batch normalization
         self._extra_train_ops = []
+
+        if usemodel == 'attn':
+            self.subnetwork = ModelAttn(config)
 
         # self._config.num_iterations = None  # "Nepoch"
         # self._train_ops = None  # Gradient, Vale,
@@ -115,6 +120,8 @@ class FeedForwardModel(object):
                     z = self._subnetworklstm([self._x[:, :, t + 1]], t) / self._dim
                 elif self._usemodel == 'ff':
                     z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
+                elif self._usemodel == 'attn':
+                    z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
 
             # Terminal time
             y = (
