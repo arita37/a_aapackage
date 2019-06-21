@@ -9,14 +9,14 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
+
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
-sns.set()
 
 
-# In[4]:
+
+
 
 class ModelAttn(object):
     def __init__(self, config):
@@ -28,13 +28,20 @@ class ModelAttn(object):
     def build(self, x, i):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
-                num_units=self._config.n_hidden_lstm, memory=tf.expand_dims(x[0], axis=1), dtype=tf.float64)
+                                    num_units=self._config.n_hidden_lstm, 
+                                    memory=tf.expand_dims(x[0], axis=1), 
+                                    dtype=tf.float64)
+            
             self.rnn_cells = tf.contrib.seq2seq.AttentionWrapper(
-                cell=tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0),
-                attention_mechanism=attention_mechanism)
-            self.outputs, self.last_state = tf.nn.static_rnn(
-                self.rnn_cells, x, dtype=tf.float64)
-            self.out = tf.layers.dense(self.outputs[-1], self._config.num_hiddens[-1], name='dense_out', reuse=i > 0)
+                             cell=tf.nn.rnn_cell.LSTMCell( self._config.n_hidden_lstm, 
+                                                           name='lstm_cell', 
+                                                           reuse=i > 0),
+                             attention_mechanism=attention_mechanism)
+                
+            self.outputs, self.last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=tf.float64)
+            self.out = tf.layers.dense(self.outputs[-1], 
+                                       self._config.num_hiddens[-1], 
+                                       name='dense_out', reuse=i > 0)
             return self.out
 
 
@@ -168,6 +175,8 @@ def test(filename="dataset/GOOG-year.csv"):
 
 if __name__ == "__main__":
     # In[2]:
+    import seaborn as sns
+    sns.set()
 
     df = pd.read_csv("../dataset/GOOG-year.csv")
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()

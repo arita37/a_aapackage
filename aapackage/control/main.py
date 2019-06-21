@@ -1,9 +1,7 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
-source activate 
-
-
+source activate py36c
 
 python  main.py  --problem_name PricingOption  --usemodel ff 
 
@@ -11,6 +9,10 @@ python  main.py  --problem_name PricingOption  --usemodel ff
 python  main.py  --problem_name PricingOption  --usemodel lstm
 
 
+python  main.py  --problem_name PricingOption  --usemodel attn
+
+
+tensorboard   --logdir=logs/
 
 
 """
