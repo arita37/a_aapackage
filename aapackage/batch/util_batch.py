@@ -17,7 +17,6 @@ import numpy as np
 import pandas as pd
 
 from aapackage import util_log
-
 #######################################################################
 
 ################### Variables #########################################
@@ -198,57 +197,8 @@ https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSe
     return 1
 
 
-"""
-
->>> new_toml_string = toml.dumps(parsed_toml)
->>> print(new_toml_string)
-title = "TOML Example"
-[owner]
-name = "Tom Preston-Werner"
-dob = 1979-05-27T07:32:00Z
-[database]
-server = "192.168.1.1"
-ports = [ 8001, 8001, 8002,]
-connection_max = 5000
-enabled = true
-[clients]
-data = [ [ "gamma", "delta",], [ 1, 2,],]
-hosts = [ "alpha", "omega",]
-[servers.alpha]
-ip = "10.0.0.1"
-dc = "eqdc10"
-[servers.beta]
-ip = "10.0.0.2"
-dc = "eqdc10"
 
 
-"""
-
-
-"""
-def batch_execute_parallel(HyperParametersFile,
-                           subprocess_script, batch_log_file ="batch_logfile.txt",
-                           waitseconds = 2):
-
-    python_path = sys.executable
-
-    HyperParameters  = pd.read_csv( HyperParametersFile)
-    OptimizerName    = os.path.basename(subprocess_script)
-    WorkingFolder = subprocess_script
-
-    # logging.basicConfig(level=logging.INFO)
-    #batch_log_file = os.path.join(WorkingFolder, "batch_logs/batch_%s.txt" % batch_label)
-    ChildProcesses = []
-
-    for ii in range(HyperParameters.shape[0]):
-       # Extract parameters for single run from batch_parameters data.
-       # params_dict = HyperParameters.iloc[ii].to_dict()
-       log("Executing index", ii, WorkingFolder, "\n\n")
-
-       proc = subprocess.Popen([ python_path, subprocess_script, str(ii) ],
-                                 stdout=subprocess.PIPE)
-       # ChildProcesses.append(proc)
-"""
 
 
 if __name__ == "__main__":

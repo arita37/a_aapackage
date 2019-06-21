@@ -14,7 +14,6 @@ python  main.py  --problem_name PricingOption  --usemodel lstm
 
 
 """
-
 import json
 import logging
 import os
@@ -23,10 +22,8 @@ from argparse import ArgumentParser
 
 import numpy as np
 
-
 ####################################################################################################
 from config import get_config
-
 
 
 

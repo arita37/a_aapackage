@@ -285,5 +285,73 @@ class Tflog():
 
 
 
+def load_arguments(config_file=None, arg_list=None):
+    """
+      Load CLI input, load config.toml , overwrite config.toml by CLI Input
+      [{}, {}]
+    """
+    import toml
+    import argparse
+    
+    if config_file is not None :
+      cur_path = os.path.dirname(os.path.realpath(__file__))
+      config_file = os.path.join(cur_path, "config.toml")
 
 
+    p = argparse.ArgumentParser()
+    p.add_argument("--config_file", default=config_file, help="Params File")
+    p.add_argument("--config_mode", default="test", help=" test/ prod /uat")
+    for x in arg_list : 
+        p.add_argument(x["--"], default=x.get("default"), help=x.get("help") )
+
+    arg = p.parse_args()
+    
+    
+    # Load file params as dict namespace
+    class to_name(object):
+        def __init__(self, adict):
+            self.__dict__.update(adict)
+
+    print(arg.config_file)
+    pars = toml.load(arg.config_file)
+    pars = pars[arg.config_mode]       # test / prod
+    print(arg.config_file, pars)
+
+    ### Overwrite params by CLI input and merge with toml file
+    for key, x in vars(arg).items():
+        if x is not None:  # only values NOT set by CLI
+            pars[key] = x
+
+    # print(pars)
+    pars = to_name(pars)  #  like object/namespace pars.instance
+    return pars
+
+
+
+
+    
+    """
+    p.add_argument("--param_file", default=config_file, help="Params File")
+    p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
+    p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
+    p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
+    
+    p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
+    p.add_argument("--task_folder", help="path to task folder.")  # default=TASK_FOLDER_DEFAULT,
+    p.add_argument("--reset_global_task_file", help="global task file Reset File")
+    
+    p.add_argument("--task_repourl", help="repo for task")  # default="https://github.com/arita37/tasks.git"
+    p.add_argument("--task_reponame", help="repo for task")  # default="tasks",
+    p.add_argument("--task_repobranch", help="repo for task")  #  default="dev",
+    
+    p.add_argument("--ami", help="AMI used for spot")  #  default=amiId,
+    p.add_argument("--instance", help="Type of soot instance")  # default=default_instance_type,
+    p.add_argument("--spotprice", type=float, help="Actual price offered by us.")
+    p.add_argument("--waitsec", type=int, help="wait sec")
+    p.add_argument("--max_instance", type=int, help="")
+    p.add_argument("--max_cpu", type=int, help="")
+    """
+    
+    
+    
+    

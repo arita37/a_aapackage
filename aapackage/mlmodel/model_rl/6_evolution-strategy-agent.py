@@ -249,13 +249,13 @@ def test(filename= '../dataset/GOOG-year.csv'):
     # states_buy, states_sell, total_gains, invest = agent.buy(initial_money = initial_money)
     res_list = predict(model, sess, close, {'initial_money': initial_money})
 
+imports = list(set(get_imports()))
+requirements = []
+for m in pkg_resources.working_set:
+    if m.project_name in imports and m.project_name != "pip":
+        requirements.append((m.project_name, m.version))
 if __name__ == "__main__":
 
-    imports = list(set(get_imports()))
-    requirements = []
-    for m in pkg_resources.working_set:
-        if m.project_name in imports and m.project_name != "pip":
-            requirements.append((m.project_name, m.version))
 
     for r in requirements:
         print("{}=={}".format(*r))
