@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """
+source activate py36
+
 #### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
@@ -24,6 +26,9 @@ Taks Folder naming :
        main.sh   ** mandatory
        run.py
        task_config.py
+
+    /zs3drive/global_task.json   Storage of task finished/running
+    /zs3drive/tasks/            
 
 
 ####################################################################################################
@@ -546,7 +551,7 @@ def instance_stop_rule(task_folder, global_task_file, instance):
         return None
 
 
-################################################################################
+##############################################################################
 def ec2_instance_initialize_ssh(args):
     """
     Many issues with S3 and ssh, Very sensitive code...
