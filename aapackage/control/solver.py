@@ -23,11 +23,16 @@ def log(s):
 
 
 ###############  LSTM
-def subnetwork_lstm(n_hidden_lstm, num_hiddens , x, i):
+class subnetwork_lstm(object):
+    def __init__(self, config):
+        self._config = config
+
+
+    def build(self, x, i):        
         with tf.variable_scope('Global_RNN', reuse=i > 0):
-            lstm = tf.nn.rnn_cell.LSTMCell(n_hidden_lstm, name='lstm_cell', reuse=i > 0)
+            lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
             x, s = tf.nn.static_rnn(lstm, x, dtype=TF_DTYPE)
-            x = tf.layers.dense(x[-1], num_hiddens[-1], name='dense_out', reuse=i > 0)
+            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1], name='dense_out', reuse=i > 0)
             return x
 
 
@@ -65,7 +70,7 @@ class subnetwork_lstm_attn(object):
 
 
 ##############  FeedForward 
-def subnetwork_ff(object):
+class subnetwork_ff(object):
         """
           FeedForward network, connected by Input.
           Final layer no Activation function,
@@ -73,10 +78,30 @@ def subnetwork_ff(object):
           num_hiddens = [dim, dim+10, dim+10, dim]
         """
         
-        def __init__(self, x, name, config ) :
-            self.x = x
-            self.name = name
+        def __init__(self,config ) :
             self.config = config
+ 
+ 
+        def build(self, x, i):
+          # self.x = x
+          name = str(i)
+          with tf.variable_scope(name):
+            # standardize the path input first
+            # the affine  could be redundant, but helps converge faster
+            hiddens = self._batch_norm(x, name="path_input_norm")
+            for i in range(1, len(self._config.num_hiddens) - 1):
+                hiddens = self._dense_batch_layer(
+                    hiddens,
+                    self._config.num_hiddens[i],
+                    activation_fn=tf.nn.relu,
+                    name="layer_{}".format(i),
+                )
+            output = self._dense_batch_layer(
+                hiddens, self._config.num_hiddens[-1], activation_fn=None, name="final_layer"
+            )
+            return output
+            
+            
             
         def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear" ):
               with tf.variable_scope(name):
@@ -145,22 +170,6 @@ def subnetwork_ff(object):
             y.set_shape(x.get_shape())
             return y
           
-            
-        with tf.variable_scope(name):
-            # standardize the path input first
-            # the affine  could be redundant, but helps converge faster
-            hiddens = self._batch_norm(x, name="path_input_norm")
-            for i in range(1, len(_config.num_hiddens) - 1):
-                hiddens = _dense_batch_layer(
-                    hiddens,
-                    _config.num_hiddens[i],
-                    activation_fn=tf.nn.relu,
-                    name="layer_{}".format(i),
-                )
-            output = _dense_batch_layer(
-                hiddens, _config.num_hiddens[-1], activation_fn=None, name="final_layer"
-            )
-        return output
 
 
 
@@ -193,8 +202,15 @@ class FeedForwardModel(object):
         if usemodel == 'attn':
             self.subnetwork = subnetwork_lstm_attn(config)
 
+        if usemodel == 'lstm':
+            self.subnetwork = subnetwork_lstm(config)
+
+        if usemodel == 'ff':
+            self.subnetwork = subnetwork_ff(config)
+
         # self._config.num_iterations = None  # "Nepoch"
         # self._train_ops = None  # Gradient, Vale,
+
 
     def train(self):
         start_time = time.time()
@@ -228,6 +244,7 @@ class FeedForwardModel(object):
                 feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
             )
         return np.array(training_history)
+
 
     def build(self):
         """"
@@ -273,13 +290,17 @@ class FeedForwardModel(object):
 
                 ## Neural Network per Time Step, Calculate Gradient
                 if self._usemodel == 'lstm':
-                    z = self._subnetworklstm([self._x[:, :, t + 1]], t) / self._dim
-                
+                    #z = self._subnetworklstm([self._x[:, :, t + 1]], t) / self._dim
+                    z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+
+                    
                 elif self._usemodel == 'ff':
-                    z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
+                    # z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
+                    z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
                     
                 elif self._usemodel == 'attn':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+
 
             # Terminal time
             y = (
