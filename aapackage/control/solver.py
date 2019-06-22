@@ -214,7 +214,7 @@ class FeedForwardModel(object):
 
     def train(self):
         t0 = time.time()
-        training_history = []  # to save iteration results
+        train_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
         dw_valid, x_valid = self._bsde.sample(self._config.valid_size)
@@ -225,23 +225,25 @@ class FeedForwardModel(object):
         val_writer = tf.summary.FileWriter('logs', self._sess.graph)
         merged = tf.summary.merge_all()
         for step in range(self._config.num_iterations + 1):
-            ### Validation Data Eval.
-            if step % self._config.logging_frequency == 0:
-                loss, init, summary = self._sess.run([self._loss, self._y_init, merged], 
-                                                     feed_dict=feed_dict_valid)
-                dt0 = time.time() - t0 + self._t_build
-                training_history.append([step, loss, init, dt0])
-                log(  "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                      % (step, loss, init, dt0))
-                val_writer.add_summary(summary, step)
-
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
             self._sess.run(
                 self._train_ops,
                 feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
             )
-        return np.array(training_history)
+            
+            ### Validation Data Eval.
+            if step % self._config.logging_frequency == 0:
+                loss, init, summary = self._sess.run([self._loss, self._y_init, merged], 
+                                                     feed_dict=feed_dict_valid)
+                dt0 = time.time() - t0 + self._t_build
+                train_history.append([step, loss, init, dt0])
+                log(  "step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
+                      % (step, loss, init, dt0))
+                val_writer.add_summary(summary, step)
+
+
+        return np.array(train_history)
 
 
     def build(self):
@@ -264,9 +266,7 @@ class FeedForwardModel(object):
         ### Cost
         self._y_init = tf.Variable(
             tf.random_uniform(
-                [1],
-                minval=self._config.y_init_range[0],
-                maxval=self._config.y_init_range[1],
+                [1], minval=self._config.y_init_range[0], maxval=self._config.y_init_range[1],
                 dtype=TF_DTYPE,
             )
         )
