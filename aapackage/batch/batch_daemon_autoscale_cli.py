@@ -6,10 +6,12 @@ source activate py36
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 #### Test with reset of task files
-batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/z/test/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 #### Test with reset of task files and test 
-batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/config_batch.toml  
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/ztest/config_batch.toml  
+
+
 
 
 #### Prod setup of task files
