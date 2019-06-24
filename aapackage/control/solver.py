@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.training import moving_averages
 
-#from lstm_attention import subnetwork_lstm_attn
 
 TF_DTYPE = tf.float64
 MOMENTUM = 0.99
@@ -26,7 +25,7 @@ def log(s):
 class subnetwork_lstm(object):
     def __init__(self, config):
         self._config = config
-
+        self._is_training = tf.placeholder(tf.bool)
 
     def build(self, x, i):        
         with tf.variable_scope('Global_RNN', reuse=i > 0):
@@ -37,12 +36,11 @@ class subnetwork_lstm(object):
 
 
 
-
-
 ############### LSTM ATTN 
 class subnetwork_lstm_attn(object):
     def __init__(self, config):
         self._config = config
+        self._is_training = tf.placeholder(tf.bool)
 
     def lstm_cell(self):
         return tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm)
@@ -78,10 +76,12 @@ class subnetwork_ff(object):
           num_hiddens = [dim, dim+10, dim+10, dim]
         """
         
-        def __init__(self,config ) :
-            self.config = config
- 
- 
+        def __init__(self, config, is_training):
+            self._config = config
+            # ops for statistics update of batch normalization
+            self._extra_train_ops = []
+            self._is_training = is_training
+
         def build(self, x, i):
           # self.x = x
           name = str(i)
@@ -100,8 +100,7 @@ class subnetwork_ff(object):
                 hiddens, self._config.num_hiddens[-1], activation_fn=None, name="final_layer"
             )
             return output
-            
-            
+
             
         def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear" ):
               with tf.variable_scope(name):
@@ -113,72 +112,12 @@ class subnetwork_ff(object):
                     tf.random_normal_initializer(stddev=stddev / np.sqrt(shape[1] + output_size)),
                     )
                  hiddens = tf.matmul(input_, weight)
-                 hiddens_bn = self._batch_norm(hiddens)
-
+                 #hiddens_bn = self._batch_norm(hiddens)
+                 hiddens_bn = tf.layers.batch_normalization(hiddens, training=self._is_training)
               if activation_fn:
                  return activation_fn(hiddens_bn)
               else: 
                  return hiddens_bn
-   
-
-        def _batch_norm(self, x, affine=True, name="batch_norm"):
-          """Batch normalization"""
-          with tf.variable_scope(name):
-            params_shape = [x.get_shape()[-1]]
-            beta = tf.get_variable(
-                "beta",
-                params_shape,
-                TF_DTYPE,
-                initializer=tf.random_normal_initializer(0.0, stddev=0.1, dtype=TF_DTYPE),
-            )
-
-            gamma = tf.get_variable(
-                "gamma",
-                params_shape,
-                TF_DTYPE,
-                initializer=tf.random_uniform_initializer(0.1, 0.5, dtype=TF_DTYPE),
-            )
-
-            moving_mean = tf.get_variable(
-                "moving_mean",
-                params_shape,
-                TF_DTYPE,
-                initializer=tf.constant_initializer(0.0, TF_DTYPE),
-                trainable=False,
-            )
-
-            moving_variance = tf.get_variable(
-                "moving_variance",
-                params_shape,
-                TF_DTYPE,
-                initializer=tf.constant_initializer(1.0, TF_DTYPE),
-                trainable=False,
-            )
-
-            # These ops will only be preformed when training
-            mean, variance = tf.nn.moments(x, [0], name="moments")
-            self._extra_train_ops.append(
-                moving_averages.assign_moving_average(moving_mean, mean, MOMENTUM)
-            )
-            self._extra_train_ops.append(
-                moving_averages.assign_moving_average(moving_variance, variance, MOMENTUM)
-            )
-            mean, variance = tf.cond(
-                self._is_training, lambda: (mean, variance), lambda: (moving_mean, moving_variance)
-            )
-            y = tf.nn.batch_normalization(x, mean, variance, beta, gamma, EPSILON)
-            y.set_shape(x.get_shape())
-            return y
-          
-
-
-
-
-
-
-
-
-
 
 
 ##############################
@@ -196,9 +135,7 @@ class FeedForwardModel(object):
         self._num_time_interval = bsde.num_time_interval
         self._total_time = bsde.total_time
 
-        # ops for statistics update of batch normalization
-        self._extra_train_ops = []
-
+        self._is_training = tf.placeholder(tf.bool)
         if usemodel == 'attn':
             self.subnetwork = subnetwork_lstm_attn(config)
 
@@ -206,7 +143,9 @@ class FeedForwardModel(object):
             self.subnetwork = subnetwork_lstm(config)
 
         if usemodel == 'ff':
-            self.subnetwork = subnetwork_ff(config)
+            self.subnetwork = subnetwork_ff(config, self._is_training)
+
+        self._extra_train_ops = []
 
         # self._config.num_iterations = None  # "Nepoch"
         # self._train_ops = None  # Gradient, Vale,
@@ -219,6 +158,9 @@ class FeedForwardModel(object):
         ## Validation DATA : Brownian part, drift part from MC simulation
         dw_valid, x_valid = self._bsde.sample(self._config.valid_size)
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+
+        update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
+        self._train_ops = tf.group([self._train_ops, update_ops])
 
         self._sess.run(tf.global_variables_initializer())  # initialization
         # begin sgd iteration
@@ -259,7 +201,6 @@ class FeedForwardModel(object):
         ### dim X Ntime_interval for Stochastic Process
         self._dw = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval], name="dW")
         self._x = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval + 1], name="X")
-        self._is_training = tf.placeholder(tf.bool)
 
         ### Initialization
         ## x : state
@@ -294,7 +235,7 @@ class FeedForwardModel(object):
                     
                 elif self._usemodel == 'ff':
                     # z = self._subnetwork(self._x[:, :, t + 1], str(t + 1)) / self._dim
-                    z = self.subnetwork.build([self._x[:, :, t + 1]], t+1) / self._dim
+                    z = self.subnetwork.build(self._x[:, :, t + 1], str(t+1)) / self._dim
                     
                 elif self._usemodel == 'attn':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim

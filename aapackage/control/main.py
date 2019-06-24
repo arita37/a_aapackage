@@ -3,15 +3,16 @@ The main file to run BSDE solver to solve parabolic partial differential equatio
 
 source activate py36c
 
+For fully connected layers:
 python  main.py  --problem_name PricingOption  --usemodel ff 
 
-
+For global lstm layer:
 python  main.py  --problem_name PricingOption  --usemodel lstm
 
-
+For global lstm with attention:
 python  main.py  --problem_name PricingOption  --usemodel attn
 
-
+For tenosrboard, run this from the 'control' directory.
 tensorboard   --logdir=logs/
 
 
