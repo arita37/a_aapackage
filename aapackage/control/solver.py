@@ -25,8 +25,6 @@ def log(s):
 class subnetwork_lstm(object):
     def __init__(self, config):
         self._config = config
-        self._is_training = tf.placeholder(tf.bool)
-
     def build(self, x, i):        
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
@@ -40,7 +38,6 @@ class subnetwork_lstm(object):
 class subnetwork_lstm_attn(object):
     def __init__(self, config):
         self._config = config
-        self._is_training = tf.placeholder(tf.bool)
 
     def lstm_cell(self):
         return tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm)
@@ -88,7 +85,7 @@ class subnetwork_ff(object):
           with tf.variable_scope(name):
             # standardize the path input first
             # the affine  could be redundant, but helps converge faster
-            hiddens = self._batch_norm(x, name="path_input_norm")
+            hiddens = tf.layers.batch_normalization(x, training=self._is_training)
             for i in range(1, len(self._config.num_hiddens) - 1):
                 hiddens = self._dense_batch_layer(
                     hiddens,

@@ -37,7 +37,7 @@ def load_argument() :
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
-   p.add_argument("--usemodel", type=str, default='attn')
+   p.add_argument("--usemodel", type=str, default='ff')
    arg = p.parse_args()
    return arg
 
