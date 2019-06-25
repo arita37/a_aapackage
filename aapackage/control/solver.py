@@ -156,7 +156,8 @@ class FeedForwardModel(object):
         dw_valid, x_valid = self._bsde.sample(self._config.valid_size)
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
-        update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)
+        #update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         self._train_ops = tf.group([self._train_ops, update_ops])
 
         self._sess.run(tf.global_variables_initializer())  # initialization
