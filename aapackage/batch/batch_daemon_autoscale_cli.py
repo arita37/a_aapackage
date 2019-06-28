@@ -148,12 +148,13 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
         to_task_folder = os.path.join(to_task_folder, os.sep)
 
     os_system("rm -rf " + repo_folder)
-    cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    cwd = tmp_folder
+    cmds = "git clone {b} {c}".format(b=repourl, c=reponame)
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
-    print(cmds)
-    os_system(cmds)
+    print(cwd, ': ', cmds)
+    os_system(cmds, cwd=cwd)
 
     # Copy
     task_list, task_list_added = os_folder_copy(repo_folder, to_task_folder)
@@ -162,10 +163,11 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     for f in task_list:
         os.rename(f, f + "_ignore" if f[-1] != "/" else f[:-1] + "_ignore")
 
-    cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    cwd = repo_folder
+    cmds = "git add --all && git commit -m 'S3 copied '"
     cmds += " &&  git push --all --force "
-    print(cmds)
-    os_system(cmds)
+    print(cwd, ': ', cmds)
+    os_system(cmds, cwd=cwd)
     return task_list, task_list_added
 
 
@@ -625,7 +627,7 @@ def load_arguments():
     p.add_argument("--prod", action='store_true', default=False, help="Prod/Test")
     p.add_argument("--param_file", default=config_file, help="Params File")
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
-    p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
+    p.add_argument("--mode", default="nodaemon", help="daemon/ .")  # default="nodaemon",
     p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
     
     p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
