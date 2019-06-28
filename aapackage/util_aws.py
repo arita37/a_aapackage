@@ -1525,10 +1525,10 @@ class dict2(object):
        self.__dict__.update(adict)
 
 
-def os_system(cmds, stdout_only=1):
+def os_system(cmds, cwd=None, stdout_only=1):
     # Get print output from command line
     cmds = cmds.split(" ")
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(cmds, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     outdata, errdata = p.stdout.read(),  p.stderr.read()
     if stdout_only:
         return outdata
