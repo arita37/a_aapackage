@@ -10,6 +10,7 @@ class Config(object):
     logging_frequency = 100
     verbose = True
     y_init_range = [0, 1]
+    dilations = [1, 2, 4, 8]
 
 
 class AllenCahnConfig(Config):

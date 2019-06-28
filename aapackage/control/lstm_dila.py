@@ -19,7 +19,6 @@ sns.set()
 
 # In[5]:
 
-
 def contruct_cells(hidden_structs):
     cells = []
     for hidden_dims in hidden_structs:
