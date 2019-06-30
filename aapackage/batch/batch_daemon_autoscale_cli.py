@@ -70,6 +70,9 @@ warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 ############### Input  #########################################################
 ISTEST = True  ### For test the code
 
+MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
+
+
 # cur_path = os.path.dirname(os.path.realpath(__file__))
 # config_file = os.path.join(cur_path, "config.toml")
 
@@ -448,7 +451,11 @@ def ec2_spot_instance_list():
 
 ################################################################################
 def ec2_instance_stop(instance_list):
-    """ Stop the spot instances ainstances u stop any other instance, this should work"""
+    """ Stop the spot instances ainstances u stop any other instance, this should work
+    
+    """
+    instance_list = [t for t in instance_list if t not in MAIN_INSTANCE_TO_PROTECT ]
+    
     instances = instance_list
     if instances:
         if isinstance(instance_list, list):
