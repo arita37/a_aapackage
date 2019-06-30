@@ -150,12 +150,16 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     if to_task_folder and not to_task_folder.endswith(os.sep):
         to_task_folder = os.path.join(to_task_folder, os.sep)
 
+    log("check", tmp_folder)
+
     os_system("rm -rf " + repo_folder)
-    cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    # cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    cmds = "git clone {b} {c}".format(b=repourl, c=reponame)
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
     print(cmds)
+    os.chdir(tmp_folder)
     os_system(cmds)
 
     # Copy
@@ -165,9 +169,11 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     for f in task_list:
         os.rename(f, f + "_ignore" if f[-1] != "/" else f[:-1] + "_ignore")
 
-    cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    # cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    cmds = "git add --all && git commit -m 'S3 copied '"
     cmds += " &&  git push --all --force "
     print(cmds)
+    os.chdir(repo_folder)
     os_system(cmds)
     return task_list, task_list_added
 
