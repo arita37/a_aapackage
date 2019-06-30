@@ -412,7 +412,7 @@ def ec2_config_build_template(amiId, instance_type='t3.small',
 
 ################################################################################
 def ec2_spot_start(amiId, instance_type, spot_price, region='us-west-2',
-                   spot_cfg_file='/tmp/ec_spot_config', keypair=None, waitsec=100):
+                   spot_cfg_file='/home/ubuntu/test/ec_spot_config', keypair=None, waitsec=100):
     """
     Request a spot instance based on the price for the instance type
     # Need a check if this request has been successful.
@@ -525,6 +525,10 @@ def instance_start_rule(task_folder, global_task_file):
     if ntask == 0 and not ISTEST:
         return None
 
+    if ISTEST :
+        spotprice = 0.10
+        return {"type": "t3.small", "spotprice": spotprice}
+
     # hard coded values here
     if ntask > 20 and ncpu < 5:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
@@ -538,7 +542,7 @@ def instance_start_rule(task_folder, global_task_file):
         return {"type": "t3.2xlarge", "spotprice": spotprice}
 
     # Minimal instance
-    if ntask > 0 and ncpu == 0:
+    if ntask > 0 and ncpu < 2:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
         # 2 CPU / 0.02 / hour
         spotprice = 0.05
