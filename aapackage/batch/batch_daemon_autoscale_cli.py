@@ -399,7 +399,7 @@ def ec2_instance_usage(instance_id=None, ipadress=None, key_file=None):
         cpuusage = 100.0 if not cpuusage else float(cpuusage)
         cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
         ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
-        log('Instance: %s' % instance_id, ' IP: %s' % ipadress, ' RAM: %.2f' % ramusage,
+        log('Instance: %s' % instance_id, ' IP: %s' % ipadress, ' RAM: %s' % ramusage,
             ' CPU: %.2f' % cpuusage)
         if not ramusage:
             totalram = 0
