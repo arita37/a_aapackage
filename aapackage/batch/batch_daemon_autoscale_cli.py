@@ -65,33 +65,26 @@ from aapackage import util_log
 from aapackage.util_log import logger_setup
 from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
 
+import socket
+
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
+
+
+################################################################################
+logger = None
+
+def log(*argv):
+    if logger:
+        logger.info(",".join([str(x) for x in argv]))
+        
 
 ############### Input  #########################################################
 ISTEST = True  ### For test the code
 
 MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
-CLOUD9IP = '52.26.181.200'
-
-
-# cur_path = os.path.dirname(os.path.realpath(__file__))
-# config_file = os.path.join(cur_path, "config.toml")
-
-
-# TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
-# TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
-
-# keypair = "aws_ec2_ajey"  # Remote Spot Instance
-# region = "us-west-2"  # Oregon West
-# default_instance_type = "t3.small"
-# amiId = "ami-090b189f0e2ffe4df"  # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
-# spot_cfg_file = "/tmp/ec_spot_config"
-
-
-# HOME = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
-
-### Record the running/done tasks on S3 DRIVE, Global File system  #############
-# global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
+# MAIN_INSTANCE_IP = '52.26.181.200'
+MAIN_INSTANCE_IP = socket.gethostbyname(socket.gethostname())
+log( MAIN_INSTANCE_TO_PROTECT,  MAIN_INSTANCE_IP)
 
 
 ################################################################################
@@ -100,14 +93,6 @@ INSTANCE_DICT = {
     "id": {"id": "", "cpu": 0, "ip_address": "", "ram": 0, "cpu_usage": 0, "ram_usage": 0}
 }
 
-
-################################################################################
-logger = None
-
-
-def log(*argv):
-    if logger:
-        logger.info(",".join([str(x) for x in argv]))
 
 
 ################################################################################
@@ -357,7 +342,7 @@ def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
                     ipaddr = instance["PublicIpAddress"]
                 instance_type = instance["InstanceType"]
 
-        if ipaddr and ipaddr != CLOUD9IP:
+        if ipaddr and ipaddr != MAIN_INSTANCE_IP:
             log('Usage for IP: %s' % ipaddr)
             cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)
@@ -780,6 +765,28 @@ if __name__ == "__main__":
             break
 
         sleep(arg.waitsec)
+
+
+
+
+# cur_path = os.path.dirname(os.path.realpath(__file__))
+# config_file = os.path.join(cur_path, "config.toml")
+
+
+# TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
+# TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
+
+# keypair = "aws_ec2_ajey"  # Remote Spot Instance
+# region = "us-west-2"  # Oregon West
+# default_instance_type = "t3.small"
+# amiId = "ami-090b189f0e2ffe4df"  # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+# spot_cfg_file = "/tmp/ec_spot_config"
+
+
+# HOME = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
+
+### Record the running/done tasks on S3 DRIVE, Global File system  #############
+# global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
 
 
 
