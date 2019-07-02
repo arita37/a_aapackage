@@ -84,7 +84,7 @@ ISTEST = True  ### For test the code
 MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
 # MAIN_INSTANCE_IP = '52.26.181.200'
 MAIN_INSTANCE_IP = socket.gethostbyname(socket.gethostname())
-log( MAIN_INSTANCE_TO_PROTECT,  MAIN_INSTANCE_IP)
+
 
 
 ################################################################################
@@ -690,6 +690,11 @@ def load_arguments():
     return pars
 
 
+def ps_check_process(name) :
+    # Check if process name exist
+    return True
+
+
 ###################################################################################
 if __name__ == "__main__":
     ### Variable initialization #####################################################
@@ -698,6 +703,7 @@ if __name__ == "__main__":
     logger = logger_setup(__name__, log_file=arg.log_file, formatter=util_log.FORMATTER_4,
                           isrotate=True)
     # print("arg input", arg)
+    log( MAIN_INSTANCE_TO_PROTECT,  MAIN_INSTANCE_IP)
     key_file = ec2_keypair_get(arg.keypair)
     
     global_task_file = arg.global_task_file
