@@ -393,7 +393,7 @@ def ec2_config_build_template(amiId, instance_type='t3.small',
         "InstanceType": instance_type,
         "IamInstanceProfile": {"Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"},
         "BlockDeviceMappings": [
-            {"DeviceName": "/dev/sda1", "Ebs": {"DeleteOnTermination": True, "VolumeSize": 60}}
+            {"DeviceName": "/dev/sda1", "Ebs": {"DeleteOnTermination": True, "VolumeSize": 80}}
         ],
     }
     # read spot_cfg_file from config.toml or AWS()
