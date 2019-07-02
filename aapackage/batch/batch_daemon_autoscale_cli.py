@@ -70,6 +70,9 @@ warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 ############### Input  #########################################################
 ISTEST = True  ### For test the code
 
+MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
+
+
 # cur_path = os.path.dirname(os.path.realpath(__file__))
 # config_file = os.path.join(cur_path, "config.toml")
 
@@ -147,12 +150,16 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     if to_task_folder and not to_task_folder.endswith(os.sep):
         to_task_folder = os.path.join(to_task_folder, os.sep)
 
+    log("check", tmp_folder)
+
     os_system("rm -rf " + repo_folder)
-    cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    # cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    cmds = "git clone {b} {c}".format(b=repourl, c=reponame)
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
     print(cmds)
+    os.chdir(tmp_folder)
     os_system(cmds)
 
     # Copy
@@ -162,9 +169,11 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     for f in task_list:
         os.rename(f, f + "_ignore" if f[-1] != "/" else f[:-1] + "_ignore")
 
-    cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    # cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    cmds = "git add --all && git commit -m 'S3 copied '"
     cmds += " &&  git push --all --force "
     print(cmds)
+    os.chdir(repo_folder)
     os_system(cmds)
     return task_list, task_list_added
 
@@ -403,7 +412,7 @@ def ec2_config_build_template(amiId, instance_type='t3.small',
 
 ################################################################################
 def ec2_spot_start(amiId, instance_type, spot_price, region='us-west-2',
-                   spot_cfg_file='/tmp/ec_spot_config', keypair=None, waitsec=100):
+                   spot_cfg_file='/home/ubuntu/test/ec_spot_config', keypair=None, waitsec=100):
     """
     Request a spot instance based on the price for the instance type
     # Need a check if this request has been successful.
@@ -448,7 +457,11 @@ def ec2_spot_instance_list():
 
 ################################################################################
 def ec2_instance_stop(instance_list):
-    """ Stop the spot instances ainstances u stop any other instance, this should work"""
+    """ Stop the spot instances ainstances u stop any other instance, this should work
+    
+    """
+    instance_list = [t for t in instance_list if t not in MAIN_INSTANCE_TO_PROTECT ]
+    
     instances = instance_list
     if instances:
         if isinstance(instance_list, list):
@@ -512,6 +525,10 @@ def instance_start_rule(task_folder, global_task_file):
     if ntask == 0 and not ISTEST:
         return None
 
+    if ISTEST :
+        spotprice = 0.10
+        return {"type": "t3.small", "spotprice": spotprice}
+
     # hard coded values here
     if ntask > 20 and ncpu < 5:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
@@ -525,7 +542,7 @@ def instance_start_rule(task_folder, global_task_file):
         return {"type": "t3.2xlarge", "spotprice": spotprice}
 
     # Minimal instance
-    if ntask > 0 and ncpu == 0:
+    if ntask > 0 and ncpu < 2:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
         # 2 CPU / 0.02 / hour
         spotprice = 0.05
