@@ -10,6 +10,7 @@ class Config(object):
     logging_frequency = 100
     verbose = True
     y_init_range = [0, 1]
+    dilations = [1, 2, 4, 8]
 
 
 class AllenCahnConfig(Config):
@@ -33,20 +34,21 @@ class HJBConfig(Config):
     lr_boundaries = [400]
     num_iterations = 10000
     lr_values = list(np.array([1e-2, 1e-2]))
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim+50, dim+50, dim]
     y_init_range = [0, 1]
 
 
 class PricingOptionConfig(Config):
-    dim = 100
-    total_time = 0.5
+    # 6.5 option price by formulae
+    dim = 2
+    total_time = 1.0
     n_hidden_lstm = 100
-    num_time_interval = 20
+    num_time_interval = 10
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
-    num_iterations = 4000
+    num_iterations = 40000
     num_hiddens = [dim, dim+10, dim+10, dim]
-    y_init_range = [15, 18]
+    y_init_range = [1, 10]
 
 
 class PricingDefaultRiskConfig(Config):

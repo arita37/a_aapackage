@@ -127,7 +127,6 @@ NG -  Keep CLI and boto version separate.separate
 from __future__ import division, print_function
 
 import csv
-###############################################################################
 import json
 import socket
 import os
@@ -139,34 +138,28 @@ import fnmatch
 import shutil
 import zipfile
 from stat import S_ISDIR
+from time import sleep
+
+
 import boto
 from boto import ec2
 from boto.ec2.connection import EC2Connection
 from boto.ec2.blockdevicemapping import BlockDeviceMapping, EBSBlockDeviceType
 from boto.s3.connection import S3Connection
 from future import standard_library
-from time import sleep
+
 from tqdm import tqdm
 import paramiko
 import ntpath
 standard_library.install_aliases()
 
 
+###############################################################################
 def exists_file(fname):
     """Check if path exists and is a file"""
     if fname and os.path.exists(fname) and os.path.isfile(fname):
         return True
     return False
-
-
-def json_from_string(json_str, defval=None):
-    """Get json from the string."""
-    jsondata = defval
-    try:
-        jsondata = json.loads(json_str)
-    except:
-        print('Failed to load json data: %s', json_str)
-    return jsondata
 
 
 def json_from_file(jsonfile, defval=None):
@@ -322,9 +315,13 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
    
   """
   try:
+    print('%s: %s' % ('*' * 10, key_file))
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    # k = paramiko.RSAKey.from_private_key_file(key_file)
+    # ssh.connect(hostname, pkey=k, timeout=5, look_for_keys=False)
+    ssh.connect(hostname, key_filename=key_file, timeout=5, look_for_keys=False)
+
     stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking  , get_pty=False
     
     """
@@ -346,7 +343,7 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
     ssh.close()
     return value
   except Exception as e :
-    print("Error Paramiko", e)
+    print("Error Paramiko: %s" % hostname, e)
     return None
 
 
@@ -1537,12 +1534,16 @@ class dict2(object):
 
 def os_system(cmds, stdout_only=1):
     # Get print output from command line
-    cmds = cmds.split(" ")
-    p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    outdata, errdata = p.stdout.read(),  p.stderr.read()
-    if stdout_only:
+    cmds = [ t for t  in cmds.split(" ") if t != ""   ]
+    try :
+      p = subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      outdata, errdata = p.stdout.read(),  p.stderr.read()
+      if stdout_only:
         return outdata
-    return outdata, errdata
+      return outdata, errdata
+    except Exception as e:
+      print(e)
+      return None
 
 
 def tofloat(value, default=0.0):

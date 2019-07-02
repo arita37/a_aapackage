@@ -83,22 +83,4 @@ with different interest rates for borrowing and lending.
 * `ReactionDiffusion`: Time-dependent reaction-diffusion-type example PDE with oscillating explicit solutions.
 
 
-New problems can be added very easily. Inherit the class `equation`
-in `equation.py` and define the new problem. Note that the generator function
-and terminal function should be TensorFlow operation while the sample function
-can be python operation. Also remember to a give proper config in `config.py`.
-
-
-## Dependencies
-
-* [TensorFlow >=1.2](https://www.tensorflow.org/)
-
-## Reference
-[1] Han, J., Jentzen, A., and E, W. Overcoming the curse of dimensionality: Solving high-dimensional partial differential equations using deep learning.
-[arXiv:1707.02568](https://arxiv.org/abs/1707.02568) (2017) <br />
-
-
-[2] E, W., Han, J., and Jentzen, A. Deep learning-based numerical methods for high-dimensional parabolic partial differential equations and backward stochastic differential equations.
-[arXiv:1706.04702 ](https://arxiv.org/abs/1706.04702) (2017)
-
 

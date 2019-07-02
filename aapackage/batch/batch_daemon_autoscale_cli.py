@@ -1,20 +1,40 @@
 # -*- coding: utf-8 -*-
 """
-##### Daemon mode
-batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   
+source activate py36
 
 #### Test with reset task file, on S3 drive, no daemon mode
 batch_daemon_autoscale_cli.py --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
 #### Test with reset of task files
-batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
+batch_daemon_autoscale_cli.py --mode daemon --task_folder  zs3drive/z/test/tasks/  --log_file zlog/batchautoscale.log   --reset_global_task_file 1
 
-#### Test with reset of task files and test p
-batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test   --param_file zs3drive/config_batch.toml  
+
+#### Test with reset of task files and test 
+batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1  --param_mode test  --param_file zs3drive/ztest/config_batch.toml  
+
+
+
 
 #### Prod setup of task files
 batch_daemon_autoscale_cli.py  --mode daemon  --reset_global_task_file 1 --param_file zs3drive/config_batch.toml  --param_mode prod
-###########################################################################################
+
+
+##### Daemon mode
+batch_daemon_autoscale_cli.py --mode daemon  --task_folder zs3drive/tasks/  --log_file zlog/batchautoscale.log   --param_mode prod
+
+
+####################################################################################################
+Taks Folder naming :
+    _qstart|_qdone|_ignore
+       main.sh   ** mandatory
+       run.py
+       task_config.py
+
+    /zs3drive/global_task.json   Storage of task finished/running
+    /zs3drive/tasks/            
+
+
+####################################################################################################
 Daemon for auto-scale.
 Only launch in master instance 
 ### S3 does NOT support folder rename, bash shell to replance rename
@@ -29,7 +49,6 @@ Auto-Scale :
         
     keypair: ec2_linux_instance
     Oregon West - us-west-2
-    AMI :  ami-0491a657e7ed60af7
     Instance spot :  t3.small
     Common Drive is Task Folders: /home/ubuntu/zs3drive/tasks/
     Out for tasks : /home/ubuntu/zs3drive/tasks_out/
@@ -44,46 +63,36 @@ from datetime import datetime
 from time import sleep
 from aapackage import util_log
 from aapackage.util_log import logger_setup
-from aapackage.util_aws import os_system, json_from_file, tofloat, json_from_string,\
-    ssh_cmdrun
+from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
+
+import socket
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
-
-############### Input  #########################################################
-ISTEST = True  ### For test the code
-
-cur_path = os.path.dirname(os.path.realpath(__file__))
-config_file = os.path.join(cur_path, "config.toml")
-
-
-TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
-# TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
-
-keypair = "aws_ec2_ajey"  # Remote Spot Instance
-region = "us-west-2"  # Oregon West
-default_instance_type = "t3.small"
-amiId = "ami-090b189f0e2ffe4df"  # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
-spot_cfg_file = "/tmp/ec_spot_config"
-
-
-HOME = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
-
-### Record the running/done tasks on S3 DRIVE, Global File system  #############
-global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
-
-
-################################################################################
-# Maintain infos on all instances
-# global INSTANCE_DICT
-INSTANCE_DICT = {
-    "id": {"id": "", "cpu": 0, "ip_address": "", "ram": 0, "cpu_usage": 0, "ram_usage": 0}
-}
 
 
 ################################################################################
 logger = None
+
 def log(*argv):
-    logger.info(",".join([str(x) for x in argv]))
+    if logger:
+        logger.info(",".join([str(x) for x in argv]))
+        
+
+############### Input  #########################################################
+ISTEST = True  ### For test the code
+
+MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
+# MAIN_INSTANCE_IP = '52.26.181.200'
+MAIN_INSTANCE_IP = socket.gethostbyname(socket.gethostname())
+
+
+
+################################################################################
+# Maintain infos on all instances
+INSTANCE_DICT = {
+    "id": {"id": "", "cpu": 0, "ip_address": "", "ram": 0, "cpu_usage": 0, "ram_usage": 0}
+}
+
 
 
 ################################################################################
@@ -91,6 +100,8 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
     """
     Copy with criteria
     """
+    log("Folder copy - src: %s" % from_folder_root, " to dst: %s" % to_folder,
+        " overwrite: %s" % str(isoverwrite), " exclude: %s" % str(exclude_flag))
     task_list_added, task_list = [], []
     for f in os.listdir(from_folder_root):
         from_f = from_folder_root + f
@@ -100,12 +111,14 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
         if os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f:
             if not os.path.exists(to_f) or isoverwrite:
                 os_system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f))
-                print("Copy", from_f, to_f)
+                log("Copy - from: %s" % from_f, " to: %s" % to_f)
                 if os.path.exists(to_f):
                     task_list_added.append(to_f)
                     task_list.append(from_f)
                 else:
                     print("Error copy", from_f, to_f)
+                    log("Copy Error -  to: %s does not exist" % to_f)
+    log(' task list: %s' % ','.join(task_list), ' task_list_added: %s' % ','.join(task_list_added))
     return task_list, task_list_added
 
 
@@ -124,18 +137,23 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     """
     # Git pull
     if not os.path.exists(tmp_folder):
+        log('Creating tmp folder: %s' % tmp_folder)
         os.mkdir(tmp_folder)
 
     repo_folder = tmp_folder + os.sep + reponame + os.sep
     if to_task_folder and not to_task_folder.endswith(os.sep):
         to_task_folder = os.path.join(to_task_folder, os.sep)
 
+    log("check", tmp_folder)
+
     os_system("rm -rf " + repo_folder)
-    cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    # cmds = "cd {a} && git clone {b} {c}".format(a=tmp_folder, b=repourl, c=reponame)
+    cmds = "git clone {b} {c}".format(b=repourl, c=reponame)
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
-    print(cmds)
+    log(cmds)
+    os.chdir(tmp_folder)
     os_system(cmds)
 
     # Copy
@@ -145,9 +163,11 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     for f in task_list:
         os.rename(f, f + "_ignore" if f[-1] != "/" else f[:-1] + "_ignore")
 
-    cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    # cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
+    cmds = "git add --all && git commit -m 'S3 copied '"
     cmds += " &&  git push --all --force "
-    print(cmds)
+    log(cmds)
+    os.chdir(repo_folder)
     os_system(cmds)
     return task_list, task_list_added
 
@@ -166,14 +186,15 @@ def task_put_to_github(repourl, branch="dev",
     if os.path.exists(repo_folder):
         cmds = " cd {a} && git pull --all ".format(a=repo_folder)
         cmds += " && git checkout {b}".format(b=branch)
-        print("Git Pull results", cmds)
+        log("Git Pull results: %s" % cmds)
         os_system(cmds)
     else:
-        print("Git clone")
+
         cmds = "git clone {a} {b}".format(a=repourl, b=repo_folder)
         if branch:
             # Checkout the branch directly.
             cmds = "{a} --branch {b}".format(a=cmds, b=branch)
+        log("Git clone: %s" % cmds)
         os_system(cmds)
 
     ### Copy with OVERWRITE
@@ -184,7 +205,7 @@ def task_put_to_github(repourl, branch="dev",
     cmds = "cd {a} && git add --all".format(a=repo_folder)
     cmds += " && git commit -m 'oo{b}'".format(b=",".join(task_list_added))
     cmds += " && git push --all   --force "
-    print("Git push task resut", cmds)
+    log("Git push task results: %s" % cmds)
     os_system(cmds)
     return task_list, task_list_added
 
@@ -196,6 +217,7 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
     _qstart, _ignore , _qdone are excluded.
     main.sh or main.py should be in the folder.
     """
+    log('Get list of valid folders: %s' % folder, ' with regex: %s' % script_regex)
     if not os.path.isdir(folder):
         return []
     valid_folders = []
@@ -205,16 +227,18 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
             if re.match(script_regex, filename, re.I) and \
                     not re.match(r"^.*(_qstart|_qdone|_ignore)$", root_splits[-1], re.I):
                 valid_folders.append(root)
+    log('Valid folders: %s' % ','.join(valid_folders))
     return valid_folders
 
 
 ################################################################################
-def task_get_list_valid_folder_new(folder_main):
+def task_get_list_valid_folder_new(folder_main, global_task_file):
     """
     Solution is to have a Global File global_task_dict which maintains current running tasks/done
     tasks
     """
     # task already started
+    log('Get list of valid folders: %s' % folder_main, ' with task file: %s' % global_task_file)
     folder_check = json_from_file(global_task_file)
     task_started = {k for k in folder_check} if folder_check else set()
     task_all = {x for x in os.listdir(folder_main) if os.path.isdir("%s/%s" % (folder_main, x))}
@@ -223,8 +247,7 @@ def task_get_list_valid_folder_new(folder_main):
     for folder in folders:
         if task_isvalid_folder(folder_main, folder, folder_check):
             valid_folders.append(folder)
-
-    print(valid_folders)
+    log('Valid folders: %s' % ','.join(valid_folders))
     return valid_folders
 
 
@@ -241,17 +264,17 @@ def task_isvalid_folder(folder_main, folder, folder_check):
 
 
 ################################################################################
-def task_getcount(folder_main):
+def task_getcount(folder_main, global_task_file):
     """ Number of tasks remaining to be scheduled for run """
-    return len(task_get_list_valid_folder_new(folder_main))
+    return len(task_get_list_valid_folder_new(folder_main, global_task_file))
 
 
 ################################################################################
-def task_getcount_cpurequired(folder_main):
+def task_getcount_cpurequired(folder_main, global_task_file):
     """  
     ncpu_required defined in task_config.py
     """
-    task_list = task_get_list_valid_folder_new(folder_main)
+    task_list = task_get_list_valid_folder_new(folder_main, global_task_file)
     ncpu_all = 0
     for f in task_list:
         cmds = "python  {a}/task_config.py --do ncpu_required   ".format(a=folder_main + "/" + f)
@@ -262,13 +285,17 @@ def task_getcount_cpurequired(folder_main):
 
 
 ##################################################################################
-def ec2_get_spot_price(instance_type):
+def ec2_get_spot_price(instance_type='t3.small'):
     """ Get the spot price for instance type in us-west-2"""
     value = 0.0
-    if os.path.exists("./aws_spot_price.sh") and os.path.isfile("./aws_spot_price.sh"):
-        cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
+    curcwd = os.path.dirname(os.path.abspath(__file__))
+    shell_file = '%s/aws/aws_spot_price.sh' % curcwd
+    log('Shell script: %s' % shell_file, ' instance type: %s' % instance_type)
+    if os.path.exists(shell_file) and os.path.isfile(shell_file):
+        cmdstr = "%s %s | grep Price | awk '{print $2}'" % (shell_file, instance_type)
         value = os.popen(cmdstr).read()
         value = value.replace("\n", "") if value else 0.10
+    log('Instance type: %s' % instance_type, ' spot value: %.2f' % value)
     return tofloat(value)
 
 
@@ -283,7 +310,7 @@ def instance_get_ncpu(instances_dict):
 
 
 ################################################################################
-def ec2_instance_getallstate():
+def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
     """
       use to update the global INSTANCE_DICT
           "id" :  instance_type,
@@ -301,10 +328,10 @@ def ec2_instance_getallstate():
         cmdargs = ["aws", "ec2", "describe-instances", "--instance-id", spot]
         cmd = " ".join(cmdargs)
         value = os.popen(cmd).read()
-        inst = json_from_string(value)
+        inst = json.loads(value)
         ncpu = 0
         ipaddr = None
-        instance_type = default_instance_type
+        instance_type = instance_type
         if inst and "Reservations" in inst and inst["Reservations"]:
             reserves = inst["Reservations"][0]
             if "Instances" in reserves and reserves["Instances"]:
@@ -315,8 +342,9 @@ def ec2_instance_getallstate():
                     ipaddr = instance["PublicIpAddress"]
                 instance_type = instance["InstanceType"]
 
-        if ipaddr:
-            cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
+        if ipaddr and ipaddr != MAIN_INSTANCE_IP:
+            log('Usage for IP: %s' % ipaddr)
+            cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)
             val[spot] = {
                 "id": spot,
@@ -332,29 +360,32 @@ def ec2_instance_getallstate():
 
 
 ################################################################################
-# Use this read from AWS(), should config.toml be read for this?
-def ec2_keypair_get():
+# Keypair read from config.toml be read for this?
+def ec2_keypair_get(keypair):
     identity = "%s/.ssh/%s" % (
         os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu",
         keypair,
     )
+    log('Key file: %s' % identity)
     return identity
 
 
 ################################################################################
-def ec2_instance_usage(instance_id=None, ipadress=None):
+def ec2_instance_usage(instance_id=None, ipadress=None, key_file=None):
     """
     https://stackoverflow.com/questions/20693089/get-cpu-usage-via-ssh
     https://haloseeker.com/5-commands-to-check-memory-usage-on-linux-via-ssh/
     """
     cpuusage, ramusage, totalram = (None,) * 3
     if instance_id and ipadress:
-        identity = ec2_keypair_get()
+        identity = key_file  # ec2_keypair_get()
         cmdstr = "top -b -n 10 -d.2 | grep 'Cpu' | awk 'BEGIN{val=0.0}{ if( $2 > val ) val = $2} END{print(val)}'"
         cpuusage = ssh_cmdrun(ipadress, identity, cmdstr)
         cpuusage = 100.0 if not cpuusage else float(cpuusage)
         cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
         ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
+        log('Instance: %s' % instance_id, ' IP: %s' % ipadress, ' RAM: %s' % ramusage,
+            ' CPU: %.2f' % cpuusage)
         if not ramusage:
             totalram = 0
             usageram = 100.0
@@ -366,41 +397,43 @@ def ec2_instance_usage(instance_id=None, ipadress=None):
 
 
 ################################################################################
-def ec2_config_build_template(instance_type):
+def ec2_config_build_template(amiId, instance_type='t3.small',
+                              spot_cfg_file='/tmp/ec_spot_config', keypair=None):
     """ Build the spot json config into a json file. """
     spot_config = {
         "ImageId": amiId,
         "KeyName": keypair,
         "SecurityGroupIds": ["sg-4b1d6631", "sg-42e59e38"],
-        "InstanceType": instance_type if instance_type else default_instance_type,
+        "InstanceType": instance_type,
         "IamInstanceProfile": {"Arn": "arn:aws:iam::013584577149:instance-profile/ecsInstanceRole"},
         "BlockDeviceMappings": [
-            {"DeviceName": "/dev/sda1", "Ebs": {"DeleteOnTermination": True, "VolumeSize": 60}}
+            {"DeviceName": "/dev/sda1", "Ebs": {"DeleteOnTermination": True, "VolumeSize": 80}}
         ],
     }
     # read spot_cfg_file from config.toml or AWS()
     with open(spot_cfg_file, "w") as spot_file:
         spot_file.write(json.dumps(spot_config))
+    log('Spot build template - ami: %s' % amiId, ' instance type: %s' % instance_type,
+        ' spot template: %s' % spot_cfg_file, ' keypair: %s' % keypair)
 
 
 ################################################################################
-def ec2_spot_start(instance_type, spot_price, waitsec=100):
+def ec2_spot_start(amiId, instance_type, spot_price, region='us-west-2',
+                   spot_cfg_file='/home/ubuntu/test/ec_spot_config', keypair=None, waitsec=100):
     """
     Request a spot instance based on the price for the instance type
     # Need a check if this request has been successful.
     100 sec to be provisionned and started.
     """
     if not instance_type:
-        instance_type = default_instance_type
-    ec2_config_build_template(instance_type)
+        instance_type = 't3.small'
+    ec2_config_build_template(amiId, instance_type, spot_cfg_file, keypair)
     cmdargs = [
         "aws",
         "ec2",
         "request-spot-instances",
-        "--region",
-        region,
-        "--spot-price",
-        str(spot_price),
+        "--region", region,
+        "--spot-price", str(spot_price),
         "--instance-count",
         "1",
         " --type",
@@ -408,8 +441,8 @@ def ec2_spot_start(instance_type, spot_price, waitsec=100):
         "--launch-specification",
         "file://%s" % spot_cfg_file,
     ]
-    print(cmdargs)
     cmd = " ".join(cmdargs)
+    log('Spot request AWS CLI: %s' % cmd)
     os_system(cmd)
     sleep(waitsec)  # It may not be fulfilled in 50 secs.
     ll = ec2_spot_instance_list()
@@ -431,13 +464,18 @@ def ec2_spot_instance_list():
 
 ################################################################################
 def ec2_instance_stop(instance_list):
-    """ Stop the spot instances ainstances u stop any other instance, this should work"""
+    """ Stop the spot instances ainstances u stop any other instance, this should work
+    
+    """
+    instance_list = [t for t in instance_list if t not in MAIN_INSTANCE_TO_PROTECT ]
+    
     instances = instance_list
     if instances:
         if isinstance(instance_list, list):
             instances = ",".join(instance_list)
         cmdargs = ["aws", "ec2", "terminate-instances", "--instance-ids", instances]
         cmd = " ".join(cmdargs)
+        log('Spot stop AWS CLI: %s' % cmd)
         os_system(cmd)
         return instances.split(",")
 
@@ -462,7 +500,7 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
             # fname = f.split("/")[-1]
             cmds = "cp -r {a} {b}".format(a=f, b=target_folder)
             msg = os_system(cmds)
-            print(cmds, msg)
+            log('Backup commands: %s' % cmds, 'Command Response: %s' % msg)
 
         """
         # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
@@ -482,18 +520,22 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
 
 
 ################################################################################
-def instance_start_rule(task_folder):
+def instance_start_rule(task_folder, global_task_file):
     """ Start spot instance if more than 10 tasks or less than 10 CPUs 
       return instance type, spotprice
     """
     global INSTANCE_DICT
-    # ntask = task_getcount(task_folder)
-    ntask = task_getcount_cpurequired(task_folder)
+    # ntask = task_getcount(task_folder, global_task_file)
+    ntask = task_getcount_cpurequired(task_folder, global_task_file)
     ncpu = instance_get_ncpu(INSTANCE_DICT)
     log("Start Rule", "Ntask, ncpu", ntask, ncpu)
 
     if ntask == 0 and not ISTEST:
         return None
+
+    if ISTEST :
+        spotprice = 0.10
+        return {"type": "t3.small", "spotprice": spotprice}
 
     # hard coded values here
     if ntask > 20 and ncpu < 5:
@@ -508,7 +550,7 @@ def instance_start_rule(task_folder):
         return {"type": "t3.2xlarge", "spotprice": spotprice}
 
     # Minimal instance
-    if ntask > 0 and ncpu == 0:
+    if ntask > 0 and ncpu < 2:
         # spotprice = max(0.05, ec2_get_spot_price('t3.medium')* 1.30)
         # 2 CPU / 0.02 / hour
         spotprice = 0.05
@@ -518,15 +560,13 @@ def instance_start_rule(task_folder):
 
 
 ################################################################################
-def instance_stop_rule(task_folder):
+def instance_stop_rule(task_folder, global_task_file, instance, key_file):
     """
     If spot instance usage is ZERO CPU%  and RAM is low --> close instances.
     """
     global INSTANCE_DICT
-    # ntask = task_getcount(task_folder)
-    ntask = task_getcount_cpurequired(task_folder)
-    # INSTANCE_DICT_prev = copy.deepcopy(INSTANCE_DICT)
-    INSTANCE_DICT = ec2_instance_getallstate()
+    ntask = task_getcount_cpurequired(task_folder, global_task_file)
+    INSTANCE_DICT = ec2_instance_getallstate(instance, key_file)
     log("Stop rules", "ntask", ntask, INSTANCE_DICT)
 
     if ntask == 0 and INSTANCE_DICT:
@@ -538,21 +578,8 @@ def instance_stop_rule(task_folder):
     else:
         return None
 
-    """    
-    instance_list = []
-    
-    if ntask == 0 and  INSTANCE_DICT :
-      # Idle Instances
-      for idx, x in INSTANCE_DICT.items() :
-         if x["cpu_usage"] < 10.0   and x["ram_usage"] < 8.0 :
-            instance_list.append(x)  
-      return instance_list
-    else :
-      return None
-    """
 
-
-################################################################################
+##############################################################################
 def ec2_instance_initialize_ssh(args):
     """
     Many issues with S3 and ssh, Very sensitive code...
@@ -606,8 +633,9 @@ def ec2_instance_initialize_ssh(args):
 
 ################################################################################
 def task_globalfile_reset(global_task_file=None):
-    with open(global_task_file, "w") as f:
-        json.dump({}, f)
+    if global_task_file:
+        with open(global_task_file, "w") as f:
+            json.dump({}, f)
 
 
 ################################################################################
@@ -619,9 +647,10 @@ def load_arguments():
     config_file = os.path.join(cur_path, "config.toml")
 
     p = argparse.ArgumentParser()
+    p.add_argument("--prod", action='store_true', default=False, help="Prod/Test")
     p.add_argument("--param_file", default=config_file, help="Params File")
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
-    p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
+    p.add_argument("--mode", default="nodaemon", help="daemon/ .")  # default="nodaemon",
     p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
     
     p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
@@ -661,15 +690,21 @@ def load_arguments():
     return pars
 
 
+def ps_check_process(name) :
+    # Check if process name exist
+    return True
+
+
 ###################################################################################
 if __name__ == "__main__":
-    global INSTANCE_DICT
     ### Variable initialization #####################################################
     arg = load_arguments()
+    # ISTEST = not arg.prod
     logger = logger_setup(__name__, log_file=arg.log_file, formatter=util_log.FORMATTER_4,
                           isrotate=True)
     # print("arg input", arg)
-    key_file = ec2_keypair_get()
+    log( MAIN_INSTANCE_TO_PROTECT,  MAIN_INSTANCE_IP)
+    key_file = ec2_keypair_get(arg.keypair)
     
     global_task_file = arg.global_task_file
     if arg.reset_global_task_file:
@@ -687,17 +722,18 @@ if __name__ == "__main__":
                                                         tmp_folder=arg.task_local_folder,)
             log("task", "new from github", task_added)
         # Keep Global state of running instances
-        INSTANCE_DICT = ec2_instance_getallstate()
+        INSTANCE_DICT = ec2_instance_getallstate(arg.instance, key_file)
 
         ### Start instance by rules ###############################################
-        start_instance = instance_start_rule(arg.task_folder)
+        start_instance = instance_start_rule(arg.task_folder, global_task_file)
         log("Instances to start", start_instance)
         if start_instance:
             # When instance start, batchdaemon will start and picks up task in  COMMON DRIVE /zs3drive/
-            instance_list = ec2_spot_start(start_instance["type"], start_instance["spotprice"])
+            instance_list = ec2_spot_start(arg.ami, start_instance["type"], start_instance["spotprice"],
+                                           arg.region, arg.spot_cfg_file, arg.keypair)
             log("Instances started", instance_list)
 
-            INSTANCE_DICT = ec2_instance_getallstate()
+            INSTANCE_DICT = ec2_instance_getallstate(arg.instance, key_file)
             log("Instances running", INSTANCE_DICT)
 
             ##### Launch Batch system by No Blocking SSH  #########################
@@ -705,7 +741,7 @@ if __name__ == "__main__":
             sleep(10)
 
         ### Stop instance by rules ################################################
-        stop_instances = instance_stop_rule(arg.task_folder)
+        stop_instances = instance_stop_rule(arg.task_folder, arg.global_task_file, arg.instance, key_file)
         log("Instances to be stopped", stop_instances)
         if stop_instances:
             stop_instances_list = [v["id"] for v in stop_instances]
@@ -735,6 +771,29 @@ if __name__ == "__main__":
             break
 
         sleep(arg.waitsec)
+
+
+
+
+# cur_path = os.path.dirname(os.path.realpath(__file__))
+# config_file = os.path.join(cur_path, "config.toml")
+
+
+# TASK_FOLDER_DEFAULT = os.path.dirname(os.path.realpath(__file__)) + "/ztest/tasks/"
+# TASK_FOLDER_DEFAULT =  "/home/ubuntu/ztest/tasks/"
+
+# keypair = "aws_ec2_ajey"  # Remote Spot Instance
+# region = "us-west-2"  # Oregon West
+# default_instance_type = "t3.small"
+# amiId = "ami-090b189f0e2ffe4df"  # "ami-0d16a0996debff8d4"  #'ami-0491a657e7ed60af7'
+# spot_cfg_file = "/tmp/ec_spot_config"
+
+
+# HOME = os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu"
+
+### Record the running/done tasks on S3 DRIVE, Global File system  #############
+# global_task_file_default = "%s/zs3drive/ztest_global_task.json" % ( HOME)
+
 
 
 """

@@ -1,20 +1,25 @@
 """
 The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
 
-source activate 
+source activate py36c
 
-
-
+For fully connected layers:
 python  main.py  --problem_name PricingOption  --usemodel ff 
 
-
+For global lstm layer:
 python  main.py  --problem_name PricingOption  --usemodel lstm
 
+For global lstm with attention:
+python  main.py  --problem_name PricingOption  --usemodel attn
 
+For global dilated rnn:
+python main.py --problem_name PricingOption --usemodel dila
+
+For tenosrboard, run this from the 'control' directory.
+tensorboard   --logdir=logs/
 
 
 """
-
 import json
 import logging
 import os
@@ -23,10 +28,8 @@ from argparse import ArgumentParser
 
 import numpy as np
 
-
 ####################################################################################################
 from config import get_config
-
 
 
 
@@ -37,7 +40,7 @@ def load_argument() :
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
-   p.add_argument("--usemodel", type=str, default='lstm')
+   p.add_argument("--usemodel", type=str, default='dila')
    arg = p.parse_args()
    return arg
 
@@ -99,7 +102,6 @@ def main():
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build()
-                file_writer = tf.summary.FileWriter('./logs', sess.graph)
                 training_history = model.train()
                 if not os.path.exists('ckpt'):
                     os.makedirs('ckpt')

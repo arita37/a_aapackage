@@ -9,28 +9,54 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
+
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
-sns.set()
 
 
-# In[4]:
+
+
+
+class ModelAttn(object):
+    def __init__(self, config):
+        self._config = config
+
+    def lstm_cell(self):
+        return tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm)
+
+    def build(self, x, i):
+        with tf.variable_scope('Global_RNN', reuse=i > 0):
+            attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
+                                    num_units=self._config.n_hidden_lstm, 
+                                    memory=tf.expand_dims(x[0], axis=1), 
+                                    dtype=tf.float64)
+            
+            self.rnn_cells = tf.contrib.seq2seq.AttentionWrapper(
+                             cell=tf.nn.rnn_cell.LSTMCell( self._config.n_hidden_lstm, 
+                                                           name='lstm_cell', 
+                                                           reuse=i > 0),
+                             attention_mechanism=attention_mechanism)
+                
+            self.outputs, self.last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=tf.float64)
+            self.out = tf.layers.dense(self.outputs[-1], 
+                                       self._config.num_hiddens[-1], 
+                                       name='dense_out', reuse=i > 0)
+            return self.out
 
 
 class Model:
     def __init__(
-        self,
-        learning_rate,
-        num_layers,
-        size,
-        size_layer,
-        output_size,
-        forget_bias=0.1,
-        attention_size=10,
-        epoch=100,
-        timestep=5,
+            self,
+            learning_rate,
+            num_layers,
+            size,
+            size_layer,
+            output_size,
+            forget_bias=0.1,
+            attention_size=10,
+            epoch=100,
+            timestep=5,
     ):
         def lstm_cell(size_layer):
             return tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple=False)
@@ -72,7 +98,7 @@ def fit(model, data_frame):
         for k in range(0, data_frame.shape[0] - 1, model.timestep):
             index = min(k + model.timestep, data_frame.shape[0] - 1)
             batch_x = np.expand_dims(data_frame.iloc[k:index, :].values, axis=0)
-            batch_y = data_frame.iloc[k + 1 : index + 1, :].values
+            batch_y = data_frame.iloc[k + 1: index + 1, :].values
             last_state, _, loss = sess.run(
                 [model.last_state, model.optimizer, model.cost],
                 feed_dict={model.X: batch_x, model.Y: batch_y},
@@ -103,11 +129,11 @@ def predict(model, sess, data_frame, get_hidden_state=False, init_value=None):
             out_logits, last_state = sess.run(
                 [model.logits, model.last_state],
                 feed_dict={
-                    model.X: np.expand_dims(data_frame.iloc[k : k + model.timestep].values, axis=0)
+                    model.X: np.expand_dims(data_frame.iloc[k: k + model.timestep].values, axis=0)
                 },
             )
             model.initial_state = last_state
-            output_predict[k + 1 : k + model.timestep + 1] = out_logits
+            output_predict[k + 1: k + model.timestep + 1] = out_logits
     if get_hidden_state:
         return output_predict, model.initial_state
     return output_predict
@@ -149,6 +175,8 @@ def test(filename="dataset/GOOG-year.csv"):
 
 if __name__ == "__main__":
     # In[2]:
+    import seaborn as sns
+    sns.set()
 
     df = pd.read_csv("../dataset/GOOG-year.csv")
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
@@ -194,10 +222,10 @@ if __name__ == "__main__":
         modelnn, sess, df_log, True
     )
 
-    output_predict[upper_b + 1 : df_log.shape[0] + 1], modelnn.initial_state = predict(
+    output_predict[upper_b + 1: df_log.shape[0] + 1], modelnn.initial_state = predict(
         modelnn, sess, df_log.iloc[upper_b:], True
     )
-    df_log.loc[df_log.shape[0]] = output_predict[upper_b + 1 : df_log.shape[0] + 1][-1]
+    df_log.loc[df_log.shape[0]] = output_predict[upper_b + 1: df_log.shape[0] + 1][-1]
 
     date_ori.append(date_ori[-1] + timedelta(days=1))
 
@@ -218,6 +246,7 @@ if __name__ == "__main__":
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format="%Y-%m-%d").tolist()
 
+
     # In[11]:
 
     def anchor(signal, weight):
@@ -228,6 +257,7 @@ if __name__ == "__main__":
             buffer.append(smoothed_val)
             last = smoothed_val
         return buffer
+
 
     # In[12]:
 
