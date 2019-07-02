@@ -315,9 +315,13 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
    
   """
   try:
+    print('%s: %s' % ('*' * 10, key_file))
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname, key_filename=key_file, timeout=5)
+    # k = paramiko.RSAKey.from_private_key_file(key_file)
+    # ssh.connect(hostname, pkey=k, timeout=5, look_for_keys=False)
+    ssh.connect(hostname, key_filename=key_file, timeout=5, look_for_keys=False)
+
     stdin, stdout, stderr = ssh.exec_command(cmdstr) #No Blocking  , get_pty=False
     
     """
@@ -339,7 +343,7 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
     ssh.close()
     return value
   except Exception as e :
-    print("Error Paramiko", e)
+    print("Error Paramiko: %s" % hostname, e)
     return None
 
 

@@ -357,6 +357,7 @@ def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
                 instance_type = instance["InstanceType"]
 
         if ipaddr:
+            log('Usage for IP: %s' % ipaddr)
             cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)
             val[spot] = {
@@ -397,6 +398,8 @@ def ec2_instance_usage(instance_id=None, ipadress=None, key_file=None):
         cpuusage = 100.0 if not cpuusage else float(cpuusage)
         cmdstr = "free | grep Mem | awk '{print $3/$2 * 100.0, $2}'"
         ramusage = ssh_cmdrun(ipadress, identity, cmdstr)
+        log('Instance: %s' % instance_id, ' IP: %s' % ipadress, ' RAM: %.2f' % ramusage,
+            ' CPU: %.2f' % cpuusage)
         if not ramusage:
             totalram = 0
             usageram = 100.0
@@ -661,7 +664,7 @@ def load_arguments():
     p.add_argument("--prod", action='store_true', default=False, help="Prod/Test")
     p.add_argument("--param_file", default=config_file, help="Params File")
     p.add_argument("--param_mode", default="test", help=" test/ prod /uat")
-    p.add_argument("--mode", help="daemon/ .")  # default="nodaemon",
+    p.add_argument("--mode", default="nodaemon", help="daemon/ .")  # default="nodaemon",
     p.add_argument("--log_file", help=".")  # default="batchdaemon_autoscale.log",
     
     p.add_argument("--global_task_file", help="global task file")  #  default=global_task_file_default,
