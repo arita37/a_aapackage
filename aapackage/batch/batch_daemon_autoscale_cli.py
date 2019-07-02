@@ -102,8 +102,11 @@ INSTANCE_DICT = {
 
 ################################################################################
 logger = None
+
+
 def log(*argv):
-    logger.info(",".join([str(x) for x in argv]))
+    if logger:
+        logger.info(",".join([str(x) for x in argv]))
 
 
 ################################################################################
@@ -111,6 +114,8 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
     """
     Copy with criteria
     """
+    log("Folder copy - src: %s" % from_folder_root, " to dst: %s" % to_folder,
+        " overwrite: %s" % str(isoverwrite), " exclude: %s" % str(exclude_flag))
     task_list_added, task_list = [], []
     for f in os.listdir(from_folder_root):
         from_f = from_folder_root + f
@@ -120,12 +125,14 @@ def os_folder_copy(from_folder_root, to_folder, isoverwrite=False, exclude_flag=
         if os.path.isdir(from_f) and f not in {".git"} and exclude_flag not in f:
             if not os.path.exists(to_f) or isoverwrite:
                 os_system("cp -r {f1} {f2}".format(f1=from_f, f2=to_f))
-                print("Copy", from_f, to_f)
+                log("Copy - from: %s" % from_f, " to: %s" % to_f)
                 if os.path.exists(to_f):
                     task_list_added.append(to_f)
                     task_list.append(from_f)
                 else:
                     print("Error copy", from_f, to_f)
+                    log("Copy Error -  to: %s does not exist" % to_f)
+    log(' task list: %s' % ','.join(task_list), ' task_list_added: %s' % ','.join(task_list_added))
     return task_list, task_list_added
 
 
@@ -144,6 +151,7 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     """
     # Git pull
     if not os.path.exists(tmp_folder):
+        log('Creating tmp folder: %s' % tmp_folder)
         os.mkdir(tmp_folder)
 
     repo_folder = tmp_folder + os.sep + reponame + os.sep
@@ -158,7 +166,7 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     if branch:
         # Checkout the branch directly.
         cmds = "{a} --branch {b}".format(a=cmds, b=branch)
-    print(cmds)
+    log(cmds)
     os.chdir(tmp_folder)
     os_system(cmds)
 
@@ -172,7 +180,7 @@ def task_get_from_github(repourl, reponame="tasks", branch="dev",
     # cmds = " cd {a} && git add --all && git commit -m 'S3 copied '".format(a=repo_folder)
     cmds = "git add --all && git commit -m 'S3 copied '"
     cmds += " &&  git push --all --force "
-    print(cmds)
+    log(cmds)
     os.chdir(repo_folder)
     os_system(cmds)
     return task_list, task_list_added
@@ -192,14 +200,15 @@ def task_put_to_github(repourl, branch="dev",
     if os.path.exists(repo_folder):
         cmds = " cd {a} && git pull --all ".format(a=repo_folder)
         cmds += " && git checkout {b}".format(b=branch)
-        print("Git Pull results", cmds)
+        log("Git Pull results: %s" % cmds)
         os_system(cmds)
     else:
-        print("Git clone")
+
         cmds = "git clone {a} {b}".format(a=repourl, b=repo_folder)
         if branch:
             # Checkout the branch directly.
             cmds = "{a} --branch {b}".format(a=cmds, b=branch)
+        log("Git clone: %s" % cmds)
         os_system(cmds)
 
     ### Copy with OVERWRITE
@@ -210,7 +219,7 @@ def task_put_to_github(repourl, branch="dev",
     cmds = "cd {a} && git add --all".format(a=repo_folder)
     cmds += " && git commit -m 'oo{b}'".format(b=",".join(task_list_added))
     cmds += " && git push --all   --force "
-    print("Git push task resut", cmds)
+    log("Git push task results: %s" % cmds)
     os_system(cmds)
     return task_list, task_list_added
 
@@ -222,6 +231,7 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
     _qstart, _ignore , _qdone are excluded.
     main.sh or main.py should be in the folder.
     """
+    log('Get list of valid folders: %s' % folder, ' with regex: %s' % script_regex)
     if not os.path.isdir(folder):
         return []
     valid_folders = []
@@ -231,6 +241,7 @@ def task_get_list_valid_folder(folder, script_regex=r"main\.(sh|py)"):
             if re.match(script_regex, filename, re.I) and \
                     not re.match(r"^.*(_qstart|_qdone|_ignore)$", root_splits[-1], re.I):
                 valid_folders.append(root)
+    log('Valid folders: %s' % ','.join(valid_folders))
     return valid_folders
 
 
@@ -241,6 +252,7 @@ def task_get_list_valid_folder_new(folder_main, global_task_file):
     tasks
     """
     # task already started
+    log('Get list of valid folders: %s' % folder_main, ' with task file: %s' % global_task_file)
     folder_check = json_from_file(global_task_file)
     task_started = {k for k in folder_check} if folder_check else set()
     task_all = {x for x in os.listdir(folder_main) if os.path.isdir("%s/%s" % (folder_main, x))}
@@ -249,8 +261,7 @@ def task_get_list_valid_folder_new(folder_main, global_task_file):
     for folder in folders:
         if task_isvalid_folder(folder_main, folder, folder_check):
             valid_folders.append(folder)
-
-    print(valid_folders)
+    log('Valid folders: %s' % ','.join(valid_folders))
     return valid_folders
 
 
@@ -291,10 +302,14 @@ def task_getcount_cpurequired(folder_main, global_task_file):
 def ec2_get_spot_price(instance_type='t3.small'):
     """ Get the spot price for instance type in us-west-2"""
     value = 0.0
-    if os.path.exists("./aws_spot_price.sh") and os.path.isfile("./aws_spot_price.sh"):
-        cmdstr = "./aws_spot_price.sh %s | grep Price | awk '{print $2}'" % instance_type
+    curcwd = os.path.dirname(os.path.abspath(__file__))
+    shell_file = '%s/aws/aws_spot_price.sh' % curcwd
+    log('Shell script: %s' % shell_file, ' instance type: %s' % instance_type)
+    if os.path.exists(shell_file) and os.path.isfile(shell_file):
+        cmdstr = "%s %s | grep Price | awk '{print $2}'" % (shell_file, instance_type)
         value = os.popen(cmdstr).read()
         value = value.replace("\n", "") if value else 0.10
+    log('Instance type: %s' % instance_type, ' spot value: %.2f' % value)
     return tofloat(value)
 
 
@@ -309,7 +324,7 @@ def instance_get_ncpu(instances_dict):
 
 
 ################################################################################
-def ec2_instance_getallstate(instance_type='t3.small'):
+def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
     """
       use to update the global INSTANCE_DICT
           "id" :  instance_type,
@@ -342,7 +357,7 @@ def ec2_instance_getallstate(instance_type='t3.small'):
                 instance_type = instance["InstanceType"]
 
         if ipaddr:
-            cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr)
+            cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)
             val[spot] = {
                 "id": spot,
@@ -364,6 +379,7 @@ def ec2_keypair_get(keypair):
         os.environ["HOME"] if "HOME" in os.environ else "/home/ubuntu",
         keypair,
     )
+    log('Key file: %s' % identity)
     return identity
 
 
@@ -408,6 +424,8 @@ def ec2_config_build_template(amiId, instance_type='t3.small',
     # read spot_cfg_file from config.toml or AWS()
     with open(spot_cfg_file, "w") as spot_file:
         spot_file.write(json.dumps(spot_config))
+    log('Spot build template - ami: %s' % amiId, ' instance type: %s' % instance_type,
+        ' spot template: %s' % spot_cfg_file, ' keypair: %s' % keypair)
 
 
 ################################################################################
@@ -434,8 +452,8 @@ def ec2_spot_start(amiId, instance_type, spot_price, region='us-west-2',
         "--launch-specification",
         "file://%s" % spot_cfg_file,
     ]
-    print(cmdargs)
     cmd = " ".join(cmdargs)
+    log('Spot request AWS CLI: %s' % cmd)
     os_system(cmd)
     sleep(waitsec)  # It may not be fulfilled in 50 secs.
     ll = ec2_spot_instance_list()
@@ -468,6 +486,7 @@ def ec2_instance_stop(instance_list):
             instances = ",".join(instance_list)
         cmdargs = ["aws", "ec2", "terminate-instances", "--instance-ids", instances]
         cmd = " ".join(cmdargs)
+        log('Spot stop AWS CLI: %s' % cmd)
         os_system(cmd)
         return instances.split(",")
 
@@ -492,7 +511,7 @@ def ec2_instance_backup(instances_list, folder_list=["zlog/"],
             # fname = f.split("/")[-1]
             cmds = "cp -r {a} {b}".format(a=f, b=target_folder)
             msg = os_system(cmds)
-            print(cmds, msg)
+            log('Backup commands: %s' % cmds, 'Command Response: %s' % msg)
 
         """
         # ssh = aws_ec2_ssh( inst["ip_address"], key_file)
@@ -552,13 +571,13 @@ def instance_start_rule(task_folder, global_task_file):
 
 
 ################################################################################
-def instance_stop_rule(task_folder, global_task_file, instance):
+def instance_stop_rule(task_folder, global_task_file, instance, key_file):
     """
     If spot instance usage is ZERO CPU%  and RAM is low --> close instances.
     """
     global INSTANCE_DICT
     ntask = task_getcount_cpurequired(task_folder, global_task_file)
-    INSTANCE_DICT = ec2_instance_getallstate(instance)
+    INSTANCE_DICT = ec2_instance_getallstate(instance, key_file)
     log("Stop rules", "ntask", ntask, INSTANCE_DICT)
 
     if ntask == 0 and INSTANCE_DICT:
@@ -708,7 +727,7 @@ if __name__ == "__main__":
                                                         tmp_folder=arg.task_local_folder,)
             log("task", "new from github", task_added)
         # Keep Global state of running instances
-        INSTANCE_DICT = ec2_instance_getallstate(arg.instance)
+        INSTANCE_DICT = ec2_instance_getallstate(arg.instance, key_file)
 
         ### Start instance by rules ###############################################
         start_instance = instance_start_rule(arg.task_folder, global_task_file)
@@ -719,7 +738,7 @@ if __name__ == "__main__":
                                            arg.region, arg.spot_cfg_file, arg.keypair)
             log("Instances started", instance_list)
 
-            INSTANCE_DICT = ec2_instance_getallstate(arg.instance)
+            INSTANCE_DICT = ec2_instance_getallstate(arg.instance, key_file)
             log("Instances running", INSTANCE_DICT)
 
             ##### Launch Batch system by No Blocking SSH  #########################
@@ -727,7 +746,7 @@ if __name__ == "__main__":
             sleep(10)
 
         ### Stop instance by rules ################################################
-        stop_instances = instance_stop_rule(arg.task_folder, arg.global_task_file, arg.instance)
+        stop_instances = instance_stop_rule(arg.task_folder, arg.global_task_file, arg.instance, key_file)
         log("Instances to be stopped", stop_instances)
         if stop_instances:
             stop_instances_list = [v["id"] for v in stop_instances]
