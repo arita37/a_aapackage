@@ -43,10 +43,11 @@ from models import create, module_load
 
 
 def optim(modelname="model_dl.1_lstm.py", 
-          pars= {},         
+          pars= {},      
+          data_frame = None,
           optim_engine="optuna",
           optim_methhod="normal/prune",
-          save_folder="/mymodel/", log_folder="",file_name='dataset/GOOG-year.csv') :
+          save_folder="/mymodel/", log_folder="") :
     """
        Interface layer to Optuna 
        for hyperparameter optimization
@@ -74,25 +75,13 @@ def optim(modelname="model_dl.1_lstm.py",
     drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1)
     """
     
-    module = module_load(modelname)  # '1_lstm'
-    # module.fit()
+    if data_frame is None:
+        return -1
     
-    pars =  {
-        "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
-        "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
-        "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
-        "timestep":      {"type" : 'categorical', "value": [5] },
-        "epoch":        {"type" : 'categorical', "value": [100] },
-    }      
-    df = pd.read_csv(file_name)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    module = module_load(modelname)    
 
-
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    df_log = pd.DataFrame(df_log) 
     def objective(trial):
-        param_dict =  module.get_params(choice="test", ncol_input=df_log.shape[1], ncol_output=df_log.shape[1])
+        param_dict =  module.get_params(choice="test", ncol_input=data_frame.shape[1], ncol_output=data_frame.shape[1])
         for param in pars:
             param_value = None
             if pars[param]['type']=='log_uniform':
@@ -106,7 +95,7 @@ def optim(modelname="model_dl.1_lstm.py",
 
             param_dict[param] = param_value
         model = module.Model(**param_dict)
-        sess = module.fit(model,df_log)
+        sess = module.fit(model,data_frame)
         del sess
         # fitting
         # predicting
@@ -142,10 +131,26 @@ def load_arguments(config_file= None ):
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
 
+def test_all():
+    df = pd.read_csv('dataset/GOOG-year.csv')
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
 
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+    pars =  {
+        "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
+        "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
+        "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
+        "timestep":      {"type" : 'categorical', "value": [5] },
+        "epoch":        {"type" : 'categorical', "value": [100] },
+    }  
+    res = optim('model_dl.1_lstm', pars=pars, data_frame = df_log)  # '1_lstm'
+    print(res)
 
 if __name__ == "__main__":
-    # test_all() # tot test all te modules inside model_dl
+    test_all() # tot test all te modules inside model_dl
     '''
     args = load_arguments()
 
@@ -162,6 +167,5 @@ if __name__ == "__main__":
         res = optim(args.modelname, d)  # '1_lstm'
         print(res)
     '''
-    res = optim('model_dl.1_lstm', {})  # '1_lstm'
-    print(res)
+
         
