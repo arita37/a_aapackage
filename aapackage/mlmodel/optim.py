@@ -45,7 +45,7 @@ from models import create, module_load, save
 
 def optim(modelname="model_dl.1_lstm.py", 
           pars= {},      
-          data_frame = None,
+          df = None,
           optim_engine="optuna",
           optim_method="normal/prune",
           save_folder="/mymodel/", log_folder="",ntrials=2) :
@@ -76,31 +76,38 @@ def optim(modelname="model_dl.1_lstm.py",
     drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1)
     """
     
-    if data_frame is None:
+    if df is None:
         return -1
     
     module = module_load(modelname)    
 
     def objective(trial):
-        param_dict =  module.get_params(choice="test", ncol_input=data_frame.shape[1], ncol_output=data_frame.shape[1])
-        for param in pars:
-            param_value = None
-            if pars[param]['type']=='log_uniform':
-                param_value = trial.suggest_loguniform(param,pars[param]['range'][0], pars[param]['range'][1])
-            elif pars[param]['type']=='int':
-                param_value = trial.suggest_int(param,pars[param]['range'][0], pars[param]['range'][1])
-            elif pars[param]['type']=='categorical':
-                param_value = trial.suggest_categorical(param,pars[param]['value'])
-            elif pars[param]['type']=='discrete_uniform':
-                param_value = trial.suggest_discrete_uniform(param, pars[param]['init'],pars[param]['range'][0],pars[param]['range'][1])
-            elif pars[param]['type']=='uniform':
-                param_value = trial.suggest_uniform(param,pars[param]['range'][0], pars[param]['range'][1])
+        param_dict =  module.get_params(choice="test", ncol_input=df.shape[1], ncol_output=df.shape[1])
+        for t in pars:
+            p = None
+            x =pars[t]['type']
+            if x=='log_uniform':
+                p = trial.suggest_loguniform(t,pars[t]['range'][0], pars[t]['range'][1])
+                
+            elif x=='int':
+                p = trial.suggest_int(t,pars[t]['range'][0], pars[t]['range'][1])
+                
+            elif x=='categorical':
+                p = trial.suggest_categorical(t,pars[t]['value'])
+                
+            elif x=='discrete_uniform':
+                p = trial.suggest_discrete_uniform(t, pars[t]['init'],pars[t]['range'][0],pars[t]['range'][1])
+            
+            elif x=='uniform':
+                p = trial.suggest_uniform(t,pars[t]['range'][0], pars[t]['range'][1])
+            
             else:
-                raise Exception('Not supported type {}'.format(pars[param]['type']))
+                raise Exception('Not supported type {}'.format(pars[t]['type']))
 
-            param_dict[param] = param_value
+            param_dict[t] = p
+            
         model = module.Model(**param_dict)
-        sess = module.fit(model,data_frame)
+        sess = module.fit(model,df)
         stats = model.stats["loss"]
         del sess
         del model
@@ -110,12 +117,12 @@ def optim(modelname="model_dl.1_lstm.py",
     study = optuna.create_study()  # Create a new study.
     study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
     param_dict =  study.best_params
-    param_dict.update(module.get_params(choice="test", ncol_input=data_frame.shape[1], 
-                                        ncol_output=data_frame.shape[1]))
+    param_dict.update(module.get_params(choice="test", ncol_input=df.shape[1], 
+                                        ncol_output=df.shape[1]))
     
 
     model = module.Model(**param_dict)
-    sess = module.fit(model,data_frame)
+    sess = module.fit(model,df)
     modelname = modelname.split('.')[-2] # this is the module name which contains .
     os.makedirs(save_folder)
     file_path = os.path.join(save_folder,modelname+'.ckpt')
@@ -176,7 +183,7 @@ def test_all():
         "timestep":      {"type" : 'categorical', "value": [5] },
         "epoch":        {"type" : 'categorical', "value": [100] },
     }  
-    res = optim('model_dl.1_lstm', pars=pars, data_frame = df_log,ntrials=1)  # '1_lstm'
+    res = optim('model_dl.1_lstm', pars=pars, df = df_log,ntrials=1)  # '1_lstm'
     print(res)
 
 
@@ -198,7 +205,7 @@ if __name__ == "__main__":
                     ntrials=int(args.ntrials), 
                     optim_engine=args.optim_engine, 
                     optim_method=args.optim_method, 
-                    data_frame=df_log, 
+                    df=df_log, 
                     save_folder=args.save_folder)  # '1_lstm'
         print(res)
     
