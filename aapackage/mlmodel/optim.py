@@ -110,7 +110,8 @@ def optim(modelname="model_dl.1_lstm.py",
     study = optuna.create_study()  # Create a new study.
     study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
     param_dict =  study.best_params
-    param_dict.update(module.get_params(choice="test", ncol_input=data_frame.shape[1], ncol_output=data_frame.shape[1]))
+    param_dict.update(module.get_params(choice="test", ncol_input=data_frame.shape[1], 
+                                        ncol_output=data_frame.shape[1]))
     
 
     model = module.Model(**param_dict)
@@ -152,18 +153,22 @@ def load_arguments(config_file= None ):
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
 
-def preprocess_dataframe(file_name='dataset/GOOG-year.csv'):
+
+def data_loader(file_name='dataset/GOOG-year.csv'):
     df = pd.read_csv(file_name)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    
+    #date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
 
 
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    df_log = pd.DataFrame(df_log) 
-    return df_log
+    #minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    #df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    #df_log = pd.DataFrame(df_log) 
+    return df
+
+    
     
 def test_all():
-    df_log = preprocess_dataframe()
+    df_log = data_loader()
     pars =  {
         "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
         "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
@@ -174,9 +179,11 @@ def test_all():
     res = optim('model_dl.1_lstm', pars=pars, data_frame = df_log,ntrials=1)  # '1_lstm'
     print(res)
 
+
+
+
 if __name__ == "__main__":
     #test_all() # tot test all te modules inside model_dl
-    
     args = load_arguments()
 
 
@@ -185,9 +192,14 @@ if __name__ == "__main__":
 
 
     if args.do == "search"  :
-        df_log = preprocess_dataframe(args.data_path)
+        df_log = data_loader(args.data_path)
         d = json.load(open(args.config_file,'r'))
-        res = optim(args.modelname, d,ntrials=int(args.ntrials),optim_engine=args.optim_engine,optim_method=args.optim_method, data_frame=df_log, save_folder=args.save_folder)  # '1_lstm'
+        res = optim(args.modelname, d, 
+                    ntrials=int(args.ntrials), 
+                    optim_engine=args.optim_engine, 
+                    optim_method=args.optim_method, 
+                    data_frame=df_log, 
+                    save_folder=args.save_folder)  # '1_lstm'
         print(res)
     
 
