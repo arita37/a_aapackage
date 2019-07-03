@@ -90,6 +90,10 @@ def optim(modelname="model_dl.1_lstm.py",
                 param_value = trial.suggest_int(param,pars[param]['range'][0], pars[param]['range'][1])
             elif pars[param]['type']=='categorical':
                 param_value = trial.suggest_categorical(param,pars[param]['value'])
+            elif pars[param]['type']=='discrete_uniform':
+                param_value = trial.suggest_discrete_uniform(param, pars[param]['init'],pars[param]['range'][0],pars[param]['range'][1])
+            elif pars[param]['type']=='uniform':
+                param_value = trial.suggest_uniform(param,pars[param]['range'][0], pars[param]['range'][1])
             else:
                 raise Exception('Not supported type {}'.format(pars[param]['type']))
 
@@ -97,9 +101,6 @@ def optim(modelname="model_dl.1_lstm.py",
         model = module.Model(**param_dict)
         sess = module.fit(model,data_frame)
         del sess
-        # fitting
-        # predicting
-        # returning error on fixed set
         return model.stats["loss"]
     study = optuna.create_study()  # Create a new study.
     study.optimize(objective, n_trials=20)  # Invoke optimization of the objective function.
@@ -150,8 +151,8 @@ def test_all():
     print(res)
 
 if __name__ == "__main__":
-    test_all() # tot test all te modules inside model_dl
-    '''
+    #test_all() # tot test all te modules inside model_dl
+    
     args = load_arguments()
 
 
@@ -166,6 +167,6 @@ if __name__ == "__main__":
         d = json.load(args.optim_config)
         res = optim(args.modelname, d)  # '1_lstm'
         print(res)
-    '''
+    
 
         
