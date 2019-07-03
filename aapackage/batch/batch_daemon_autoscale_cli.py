@@ -63,7 +63,8 @@ from datetime import datetime
 from time import sleep
 from aapackage import util_log
 from aapackage.util_log import logger_setup
-from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
+from aapackage.util_aws import os_system, json_from_file, tofloat,\
+    ssh_cmdrun, get_host_public_ipaddress
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 
@@ -71,7 +72,7 @@ warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 ISTEST = True  ### For test the code
 
 MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
-CLOUD9IP = '52.26.181.200'
+MAIN_INSTANCE_IP = [get_host_public_ipaddress()]
 
 
 # cur_path = os.path.dirname(os.path.realpath(__file__))
@@ -357,7 +358,7 @@ def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
                     ipaddr = instance["PublicIpAddress"]
                 instance_type = instance["InstanceType"]
 
-        if ipaddr and ipaddr != CLOUD9IP:
+        if ipaddr and ipaddr not in MAIN_INSTANCE_IP:
             log('Usage for IP: %s' % ipaddr)
             cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)
