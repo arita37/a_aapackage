@@ -151,10 +151,19 @@ from future import standard_library
 from tqdm import tqdm
 import paramiko
 import ntpath
+import urllib.request
 standard_library.install_aliases()
 
 
 ###############################################################################
+def get_host_public_ipaddress():
+    f = urllib.request.urlopen("http://ipinfo.io/ip")
+    val = f.read()
+    ip = str(val, 'utf-8').replace('\n', '') if val else ''
+    f.close()
+    return ip
+
+
 def exists_file(fname):
     """Check if path exists and is a file"""
     if fname and os.path.exists(fname) and os.path.isfile(fname):
@@ -315,7 +324,7 @@ def ssh_cmdrun(hostname, key_file, cmdstr, remove_newline=True, isblocking=True)
    
   """
   try:
-    print('%s: %s' % ('*' * 10, key_file))
+    # print('%s: %s' % ('*' * 10, key_file))
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     # k = paramiko.RSAKey.from_private_key_file(key_file)
@@ -388,8 +397,7 @@ def ec2_instance_getallstate_cli(default_instance_type="t3.medium"):
     cmdargs = ['aws', 'ec2', 'describe-instances', '--instance-id', spot]
     cmd     = ' '.join(cmdargs)
     value   = os.popen(cmd).read()
-    inst = json_from_string(value)
-    # inst    = json.loads(value)
+    inst    = json.loads(value)
     ncpu    = 0
     ipaddr  = None
     instance_type = default_instance_type
@@ -507,7 +515,7 @@ def ec2_spot_instance_list():
   ]
   cmd = ' '.join(cmdargs)
   value = os.popen(cmd).read()
-  instance_list = json_from_string(value, {"SpotInstanceRequests": []})
+  instance_list = json.loads(value)
   return instance_list
 
 
