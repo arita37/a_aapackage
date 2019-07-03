@@ -2,7 +2,8 @@
 fname='spotprice_list.txt'
 region='us-west-2'
 echo "Fetching spot prices for regions and instance type in $fname"
-curl -s 'http://spot-price.s3.amazonaws.com/spot.js' | sed 's/callback(//g;s/)\;//g' | jq -r '[.config.regions[] | {region:.region, size:(.instanceTypes[].sizes[])}] | map("Price: \(.size.valueColumns[0].prices.USD) Size: \(.size.size) Region: \(.region)")|.[]' | grep -v 'N/A*' | sort -nrk2  > $fname 2>&1
+echo "Price,Instance,Region" > $fname
+curl -s 'http://spot-price.s3.amazonaws.com/spot.js' | sed 's/callback(//g;s/)\;//g' | jq -r '[.config.regions[] | {region:.region, size:(.instanceTypes[].sizes[])}] | map("\(.size.valueColumns[0].prices.USD),\(.size.size),\(.region)")|.[]' | grep -v 'N/A*' | sort -nrk2  >> $fname 2>&1
 if [ -z "$fname" ]; then
    echo "Unable to fetch spot prices"
    exit 1

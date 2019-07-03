@@ -41,12 +41,25 @@ from models import create, module_load, save
 ###############################################################################
 
 
-
-
 def optim(modelname="model_dl.1_lstm.py", 
           pars= {},      
           df = None,
           optim_engine="optuna",
+          optim_method="normal/prune",
+          save_folder="/mymodel/", log_folder="",ntrials=2) :
+
+          if optim_engine == "optuna" :
+            return optim_optuna(modelname, 
+                pars,      
+                    df,
+                optim_method,
+                save_folder, log_folder,ntrials) 
+          return None
+                    
+
+def optim_optuna(modelname="model_dl.1_lstm.py", 
+          pars= {},      
+          df = None,
           optim_method="normal/prune",
           save_folder="/mymodel/", log_folder="",ntrials=2) :
     """
@@ -164,13 +177,13 @@ def load_arguments(config_file= None ):
 def data_loader(file_name='dataset/GOOG-year.csv'):
     df = pd.read_csv(file_name)
     
-    #date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
 
 
-    #minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
-    #df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
-    #df_log = pd.DataFrame(df_log) 
-    return df
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+    return df_log
 
     
     
