@@ -31,12 +31,13 @@ from importlib import import_module
 import json
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
 
 
 import optuna
 
 from util import load_config
-from models import create, module_load
+from models import create, module_load, save
 ###############################################################################
 
 
@@ -46,8 +47,8 @@ def optim(modelname="model_dl.1_lstm.py",
           pars= {},      
           data_frame = None,
           optim_engine="optuna",
-          optim_methhod="normal/prune",
-          save_folder="/mymodel/", log_folder="") :
+          optim_method="normal/prune",
+          save_folder="/mymodel/", log_folder="",ntrials=2) :
     """
        Interface layer to Optuna 
        for hyperparameter optimization
@@ -100,11 +101,27 @@ def optim(modelname="model_dl.1_lstm.py",
             param_dict[param] = param_value
         model = module.Model(**param_dict)
         sess = module.fit(model,data_frame)
+        stats = model.stats["loss"]
         del sess
-        return model.stats["loss"]
+        del model
+        tf.reset_default_graph()
+        return stats
+        
     study = optuna.create_study()  # Create a new study.
-    study.optimize(objective, n_trials=20)  # Invoke optimization of the objective function.
-    return study.best_params
+    study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
+    param_dict =  study.best_params
+    param_dict.update(module.get_params(choice="test", ncol_input=data_frame.shape[1], ncol_output=data_frame.shape[1]))
+    
+
+    model = module.Model(**param_dict)
+    sess = module.fit(model,data_frame)
+    modelname = modelname.split('.')[-2] # this is the module name which contains .
+    os.makedirs(save_folder)
+    file_path = os.path.join(save_folder,modelname+'.ckpt')
+
+    save(sess,file_path)
+
+    return param_dict
 
 
 
@@ -121,25 +138,32 @@ def load_arguments(config_file= None ):
     p = argparse.ArgumentParser()
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help="test/ prod /uat")
-    p.add_argument("--log_file", help="log.log")  
+    p.add_argument("--log_file", help="File to save the logging")  
 
-    p.add_argument("--do", default="test", help="test") 
-    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help=".")  
-    p.add_argument("--dataname", default="model_dl.1_lstm.py",  help=".") 
-    p.add_argument("--data", default="model_dl.1_lstm.py",  help=".")     
+    p.add_argument("--do", default="test", help="what to do test or search") 
+    p.add_argument("--ntrials", default=100, help='number of trials during the hyperparameters tuning')
+    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help="name of the model to be tuned this name will be used to save the model")  
+    p.add_argument("--data_path", default="dataset/GOOG-year.csv",  help="path of the training file")  
+    p.add_argument('--optim_engine', default='optuna',help='Optimization engine') 
+    p.add_argument('--optim_method', default='normal/prune',help='Optimization method')  
+    p.add_argument('--save_folder', default='save_dir',help='folder that will contain saved version of best model')  
     
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
 
-def test_all():
-    df = pd.read_csv('dataset/GOOG-year.csv')
+def preprocess_dataframe(file_name='dataset/GOOG-year.csv'):
+    df = pd.read_csv(file_name)
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
 
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
     df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
     df_log = pd.DataFrame(df_log) 
+    return df_log
+    
+def test_all():
+    df_log = preprocess_dataframe()
     pars =  {
         "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
         "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
@@ -147,7 +171,7 @@ def test_all():
         "timestep":      {"type" : 'categorical', "value": [5] },
         "epoch":        {"type" : 'categorical', "value": [100] },
     }  
-    res = optim('model_dl.1_lstm', pars=pars, data_frame = df_log)  # '1_lstm'
+    res = optim('model_dl.1_lstm', pars=pars, data_frame = df_log,ntrials=1)  # '1_lstm'
     print(res)
 
 if __name__ == "__main__":
@@ -157,15 +181,13 @@ if __name__ == "__main__":
 
 
     if args.do == "test"  :
-        print(args.do)
-        module = module_load(args.modelname)  # '1_lstm'
-        print(module)
-        module.test()
+        test_all()
 
 
     if args.do == "search"  :
-        d = json.load(args.optim_config)
-        res = optim(args.modelname, d)  # '1_lstm'
+        df_log = preprocess_dataframe(args.data_path)
+        d = json.load(open(args.config_file,'r'))
+        res = optim(args.modelname, d,ntrials=int(args.ntrials),optim_engine=args.optim_engine,optim_method=args.optim_method, data_frame=df_log, save_folder=args.save_folder)  # '1_lstm'
         print(res)
     
 
