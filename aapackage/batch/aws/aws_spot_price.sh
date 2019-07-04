@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-fname='spotprice_list.txt'
+if [ ! -d "$HOME/.aws" ]; then
+    mkdir -p $HOME/.aws
+fi
+fname="$HOME/.aws/spotprice_list.txt"
 region='us-west-2'
 echo "Fetching spot prices for regions and instance type in $fname"
 echo "Price,Instance,Region" > $fname
