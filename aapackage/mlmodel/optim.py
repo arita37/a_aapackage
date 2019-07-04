@@ -29,20 +29,39 @@ import os
 import re
 from importlib import import_module
 import json
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
+import tensorflow as tf
+
 
 import optuna
 
 from util import load_config
-from models import create, module_load
+from models import create, module_load, save
 ###############################################################################
 
 
-
 def optim(modelname="model_dl.1_lstm.py", 
-          pars= {},         
+          pars= {},      
+          df = None,
           optim_engine="optuna",
-          optim_methhod="normal/prune",
-          save_folder="/mymodel/", log_folder="") :
+          optim_method="normal/prune",
+          save_folder="/mymodel/", log_folder="",ntrials=2) :
+
+          if optim_engine == "optuna" :
+            return optim_optuna(modelname, 
+                pars,      
+                    df,
+                optim_method,
+                save_folder, log_folder,ntrials) 
+          return None
+                    
+
+def optim_optuna(modelname="model_dl.1_lstm.py", 
+          pars= {},      
+          df = None,
+          optim_method="normal/prune",
+          save_folder="/mymodel/", log_folder="",ntrials=2) :
     """
        Interface layer to Optuna 
        for hyperparameter optimization
@@ -68,40 +87,62 @@ def optim(modelname="model_dl.1_lstm.py",
 
     # Discrete-uniform parameter
     drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1)
-    
-         
-         
-
-    
-    
-    
-    
     """
-    pass
-    module = module_load(modelname)  # '1_lstm'
-    # module.fit()
     
-    pars =  {
-        "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
-        "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
-        "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
-        "output_size":   {"type" : 'categorical', "value": [100] },
-        "timestep":      {"type" : 'categorical', "value": [5] },
-        "epoch":        {"type" : 'categorical', "value": [100] },
-    }      
+    if df is None:
+        return -1
     
-          	
-    res = optuna
-    return res
+    module = module_load(modelname)    
 
+    def objective(trial):
+        param_dict =  module.get_params(choice="test", ncol_input=df.shape[1], ncol_output=df.shape[1])
+        for t in pars:
+            p = None
+            x =pars[t]['type']
+            if x=='log_uniform':
+                p = trial.suggest_loguniform(t,pars[t]['range'][0], pars[t]['range'][1])
+                
+            elif x=='int':
+                p = trial.suggest_int(t,pars[t]['range'][0], pars[t]['range'][1])
+                
+            elif x=='categorical':
+                p = trial.suggest_categorical(t,pars[t]['value'])
+                
+            elif x=='discrete_uniform':
+                p = trial.suggest_discrete_uniform(t, pars[t]['init'],pars[t]['range'][0],pars[t]['range'][1])
+            
+            elif x=='uniform':
+                p = trial.suggest_uniform(t,pars[t]['range'][0], pars[t]['range'][1])
+            
+            else:
+                raise Exception('Not supported type {}'.format(pars[t]['type']))
 
-
-
+            param_dict[t] = p
+            
+        model = module.Model(**param_dict)
+        sess = module.fit(model,df)
+        stats = model.stats["loss"]
+        del sess
+        del model
+        tf.reset_default_graph()
+        return stats
+        
+    study = optuna.create_study()  # Create a new study.
+    study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
+    param_dict =  study.best_params
+    param_dict.update(module.get_params(choice="test", ncol_input=df.shape[1], 
+                                        ncol_output=df.shape[1]))
     
 
+    model = module.Model(**param_dict)
+    sess = module.fit(model,df)
+    modelname = modelname.split('.')[-2] # this is the module name which contains .
+    os.makedirs(save_folder)
+    file_path = os.path.join(save_folder,modelname+'.ckpt')
 
+    save(sess,file_path)
 
-
+    return param_dict
 
 
 
@@ -118,33 +159,68 @@ def load_arguments(config_file= None ):
     p = argparse.ArgumentParser()
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help="test/ prod /uat")
-    p.add_argument("--log_file", help="log.log")  
+    p.add_argument("--log_file", help="File to save the logging")  
 
-    p.add_argument("--do", default="test", help="test") 
-    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help=".")  
-    p.add_argument("--dataname", default="model_dl.1_lstm.py",  help=".") 
-    p.add_argument("--data", default="model_dl.1_lstm.py",  help=".")     
+    p.add_argument("--do", default="test", help="what to do test or search") 
+    p.add_argument("--ntrials", default=100, help='number of trials during the hyperparameters tuning')
+    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help="name of the model to be tuned this name will be used to save the model")  
+    p.add_argument("--data_path", default="dataset/GOOG-year.csv",  help="path of the training file")  
+    p.add_argument('--optim_engine', default='optuna',help='Optimization engine') 
+    p.add_argument('--optim_method', default='normal/prune',help='Optimization method')  
+    p.add_argument('--save_folder', default='save_dir',help='folder that will contain saved version of best model')  
     
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
 
 
+def data_loader(file_name='dataset/GOOG-year.csv'):
+    df = pd.read_csv(file_name)
+    
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
+    df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+    df_log = pd.DataFrame(df_log) 
+    return df_log
+
+    
+    
+def test_all():
+    df_log = data_loader()
+    pars =  {
+        "learning_rate": {"type": "log_uniform", "init": 0.01,  "range" :(0.001, 0.1)}, 
+        "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
+        "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
+        "timestep":      {"type" : 'categorical', "value": [5] },
+        "epoch":        {"type" : 'categorical', "value": [100] },
+    }  
+    res = optim('model_dl.1_lstm', pars=pars, df = df_log,ntrials=1)  # '1_lstm'
+    print(res)
+
+
+
 
 if __name__ == "__main__":
-    # test_all() # tot test all te modules inside model_dl
+    #test_all() # tot test all te modules inside model_dl
     args = load_arguments()
 
 
     if args.do == "test"  :
-        print(args.do)
-        module = module_load(args.modelname)  # '1_lstm'
-        print(module)
-        module.test()
+        test_all()
 
 
     if args.do == "search"  :
-        d = json.load(args.optim_config)
-        res = optim(args.modelname, d)  # '1_lstm'
+        df_log = data_loader(args.data_path)
+        d = json.load(open(args.config_file,'r'))
+        res = optim(args.modelname, d, 
+                    ntrials=int(args.ntrials), 
+                    optim_engine=args.optim_engine, 
+                    optim_method=args.optim_method, 
+                    df=df_log, 
+                    save_folder=args.save_folder)  # '1_lstm'
         print(res)
+    
+
         
