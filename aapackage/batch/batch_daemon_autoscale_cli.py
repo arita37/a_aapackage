@@ -56,6 +56,7 @@ Auto-Scale :
 import argparse
 import toml
 import json
+import csv
 import os
 import re
 import warnings
@@ -294,6 +295,26 @@ def ec2_get_spot_price(instance_type='t3.small'):
         value = value.replace("\n", "") if value else 0.10
     log('Instance type: %s' % instance_type, ' spot value: %.2f' % value)
     return tofloat(value)
+
+def ec2_spot_price_value(region, instance_type='t3.small'):
+    """ Read the csv as a dictionary with the first row as the keys. """
+    fname = '/home/ubuntu/.aws/spotprice_list.txt'
+    val = 0.0
+    rows = {}
+    if fname and os.path.exists(fname) and os.path.isfile(fname):
+        try:
+            with open(fname) as f:
+                csvr = csv.DictReader(f)
+                for row in csvr:
+                    if row['Region']  not in rows:
+                        rows[row['Region']] = {}
+                        rows[row['Region']][row['Instance']] = 0.0
+                    rows[row['Region']][row['Instance']] = tofloat(row['Price'])
+        except Exception as ex:
+            print('Failed to csv file: %s, exception: %s' % (fname, ex))
+    if region in rows and  instance_type in rows[region]:
+        val = rows[region][instance_type]
+    return val
 
 
 ################################################################################
