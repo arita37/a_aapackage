@@ -15,6 +15,9 @@ python  main.py  --problem_name PricingOption  --usemodel attn
 For global dilated rnn:
 python main.py --problem_name PricingOption --usemodel dila
 
+For global bi-directional rnn with attention
+python main.py --problem_name PricingOption --usemodel biattn
+
 For tenosrboard, run this from the 'control' directory.
 tensorboard   --logdir=logs/
 
@@ -40,7 +43,7 @@ def load_argument() :
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
-   p.add_argument("--usemodel", type=str, default='dila')
+   p.add_argument("--usemodel", type=str, default='biattn')
    arg = p.parse_args()
    return arg
 
