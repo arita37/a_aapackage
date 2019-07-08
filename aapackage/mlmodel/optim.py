@@ -126,8 +126,10 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
         del model
         tf.reset_default_graph()
         return stats
-        
-    study = optuna.create_study()  # Create a new study.
+    if optim_method=='prune':
+        study = optuna.create_study(pruner=optuna.pruners.MedianPruner())
+    else:
+        study = optuna.create_study()  # Create a new study.
     study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
     param_dict =  study.best_params
     param_dict.update(module.get_params(choice="test", ncol_input=df.shape[1], 
@@ -137,7 +139,8 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
     model = module.Model(**param_dict)
     sess = module.fit(model,df)
     modelname = modelname.split('.')[-2] # this is the module name which contains .
-    os.makedirs(save_folder)
+    if not(os.path.isdir(save_folder)):
+        os.makedirs(save_folder)
     file_path = os.path.join(save_folder,modelname+'.ckpt')
 
     save(sess,file_path)
