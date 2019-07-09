@@ -9,7 +9,12 @@ https://optuna.readthedocs.io/en/stable/installation.html
 https://github.com/pfnet/optuna/blob/master/examples/tensorflow_estimator_simple.py
 https://github.com/pfnet/optuna/tree/master/examples
 
+###### Model param search
 
+#for normal optimization search method
+python optim.py --do search --ntrials 1  --config_file data.json --optim_method normal
+# for pruning method
+python optim.py --do search --ntrials 1  --config_file data.json --optim_method prune
 
 ###### Model standalone run
 python  models.py  --modelname model_dl.1_lstm.py  --do test
