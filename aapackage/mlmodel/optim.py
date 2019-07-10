@@ -39,6 +39,7 @@ import json
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
+import pandas as pd
 
 
 import optuna
@@ -95,7 +96,7 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
 
     def objective(trial):
         param_dict =  module.get_params(choice="test", ncol_input=df.shape[1], ncol_output=df.shape[1])
-        for p,t in pars.items():
+        for t,p  in pars.items():
             pres = None
             #p = pars[t]
             x = p['type']
@@ -164,6 +165,8 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
 
 
     ### Update with Best values
+    study_trials = study.trials_dataframe()
+    study_trials.to_csv(os.path.join(save_folder,modelname+'_study.csv'))
     param_dict["best_value"] = study.best_value
     param_dict["file_path"] = file_path 
     return param_dict
