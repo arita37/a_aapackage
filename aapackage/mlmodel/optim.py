@@ -4,7 +4,6 @@ Lightweight Functional interface to wrap Hyper-parameter Optimization
 
 1st engine is optuna
 
-
 https://optuna.readthedocs.io/en/stable/installation.html
 https://github.com/pfnet/optuna/blob/master/examples/tensorflow_estimator_simple.py
 https://github.com/pfnet/optuna/tree/master/examples
@@ -50,7 +49,7 @@ from models import create, module_load, save
 
 
 
-def model_name(save_folder, model_name) :
+def create_model_name(save_folder, model_name) :
     pass 
     
     
@@ -84,33 +83,21 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
        Interface layer to Optuna  for hyperparameter optimization
        return Best Parameters 
 
-     weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
-    optimizer_name = trial.suggest_categorical('optimizer', ['Adam', 'MomentumSGD'])
-    # Categorical parameter
-    optimizer = trial.suggest_categorical('optimizer', ['MomentumSGD', 'Adam'])
-
-    # Int parameter
-    num_layers = trial.suggest_int('num_layers', 1, 3)
-
-    # Uniform parameter
-    dropout_rate = trial.suggest_uniform('dropout_rate', 0.0, 1.0)
-
-    # Loguniform parameter
-    learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-2)
-
-    # Discrete-uniform parameter
-    drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1)
+    weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
+    optimizer = trial.suggest_categorical('optimizer', ['MomentumSGD', 'Adam']) # Categorical parameter
+    num_layers = trial.suggest_int('num_layers', 1, 3)      # Int parameter
+    dropout_rate = trial.suggest_uniform('dropout_rate', 0.0, 1.0)      # Uniform parameter
+    learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-2)      # Loguniform parameter
+    drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1) # Discrete-uniform parameter
     """
-    
-
     
     module = module_load(modelname)    
 
     def objective(trial):
         param_dict =  module.get_params(choice="test", ncol_input=df.shape[1], ncol_output=df.shape[1])
-        for t in pars:
+        for p,t in pars.items():
             pres = None
-            p = pars[t]
+            #p = pars[t]
             x = p['type']
             
             if x=='log_uniform':
@@ -146,6 +133,17 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
     else:
         study = optuna.create_study()  # Create a new study.
     
+    """
+    optuna create-study --study-name "distributed-example" --storage "sqlite:///example.db"
+    
+    https://optuna.readthedocs.io/en/latest/tutorial/distributed.html
+     if __name__ == '__main__':
+    study = optuna.load_study(study_name='distributed-example', storage='sqlite:///example.db')
+    study.optimize(objective, n_trials=100)
+    
+    
+    
+    """
     study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
     param_dict =  study.best_params
     param_dict.update(module.get_params(choice="test", ncol_input=df.shape[1], 
