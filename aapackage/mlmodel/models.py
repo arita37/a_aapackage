@@ -31,7 +31,7 @@ from importlib import import_module
 
 # from aapackage.mlmodel import util
 import pandas as pd
-
+import tensorflow as tf
 from util import load_config
 
 
@@ -98,12 +98,17 @@ def predict(model, module, sess=None, X=None):
 
 
 
-def load(folder, filename):
-    pass
+def load(filename):
+    saver = tf.train.Saver()
+    sess = tf.Session()
+    saver.restore(sess, filename)
+    return sess
 
 
-def save(model, folder, saveformat=""):
-    pass
+def save(sess, file_path):
+    saver = tf.train.Saver()
+    return saver.save(sess, file_path)
+    
 
 
 

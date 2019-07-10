@@ -29,6 +29,9 @@ class Model:
         epoch=5,
     ):
         self.epoch = epoch
+        self.stats = {"loss":0.0, 
+                      "loss_history": [] }
+        
         self.timestep = timestep
         self.hidden_layer_size = num_layers * 2 * size_layer
 
@@ -50,7 +53,7 @@ class Model:
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
 
-
+  
 
 def fit(model, df):
     sess = tf.InteractiveSession()
@@ -70,10 +73,16 @@ def fit(model, df):
             init_value = last_state
             total_loss += loss
         total_loss /= df.shape[0] // model.timestep
+        model.stats["loss"] = total_loss
+        
         if (i + 1) % 100 == 0:
             print("epoch:", i + 1, "avg loss:", total_loss)
     return sess
 
+
+def stats(model):
+    return model.stats
+    
 
 
 def predict(model, sess, df, get_hidden_state=False, init_value=None):

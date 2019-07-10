@@ -16,6 +16,97 @@ def log(s):
     logging.info(s)
 
 
+class subnetwork_bidirectionalattn(object):
+
+    def __init__(self, config):
+        self._config = config
+
+    def lstm_cell(self):
+        return tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, state_is_tuple=False)
+
+    def build(self, x, i):
+        with tf.variable_scope("Global_RNN", reuse=i > 0):
+            x = tf.expand_dims(x, 1)
+            backward_rnn_cells = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+            #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
+            #)
+            forward_rnn_cells = self.lstm_cell() #tf.nn.rnn_cell.MultiRNNCell(
+            #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
+            #)
+
+            outputs, last_state = tf.nn.bidirectional_dynamic_rnn(
+                forward_rnn_cells,
+                backward_rnn_cells,
+                x,
+                dtype=TF_DTYPE,
+            )
+
+            outputs = list(outputs)
+            attention_w = tf.get_variable("attention_v1", [self._config.n_hidden_lstm], TF_DTYPE)
+            query = tf.layers.dense(tf.expand_dims(last_state[0][:, self._config.n_hidden_lstm:], 1),
+                                    self._config.n_hidden_lstm)
+            keys = tf.layers.dense(outputs[0], self._config.n_hidden_lstm)
+            align = tf.reduce_sum(attention_w * tf.tanh(keys + query), [2])
+            align = tf.nn.tanh(align)
+            outputs[0] = tf.squeeze(
+                tf.matmul(tf.transpose(outputs[0], [0, 2, 1]), tf.expand_dims(align, 2)), 2
+            )
+            outputs[0] = tf.concat([outputs[0], last_state[0][:, self._config.n_hidden_lstm:]], 1)
+
+            attention_w = tf.get_variable("attention_v2", [self._config.n_hidden_lstm], TF_DTYPE)
+            query = tf.layers.dense(tf.expand_dims(last_state[1][:, self._config.n_hidden_lstm:], 1),
+                                    self._config.n_hidden_lstm)
+            keys = tf.layers.dense(outputs[1], self._config.n_hidden_lstm)
+            align = tf.reduce_sum(attention_w * tf.tanh(keys + query), [2])
+            align = tf.nn.tanh(align)
+            outputs[1] = tf.squeeze(
+                tf.matmul(tf.transpose(outputs[1], [0, 2, 1]), tf.expand_dims(align, 2)), 2
+            )
+            outputs[1] = tf.concat([outputs[1], last_state[1][:, self._config.n_hidden_lstm:]], 1)
+
+            with tf.variable_scope("decoder", reuse=i > 0):
+                self.backward_rnn_cells_dec = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+                #   [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
+                #)
+                self.forward_rnn_cells_dec = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+                #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
+                #)
+                self.outputs, self.last_state = tf.nn.bidirectional_dynamic_rnn(
+                    self.forward_rnn_cells_dec,
+                    self.backward_rnn_cells_dec,
+                    x,
+                    initial_state_fw=outputs[0],
+                    initial_state_bw=outputs[1],
+                    dtype=TF_DTYPE,
+                )
+            self.outputs = list(self.outputs)
+            attention_w = tf.get_variable("attention_v3", [self._config.n_hidden_lstm], TF_DTYPE)
+            query = tf.layers.dense(
+                tf.expand_dims(self.last_state[0][:, self._config.n_hidden_lstm:], 1), self._config.n_hidden_lstm
+            )
+            keys = tf.layers.dense(self.outputs[0], self._config.n_hidden_lstm)
+            align = tf.reduce_sum(attention_w * tf.tanh(keys + query), [2])
+            align = tf.nn.tanh(align)
+            self.outputs[0] = tf.squeeze(
+                tf.matmul(tf.transpose(self.outputs[0], [0, 2, 1]), tf.expand_dims(align, 2)), 2
+            )
+
+            attention_w = tf.get_variable("attention_v4", [self._config.n_hidden_lstm], TF_DTYPE)
+            query = tf.layers.dense(
+                tf.expand_dims(self.last_state[1][:, self._config.n_hidden_lstm:], 1), self._config.n_hidden_lstm
+            )
+            keys = tf.layers.dense(self.outputs[1], self._config.n_hidden_lstm)
+            align = tf.reduce_sum(attention_w * tf.tanh(keys + query), [2])
+            align = tf.nn.tanh(align)
+            self.outputs[1] = tf.squeeze(
+                tf.matmul(tf.transpose(self.outputs[1], [0, 2, 1]), tf.expand_dims(align, 2)), 2
+            )
+            self.outputs = tf.concat(self.outputs, 1)
+            self.logits = tf.layers.dense(self.outputs, self._config.dim)
+
+            return self.logits
+
+
 class subnetwork_dila(object):
     def __init__(self, config):
         self._config = config
@@ -60,7 +151,7 @@ class subnetwork_dila(object):
     def build(self, x_reformat, t):
         with tf.variable_scope('Global_RNN', reuse=t > 0):
             hidden_structs = self._config.num_hiddens
-            #x_reformat = self.rnn_reformat(x, self._config.dim, self._config.num_time_interval)
+            # x_reformat = self.rnn_reformat(x, self._config.dim, self._config.num_time_interval)
             cells = self.contruct_cells(hidden_structs)
             layer_outputs, self.last_state = self.multi_dilated_rnn(
                 cells, x_reformat, self._config.dilations)
@@ -99,7 +190,7 @@ class subnetwork_lstm_attn(object):
             attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
                 num_units=self._config.n_hidden_lstm,
                 memory=tf.expand_dims(x[0], axis=1),
-                dtype=tf.float64)
+                dtype=TF_DTYPE)
 
             self.rnn_cells = tf.contrib.seq2seq.AttentionWrapper(
                 cell=tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm,
@@ -107,7 +198,7 @@ class subnetwork_lstm_attn(object):
                                              reuse=i > 0),
                 attention_mechanism=attention_mechanism)
 
-            self.outputs, self.last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=tf.float64)
+            self.outputs, self.last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=TF_DTYPE)
             self.out = tf.layers.dense(self.outputs[-1],
                                        self._config.num_hiddens[-1],
                                        name='dense_out', reuse=i > 0)
@@ -194,6 +285,9 @@ class FeedForwardModel(object):
         if usemodel == 'dila':
             self.subnetwork = subnetwork_dila(config)
 
+        if usemodel == 'biattn':
+            self.subnetwork = subnetwork_bidirectionalattn(config)
+
         self._extra_train_ops = []
 
         # self._config.num_iterations = None  # "Nepoch"
@@ -207,7 +301,7 @@ class FeedForwardModel(object):
         dw_valid, x_valid = self._bsde.sample(self._config.valid_size)
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
-        #update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
+        # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         self._train_ops = tf.group([self._train_ops, update_ops])
 
@@ -229,7 +323,7 @@ class FeedForwardModel(object):
                                                      feed_dict=feed_dict_valid)
                 dt0 = time.time() - t0 + self._t_build
                 train_history.append([step, loss, init, dt0])
-                log("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
+                print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
                     % (step, loss, init, dt0))
                 val_writer.add_summary(summary, step)
 
@@ -289,6 +383,9 @@ class FeedForwardModel(object):
 
                 elif self._usemodel == 'dila':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+
+                elif self._usemodel == 'biattn':
+                    z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
 
             # Terminal time
             y = (

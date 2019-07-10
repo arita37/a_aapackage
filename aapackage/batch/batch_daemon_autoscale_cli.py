@@ -56,6 +56,7 @@ Auto-Scale :
 import argparse
 import toml
 import json
+import csv
 import os
 import re
 import warnings
@@ -63,14 +64,17 @@ from datetime import datetime
 from time import sleep
 from aapackage import util_log
 from aapackage.util_log import logger_setup
-from aapackage.util_aws import os_system, json_from_file, tofloat, ssh_cmdrun
-
-import socket
+from aapackage.util_aws import os_system, json_from_file, tofloat,\
+    ssh_cmdrun, get_host_public_ipaddress
 
 warnings.filterwarnings(action="ignore", module=".*paramiko.*")
 
+MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
+MAIN_INSTANCE_IP = [get_host_public_ipaddress()]
+
 
 ################################################################################
+
 logger = None
 
 def log(*argv):
@@ -80,12 +84,6 @@ def log(*argv):
 
 ############### Input  #########################################################
 ISTEST = True  ### For test the code
-
-MAIN_INSTANCE_TO_PROTECT = [ "i-0b33754bc818d0ef5"]  #Current instance
-# MAIN_INSTANCE_IP = '52.26.181.200'
-MAIN_INSTANCE_IP = socket.gethostbyname(socket.gethostname())
-
-
 
 ################################################################################
 # Maintain infos on all instances
@@ -298,6 +296,26 @@ def ec2_get_spot_price(instance_type='t3.small'):
     log('Instance type: %s' % instance_type, ' spot value: %.2f' % value)
     return tofloat(value)
 
+def ec2_spot_price_value(region, instance_type='t3.small'):
+    """ Read the csv as a dictionary with the first row as the keys. """
+    fname = '/home/ubuntu/.aws/spotprice_list.txt'
+    val = 0.0
+    rows = {}
+    if fname and os.path.exists(fname) and os.path.isfile(fname):
+        try:
+            with open(fname) as f:
+                csvr = csv.DictReader(f)
+                for row in csvr:
+                    if row['Region']  not in rows:
+                        rows[row['Region']] = {}
+                        rows[row['Region']][row['Instance']] = 0.0
+                    rows[row['Region']][row['Instance']] = tofloat(row['Price'])
+        except Exception as ex:
+            print('Failed to csv file: %s, exception: %s' % (fname, ex))
+    if region in rows and  instance_type in rows[region]:
+        val = rows[region][instance_type]
+    return val
+
 
 ################################################################################
 def instance_get_ncpu(instances_dict):
@@ -342,7 +360,7 @@ def ec2_instance_getallstate(instance_type='t3.small', key_file=None):
                     ipaddr = instance["PublicIpAddress"]
                 instance_type = instance["InstanceType"]
 
-        if ipaddr and ipaddr != MAIN_INSTANCE_IP:
+        if ipaddr and ipaddr not in MAIN_INSTANCE_IP:
             log('Usage for IP: %s' % ipaddr)
             cpuusage, usageram, totalram = ec2_instance_usage(spot, ipaddr, key_file)
             # print(cpuusage, usageram, totalram)

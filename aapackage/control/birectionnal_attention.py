@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: utf-8
 
 # In[1]:
@@ -15,20 +16,18 @@ from sklearn.preprocessing import MinMaxScaler
 sns.set()
 
 # In[5]:
-
-
 class Model:
     def __init__(
-        self,
-        learning_rate,
-        num_layers,
-        size,
-        size_layer,
-        output_size,
-        forget_bias=0.1,
-        attention_size=10,
-        epoch=500,
-        timestep=5,
+            self,
+            learning_rate,
+            num_layers,
+            size,
+            size_layer,
+            output_size,
+            forget_bias=0.1,
+            attention_size=10,
+            epoch=500,
+            timestep=5,
     ):
         def lstm_cell():
             return tf.nn.rnn_cell.LSTMCell(size_layer, state_is_tuple=False)
@@ -143,7 +142,7 @@ def fit(model, data_frame):
         for k in range(0, data_frame.shape[0] - 1, model.timestep):
             index = min(k + model.timestep, data_frame.shape[0] - 1)
             batch_x = np.expand_dims(data_frame.iloc[k:index].values, axis=0)
-            batch_y = data_frame.iloc[k + 1 : index + 1].values
+            batch_y = data_frame.iloc[k + 1: index + 1].values
             last_state, _, loss = sess.run(
                 [model.last_state, model.optimizer, model.cost],
                 feed_dict={
@@ -163,12 +162,12 @@ def fit(model, data_frame):
 
 
 def predict(
-    model,
-    sess,
-    data_frame,
-    get_hidden_state=False,
-    init_value_forward=None,
-    init_value_backward=None,
+        model,
+        sess,
+        data_frame,
+        get_hidden_state=False,
+        init_value_forward=None,
+        init_value_backward=None,
 ):
     output_predict = np.zeros((data_frame.shape[0], data_frame.shape[1]))
     if init_value_forward is None:
@@ -193,14 +192,14 @@ def predict(
             out_logits, last_state = sess.run(
                 [model.logits, model.last_state],
                 feed_dict={
-                    model.X: np.expand_dims(data_frame.iloc[k : k + model.timestep, :], axis=0),
+                    model.X: np.expand_dims(data_frame.iloc[k: k + model.timestep, :], axis=0),
                     model.backward_hidden_layer: init_value_backward,
                     model.forward_hidden_layer: init_value_forward,
                 },
             )
             init_value_forward = last_state[0]
             init_value_backward = last_state[1]
-            output_predict[k + 1 : k + model.timestep + 1, :] = out_logits
+            output_predict[k + 1: k + model.timestep + 1, :] = out_logits
     if get_hidden_state:
         return output_predict, init_value_forward, init_value_backward
     return output_predict
@@ -280,7 +279,7 @@ if __name__ == "__main__":
         modelnn, sess, df_log.iloc[upper_b:, :], True, init_value_forward, init_value_backward
     )
 
-    output_predict[upper_b + 1 : df_log.shape[0] + 1] = out_logits
+    output_predict[upper_b + 1: df_log.shape[0] + 1] = out_logits
     df_log.loc[df_log.shape[0]] = out_logits[-1]
     date_ori.append(date_ori[-1] + timedelta(days=1))
 
@@ -304,6 +303,7 @@ if __name__ == "__main__":
     df_log = minmax.inverse_transform(output_predict)
     date_ori = pd.Series(date_ori).dt.strftime(date_format="%Y-%m-%d").tolist()
 
+
     # In[11]:
 
     def anchor(signal, weight):
@@ -314,6 +314,7 @@ if __name__ == "__main__":
             buffer.append(smoothed_val)
             last = smoothed_val
         return buffer
+
 
     # In[12]:
 
