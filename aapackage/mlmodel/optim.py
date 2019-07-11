@@ -167,8 +167,11 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
     ### Update with Best values
     study_trials = study.trials_dataframe()
     study_trials.to_csv(os.path.join(save_folder,modelname+'_study.csv'))
+    
     param_dict["best_value"] = study.best_value
     param_dict["file_path"] = file_path 
+    json.dump( param_dict,  os.path.join(save_folder, modelname+'_params.csv') )
+    
     return param_dict
 
 
