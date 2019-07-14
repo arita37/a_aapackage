@@ -35,7 +35,6 @@ import numpy as np
 from config import get_config
 
 
-
 ####################################################################################################
 def load_argument() :
    p = ArgumentParser()
@@ -43,7 +42,7 @@ def load_argument() :
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
-   p.add_argument("--usemodel", type=str, default='biattn')
+   p.add_argument("--usemodel", type=str, default='ff')
    arg = p.parse_args()
    return arg
 
@@ -104,8 +103,8 @@ def main():
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
-                model.build()
-                training_history = model.train()
+                model.build2()
+                training_history = model.train2()
                 if not os.path.exists('ckpt'):
                     os.makedirs('ckpt')
                 saver = tf.train.Saver()
