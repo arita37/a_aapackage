@@ -137,6 +137,24 @@ class PricingOption(Equation):
         return dw_sample, x_sample
 
 
+    def sample2(self, num_sample):
+        dw_sample = (
+            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+        )
+        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        # for i in xrange(self._n_time):
+        # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+        # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+        for i in range(self._num_time_interval):
+            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[
+                :, :, i
+            ]
+        return dw_sample, x_sample
+
+
+
     def f_tf(self, t, x, y, z):
         temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
         return (
@@ -149,6 +167,8 @@ class PricingOption(Equation):
     def g_tf(self, t, x):
         temp = tf.reduce_max(x, 1, keepdims=True)
         return tf.maximum(temp - 100, 0)  
+
+
 
 
 class PricingDefaultRisk(Equation):
@@ -188,6 +208,8 @@ class PricingDefaultRisk(Equation):
         return tf.reduce_min(x, 1, keepdims=True)
 
 
+
+
 class BurgesType(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(BurgesType, self).__init__(dim, total_time, num_time_interval)
@@ -210,6 +232,10 @@ class BurgesType(Equation):
 
     def g_tf(self, t, x):
         return 1 - 1.0 / (1 + tf.exp(t + tf.reduce_sum(x, 1, keepdims=True) / self._dim))
+
+
+
+
 
 
 class QuadraticGradients(Equation):
