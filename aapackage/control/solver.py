@@ -195,12 +195,10 @@ class FeedForwardModel(object):
                 #y = (y_old
                 #        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y_old, z))
                 #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
-                if t == 0 :
-                    xold = self._x[:, :, t]
+                #if t == 0 :
+                #    xold = self._x[:, :, t]
                     
                     
-
-                
                 ## Neural Network per Time Step, Calculate Gradient
                 if self._usemodel == 'lstm':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
@@ -222,10 +220,11 @@ class FeedForwardModel(object):
                 all_w.append(w)
                 
                 
-                y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
-                all_y.append(y)
+                #y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
+                #all_y.append(y)
                 
-                p = p_old * (1 + y )                
+                p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)  )
+                #p = p_old * (1 + y )                
                 #p = p_old * (1 + tf.reduce_sum(w * (y / y_old - 1), axis=1))
                 all_p.append(p)
                 p_old = p
@@ -236,19 +235,20 @@ class FeedForwardModel(object):
             #        - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :, -2], y, z)
             #        + tf.reduce_sum(z * self._dw[:, :, -1], 1, keepdims=True) )
             # y = self._x[:, :, -2]
-            y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
+            #y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
             
-            all_y.append(y)
+            #all_y.append(y)
             
             w = z / tf.reduce_sum(z, -1, keepdims=True)
             all_w.append(w)
             
             #p = p_old * (1 + tf.reduce_sum(w * (y / y_old - 1), axis=1))
-            p = p_old * (1 + y ) 
+            p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)  )
+            #p = p_old * (1 + y ) 
             all_p.append(p)
             
             p = tf.stack(all_p, axis=-1)
-            self.all_y = tf.stack(all_y, axis=-1)
+            #self.all_y = tf.stack(all_y, axis=-1)
             self.all_z = tf.stack(all_z, axis=-1)
             self.all_w = tf.stack(all_w, axis=-1)
             self.all_p = p
