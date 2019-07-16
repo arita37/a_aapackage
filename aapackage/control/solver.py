@@ -1,6 +1,7 @@
 import logging
 import time
 import copy
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -22,7 +23,7 @@ def log(s):
 
 
 
-export_folder = "/home/ubuntu/proj/control/"
+export_folder = "numpy_arrays"
 
 
 
@@ -121,12 +122,12 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
-            _, y, z, p, w = self._sess.run(
-                [self._train_ops, self.all_y, self.all_z, self.all_p, self.all_w],
+            _, z, p, w = self._sess.run(
+                [self._train_ops, self.all_z, self.all_p, self.all_w],
                 feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
             )
             x_all.append(x_train)
-            y_all.append(y)
+            #y_all.append(y)
             z_all.append(z)
             p_all.append(p)
             w_all.append(w)
@@ -141,12 +142,14 @@ class FeedForwardModel(object):
                     % (step, loss, init, dt0))
                 val_writer.add_summary(summary, step)
 
-        print("Writing path history on disk, logs/")
-        np.save(export_folder + '/x.npy', np.concatenate(x_all, axis=0))
-        np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
-        np.save(export_folder + '/z.npy', np.concatenate(z_all, axis=0))
-        np.save(export_folder + '/p.npy', np.concatenate(p_all, axis=0))
-        np.save(export_folder + '/w.npy', np.concatenate(w_all, axis=0))
+        print("Writing path history on disk, {}/".format(export_folder))
+        if not os.path.exists(export_folder):
+            os.makedirs(export_folder)
+        np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
+        #np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
+        np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
+        np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
+        np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
         return np.array(train_history)
 
 
@@ -223,7 +226,7 @@ class FeedForwardModel(object):
                 #y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
                 #all_y.append(y)
                 
-                p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)  )
+                p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
                 #p = p_old * (1 + y )                
                 #p = p_old * (1 + tf.reduce_sum(w * (y / y_old - 1), axis=1))
                 all_p.append(p)
@@ -243,7 +246,7 @@ class FeedForwardModel(object):
             all_w.append(w)
             
             #p = p_old * (1 + tf.reduce_sum(w * (y / y_old - 1), axis=1))
-            p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)  )
+            p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1))
             #p = p_old * (1 + y ) 
             all_p.append(p)
             
