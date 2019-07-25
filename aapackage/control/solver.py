@@ -34,7 +34,7 @@ Return = sum(ri) = Total return
 """
 
 
-export_folder = "numpy_arrays"
+export_folder = "/home/ubuntu/zs3drive/"
 
 
 

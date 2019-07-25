@@ -242,6 +242,8 @@ class subnetwork_ff(object):
             return output
 
 
+
+
     def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear"):
         with tf.variable_scope(name):
             shape = input_.get_shape().as_list()
