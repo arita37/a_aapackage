@@ -205,6 +205,7 @@ class subnetwork_lstm_attn(object):
             return self.out
 
 
+
 ##############  FeedForward
 class subnetwork_ff(object):
     """
@@ -219,6 +220,7 @@ class subnetwork_ff(object):
         # ops for statistics update of batch normalization
         self._extra_train_ops = []
         self._is_training = is_training
+
 
     def build(self, x, i):
         # self.x = x
@@ -239,6 +241,7 @@ class subnetwork_ff(object):
             )
             return output
 
+
     def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear"):
         with tf.variable_scope(name):
             shape = input_.get_shape().as_list()
@@ -255,3 +258,6 @@ class subnetwork_ff(object):
             return activation_fn(hiddens_bn)
         else:
             return hiddens_bn
+
+
+
