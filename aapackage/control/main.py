@@ -21,6 +21,7 @@ python main.py --problem_name PricingOption --usemodel biattn
 For tenosrboard, run this from the 'control' directory.
 tensorboard   --logdir=logs/
 
+To use old build() and train() methods, set clayer to 1 in config file.
 
 """
 import json
@@ -42,7 +43,7 @@ def load_argument() :
    p.add_argument("--num_run", type=int, default=1)
    p.add_argument("--log_dir", type=str, default='./logs')
    p.add_argument("--framework", type=str, default='tf')
-   p.add_argument("--usemodel", type=str, default='ff')
+   p.add_argument("--usemodel", type=str, default='lstm')
    arg = p.parse_args()
    return arg
 
@@ -103,7 +104,7 @@ def main():
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
-                model.build2()
+                model.build()
                 training_history = model.train2()
                 if not os.path.exists('ckpt'):
                     os.makedirs('ckpt')

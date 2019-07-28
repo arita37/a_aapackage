@@ -27,12 +27,12 @@ class subnetwork_bidirectionalattn(object):
     def build(self, x, i):
         with tf.variable_scope("Global_RNN", reuse=i > 0):
             x = tf.expand_dims(x, 1)
-            backward_rnn_cells = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+            backward_rnn_cells = self.lstm_cell()  # tf.nn.rnn_cell.MultiRNNCell(
             #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
-            #)
-            forward_rnn_cells = self.lstm_cell() #tf.nn.rnn_cell.MultiRNNCell(
+            # )
+            forward_rnn_cells = self.lstm_cell()  # tf.nn.rnn_cell.MultiRNNCell(
             #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
-            #)
+            # )
 
             outputs, last_state = tf.nn.bidirectional_dynamic_rnn(
                 forward_rnn_cells,
@@ -65,12 +65,12 @@ class subnetwork_bidirectionalattn(object):
             outputs[1] = tf.concat([outputs[1], last_state[1][:, self._config.n_hidden_lstm:]], 1)
 
             with tf.variable_scope("decoder", reuse=i > 0):
-                self.backward_rnn_cells_dec = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+                self.backward_rnn_cells_dec = self.lstm_cell()  # tf.nn.rnn_cell.MultiRNNCell(
                 #   [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
-                #)
-                self.forward_rnn_cells_dec = self.lstm_cell()#tf.nn.rnn_cell.MultiRNNCell(
+                # )
+                self.forward_rnn_cells_dec = self.lstm_cell()  # tf.nn.rnn_cell.MultiRNNCell(
                 #    [self.lstm_cell() for _ in range(len(self._config.num_hiddens))], state_is_tuple=False
-                #)
+                # )
                 self.outputs, self.last_state = tf.nn.bidirectional_dynamic_rnn(
                     self.forward_rnn_cells_dec,
                     self.backward_rnn_cells_dec,
@@ -156,7 +156,8 @@ class subnetwork_dila(object):
             layer_outputs, self.last_state = self.multi_dilated_rnn(
                 cells, x_reformat, self._config.dilations)
             weights = tf.Variable(
-                tf.random_normal(shape=[hidden_structs[-1], self._config.num_hiddens[-1]], dtype=TF_DTYPE),
+                tf.random_normal(shape=[hidden_structs[-1], self._config.num_hiddens[-1]],
+                                 dtype=TF_DTYPE),
                 dtype=TF_DTYPE)
             bias = tf.Variable(tf.random_normal(shape=[self._config.num_hiddens[-1]], dtype=TF_DTYPE),
                                dtype=TF_DTYPE)
@@ -173,7 +174,9 @@ class subnetwork_lstm(object):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
             x, s = tf.nn.static_rnn(lstm, x, dtype=TF_DTYPE)
-            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1], name='dense_out', reuse=i > 0)
+            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1], name='hidden_out', reuse=i > 0)
+            x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
+                                reuse=i > 0)
             return x
 
 
@@ -205,7 +208,6 @@ class subnetwork_lstm_attn(object):
             return self.out
 
 
-
 ##############  FeedForward
 class subnetwork_ff(object):
     """
@@ -221,10 +223,9 @@ class subnetwork_ff(object):
         self._extra_train_ops = []
         self._is_training = is_training
 
-
     def build(self, x, i):
         # self.x = x
-        name = str(i+1)
+        name = str(i + 1)
         with tf.variable_scope(name):
             # standardize the path input first
             # the affine  could be redundant, but helps converge faster
@@ -240,9 +241,6 @@ class subnetwork_ff(object):
                 hiddens, self._config.num_hiddens[-1], activation_fn=None, name="final_layer"
             )
             return output
-
-
-
 
     def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear"):
         with tf.variable_scope(name):
@@ -260,6 +258,3 @@ class subnetwork_ff(object):
             return activation_fn(hiddens_bn)
         else:
             return hiddens_bn
-
-
-

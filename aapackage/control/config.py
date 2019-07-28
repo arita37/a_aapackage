@@ -11,6 +11,7 @@ class Config(object):
     verbose = True
     y_init_range = [0, 1]
     dilations = [1, 2, 4, 8]
+    clayer = 1
 
 
 class AllenCahnConfig(Config):
@@ -46,7 +47,7 @@ class PricingOptionConfig(Config):
     num_time_interval = 10
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
-    num_iterations = 1000
+    num_iterations = 10000
     num_hiddens = [dim, dim+10, dim+10, dim]
     y_init_range = [1, 10]
 
