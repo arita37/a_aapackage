@@ -66,6 +66,15 @@ def config_dump(conf, path_prefix):
         )
     
 
+def tf_save(tf, sess, modelname="model.ckpt"):
+    if not os.path.exists('ckpt'):
+        os.makedirs('ckpt')
+                
+    saver = tf.train.Saver()
+    save_path = saver.save(sess, os.path.join('ckpt', modelname))
+    print("TensorFlow Checkpoints saved in {}".format(save_path))    
+
+
 def main():
     arg = load_argument() 
     print(arg)
@@ -88,7 +97,6 @@ def main():
     elif arg.framework == 'tch':
         from equation_tch import get_equation as get_equation_tch
         from solver_tch import train
-
         bsde = get_equation_tch(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
 
 
@@ -104,19 +112,18 @@ def main():
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
-                model.build2()
-                training_history = model.train2()
-                if not os.path.exists('ckpt'):
-                    os.makedirs('ckpt')
-                saver = tf.train.Saver()
-                save_path = saver.save(sess, os.path.join('ckpt', "model.ckpt"))
-                print("TensorFlow Checkpoints saved in {}".format(save_path))
-
+                
+                model.build2()      #  model.build()
+                training_history = model.train2()   #  model.train()
+                
+                tf_save(tf, sess)
+                
         elif arg.framework == 'tch':
             training_history = train(c, bsde, arg.usemodel)
 
         if bsde.y_init:
             log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init),)
+
 
         # save training history
         np.savetxt(

@@ -120,22 +120,30 @@ class PricingOption(Equation):
         self._alpha = 1.0 / self._dim
 
 
-    def sample(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
-        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
-        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
-        # for i in xrange(self._n_time):
-        # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
-        # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
-        factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
-        for i in range(self._num_time_interval):
-            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[
-                :, :, i
-            ]
-        return dw_sample, x_sample
+    def sample(self, num_sample, clayer=0):
+        
+        if clayer > -1 :
+        
+          dw_sample = (
+             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+          )
+          x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+          x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        
+        
+          factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+          for i in range(self._num_time_interval):
+             x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[ :, :, i]
+          return dw_sample, x_sample
 
+          # for i in xrange(self._n_time):
+          # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+          # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        
+        
+        
+        
+        
 
     def sample2(self, num_sample):
         dw_sample = (
