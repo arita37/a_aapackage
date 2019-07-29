@@ -192,6 +192,8 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
             
+            dw_train, x_train = self.generate_feed()
+            """
             dw_train, x_train = [], []
             for clayer in range(self._config.clayer):
                 dw, x = self._bsde.sample(self._config.batch_size, clayer)
@@ -208,10 +210,9 @@ class FeedForwardModel(object):
             x_train = np.reshape(x_train, [self._config.batch_size, 
                                            self._config.clayer * self._dim,
                                            self._num_time_interval + 1])
+            """
             
-            
-            _ = self._sess.run(
-                      self._train_ops,
+            _ = self._sess.run( self._train_ops,
                       feed_dict={self._dw: dw_train, 
                                  self._x: x_train, self._is_training: True},
                 )
