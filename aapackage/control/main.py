@@ -113,8 +113,8 @@ def main():
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
                 
-                model.build2()      #  model.build()
-                training_history = model.train2()   #  model.train()
+                model.build()      #  model.build()
+                training_history = model.train()   #  model.train()
                 
                 tf_save(tf, sess)
                 

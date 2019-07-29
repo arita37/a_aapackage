@@ -78,8 +78,32 @@ class FeedForwardModel(object):
         train_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
-        dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
+        # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
+        
+        #################################################################
+        dw_valid, x_valid = [], []
+        for clayer in range(self._config.clayer):
+            dw, x = self._bsde.sample(self._config.batch_size, clayer)
+            dw_valid.append(dw)
+            x_valid.append(x)
+        
+        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
+        dw_valid = np.reshape(dw_valid,
+                              [self._config.batch_size, 
+                               self._config.clayer * self._dim, self._num_time_interval])
+        
+        x_valid = np.reshape(x_valid,
+                             [self._config.batch_size, 
+                              self._config.clayer * self._dim, self._num_time_interval + 1])
+        ##################################################################           
+        
+        
+        
+        
+        
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+
+
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -116,9 +140,9 @@ class FeedForwardModel(object):
         train_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
-        dw_valid, x_valid = [], []
         
         #################################################################
+        dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
             dw, x = self._bsde.sample(self._config.batch_size, clayer)
             dw_valid.append(dw)
@@ -339,6 +363,7 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+
 
     def build(self):
         """"
