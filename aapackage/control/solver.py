@@ -81,6 +81,8 @@ class FeedForwardModel(object):
         # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
         
         #################################################################
+        dw_valid, x_valid = self.generate_feed()
+        """
         dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
             dw, x = self._bsde.sample(self._config.batch_size, clayer)
@@ -95,9 +97,9 @@ class FeedForwardModel(object):
         x_valid = np.reshape(x_valid,
                              [self._config.batch_size, 
                               self._config.clayer * self._dim, self._num_time_interval + 1])
+        """
         ##################################################################           
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
-
 
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
@@ -111,8 +113,6 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
-            
-            
             
             
             self._sess.run(
@@ -132,6 +132,16 @@ class FeedForwardModel(object):
                 val_writer.add_summary(summary, step)
 
         return np.array(train_history)
+
+
+    def validation_train(self, sess, feed_dict_valid, train_history, merged,t0, step, val_writer) :
+                loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
+                                                     feed_dict=feed_dict_valid)
+                dt0 = time.time() - t0 + self._t_build
+                train_history.append([step, loss, init, dt0])
+                print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
+                      % (step, loss, init, dt0))
+                val_writer.add_summary(summary, step)
 
 
     def generate_feed(self) :
