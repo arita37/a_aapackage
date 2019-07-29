@@ -261,7 +261,8 @@ class FeedForwardModel(object):
             # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
 
             # all_y.append(y)
-            w = z / tf.reduce_sum(z, -1, keepdims=True)
+            #w = z / tf.reduce_sum(z, -1, keepdims=True)
+            w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t], axes=2)[0])
             # w = z
             all_w.append(w)
 

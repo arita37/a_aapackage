@@ -104,7 +104,7 @@ def main():
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
-                model.build()
+                model.build2()
                 training_history = model.train2()
                 if not os.path.exists('ckpt'):
                     os.makedirs('ckpt')
