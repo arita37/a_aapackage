@@ -117,6 +117,8 @@ class FeedForwardModel(object):
 
         ## Validation DATA : Brownian part, drift part from MC simulation
         dw_valid, x_valid = [], []
+        
+        #################################################################
         for clayer in range(self._config.clayer):
             dw, x = self._bsde.sample(self._config.batch_size, clayer)
             dw_valid.append(dw)
@@ -130,8 +132,10 @@ class FeedForwardModel(object):
         x_valid = np.reshape(x_valid,
                              [self._config.batch_size, 
                               self._config.clayer * self._dim, self._num_time_interval + 1])
-        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+        ##################################################################                      
 
+                              
+        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -146,7 +150,7 @@ class FeedForwardModel(object):
             # Generate MC sample AS the training input
             dw_train, x_train = [], []
             for clayer in range(self._config.clayer):
-                dw, x = self._bsde.sample(self._config.batch_size)
+                dw, x = self._bsde.sample(self._config.batch_size, clayer)
                 dw_train.append(dw)
                 x_train.append(x)
                 
