@@ -340,12 +340,20 @@ class FeedForwardModel(object):
 
             # all_y.append(y)
             #w = z / tf.reduce_sum(z, -1, keepdims=True)
-            w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t], axes=2)[1])
-            # w = z
+            
+        
+            ###w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t], axes=2)[1])
+            
+            ####New formulae
+            w = 0.2 + z + 1 / tf.sqrt(tf.nn.moments( tf.log( self._x[:, :self._config.dim, :t] / self._x[:, :self._config.dim, :t-1]), axes=2)[1])
+            
+            w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1 
             all_w.append(w)
 
+
             # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1))
-            p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
+            p = tf.reduce_sum(w * tf.log(self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1]), 1)
+            # p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
             all_p.append(p)
 
             p = tf.stack(all_p, axis=-1)
