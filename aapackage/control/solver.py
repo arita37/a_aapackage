@@ -96,11 +96,6 @@ class FeedForwardModel(object):
                              [self._config.batch_size, 
                               self._config.clayer * self._dim, self._num_time_interval + 1])
         ##################################################################           
-        
-        
-        
-        
-        
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
 
@@ -116,6 +111,10 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
+            
+            
+            
+            
             self._sess.run(
                 self._train_ops,
                 feed_dict={self._dw: dw_train, 
@@ -135,12 +134,7 @@ class FeedForwardModel(object):
         return np.array(train_history)
 
 
-    def train2(self):
-        t0 = time.time()
-        train_history = []  # to save iteration results
-
-        ## Validation DATA : Brownian part, drift part from MC simulation
-        
+    def generate_feed(self) :
         #################################################################
         dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
@@ -156,9 +150,34 @@ class FeedForwardModel(object):
         x_valid = np.reshape(x_valid,
                              [self._config.batch_size, 
                               self._config.clayer * self._dim, self._num_time_interval + 1])
-        ##################################################################                      
+        ##################################################################    
+        return dw_valid, x_valid
+        
+    def train2(self):
+        t0 = time.time()
+        train_history = []  # to save iteration results
 
-                              
+        ## Validation DATA : Brownian part, drift part from MC simulation
+        
+        #################################################################
+        dw_valid, x_valid = self.generate_feed()
+        """
+        dw_valid, x_valid = [], []
+        for clayer in range(self._config.clayer):
+            dw, x = self._bsde.sample(self._config.batch_size, clayer)
+            dw_valid.append(dw)
+            x_valid.append(x)
+        
+        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
+        dw_valid = np.reshape(dw_valid,
+                              [self._config.batch_size, 
+                               self._config.clayer * self._dim, self._num_time_interval])
+        
+        x_valid = np.reshape(x_valid,
+                             [self._config.batch_size, 
+                              self._config.clayer * self._dim, self._num_time_interval + 1])
+        """
+        ##################################################################                      
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
@@ -172,6 +191,7 @@ class FeedForwardModel(object):
         x_all, y_all, z_all, p_all, w_all = [], [], [], [], []
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
+            
             dw_train, x_train = [], []
             for clayer in range(self._config.clayer):
                 dw, x = self._bsde.sample(self._config.batch_size, clayer)
@@ -188,6 +208,8 @@ class FeedForwardModel(object):
             x_train = np.reshape(x_train, [self._config.batch_size, 
                                            self._config.clayer * self._dim,
                                            self._num_time_interval + 1])
+            
+            
             _ = self._sess.run(
                       self._train_ops,
                       feed_dict={self._dw: dw_train, 
