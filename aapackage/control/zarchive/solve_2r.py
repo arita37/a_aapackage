@@ -22,6 +22,7 @@ def log(s):
     logging.info(s)
 
 
+
 """
 
 Variance Realized =  Sum(ri*:2)
@@ -32,7 +33,9 @@ Return = sum(ri) = Total return
 
 """
 
+
 export_folder = "/home/ubuntu/zs3drive/"
+
 
 
 ###################################################################################################
@@ -73,34 +76,14 @@ class FeedForwardModel(object):
         # self._config.num_iterations = None  # "Nepoch"
         # self._train_ops = None  # Gradient, Vale,
 
+
     def train(self):
         t0 = time.time()
         train_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
-        # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
-        
-        #################################################################
-        dw_valid, x_valid = self.generate_feed()
-        """
-        dw_valid, x_valid = [], []
-        for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
-            dw_valid.append(dw)
-            x_valid.append(x)
-        
-        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
-        dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
-                               self._config.clayer * self._dim, self._num_time_interval])
-        
-        x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
-                              self._config.clayer * self._dim, self._num_time_interval + 1])
-        """
-        ##################################################################           
+        dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
-
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -113,12 +96,9 @@ class FeedForwardModel(object):
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
             dw_train, x_train = self._bsde.sample(self._config.batch_size)
-            
-            
             self._sess.run(
                 self._train_ops,
-                feed_dict={self._dw: dw_train, 
-                           self._x: x_train, self._is_training: True},
+                feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
             )
 
             ### Validation Data Eval.
@@ -128,72 +108,26 @@ class FeedForwardModel(object):
                 dt0 = time.time() - t0 + self._t_build
                 train_history.append([step, loss, init, dt0])
                 print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                      % (step, loss, init, dt0))
+                    % (step, loss, init, dt0))
                 val_writer.add_summary(summary, step)
 
         return np.array(train_history)
 
 
-    def validation_train(self, sess, feed_dict_valid, train_history, merged,t0, step, val_writer) :
-                loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
-                                                     feed_dict=feed_dict_valid)
-                dt0 = time.time() - t0 + self._t_build
-                train_history.append([step, loss, init, dt0])
-                print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                      % (step, loss, init, dt0))
-                val_writer.add_summary(summary, step)
-
-
-    def generate_feed(self) :
-        #################################################################
-        dw_valid, x_valid = [], []
-        for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
-            dw_valid.append(dw)
-            x_valid.append(x)
-        
-        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
-        dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
-                               self._config.clayer * self._dim, self._num_time_interval])
-        
-        x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
-                              self._config.clayer * self._dim, self._num_time_interval + 1])
-        ##################################################################    
-        return dw_valid, x_valid
-        
     def train2(self):
-        t0 = time.time()
+        t0            = time.time()
         train_history = []  # to save iteration results
 
+        
         ## Validation DATA : Brownian part, drift part from MC simulation
-        
-        #################################################################
-        dw_valid, x_valid = self.generate_feed()
-        """
-        dw_valid, x_valid = [], []
-        for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
-            dw_valid.append(dw)
-            x_valid.append(x)
-        
-        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
-        dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
-                               self._config.clayer * self._dim, self._num_time_interval])
-        
-        x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
-                              self._config.clayer * self._dim, self._num_time_interval + 1])
-        """
-        ##################################################################                      
-        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+        dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
+        feed_dict_valid   = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         self._train_ops = tf.group([self._train_ops, update_ops])
 
+        
         self._sess.run(tf.global_variables_initializer())  # initialization
         # begin sgd iteration
         val_writer = tf.summary.FileWriter('logs', self._sess.graph)
@@ -201,34 +135,17 @@ class FeedForwardModel(object):
         x_all, y_all, z_all, p_all, w_all = [], [], [], [], []
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
-            
-            dw_train, x_train = self.generate_feed()
-            """
-            dw_train, x_train = [], []
-            for clayer in range(self._config.clayer):
-                dw, x = self._bsde.sample(self._config.batch_size, clayer)
-                dw_train.append(dw)
-                x_train.append(x)
-                
-            dw_train, x_train = np.stack(dw_train, axis=2), np.stack(x_train, axis=2)
+            dw_train, x_train = self._bsde.sample(self._config.batch_size)
+            _, z, p, w = self._sess.run(
+                [self._train_ops, self.all_z, self.all_p, self.all_w],
+                feed_dict={self._dw: dw_train, self._x: x_train, self._is_training: True},
+            )
             x_all.append(x_train)
-            dw_train = np.reshape(dw_train,
-                                  [self._config.batch_size, 
-                                   self._config.clayer * self._dim, 
-                                   self._num_time_interval])
-                                   
-            x_train = np.reshape(x_train, [self._config.batch_size, 
-                                           self._config.clayer * self._dim,
-                                           self._num_time_interval + 1])
-            """
+            #y_all.append(y)
+            z_all.append(z)
+            p_all.append(p)
+            w_all.append(w)
             
-            _ = self._sess.run( self._train_ops,
-                      feed_dict={self._dw: dw_train, 
-                                 self._x: x_train, self._is_training: True},
-                )
-
-            # y_all.append(y)
-
             ### Validation Data Eval.
             if step % self._config.logging_frequency == 0:
                 loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
@@ -242,9 +159,8 @@ class FeedForwardModel(object):
         print("Writing path history on disk, {}/".format(export_folder))
         if not os.path.exists(export_folder):
             os.makedirs(export_folder)
-            
         np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
-        # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
+        #np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
         np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
         np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
         np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
@@ -261,15 +177,14 @@ class FeedForwardModel(object):
         TT = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         ### dim X Ntime_interval for Stochastic Process
-        self._dw = tf.placeholder(TF_DTYPE, [None, self._dim * self._config.clayer, self._num_time_interval], name="dW")
-        self._x = tf.placeholder(TF_DTYPE, [None, self._dim * self._config.clayer, self._num_time_interval + 1],
-                                 name="X")
+        self._dw = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval], name="dW")
+        self._x = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval + 1], name="X")
 
         ### Initialization
         ### x : state,  Cost
-        self._y_init = tf.Variable(tf.random_uniform(
-            [1], minval=self._config.y_init_range[0], maxval=self._config.y_init_range[1],
-            dtype=TF_DTYPE, )
+        self._y_init = tf.Variable( tf.random_uniform(
+                [1], minval=self._config.y_init_range[0], maxval=self._config.y_init_range[1],
+                dtype=TF_DTYPE, )
         )
         ## Control
         z_init = tf.Variable(
@@ -277,24 +192,32 @@ class FeedForwardModel(object):
             # tf.random_uniform([1, self._dim], minval=-0.1, maxval=0.1, dtype=TF_DTYPE)
         )
 
+
         # P
         p_old = tf.Variable(
             tf.random_uniform(shape=[self._config.batch_size], minval=0.0, maxval=0.0, dtype=TF_DTYPE)
         )
 
+
         all_one_vec = tf.ones(shape=tf.stack([tf.shape(self._dw)[0], 1]), dtype=TF_DTYPE)
+        y = all_one_vec * self._y_init
         z = tf.matmul(all_one_vec, z_init)
 
-        all_p, all_z, all_w = [p_old], [], []
+        y_old = y
+        all_p = [p_old]
+        all_y = [y]
+        all_z = []
+        all_w = []
         with tf.variable_scope("forward"):
             for t in range(0, self._num_time_interval - 1):
-                # y = (y_old
+                #y = (y_old
                 #        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y_old, z))
                 #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
-                # if t == 0 :
+                #if t == 0 :
                 #    xold = self._x[:, :, t]
+                    
+                    
                 ## Neural Network per Time Step, Calculate Gradient
-                ## Z = [batch, dim * clayer] -> [batch, 4] for optionprice config
                 if self._usemodel == 'lstm':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
 
@@ -305,65 +228,60 @@ class FeedForwardModel(object):
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
 
                 elif self._usemodel == 'dila':
-                    z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+                    z = self.subnetwork.build([self._x[self:, :, t + 1]], t) / self._dim
 
                 elif self._usemodel == 'biattn':
                     z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
                 all_z.append(z)
                 
-                #w = z / tf.reduce_sum(z, -1, keepdims=True)
-                w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t]  , axes=2)[1])
-                # w = [batch, 4]
-                # w = [0.2
+                
+                w =  z + tf.constant( 1/ tf.sqrt( tf.nn.moments( self._x[:, : ,:t], axes=1)[1]), shape= z.shape )  
+                #w =  z / tf.reduce_sum(z, -1, keepdims=True)
+                
+                #w = [0.2
                 all_w.append(w)
-
-                # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
-                # all_y.append(y)
-
-                ## P = [batch]
-                if t == 0:
-                    p = p_old
-                else:
-                    # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
-                    p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
-
+                
+                
+                #y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
+                #all_y.append(y)
+                
+                if t == 0 :
+                   p =  p_old
+                else :                   
+                   # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
+                   p =  tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1)
                 all_p.append(p)
-
+                
                 p_old = p
-
+                y_old = y
+            
+            
             # Terminal time
             # y = (y
             #        - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :, -2], y, z)
             #        + tf.reduce_sum(z * self._dw[:, :, -1], 1, keepdims=True) )
             # y = self._x[:, :, -2]
-            # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
-
-            # all_y.append(y)
-            #w = z / tf.reduce_sum(z, -1, keepdims=True)
+            #y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
             
-        
-            ###w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t], axes=2)[1])
-            
-            ####New formulae
-            w = 0.2 + z + 1 / tf.sqrt(tf.nn.moments( tf.log( self._x[:, :self._config.dim, :t] / self._x[:, :self._config.dim, :t-1]), axes=2)[1])
-            
-            w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1 
+            #all_y.append(y)
+            w = z / tf.reduce_sum(z, -1, keepdims=True)
+            #w = z
             all_w.append(w)
-
-
-            # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1))
-            p = tf.reduce_sum(w * tf.log(self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1]), 1)
-            # p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
+            
+            #p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1))
+            p =  tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1)
             all_p.append(p)
-
+            
+            
             p = tf.stack(all_p, axis=-1)
-            # self.all_y = tf.stack(all_y, axis=-1)
+            #self.all_y = tf.stack(all_y, axis=-1)
             self.all_z = tf.stack(all_z, axis=-1)
             self.all_w = tf.stack(all_w, axis=-1)
             self.all_p = p
 
+
             # Final Difference :
-            # delta = tf.math.reduce_variance(p, axis=1) / (1 + tf.reduce_mean(p, 1))
+            #delta = tf.math.reduce_variance(p, axis=1) / (1 + tf.reduce_mean(p, 1))
             # m = tf.reduce_mean(p, 1)
             # delta = tf.nn.moments(p, axes=1)[1] / ( tf.square(tf.reduce_mean(p, 1)))
             # delta = tf.nn.moments(p, axes=1)[1] / ( tf.reduce_mean(p, 1) )
@@ -371,16 +289,22 @@ class FeedForwardModel(object):
             # delta = -tf.reduce_mean(p, 1) + tf.nn.moments(p, axes=1)[1] 
 
             #######  -Sum(ri)   +Sum(ri**2)  
-            delta = -0.5 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]
-
+            delta =  -0.5 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]              
+            
+            
+            
+            
             # use linear approximation outside the clipped range
-            # self._loss = tf.reduce_mean(tf.where( tf.abs(delta) < DELTA_CLIP,
+            #self._loss = tf.reduce_mean(tf.where( tf.abs(delta) < DELTA_CLIP,
             #                            tf.square(delta),
             #                            2 * DELTA_CLIP * tf.abs(delta) - DELTA_CLIP ** 2,
-            # ))
-
+            #))
+            
             self._loss = tf.reduce_mean(delta)
-
+                                     
+   
+            
+            
         tf.summary.scalar('loss', self._loss)
 
         # train operations
@@ -406,6 +330,7 @@ class FeedForwardModel(object):
         self._t_build = time.time() - t0
 
 
+
     def build(self):
         """"
            y : State
@@ -416,8 +341,8 @@ class FeedForwardModel(object):
         TT = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
 
         ### dim X Ntime_interval for Stochastic Process
-        self._dw = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim, self._num_time_interval], name="dW")
-        self._x = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim, self._num_time_interval + 1], name="X")
+        self._dw = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval], name="dW")
+        self._x = tf.placeholder(TF_DTYPE, [None, self._dim, self._num_time_interval + 1], name="X")
 
         ### Initialization
         ## x : state,  Cost
@@ -439,8 +364,8 @@ class FeedForwardModel(object):
             for t in range(0, self._num_time_interval - 1):
                 y = (
                         y
-                        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :self._dim, t], y, z))
-                        + tf.reduce_sum(z * self._dw[:, :self._dim, t], 1, keepdims=True)
+                        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y, z))
+                        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True)
                 )
 
                 ## Neural Network per Time Step, Calculate Gradient
@@ -462,12 +387,12 @@ class FeedForwardModel(object):
             # Terminal time
             y = (
                     y
-                    - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :self._dim, -2], y, z)
-                    + tf.reduce_sum(z * self._dw[:, :self._dim, -1], 1, keepdims=True)
+                    - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :, -2], y, z)
+                    + tf.reduce_sum(z * self._dw[:, :, -1], 1, keepdims=True)
             )
 
             # Final Difference :
-            delta = y - self._bsde.g_tf(self._total_time, self._x[:, :self._dim, -1])
+            delta = y - self._bsde.g_tf(self._total_time, self._x[:, :, -1])
 
             # use linear approximation outside the clipped range
             self._loss = tf.reduce_mean(
@@ -478,6 +403,7 @@ class FeedForwardModel(object):
                 )
             )
         tf.summary.scalar('loss', self._loss)
+
 
         # train operations
         global_step = tf.get_variable(
@@ -500,3 +426,8 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+
+
+
+            
+            

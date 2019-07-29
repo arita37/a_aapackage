@@ -113,14 +113,39 @@ class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
-        self._sigma = 0.01
+        self._sigma = 0.20
         self._mu_bar = 0.1
         self._rl = 0.04
         self._rb = 0.06
         self._alpha = 1.0 / self._dim
 
 
-    def sample(self, num_sample):
+    def sample(self, num_sample, clayer=0):
+        
+        if clayer > -1 :
+        
+          dw_sample = (
+             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+          )
+          x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+          x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        
+        
+          factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+          for i in range(self._num_time_interval):
+             x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[ :, :, i]
+          return dw_sample, x_sample
+
+          # for i in xrange(self._n_time):
+          # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+          # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        
+        
+        
+        
+        
+
+    def sample2(self, num_sample):
         dw_sample = (
             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
         )
@@ -137,6 +162,7 @@ class PricingOption(Equation):
         return dw_sample, x_sample
 
 
+
     def f_tf(self, t, x, y, z):
         temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
         return (
@@ -149,6 +175,8 @@ class PricingOption(Equation):
     def g_tf(self, t, x):
         temp = tf.reduce_max(x, 1, keepdims=True)
         return tf.maximum(temp - 100, 0)  
+
+
 
 
 class PricingDefaultRisk(Equation):
@@ -188,6 +216,8 @@ class PricingDefaultRisk(Equation):
         return tf.reduce_min(x, 1, keepdims=True)
 
 
+
+
 class BurgesType(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(BurgesType, self).__init__(dim, total_time, num_time_interval)
@@ -210,6 +240,10 @@ class BurgesType(Equation):
 
     def g_tf(self, t, x):
         return 1 - 1.0 / (1 + tf.exp(t + tf.reduce_sum(x, 1, keepdims=True) / self._dim))
+
+
+
+
 
 
 class QuadraticGradients(Equation):
