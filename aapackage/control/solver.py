@@ -52,6 +52,8 @@ class FeedForwardModel(object):
         self._num_time_interval = bsde.num_time_interval
         self._total_time = bsde.total_time
 
+        self._smooth = 1e-8
+
         self._is_training = tf.placeholder(tf.bool)
         if usemodel == 'attn':
             self.subnetwork = subnetwork_lstm_attn(config)
@@ -79,28 +81,11 @@ class FeedForwardModel(object):
 
         ## Validation DATA : Brownian part, drift part from MC simulation
         # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
-        
+
         #################################################################
         dw_valid, x_valid = self.generate_feed()
-        """
-        dw_valid, x_valid = [], []
-        for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
-            dw_valid.append(dw)
-            x_valid.append(x)
-        
-        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
-        dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
-                               self._config.clayer * self._dim, self._num_time_interval])
-        
-        x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
-                              self._config.clayer * self._dim, self._num_time_interval + 1])
-        """
-        ##################################################################           
-        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
+        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -112,12 +97,11 @@ class FeedForwardModel(object):
         merged = tf.summary.merge_all()
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
-            dw_train, x_train = self._bsde.sample(self._config.batch_size)
-            
-            
+            dw_train, x_train = self.generate_feed()
+
             self._sess.run(
                 self._train_ops,
-                feed_dict={self._dw: dw_train, 
+                feed_dict={self._dw: dw_train,
                            self._x: x_train, self._is_training: True},
             )
 
@@ -133,60 +117,42 @@ class FeedForwardModel(object):
 
         return np.array(train_history)
 
+    def validation_train(self, sess, feed_dict_valid, train_history, merged, t0, step, val_writer):
+        loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
+                                             feed_dict=feed_dict_valid)
+        dt0 = time.time() - t0 + self._t_build
+        train_history.append([step, loss, init, dt0])
+        print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
+              % (step, loss, init, dt0))
+        val_writer.add_summary(summary, step)
 
-    def validation_train(self, sess, feed_dict_valid, train_history, merged,t0, step, val_writer) :
-                loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
-                                                     feed_dict=feed_dict_valid)
-                dt0 = time.time() - t0 + self._t_build
-                train_history.append([step, loss, init, dt0])
-                print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-                      % (step, loss, init, dt0))
-                val_writer.add_summary(summary, step)
-
-
-    def generate_feed(self) :
+    def generate_feed(self):
         #################################################################
         dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
             dw, x = self._bsde.sample(self._config.batch_size, clayer)
             dw_valid.append(dw)
             x_valid.append(x)
-        
+
         dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
         dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
+                              [self._config.batch_size,
                                self._config.clayer * self._dim, self._num_time_interval])
-        
+
         x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
+                             [self._config.batch_size,
                               self._config.clayer * self._dim, self._num_time_interval + 1])
         ##################################################################    
         return dw_valid, x_valid
-        
+
     def train2(self):
         t0 = time.time()
         train_history = []  # to save iteration results
 
         ## Validation DATA : Brownian part, drift part from MC simulation
-        
+
         #################################################################
         dw_valid, x_valid = self.generate_feed()
-        """
-        dw_valid, x_valid = [], []
-        for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
-            dw_valid.append(dw)
-            x_valid.append(x)
-        
-        dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
-        dw_valid = np.reshape(dw_valid,
-                              [self._config.batch_size, 
-                               self._config.clayer * self._dim, self._num_time_interval])
-        
-        x_valid = np.reshape(x_valid,
-                             [self._config.batch_size, 
-                              self._config.clayer * self._dim, self._num_time_interval + 1])
-        """
         ##################################################################                      
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
@@ -201,31 +167,13 @@ class FeedForwardModel(object):
         x_all, y_all, z_all, p_all, w_all = [], [], [], [], []
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
-            
+
             dw_train, x_train = self.generate_feed()
-            """
-            dw_train, x_train = [], []
-            for clayer in range(self._config.clayer):
-                dw, x = self._bsde.sample(self._config.batch_size, clayer)
-                dw_train.append(dw)
-                x_train.append(x)
-                
-            dw_train, x_train = np.stack(dw_train, axis=2), np.stack(x_train, axis=2)
-            x_all.append(x_train)
-            dw_train = np.reshape(dw_train,
-                                  [self._config.batch_size, 
-                                   self._config.clayer * self._dim, 
-                                   self._num_time_interval])
-                                   
-            x_train = np.reshape(x_train, [self._config.batch_size, 
-                                           self._config.clayer * self._dim,
-                                           self._num_time_interval + 1])
-            """
-            
-            _ = self._sess.run( self._train_ops,
-                      feed_dict={self._dw: dw_train, 
-                                 self._x: x_train, self._is_training: True},
-                )
+
+            _ = self._sess.run(self._train_ops,
+                               feed_dict={self._dw: dw_train,
+                                          self._x: x_train, self._is_training: True},
+                               )
 
             # y_all.append(y)
 
@@ -242,14 +190,13 @@ class FeedForwardModel(object):
         print("Writing path history on disk, {}/".format(export_folder))
         if not os.path.exists(export_folder):
             os.makedirs(export_folder)
-            
+
         np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
         # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
         np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
         np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
         np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
         return np.array(train_history)
-
 
     def build2(self):
         """"
@@ -269,8 +216,8 @@ class FeedForwardModel(object):
         ### x : state,  Cost
         self._y_init = tf.Variable(tf.random_uniform(
             [1], minval=self._config.y_init_range[0], maxval=self._config.y_init_range[1],
-            dtype=TF_DTYPE, )
-        )
+            dtype=TF_DTYPE))
+
         ## Control
         z_init = tf.Variable(
             tf.random_uniform([1, self._dim], minval=0.01, maxval=0.3, dtype=TF_DTYPE)
@@ -278,14 +225,14 @@ class FeedForwardModel(object):
         )
 
         # P
-        p_old = tf.Variable(
-            tf.random_uniform(shape=[self._config.batch_size], minval=0.0, maxval=0.0, dtype=TF_DTYPE)
-        )
+        # p_old = tf.Variable(
+        #    tf.random_uniform(shape=[self._config.batch_size], minval=0.0, maxval=0.0, dtype=TF_DTYPE)
+        # )
 
         all_one_vec = tf.ones(shape=tf.stack([tf.shape(self._dw)[0], 1]), dtype=TF_DTYPE)
         z = tf.matmul(all_one_vec, z_init)
 
-        all_p, all_z, all_w = [p_old], [], []
+        all_p, all_z, all_w = [], [], []
         with tf.variable_scope("forward"):
             for t in range(0, self._num_time_interval - 1):
                 # y = (y_old
@@ -310,26 +257,33 @@ class FeedForwardModel(object):
                 elif self._usemodel == 'biattn':
                     z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
                 all_z.append(z)
-                
-                #w = z / tf.reduce_sum(z, -1, keepdims=True)
-                w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t]  , axes=2)[1])
-                # w = [batch, 4]
-                # w = [0.2
+
+                # w = z / tf.reduce_sum(z, -1, keepdims=True)
+                ####New formulae
+                if t == 0:
+                    w = tf.Variable(
+                        tf.random.uniform([self._config.batch_size, self._config.dim * self._config.clayer], minval=0.1,
+                                          maxval=0.3, dtype=TF_DTYPE))
+                else:
+                    w = 0.2 + z + 1 / tf.sqrt((tf.nn.moments(
+                        tf.log((self._x[:, :self._config.dim, 1:t + 1]) / (self._x[:, :self._config.dim, :t])), axes=2)[
+                                                   1] + self._smooth))
+                w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1
                 all_w.append(w)
 
                 # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
                 # all_y.append(y)
 
                 ## P = [batch]
-                if t == 0:
-                    p = p_old
-                else:
-                    # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
-                    p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
+                # if t == 0:
+                #    p = p_old
+                # else:
+                # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
+                p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
 
                 all_p.append(p)
 
-                p_old = p
+                # p_old = p
 
             # Terminal time
             # y = (y
@@ -339,22 +293,7 @@ class FeedForwardModel(object):
             # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
 
             # all_y.append(y)
-            #w = z / tf.reduce_sum(z, -1, keepdims=True)
-            
-        
-            ###w = z + 1 / tf.sqrt(tf.nn.moments(self._x[:, :, :t], axes=2)[1])
-            
-            ####New formulae
-            w = 0.2 + z + 1 / tf.sqrt(tf.nn.moments( tf.log( self._x[:, :self._config.dim, :t] / self._x[:, :self._config.dim, :t-1]), axes=2)[1])
-            
-            w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1 
-            all_w.append(w)
-
-
-            # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1))
-            p = tf.reduce_sum(w * tf.log(self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1]), 1)
-            # p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
-            all_p.append(p)
+            # w = z / tf.reduce_sum(z, -1, keepdims=True)
 
             p = tf.stack(all_p, axis=-1)
             # self.all_y = tf.stack(all_y, axis=-1)
@@ -405,7 +344,6 @@ class FeedForwardModel(object):
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
 
-
     def build(self):
         """"
            y : State
@@ -417,7 +355,8 @@ class FeedForwardModel(object):
 
         ### dim X Ntime_interval for Stochastic Process
         self._dw = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim, self._num_time_interval], name="dW")
-        self._x = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim, self._num_time_interval + 1], name="X")
+        self._x = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim, self._num_time_interval + 1],
+                                 name="X")
 
         ### Initialization
         ## x : state,  Cost
