@@ -151,9 +151,7 @@ class FeedForwardModel(object):
 
         ## Validation DATA : Brownian part, drift part from MC simulation
 
-        #################################################################
         dw_valid, x_valid = self.generate_feed()
-        ##################################################################                      
         feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
 
         # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
@@ -164,17 +162,21 @@ class FeedForwardModel(object):
         # begin sgd iteration
         val_writer = tf.summary.FileWriter('logs', self._sess.graph)
         merged = tf.summary.merge_all()
-        x_all, y_all, z_all, p_all, w_all = [], [], [], [], []
+        x_all, z_all, p_all, w_all = [], [], [], []
         for step in range(self._config.num_iterations + 1):
             # Generate MC sample AS the training input
-
             dw_train, x_train = self.generate_feed()
 
-            _ = self._sess.run(self._train_ops,
+            _, p, z, w = self._sess.run([self._train_ops, self.all_p, self.all_z, self.all_w],
                                feed_dict={self._dw: dw_train,
                                           self._x: x_train, self._is_training: True},
                                )
-
+            x_train_orig = np.reshape(x_train, [self._config.batch_size, self._config.dim,
+                                                self._config.clayer, self._num_time_interval + 1])
+            x_all.append(x_train_orig)
+            p_all.append(p)
+            z_all.append(z)
+            w_all.append(w)
             # y_all.append(y)
 
             ### Validation Data Eval.
