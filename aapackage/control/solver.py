@@ -267,9 +267,11 @@ class FeedForwardModel(object):
                         tf.random.uniform([self._config.batch_size, self._config.dim * self._config.clayer], minval=0.1,
                                           maxval=0.3, dtype=TF_DTYPE))
                 else:
-                    w = 0.2 + z + 1 / tf.sqrt((tf.nn.moments(
+                    w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
                         tf.log((self._x[:, :self._config.dim, 1:t + 1]) / (self._x[:, :self._config.dim, :t])), axes=2)[
                                                    1] + self._smooth))
+                        
+                        
                 w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1
                 all_w.append(w)
 
