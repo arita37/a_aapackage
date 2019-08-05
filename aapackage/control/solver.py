@@ -29,7 +29,7 @@ Return = sum(ri) = Total return
 export_folder = "/home/ubuntu/zs3drive/"
 
 
-def save_history(export_folder, train_history, x_all, z_all, p_all, w_all) :
+def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all) :
     print("Writing path history on disk, {}/".format(export_folder))
     if not os.path.exists(export_folder):
       os.makedirs(export_folder)
@@ -39,7 +39,7 @@ def save_history(export_folder, train_history, x_all, z_all, p_all, w_all) :
     np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
     np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
     np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
-    return np.array(train_history)
+
 
 
 
@@ -85,47 +85,42 @@ class FeedForwardModel(object):
   
   def train(self):
     t0 = time.time()
-    train_history = []  # to save iteration results
     
     ## Validation DATA : Brownian part, drift part from MC simulation
     # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
-    
     #################################################################
     dw_valid, x_valid = self.generate_feed()
-    
     feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
     
     # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     self._train_ops = tf.group([self._train_ops, update_ops])
+
     
-    self._sess.run(tf.global_variables_initializer())  # initialization
-    # begin sgd iteration
+    # initialization
+    self._sess.run(tf.global_variables_initializer())  
     val_writer = tf.summary.FileWriter('logs', self._sess.graph)
     merged = tf.summary.merge_all()
+    train_history = []  # to save iteration results
+    
     for step in range(self._config.num_iterations + 1):
       # Generate MC sample AS the training input
       dw_train, x_train = self.generate_feed()
       
-      self._sess.run(
-        self._train_ops,
+      self._sess.run(self._train_ops,
         feed_dict={self._dw: dw_train,
-                   self._x: x_train, self._is_training: True},
-      )
+                   self._x: x_train, self._is_training: True},)
       
-      ### Validation Data Eval.
-      if step % self._config.logging_frequency == 0:
-        loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
-                                             feed_dict=feed_dict_valid)
-        dt0 = time.time() - t0 + self._t_build
-        train_history.append([step, loss, init, dt0])
-        print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-              % (step, loss, init, dt0))
-        val_writer.add_summary(summary, step)
-    
+      
+      ### Validation Data Eval.      
+      self.validation_train(feed_dict_valid, train_history, merged, t0, step, val_writer)
+      
     return np.array(train_history)
   
-  def validation_train(self, sess, feed_dict_valid, train_history, merged, t0, step, val_writer):
+  
+  def validation_train(self, feed_dict_valid, train_history, merged, t0, step, val_writer):
+    if step % self._config.logging_frequency != 0:
+        return 0
     loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
                                          feed_dict=feed_dict_valid)
     dt0 = time.time() - t0 + self._t_build
@@ -134,8 +129,8 @@ class FeedForwardModel(object):
           % (step, loss, init, dt0))
     val_writer.add_summary(summary, step)
   
+  
   def generate_feed(self):
-    #################################################################
     dw_valid, x_valid = [], []
     for clayer in range(self._config.clayer):
       dw, x = self._bsde.sample(self._config.batch_size, clayer)
@@ -153,63 +148,52 @@ class FeedForwardModel(object):
     ##################################################################
     return dw_valid, x_valid
   
+  
   def train2(self):
     t0 = time.time()
-    train_history = []  # to save iteration results
     
     ## Validation DATA : Brownian part, drift part from MC simulation
-    
     dw_valid, x_valid = self.generate_feed()
     feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+    
     
     # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     self._train_ops = tf.group([self._train_ops, update_ops])
     
-    self._sess.run(tf.global_variables_initializer())  # initialization
-    # begin sgd iteration
+    
+    # initialization
+    self._sess.run(tf.global_variables_initializer())  
     val_writer = tf.summary.FileWriter('logs', self._sess.graph)
     merged = tf.summary.merge_all()
-    x_all, z_all, p_all, w_all = [], [], [], []
+    train_history = []  # to save iteration results
+    x_all, z_all, p_all, w_all, y_all = [], [], [], [], []
+    
+    
     for step in range(self._config.num_iterations + 1):
       # Generate MC sample AS the training input
       dw_train, x_train = self.generate_feed()
       
-      _, p, z, w = self._sess.run([self._train_ops, self.all_p, self.all_z, self.all_w],
+      y, p, z, w = self._sess.run([self._train_ops, self.all_p, self.all_z, self.all_w],
                                   feed_dict={self._dw: dw_train,
                                              self._x: x_train, self._is_training: True},
                                   )
+                                  
       x_train_orig = np.reshape(x_train, [self._config.batch_size, self._config.dim,
                                           self._config.clayer, self._num_time_interval + 1])
       x_all.append(x_train_orig)
       p_all.append(p)
       z_all.append(z)
       w_all.append(w)
-      # y_all.append(y)
+      y_all.append(y)
       
-      ### Validation Data Eval.
-      if step % self._config.logging_frequency == 0:
-        loss, init, summary = self._sess.run([self._loss, self._y_init, merged],
-                                             feed_dict=feed_dict_valid)
-        dt0 = time.time() - t0 + self._t_build
-        train_history.append([step, loss, init, dt0])
-        print("step: %5u,    loss: %.4e,   Y0: %.4e,  elapsed time %3u"
-              % (step, loss, init, dt0))
-        val_writer.add_summary(summary, step)
-    
-    save_history(export_folder, train_history, x_all, z_all, p_all, w_all)
-    """
-    print("Writing path history on disk, {}/".format(export_folder))
-    if not os.path.exists(export_folder):
-      os.makedirs(export_folder)
-    
-    np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
-    # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
-    np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
-    np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
-    np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
+      ### Validation Data Eval.      
+      self.validation_train(feed_dict_valid, train_history, merged, t0, step, val_writer)
+
+
+    save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all)
     return np.array(train_history)
-    """
+
     
   
   def build2(self):
@@ -316,7 +300,7 @@ class FeedForwardModel(object):
       
       # Final Difference :
       #######  -Sum(ri)   +Sum(ri**2)
-      delta = -0.05 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]
+      delta = -0.01 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10000.0
       self._loss = tf.reduce_mean(delta)
     
     tf.summary.scalar('loss', self._loss)
