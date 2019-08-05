@@ -29,6 +29,20 @@ Return = sum(ri) = Total return
 export_folder = "/home/ubuntu/zs3drive/"
 
 
+def save_history(export_folder, train_history, x_all, z_all, p_all, w_all) :
+    print("Writing path history on disk, {}/".format(export_folder))
+    if not os.path.exists(export_folder):
+      os.makedirs(export_folder)
+    
+    np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
+    # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
+    np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
+    np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
+    np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
+    return np.array(train_history)
+
+
+
 ###################################################################################################
 class FeedForwardModel(object):
   """
@@ -183,6 +197,8 @@ class FeedForwardModel(object):
               % (step, loss, init, dt0))
         val_writer.add_summary(summary, step)
     
+    save_history(export_folder, train_history, x_all, z_all, p_all, w_all)
+    """
     print("Writing path history on disk, {}/".format(export_folder))
     if not os.path.exists(export_folder):
       os.makedirs(export_folder)
@@ -193,7 +209,8 @@ class FeedForwardModel(object):
     np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
     np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
     return np.array(train_history)
-  
+    """
+    
   
   def build2(self):
     """"
