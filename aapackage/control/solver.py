@@ -23,13 +23,9 @@ def log(s):
 
 
 """
-
 Variance Realized =  Sum(ri*:2)
 rI**2 =   Sum(wi.ri)**2
-
 Return = sum(ri) = Total return
-
-
 """
 
 export_folder = "/home/ubuntu/zs3drive/"
@@ -200,6 +196,7 @@ class FeedForwardModel(object):
         np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
         return np.array(train_history)
 
+
     def build2(self):
         """"
            y : State
@@ -227,14 +224,13 @@ class FeedForwardModel(object):
         )
 
         # P
-        # p_old = tf.Variable(
-        #    tf.random_uniform(shape=[self._config.batch_size], minval=0.0, maxval=0.0, dtype=TF_DTYPE)
-        # )
+        p_old = tf.Variable( tf.random_uniform(shape=[self._config.batch_size], 
+                             minval=0.0, maxval=0.0, dtype=TF_DTYPE) )
 
         all_one_vec = tf.ones(shape=tf.stack([tf.shape(self._dw)[0], 1]), dtype=TF_DTYPE)
         z = tf.matmul(all_one_vec, z_init)
 
-        all_p, all_z, all_w = [], [], []
+        all_p, all_z, all_w, all_y = [], [], [], []
         with tf.variable_scope("forward"):
             for t in range(0, self._num_time_interval - 1):
                 # y = (y_old
@@ -242,7 +238,9 @@ class FeedForwardModel(object):
                 #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
                 # if t == 0 :
                 #    xold = self._x[:, :, t]
+                
                 ## Neural Network per Time Step, Calculate Gradient
+                ######################################################################
                 ## Z = [batch, dim * clayer] -> [batch, 4] for optionprice config
                 if self._usemodel == 'lstm':
                     z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
@@ -260,8 +258,13 @@ class FeedForwardModel(object):
                     z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
                 all_z.append(z)
 
-                # w = z / tf.reduce_sum(z, -1, keepdims=True)
-                ####New formulae
+                ######################################################################
+                # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
+                y = z
+                all_y.append(y)
+
+
+                ######################################################################
                 if t == 0:
                     w = tf.Variable(
                         tf.random.uniform([self._config.batch_size, self._config.dim * self._config.clayer], minval=0.1,
@@ -271,61 +274,43 @@ class FeedForwardModel(object):
                         tf.log((self._x[:, :self._config.dim, 1:t + 1]) / (self._x[:, :self._config.dim, :t])), axes=2)[
                                                    1] + self._smooth))
                         
-                        
-                w = w / tf.reduce_sum(w, -1, keepdims=True)  ###Normalize Sum to 1
+                w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
                 all_w.append(w)
 
-                # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
-                # all_y.append(y)
 
-                ## P = [batch]
-                # if t == 0:
-                #    p = p_old
-                # else:
-                # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
-                p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
 
-                all_p.append(p)
+                ######################################################################   
+                if t == 0:
+                   p = p_old
+                else:
+                   # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
+                   p = tf.reduce_sum(w * (self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim, t - 1] - 1), 1)
+                   all_p.append(p)
 
-                # p_old = p
 
             # Terminal time
             # y = (y
             #        - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :, -2], y, z)
             #        + tf.reduce_sum(z * self._dw[:, :, -1], 1, keepdims=True) )
             # y = self._x[:, :, -2]
-            # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
-
+ 
             # all_y.append(y)
             # w = z / tf.reduce_sum(z, -1, keepdims=True)
 
-            p = tf.stack(all_p, axis=-1)
-            # self.all_y = tf.stack(all_y, axis=-1)
+            self.all_y = tf.stack(all_y, axis=-1)
             self.all_z = tf.stack(all_z, axis=-1)
             self.all_w = tf.stack(all_w, axis=-1)
-            self.all_p = p
+            self.all_p = tf.stack(all_p, axis=-1)
+            p = self.all_p
 
             # Final Difference :
-            # delta = tf.math.reduce_variance(p, axis=1) / (1 + tf.reduce_mean(p, 1))
-            # m = tf.reduce_mean(p, 1)
-            # delta = tf.nn.moments(p, axes=1)[1] / ( tf.square(tf.reduce_mean(p, 1)))
-            # delta = tf.nn.moments(p, axes=1)[1] / ( tf.reduce_mean(p, 1) )
-
-            # delta = -tf.reduce_mean(p, 1) + tf.nn.moments(p, axes=1)[1] 
-
             #######  -Sum(ri)   +Sum(ri**2)  
-            delta = -0.5 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]
-
-            # use linear approximation outside the clipped range
-            # self._loss = tf.reduce_mean(tf.where( tf.abs(delta) < DELTA_CLIP,
-            #                            tf.square(delta),
-            #                            2 * DELTA_CLIP * tf.abs(delta) - DELTA_CLIP ** 2,
-            # ))
-
+            delta = -0.05 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]
             self._loss = tf.reduce_mean(delta)
 
-        tf.summary.scalar('loss', self._loss)
 
+
+        tf.summary.scalar('loss', self._loss)
         # train operations
         global_step = tf.get_variable(
             "global_step", [],
@@ -347,6 +332,7 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+
 
     def build(self):
         """"
@@ -443,3 +429,8 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+        
+        
+        
+        
+        
