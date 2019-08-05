@@ -30,7 +30,7 @@ class HJBConfig(Config):
     # Y_0 is about 4.5901.
     dim = 100
     total_time = 1.0
-    n_hidden_lstm = 50
+    n_hidden_lstm = 10
     num_time_interval = 20
     lr_boundaries = [400]
     num_iterations = 10000
@@ -43,10 +43,10 @@ class PricingOptionConfig(Config):
     # 6.5 option price by formulae
     dim = 2
     total_time = 1.0
-    num_time_interval = 50
+    num_time_interval = 10
     num_iterations = 500
     
-    n_hidden_lstm = 5
+    n_hidden_lstm = 10
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     num_hiddens = [dim, dim+10, dim+10, dim]
