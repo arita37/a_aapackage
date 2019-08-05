@@ -234,11 +234,8 @@ class FeedForwardModel(object):
     z0 = tf.matmul(all_one_vec, z_init)
     
     
-    w0 = tf.Variable(
-            tf.random.uniform(
-              [self._config.batch_size, M * self._config.clayer],
-              minval=0.1,
-              maxval=0.3, dtype=TF_DTYPE))
+    w0 = tf.Variable( tf.random.uniform( [self._config.batch_size, M * self._config.clayer],
+                      minval=0.1, maxval=0.3, dtype=TF_DTYPE))
     
     all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
     with tf.variable_scope("forward"):
