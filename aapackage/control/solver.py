@@ -194,6 +194,7 @@ class FeedForwardModel(object):
     np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
     return np.array(train_history)
   
+  
   def build2(self):
     """"
        y : State
@@ -202,6 +203,8 @@ class FeedForwardModel(object):
     """
     t0 = time.time()
     TT = np.arange(0, self._bsde.num_time_interval) * self._bsde.delta_t
+    M = self._config.dim  #Nb of assets
+    
     
     ### dim X Ntime_interval for Stochastic Process
     self._dw = tf.placeholder(TF_DTYPE,
@@ -223,71 +226,63 @@ class FeedForwardModel(object):
       # tf.random_uniform([1, self._dim], minval=-0.1, maxval=0.1, dtype=TF_DTYPE)
     )
     
-    # P
-    p_old = tf.Variable(tf.random_uniform(shape=[self._config.batch_size],
+    p0 = tf.Variable(tf.random_uniform(shape=[self._config.batch_size],
                                           minval=0.0, maxval=0.0, dtype=TF_DTYPE))
     
     all_one_vec = tf.ones(shape=tf.stack([tf.shape(self._dw)[0], 1]), dtype=TF_DTYPE)
-    z = tf.matmul(all_one_vec, z_init)
+    z0 = tf.matmul(all_one_vec, z_init)
     
-    all_p, all_z, all_w, all_y = [], [], [], []
+    
+    w0 = tf.Variable(
+            tf.random.uniform(
+              [self._config.batch_size, M * self._config.clayer],
+              minval=0.1,
+              maxval=0.3, dtype=TF_DTYPE))
+    
+    all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
     with tf.variable_scope("forward"):
-      for t in range(0, self._num_time_interval - 1):
+      for t in range(1, self._num_time_interval ):
         # y = (y_old
         #        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y_old, z))
         #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
-        # if t == 0 :
-        #    xold = self._x[:, :, t]
-        
+
         ## Neural Network per Time Step, Calculate Gradient
         ######################################################################
         ## Z = [batch, dim * clayer] -> [batch, 4] for optionprice config
         if self._usemodel == 'lstm':
-          z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+          z = self.subnetwork.build([ self._x[:, :, t -1] ], t-1) / self._dim
         
         elif self._usemodel == 'ff':
-          z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
+          z = self.subnetwork.build(self._x[:, :, t -1], t-1) / self._dim
         
         elif self._usemodel == 'attn':
-          z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+          z = self.subnetwork.build([ self._x[:, :, t -1] ], t-1) / self._dim
         
         elif self._usemodel == 'dila':
-          z = self.subnetwork.build([self._x[:, :, t + 1]], t) / self._dim
+          z = self.subnetwork.build([self._x[:, :, t -1]], t-1) / self._dim
         
         elif self._usemodel == 'biattn':
-          z = self.subnetwork.build(self._x[:, :, t + 1], t) / self._dim
+          z = self.subnetwork.build(self._x[:, :, t -1], t-1) / self._dim
         all_z.append(z)
         
         ######################################################################
-        # y =   tf.reduce_sum( w * (self._x[:, :, t]  / self._x[:, :, t-1]  - 1), 1, keepdims=True)
         y = z
         all_y.append(y)
         
         ######################################################################
-        if t == 0:
-          w = tf.Variable(
-            tf.random.uniform(
-              [self._config.batch_size, self._config.dim * self._config.clayer],
-              minval=0.1,
-              maxval=0.3, dtype=TF_DTYPE))
-        else:
-          w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
-            tf.log((self._x[:, :self._config.dim, 1:t + 1]) / (
-              self._x[:, :self._config.dim, :t])), axes=2)[
-                                       1] + self._smooth))
+        w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
+            tf.log((self._x[:, :M, 1:t + 1]) / (
+              self._x[:, :M, :t])), axes=2)[1] + self._smooth))
         
         w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
         all_w.append(w)
         
         ######################################################################
-        if t == 0:
-          p = p_old
-        else:
-          # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
-          p = tf.reduce_sum(w * (
-                  self._x[:, :self._config.dim, t] / self._x[:, :self._config.dim,
+        # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
+        p = tf.reduce_sum(w * (
+                  self._x[:, :M, t] / self._x[:, :M,
                                                      t - 1] - 1), 1)
-          all_p.append(p)
+        all_p.append(p)
       
       # Terminal time
       # y = (y  - self._bsde.delta_t * self._bsde.f_tf(TT[-1], self._x[:, :, -2], y, z)
@@ -329,6 +324,7 @@ class FeedForwardModel(object):
     all_ops = [apply_op] + self._extra_train_ops
     self._train_ops = tf.group(*all_ops)
     self._t_build = time.time() - t0
+  
   
   def build(self):
     """"
