@@ -43,11 +43,12 @@ class PricingOptionConfig(Config):
     # 6.5 option price by formulae
     dim = 2
     total_time = 1.0
-    n_hidden_lstm = 20
-    num_time_interval = 10
+    num_time_interval = 50
+    num_iterations = 500
+    
+    n_hidden_lstm = 5
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
-    num_iterations = 300
     num_hiddens = [dim, dim+10, dim+10, dim]
     y_init_range = [1, 10]
 

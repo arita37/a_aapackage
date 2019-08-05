@@ -270,11 +270,12 @@ class FeedForwardModel(object):
         y = z
         all_y.append(y)
         
-        ######################################################################
-        w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
-            tf.log((self._x[:, :M, 1:t ]) / (
-                    self._x[:, :M, 0:t-1])), axes=2)[1] + self._smooth))
+        ###################################################################### 
+        #w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
+        #    tf.log((self._x[:, :M, 1:t+1 ]) / (
+        #            self._x[:, :M, 0:t ])), axes=2)[1] + self._smooth))
         
+        w = z 
         w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
         all_w.append(w)
         

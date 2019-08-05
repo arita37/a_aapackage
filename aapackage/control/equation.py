@@ -113,8 +113,8 @@ class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
-        self._sigma = 0.01
-        self._mu_bar = 0.1
+        self._sigma = 0.30
+        self._mu_bar = 0.10
         self._rl = 0.04
         self._rb = 0.06
         self._alpha = 1.0 / self._dim
@@ -132,18 +132,15 @@ class PricingOption(Equation):
         
         
           factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
-          for i in range(self._num_time_interval):
-             x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[ :, :, i]
+          for t in range(self._num_time_interval):
+             x_sample[:, :, t + 1] = factor * np.exp(self._sigma * dw_sample[:, :, t]) * x_sample[ :, :, t] 
           return dw_sample, x_sample
 
           # for i in xrange(self._n_time):
           # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
           # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
         
-        
-        
-        
-        
+
 
     def sample2(self, num_sample):
         dw_sample = (
