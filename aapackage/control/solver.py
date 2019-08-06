@@ -57,7 +57,7 @@ class FeedForwardModel(object):
     
     # make sure consistent with FBSDE equation
     self._dim = bsde.dim
-    self._num_time_interval = bsde.num_time_interval
+    self._T = bsde.num_time_interval
     self._total_time = bsde.total_time
     
     self._smooth = 1e-8
@@ -140,11 +140,11 @@ class FeedForwardModel(object):
     dw_valid, x_valid = np.stack(dw_valid, axis=2), np.stack(x_valid, axis=2)
     dw_valid = np.reshape(dw_valid,
                           [self._config.batch_size,
-                           self._config.clayer * self._dim, self._num_time_interval])
+                           self._config.clayer * self._dim, self._T])
     
     x_valid = np.reshape(x_valid,
                          [self._config.batch_size,
-                          self._config.clayer * self._dim, self._num_time_interval + 1])
+                          self._config.clayer * self._dim, self._T + 1])
     ##################################################################
     return dw_valid, x_valid
   
@@ -180,7 +180,7 @@ class FeedForwardModel(object):
                                   )
                                   
       x_train_orig = np.reshape(x_train, [self._config.batch_size, self._config.dim,
-                                          self._config.clayer, self._num_time_interval + 1])
+                                          self._config.clayer, self._T + 1])
       x_all.append(x_train_orig)
       p_all.append(p)
       z_all.append(z)
@@ -209,10 +209,10 @@ class FeedForwardModel(object):
     
     ### dim X Ntime_interval for Stochastic Process
     self._dw = tf.placeholder(TF_DTYPE,
-                              [None, self._dim * self._config.clayer, self._num_time_interval],
+                              [None, self._dim * self._config.clayer, self._T],
                               name="dW")
     self._x = tf.placeholder(TF_DTYPE, [None, self._dim * self._config.clayer,
-                                        self._num_time_interval + 1],
+                                        self._T + 1],
                              name="X")
     
     ### Initialization
@@ -239,7 +239,7 @@ class FeedForwardModel(object):
     
     all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
     with tf.variable_scope("forward"):
-      for t in range(1, self._num_time_interval ):
+      for t in range(1, self._T):
         # y = (y_old
         #        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y_old, z))
         #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
@@ -272,7 +272,7 @@ class FeedForwardModel(object):
           w = 0.0 + z 
     
         else :
-            
+          ### t=1 has issue
           w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
             tf.log((self._x[:, :M, 1:t ]) / (
                     self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
@@ -340,10 +340,10 @@ class FeedForwardModel(object):
     
     ### dim X Ntime_interval for Stochastic Process
     self._dw = tf.placeholder(TF_DTYPE,
-                              [None, self._config.clayer * self._dim, self._num_time_interval],
+                              [None, self._config.clayer * self._dim, self._T],
                               name="dW")
     self._x = tf.placeholder(TF_DTYPE, [None, self._config.clayer * self._dim,
-                                        self._num_time_interval + 1],
+                                        self._T + 1],
                              name="X")
     
     ### Initialization
@@ -365,7 +365,7 @@ class FeedForwardModel(object):
     z = tf.matmul(all_one_vec, z_init)
     
     with tf.variable_scope("forward"):
-      for t in range(0, self._num_time_interval - 1):
+      for t in range(0, self._T - 1):
         y = (
                 y
                 - self._bsde.delta_t * (
