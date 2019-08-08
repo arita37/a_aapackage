@@ -1,4 +1,15 @@
 import numpy as np
+import sys, os
+
+
+folder_win = r"D:/_devs/Python01/gitdev/zs3drive/correl_0_3assets/"
+
+
+
+export_folder = "/home/ubuntu/zs3drive/" if sys.platform != 'win32' else folder_win
+if not os.path.exists(export_folder):
+      os.makedirs(export_folder)
+      
 
 
 class Config(object):
@@ -12,6 +23,24 @@ class Config(object):
     y_init_range = [0, 1]
     dilations = [1, 2, 4, 8]
     clayer = 1
+    
+class PricingOptionConfig(Config):
+    # 6.5 option price by formulae
+    dim = 3
+    total_time = 1.0
+    num_time_interval = 10
+    num_iterations = 5000
+    
+    n_hidden_lstm =dim * 3
+    lr_values = list(np.array([5e-3, 5e-3]))
+    lr_boundaries = [2000]
+    num_hiddens = [dim, dim+10, dim+10, dim]
+    y_init_range = [1, 10]
+
+
+
+
+
 
 
 class AllenCahnConfig(Config):
@@ -38,19 +67,6 @@ class HJBConfig(Config):
     num_hiddens = [dim, dim+50, dim+50, dim]
     y_init_range = [0, 1]
 
-
-class PricingOptionConfig(Config):
-    # 6.5 option price by formulae
-    dim = 2
-    total_time = 1.0
-    num_time_interval = 10
-    num_iterations = 200
-    
-    n_hidden_lstm = 10
-    lr_values = list(np.array([5e-3, 5e-3]))
-    lr_boundaries = [2000]
-    num_hiddens = [dim, dim+10, dim+10, dim]
-    y_init_range = [1, 10]
 
 
 class PricingDefaultRiskConfig(Config):

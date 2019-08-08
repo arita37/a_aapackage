@@ -1,8 +1,13 @@
+
 import numpy as np
 import tensorflow as tf
 from scipy.stats import multivariate_normal as normal
 
 
+
+
+
+####################################################################################################
 class Equation(object):
     """Base class for defining PDE related function."""
 
@@ -47,11 +52,133 @@ class Equation(object):
         return self._delta_t
 
 
+
 def get_equation(name, dim, total_time, num_time_interval):
     try:
         return globals()[name](dim, total_time, num_time_interval)
     except KeyError:
         raise KeyError("Equation for the required problem not found.")
+
+
+import json
+from config import export_folder
+
+
+
+####################################################################################################
+####################################################################################################
+from utils import gbm_multi
+
+class PricingOption(Equation):
+    def __init__(self, dim, total_time, num_time_interval):
+        super(PricingOption, self).__init__(dim, total_time, num_time_interval)
+        self._x_init = np.ones(self._dim) * 100
+        self._sigma = 0.30
+        self._mu_bar = 0.10
+        self._rl = 0.04
+        self._rb = 0.06
+        self._alpha = 1.0 / self._dim
+
+        nasset = self._dim
+        self.s0    = np.ones((nasset)) * 100.0
+        self.drift = np.ones((nasset,1)) * 0.1
+        self.vol0  = np.ones((nasset,1)) * 0.2
+        self.vol0[0,0] = 0.0
+        self.vol0[1,0] = 0.0
+        
+        self.correl = np.identity(nasset) 
+        self.correl[1,0] = 0.0
+        self.correl[0,1] = 0.0
+        
+        dd = { "drift": self.drift.tolist(),  "vol0" :self.vol0.tolist(), "correl" : self.correl.tolist() }        
+        json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
+        
+                
+    def sample(self, num_sample, clayer=0):
+        if clayer > -1 :
+
+          nsimul = num_sample
+          nasset = self._dim
+          nstep = self._num_time_interval
+          T = self._num_time_interval * self._delta_t
+        
+          s0    = self.s0
+          drift = self.drift
+          vol0  = self.vol0
+          correl = self.correl 
+
+          allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+                    correl, choice="all")
+
+          # dw_sample = corrbm
+          # x_sample = allpaths
+          # return dw_sample, x_sample
+          return corrbm, allpaths
+      
+        
+    def sample4(self, num_sample, clayer=0):
+        
+        if clayer > -1 :
+        
+          dw_sample = (
+             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+          )
+          x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+          x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        
+        
+          factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+          for t in range(self._num_time_interval):
+             x_sample[:, :, t + 1] = factor * np.exp(self._sigma * dw_sample[:, :, t]) * x_sample[ :, :, t] 
+          return dw_sample, x_sample
+
+          # for i in xrange(self._n_time):
+          # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+          # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        
+
+
+    def sample2(self, num_sample):
+        dw_sample = (
+            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+        )
+        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        # for i in xrange(self._n_time):
+        # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+        # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+        for i in range(self._num_time_interval):
+            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[
+                :, :, i
+            ]
+        return dw_sample, x_sample
+
+
+
+    def f_tf(self, t, x, y, z):
+        temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
+        return (
+            - self._rl * y
+            - (self._mu_bar - self._rl) * temp
+            + ((self._rb - self._rl) * tf.maximum(temp - y, 0))
+        )
+
+
+    def g_tf(self, t, x):
+        temp = tf.reduce_max(x, 1, keepdims=True)
+        return tf.maximum(temp - 100, 0)  
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
+
+
 
 
 class HJB(Equation):
@@ -107,71 +234,6 @@ class AllenCahn(Equation):
 
     def g_tf(self, t, x):
         return 0.5 / (1 + 0.2 * tf.reduce_sum(tf.square(x), 1, keepdims=True))
-
-
-class PricingOption(Equation):
-    def __init__(self, dim, total_time, num_time_interval):
-        super(PricingOption, self).__init__(dim, total_time, num_time_interval)
-        self._x_init = np.ones(self._dim) * 100
-        self._sigma = 0.30
-        self._mu_bar = 0.10
-        self._rl = 0.04
-        self._rb = 0.06
-        self._alpha = 1.0 / self._dim
-
-
-    def sample(self, num_sample, clayer=0):
-        
-        if clayer > -1 :
-        
-          dw_sample = (
-             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-          )
-          x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
-          x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
-        
-        
-          factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
-          for t in range(self._num_time_interval):
-             x_sample[:, :, t + 1] = factor * np.exp(self._sigma * dw_sample[:, :, t]) * x_sample[ :, :, t] 
-          return dw_sample, x_sample
-
-          # for i in xrange(self._n_time):
-          # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
-          # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
-        
-
-
-    def sample2(self, num_sample):
-        dw_sample = (
-            normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
-        )
-        x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
-        x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
-        # for i in xrange(self._n_time):
-        # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
-        # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
-        factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
-        for i in range(self._num_time_interval):
-            x_sample[:, :, i + 1] = (factor * np.exp(self._sigma * dw_sample[:, :, i])) * x_sample[
-                :, :, i
-            ]
-        return dw_sample, x_sample
-
-
-
-    def f_tf(self, t, x, y, z):
-        temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
-        return (
-            - self._rl * y
-            - (self._mu_bar - self._rl) * temp
-            + ((self._rb - self._rl) * tf.maximum(temp - y, 0))
-        )
-
-
-    def g_tf(self, t, x):
-        temp = tf.reduce_max(x, 1, keepdims=True)
-        return tf.maximum(temp - 100, 0)  
 
 
 

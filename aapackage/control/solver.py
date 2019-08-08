@@ -24,9 +24,15 @@ def log(s):
 Variance Realized =  Sum(ri*:2)
 rI**2 =   Sum(wi.ri)**2
 Return = sum(ri) = Total return
+
 """
 
-export_folder = "/home/ubuntu/zs3drive/"
+
+####################################################################################################
+import sys
+
+from config import export_folder
+
 
 
 def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all) :
@@ -82,6 +88,7 @@ class FeedForwardModel(object):
     
     # self._config.num_iterations = None  # "Nepoch"
     # self._train_ops = None  # Gradient, Vale,
+
   
   def train(self):
     t0 = time.time()
@@ -272,12 +279,13 @@ class FeedForwardModel(object):
           w = 0.0 + z 
     
         else :
+          a=1  
           ### t=1 has issue
-          w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
-            tf.log((self._x[:, :M, 1:t ]) / (
-                    self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
+          # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
+          #  tf.log((self._x[:, :M, 1:t ]) / (
+          #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
         
-        # w = z 
+        w = z 
         w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
         all_w.append(w)
         
@@ -302,7 +310,7 @@ class FeedForwardModel(object):
       
       # Final Difference :
       #######  -Sum(ri)   +Sum(ri**2)
-      delta = -0.01 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10000.0
+      delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*1000.0
       self._loss = tf.reduce_mean(delta)
     
     tf.summary.scalar('loss', self._loss)

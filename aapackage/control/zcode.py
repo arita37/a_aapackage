@@ -1,4 +1,173 @@
 
+from math import exp, log, sqrt
+# from numba import jit, vectorize, guvectorize, float64, float32, int32, boolean
+from timeit import default_timer as timer
+
+import numexpr as ne
+import numpy as np
+import pandas as pd
+import scipy as sp
+from scipy.linalg import cholesky
+
+
+def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
+    """
+     dS/St =  drift.dt + voldt.dWt
+     
+     Girsanov :  drift - compensator).dt
+     T      :  Years
+     S0     :  Initial vector price
+     vol0   :  Vector of volatiltiies  1..nasset  0.05  5% / pa
+     drift  :  Interest rates
+     correl :  Correlation Matrix 
+  
+  """
+    # np.random.seed(1234)
+    dt = T / (1.0 * nstep)
+    drift = drift * dt
+
+    allpaths = np.zeros((nsimul, nasset, nstep+1))  # ALl time st,ep
+    corrbm_3d =  np.zeros((nsimul, nasset, nstep)) 
+    
+    iidbrownian = np.random.normal(0, 1, (nasset, nstep, nsimul))
+    print(iidbrownian.shape)
+
+    correl_upper_cholesky = cholesky(correl, lower=False)
+     
+    for k in range(0, nsimul):  # k MonteCarlo simulation
+        price = np.zeros((nasset, nstep+1))
+        price[:, 0] = S0
+        volt = vol0
+
+        corrbm = np.dot(correl_upper_cholesky, iidbrownian[:, :, k])  # correlated brownian
+        bm_process = np.multiply(corrbm, volt)  # multiply element by elt
+        # drift_adj   = drift - 0.5 * np.sum(volt*volt)   # Girsanove theorem
+        drift_adj = drift - 0.5 * np.dot(volt.T, np.dot(correl, volt))
+
+        price[:, 1:] = np.exp(drift_adj * dt + bm_process * np.sqrt(dt))
+        price = np.cumprod(price, axis=1)  # exponen product st = st-1 *st
+
+        allpaths[k, :] = price  # Simul. k
+
+        corrbm_3d[k, :] = corrbm
+
+    if choice == "all":
+        return allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian[:, : k - 1]
+
+    if choice == "path":
+        return allpaths
+    
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
+nasset = 2
+nsimul=1
+nstep= 10
+T=1
+s0  = np.ones((nasset))*100.0
+vol0  = np.ones((nasset,1))*0.1
+drift = 0.0
+correl = np.identity(nasset) 
+
+correl[1,0] = 0.1
+correl[0,1] = 0.2
+
+
+
+#### Mean Variance weights  ########################################################################
+np.dot( np.dot( vol0.T ,  correl ) , vol0)
+       
+
+cov =  np.multiply(correl, vol0)       
+       
+       
+p = np.linalg.inv(correl)
+p
+
+       
+return =  2/phi * Sigma. weight
+
+
+weight =  phi/2 * Sigme-1  *return
+
+
+
+
+       
+
+
+####################################################################################################
+####################################################################################################
+allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+              correl, choice="all")
+
+
+    
+
+    def sample3(self, num_sample, clayer=0):
+        if clayer > -1 :
+
+          nsimul = num_sample
+          nasset = self._dim
+          nstep = self._num_time_interval
+          T = self._num_time_interval * self._delta_t
+        
+          s0    = np.ones((nasset))*100.0
+          drift = np.ones((nasset,1))*0.1
+          vol0  = np.ones((nasset,1))*0.1
+          correl = np.identity(nasset) 
+
+          correl[1,0] = -0.0
+          correl[0,1] = -0.0
+
+          allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+               correl, choice="all")
+
+          dw_sample = corrbm
+          x_sample = allpaths
+
+          return dw_sample, x_sample
+      
+        
+        
+          dw_sample = (
+             normal.rvs(size=[num_sample, self._dim, self._num_time_interval]) * self._sqrt_delta_t
+          )
+          x_sample = np.zeros([num_sample, self._dim, self._num_time_interval + 1])
+          x_sample[:, :, 0] = np.ones([num_sample, self._dim]) * self._x_init
+        
+        
+          factor = np.exp((self._mu_bar - (self._sigma ** 2) / 2) * self._delta_t)
+          for t in range(self._num_time_interval):
+             x_sample[:, :, t + 1] = factor * np.exp(self._sigma * dw_sample[:, :, t]) * x_sample[ :, :, t] 
+          return dw_sample, x_sample
+
+          # for i in xrange(self._n_time):
+          # 	x_sample[:, :, i + 1] = (1 + self._mu_bar * self._delta_t) * x_sample[:, :, i] + (
+          # 		self._sigma * x_sample[:, :, i] * dw_sample[:, :, i])
+        
+        
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     def _subnetworklstm(self, x, i):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)

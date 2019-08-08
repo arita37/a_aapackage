@@ -23,17 +23,20 @@ tensorboard   --logdir=logs/
 
 To use old build() and train() methods, set clayer to 1 in config file.
 
+
+
 """
 import json
 import logging
 import os
 from argparse import ArgumentParser
-
-
 import numpy as np
+
+
 
 ####################################################################################################
 from config import get_config
+
 
 
 ####################################################################################################
@@ -46,6 +49,11 @@ def load_argument() :
    p.add_argument("--usemodel", type=str, default='lstm')
    arg = p.parse_args()
    return arg
+
+
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="-1"    
 
 
 

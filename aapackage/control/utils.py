@@ -9,6 +9,7 @@ import scipy as sp
 from scipy.linalg import cholesky
 
 
+
 def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
     """
      dS/St =  drift.dt + voldt.dWt
@@ -25,14 +26,16 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
     dt = T / (1.0 * nstep)
     drift = drift * dt
 
-    allpaths = np.zeros((nsimul, nasset, nstep))  # ALl time st,ep
-    iidbrownian = np.random.normal(0, 1, (nasset, nstep - 1, nsimul))
-    print(iidbrownian.shape)
+    allpaths = np.zeros((nsimul, nasset, nstep+1))  # ALl time st,ep
+    corrbm_3d =  np.zeros((nsimul, nasset, nstep)) 
+    
+    iidbrownian = np.random.normal(0, 1, (nasset, nstep, nsimul))
+    # print(iidbrownian.shape)
 
     correl_upper_cholesky = cholesky(correl, lower=False)
-
+     
     for k in range(0, nsimul):  # k MonteCarlo simulation
-        price = np.zeros((nasset, nstep))
+        price = np.zeros((nasset, nstep+1))
         price[:, 0] = S0
         volt = vol0
 
@@ -46,11 +49,14 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
 
         allpaths[k, :] = price  # Simul. k
 
+        corrbm_3d[k, :] = corrbm
+
     if choice == "all":
-        return allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian[:, : k - 1]
+        return allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian[:, : k - 1]
 
     if choice == "path":
         return allpaths
+    
 
 
 def test():
