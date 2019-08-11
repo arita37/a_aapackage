@@ -1,3 +1,364 @@
+%load_ext autoreload
+%autoreload
+
+import gc
+import os
+import logging
+import datetime
+import warnings
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.model_selection import StratifiedKFold, KFold
+warnings.filterwarnings('ignore')
+
+print(os.getcwd())
+
+
+
+
+
+0.20*0.20
+
+
+
+
+dir1 = "/home/ubuntu/aagit/aapackage/aapackage/control/numpy_arrays/"
+
+dir1 = "/home/ubuntu/zs3drive/"
+
+
+dir1 =  r"D:/_devs/Python01/gitdev/zs3drive/"
+
+
+from config import  export_folder
+dir1 =  export_folder
+print( export_folder)
+
+
+##################################################################################
+x = np.load( dir1 + "x.npy"  )
+z = np.load( dir1 +"z.npy"  )
+p = np.load( dir1 +"p.npy"  )
+w = np.load( dir1 +"w.npy"  )
+
+x.shape, z.shape, p.shape, w.shape
+
+##################################################################################
+def get_sample(i) :
+  dd = { "x1" : x[i][0][0][:x.shape[3]-1],
+   "x2" : x[i][1][0][:x.shape[3]-1],
+   "pret" : p[i],
+   "w1" : w[i][0],
+   "w2" : w[i][1],
+   "z1" : z[i][0],
+   "z2" : z[i][1],   
+  }  
+  df = pd.DataFrame(dd)
+  return df
+
+get_sample( 2000 ) 
+
+
+
+
+
+
+dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
+     "w2" : w[:,1,-1] ,
+         "w3" : w[:,2,-1] 
+   } )
+
+
+dfw
+
+
+dfw[["w2", "w1"]].plot()
+
+
+dfw.to_csv(dir1 + "/weight_conv.txt" )
+
+
+ w[ 5000, :, 9]
+
+
+#### Scenarios :   
+  5 assets.
+  weights 0.2
+  
+  actual results
+  
+  Mean Variance
+  
+
+
+
+####  Scenario No stationary regime :   ############################################################
+    correlation
+
+
+
+  np.cos( w.t )
+
+
+
+
+
+
+
+
+1/ 0.4 , 1/0.1
+####################################################################################################
+####################################################################################################
+from pyrb import EqualRiskContribution
+
+ERC = EqualRiskContribution(cov)
+ERC.solve()
+ERC.get_risk_contributions()
+ERC.get_volatility()
+
+
+
+import pandas as pd
+import numpy as np
+from pyrb import ConstrainedRiskBudgeting
+
+
+vol = [0.05,0.05,]
+
+
+
+
+vol = [0.05,0.05,0.07,0.1,0.15,0.15,0.15,0.18]
+cor = np.array([[100,  80,  60, -20, -10, -20, -20, -20],
+               [ 80, 100,  40, -20, -20, -10, -20, -20],
+               [ 60,  40, 100,  50,  30,  20,  20,  30],
+               [-20, -20,  50, 100,  60,  60,  50,  60],
+               [-10, -20,  30,  60, 100,  90,  70,  70],
+               [-20, -10,  20,  60,  90, 100,  60,  70],
+               [-20, -20,  20,  50,  70,  60, 100,  70],
+               [-20, -20,  30,  60,  70,  70,  70, 100]])/100
+cov = np.outer(vol,vol)*cor
+
+
+
+
+C = None
+d = None
+
+CRB = ConstrainedRiskBudgeting(cov,C=C,d=d)
+CRB.solve()
+print(CRB)
+
+
+
+C = np.array([[0,0,0,0,-1.0,-1.0,-1.0,-1.0]]) 
+d = [-0.3]
+
+CRB = ConstrainedRiskBudgeting(cov,C=C,d=d)
+CRB.solve()
+print(CRB)
+
+
+
+ap = 2 *3.14/2
+
+t = np.arange(0, 1, 0.1)
+np.cos( ap*t)
+
+
+
+####################################################################################################
+10 years, 6 months period,
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
+import pandas as pd
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import risk_models
+from pypfopt import expected_returns
+
+# Read in price data
+df = pd.read_csv("tests/stock_prices.csv", parse_dates=True, index_col="date")
+
+
+# Calculate expected returns and sample covariance
+mu = drift
+S = cov
+
+# Optimise for maximal Sharpe ratio
+ef = EfficientFrontier(mu, S)
+raw_weights = ef.max_sharpe()
+cleaned_weights = ef.clean_weights()
+print(cleaned_weights)
+ef.portfolio_performance(verbose=True)
+
+
+
+def random_portfolio(returns):  
+    '''  
+    Returns the mean and standard deviation of returns for a random portfolio  
+    '''
+
+    p = np.asmatrix(np.mean(returns, axis=1))  
+    w = np.asmatrix(rand_weights(returns.shape[0]))  
+    C = np.asmatrix(np.cov(returns))  
+    mu = w * p.T  
+    sigma = np.sqrt(w * C * w.T)  
+    # This recursion reduces outliers to keep plots pretty  
+    if sigma > 2:  
+        return random_portfolio(returns)  
+    return mu, sigma  
+
+
+
+n_portfolios = 500  
+means, stds = np.column_stack([  
+    random_portfolio(return_vec)  
+    for _ in xrange(n_portfolios)  
+])
+
+
+
+
+    
+ def optimal_portfolio(returns):  
+    n = len(returns)  
+    returns = np.asmatrix(returns)  
+    N = 100  
+    mus = [10**(5.0 * t/N - 1.0) for t in range(N)]  
+    # Convert to cvxopt matrices  
+    S = opt.matrix(np.cov(returns))  
+    pbar = opt.matrix(np.mean(returns, axis=1))  
+    # Create constraint matrices  
+    G = -opt.matrix(np.eye(n))   # negative n x n identity matrix  
+    h = opt.matrix(0.0, (n ,1))  
+    A = opt.matrix(1.0, (1, n))  
+    b = opt.matrix(1.0)  
+    # Calculate efficient frontier weights using quadratic programming  
+    portfolios = [solvers.qp(mu*S, -pbar, G, h, A, b)['x']  
+                  for mu in mus]  
+    ## CALCULATE RISKS AND RETURNS FOR FRONTIER  
+    returns = [blas.dot(pbar, x) for x in portfolios]  
+    risks = [np.sqrt(blas.dot(x, S*x)) for x in portfolios]  
+    ## CALCULATE THE 2ND DEGREE POLYNOMIAL OF THE FRONTIER CURVE  
+    m1 = np.polyfit(returns, risks, 2)  
+    x1 = np.sqrt(m1[2] / m1[0])  
+    # CALCULATE THE OPTIMAL PORTFOLIO  
+    wt = solvers.qp(opt.matrix(x1 * S), -pbar, G, h, A, b)['x']  
+    return np.asarray(wt), returns, risks
+
+
+
+weights, returns, risks = optimal_portfolio(return_vec)
+
+plt.plot(stds, means, 'o')  
+plt.ylabel('mean')  
+plt.xlabel('std')  
+plt.plot(risks, returns, 'y-o')  
+
+
+
+   
+# find min Volatility & max sharpe values in the dataframe (df)
+min_volatility = df['Volatility'].min()
+max_sharpe = df['Sharpe Ratio'].max()
+
+# use the min, max values to locate and create the two special portfolios
+sharpe_portfolio = df.loc[df['Sharpe Ratio'] == max_sharpe]
+min_variance_port = df.loc[df['Volatility'] == min_volatility]
+
+# plot frontier, max sharpe & min Volatility values with a scatterplot
+plt.style.use('seaborn-dark')
+df.plot.scatter(x='Volatility', y='Returns', c='Sharpe Ratio',
+                cmap='RdYlGn', edgecolors='black', figsize=(10, 8), grid=True)
+plt.scatter(x=sharpe_portfolio['Volatility'], y=sharpe_portfolio['Returns'], c='red', marker='D', s=200)
+plt.scatter(x=min_variance_port['Volatility'], y=min_variance_port['Returns'], c='blue', marker='D', s=200 )
+plt.xlabel('Volatility (Std. Deviation)')
+plt.ylabel('Expected Returns')
+plt.title('Efficient Frontier')
+plt.show()
+
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
+from __future__ import division
+import numpy as np
+from matplotlib import pyplot as plt
+from numpy.linalg import inv,pinv
+from scipy.optimize import minimize
+
+ # risk budgeting optimization
+def calculate_portfolio_var(w,V):
+    # function that calculates portfolio risk
+    w = np.matrix(w)
+    return (w*V*w.T)[0,0]
+
+def calculate_risk_contribution(w,V):
+    # function that calculates asset contribution to total risk
+    w = np.matrix(w)
+    sigma = np.sqrt(calculate_portfolio_var(w,V))
+    # Marginal Risk Contribution
+    MRC = V*w.T
+    # Risk Contribution
+    RC = np.multiply(MRC,w.T)/sigma
+    return RC
+
+def risk_budget_objective(x,pars):
+    # calculate portfolio risk
+    V = pars[0]# covariance table
+    x_t = pars[1] # risk target in percent of portfolio risk
+    sig_p =  np.sqrt(calculate_portfolio_var(x,V)) # portfolio sigma
+    risk_target = np.asmatrix(np.multiply(sig_p,x_t))
+    asset_RC = calculate_risk_contribution(x,V)
+    J = sum(np.square(asset_RC-risk_target.T))[0,0] # sum of squared error
+    return J
+
+def total_weight_constraint(x):
+    return np.sum(x)-1.0
+
+def long_only_constraint(x):
+    return x
+
+x_t = [0.25, 0.25, 0.25, 0.25] # your risk budget percent of total portfolio risk (equal risk)
+cons = ({'type': 'eq', 'fun': total_weight_constraint},
+{'type': 'ineq', 'fun': long_only_constraint})
+res= minimize(risk_budget_objective, w0, args=[V,x_t], method='SLSQP',constraints=cons, options={'disp': True})
+w_rb = np.asmatrix(res.x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################################################
+##################################################################################
 import logging
 import os
 import time
@@ -24,15 +385,9 @@ def log(s):
 Variance Realized =  Sum(ri*:2)
 rI**2 =   Sum(wi.ri)**2
 Return = sum(ri) = Total return
-
 """
 
-
-####################################################################################################
-import sys
-
-from config import export_folder
-
+export_folder = "/home/ubuntu/zs3drive/"
 
 
 def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all) :
@@ -88,7 +443,6 @@ class FeedForwardModel(object):
     
     # self._config.num_iterations = None  # "Nepoch"
     # self._train_ops = None  # Gradient, Vale,
-
   
   def train(self):
     t0 = time.time()
@@ -279,13 +633,12 @@ class FeedForwardModel(object):
           w = 0.0 + z 
     
         else :
-          a=1  
           ### t=1 has issue
-          # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
-          #  tf.log((self._x[:, :M, 1:t ]) / (
-          #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
+          w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
+            tf.log((self._x[:, :M, 1:t ]) / (
+                    self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
         
-        w = 0.2 + z 
+        # w = z 
         w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
         all_w.append(w)
         
@@ -310,9 +663,8 @@ class FeedForwardModel(object):
       
       # Final Difference :
       #######  -Sum(ri)   +Sum(ri**2)
-      delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
+      delta = -0.01 * tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10000.0
       self._loss = tf.reduce_mean(delta)
-    
     
     tf.summary.scalar('loss', self._loss)
     # train operations
