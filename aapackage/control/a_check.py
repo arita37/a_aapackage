@@ -62,18 +62,23 @@ def get_sample(i) :
   df = pd.DataFrame(dd)
   return df
 
-
-get_sample( 12000 )[ [  "w1", "w2", "w3" ]   ] 
-
-
 get_sample( 90000 )[ [  "w1", "w2", "w3" ]   ]  
 
 
 
-dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
-     "w2" : w[:,1,-1] ,
-     "w3" : w[:,2,-1] 
-   } )
+
+dfw = pd.DataFrame(  
+   {   "w"+str(i+1) : w[:,i,-1] for i in range(w.shape[1])    }     
+ )       
+        
+
+
+dfw.to_csv(dir1 + "/weight_conv.txt" )
+dfw[["w2", "w1", "w3" ]].iloc[:90000, :].plot()
+
+import matplotlib.pyplot as plt
+plt.savefig(dir1 + 'output.png')
+
 
 
 
@@ -84,8 +89,11 @@ dfx = pd.DataFrame(  { "x1" : np.sum(x[:,0,0, :], axis=-1) ,
      "x2" : np.sum( x[:,1,0, :], axis=-1) ,
      "x3" : np.sum( x[:,2,0, :], axis=-1) 
    } )
-  
-dfx["x1"].std() , dfx["x2"].std(),  dfx["x3"].std()
+
+
+
+### StdDev on All samples   ################################################################
+print( dfx["x1"].std() , dfx["x2"].std(),  dfx["x3"].std() )
 
 
 print( 
@@ -105,15 +113,7 @@ Variance of all variance, Minimize.
 
 #############################################################################################  
 #############################################################################################
-dfw[["w2", "w1", "w3" ]].iloc[:60000, :].plot()
 
-dfw.to_csv(dir1 + "/weight_conv.txt" )
-
-
-dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
-     "w2" : w[:,1,-1] ,
-         "w3" : w[:,2,-1] 
-   } )
 
 
 
@@ -247,15 +247,17 @@ Sharpe Ratio: 1.17
 
 
 
-####### MIn Vol
+####### Min Vol  ###################################################################################
 mu = np.array([0.0,0.0, 0.0 ] ) 
-vol = np.array([0.23, 0.15, 0.06 ] ) 
+vol = np.array([0.24, 0.16, 0.06 ] ) 
 cor = np.array([[100,  -16, -34 ],
                 [-16,  100, -55 ],
                 [-34,  -55, 100 ],                
                ])/100.0
 get_portfolio(mu, vol, cor) 
 # Vol {0: 0.09990258275835834, 1: 0.2160461468927457, 2: 0.684051270348896}
+## NN :  9  0.095334  0.201686  0.702979
+
 
 
 
@@ -356,10 +358,6 @@ Sharpe Ratio: 1.65
 
 
 
-
-
-
-
 ####### MIn Vol
 mu = np.array([0.10,0.10, 0.10 ] ) 
 vol = np.array([0.17, 0.12, 0.073 ] ) 
@@ -387,10 +385,24 @@ Annual volatility: 5.9%
 Sharpe Ratio: 1.37
 (0.10000000000000002, 0.058550760292185804, 1.3663358016322262)
 
-#Ok 
+#lstm
 9  0.193310  0.240782  0.565908
 
+
+
 """
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

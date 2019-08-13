@@ -32,19 +32,62 @@ Return = sum(ri) = Total return
 import sys
 
 from config import export_folder
-
+if not os.path.exists(export_folder):
+      os.makedirs(export_folder)
 
 
 def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all) :
     print("Writing path history on disk, {}/".format(export_folder))
-    if not os.path.exists(export_folder):
-      os.makedirs(export_folder)
-    
-    np.save(os.path.join(export_folder, 'x.npy'), np.concatenate(x_all, axis=0))
+
+    w = np.concatenate(w_all, axis=0)
+    x = np.concatenate(x_all, axis=0)
+
+    np.save(os.path.join(export_folder, 'x.npy'), x)
     # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
     np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
     np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
-    np.save(os.path.join(export_folder, 'w.npy'), np.concatenate(w_all, axis=0))
+    np.save(export_folder + '/w.npy', w )
+
+    save_stats(w, x) 
+
+
+def save_stats(w,x) :
+  import pandas as pd  
+  import matplotlib.pyplot as plt
+  
+  #### Weight Convergence
+  dfw = pd.DataFrame(  
+     {   "w"+str(i+1) : w[:,i,-1] for i in range(w.shape[1])    }     
+  )       
+  dfw.to_csv(export_folder + "/weight_conv.txt" )
+
+  dfw.iloc[:, :].plot()
+  plt.savefig(export_folder + 'w_conv_all.png')
+  plt.close()
+
+  dfw.iloc[:10**5, :].plot()
+  plt.savefig(export_folder + 'w_conv_100k.png')
+  plt.close()
+
+  #### Actual Simulation stats
+  ### Sum(return over [0,T])
+  dfx = pd.DataFrame(  { "x"+str(i+1) : np.sum(x[:,i,0, :], axis=-1) 
+                          for i in range(x.shape[1])})
+
+  dd = {}  
+  dd["ww"] = str( list(dfw.iloc[-1, : ].values )) 
+  dd["x_vol"] =  { k: dfx[k].std() for k in dfx.columns }
+  dd["x_corr"] = {}
+  from itertools import combinations 
+  for x1, x2 in list(combinations(dfx.columns, 2)):
+    dd["x_corr"][x1 + "_" + x2 ]  = np.corrcoef( dfx[x1].values , dfx[x2].values )[1,0] ,
+      
+  import json  
+  json.dump(dd, open(export_folder + "/x_stats2.txt", mode="w"))    
+    
+    
+    
+    
 
 
 
@@ -258,10 +301,10 @@ class FeedForwardModel(object):
           z = self.subnetwork.build([ self._x[:, :, t -1] ], t-1) / self._dim
         
         elif self._usemodel == 'ff':
-          z = self.subnetwork.build(self._x[:, :, t -1], t-1) / self._dim
+          z = self.subnetwork.build( self._x[:, :self._dim , t -1] , t-1) / self._dim
         
         elif self._usemodel == 'attn':
-          z = self.subnetwork.build([ self._x[:, :, t -1] ], t-1) / self._dim
+          z = self.subnetwork.build([ self._x[:, :self._dim , t -1] ], t-1) / self._dim
         
         elif self._usemodel == 'dila':
           z = self.subnetwork.build([self._x[:, :, t -1]], t-1) / self._dim

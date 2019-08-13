@@ -191,21 +191,23 @@ class subnetwork_lstm_attn(object):
     def build(self, x, i):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
-                num_units=self._config.n_hidden_lstm,
-                memory=tf.expand_dims(x[0], axis=1),
-                dtype=TF_DTYPE)
+                                  num_units=self._config.n_hidden_lstm,
+                                  memory=tf.expand_dims(x[0], axis=1),
+                                  dtype=TF_DTYPE)
 
             self.rnn_cells = tf.contrib.seq2seq.AttentionWrapper(
-                cell=tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm,
-                                             name='lstm_cell',
+                cell=tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell',
                                              reuse=i > 0),
                 attention_mechanism=attention_mechanism)
 
-            self.outputs, self.last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=TF_DTYPE)
-            self.out = tf.layers.dense(self.outputs[-1],
-                                       self._config.num_hiddens[-1],
-                                       name='dense_out', reuse=i > 0)
-            return self.out
+            x, last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=TF_DTYPE)
+            
+            ## FF
+            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1],  name='hidden_out', reuse=i > 0)
+            x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
+                                reuse=i > 0) 
+           
+            return x
 
 
 ##############  FeedForward
@@ -223,24 +225,28 @@ class subnetwork_ff(object):
         self._extra_train_ops = []
         self._is_training = is_training
 
-    def build(self, x, i):
+    def build(self, x, t):
         # self.x = x
-        name = str(i + 1)
+        name = str(t + 1)
         with tf.variable_scope(name):
             # standardize the path input first
             # the affine  could be redundant, but helps converge faster
             hiddens = tf.layers.batch_normalization(x, training=self._is_training)
             for i in range(1, len(self._config.num_hiddens) - 1):
-                hiddens = self._dense_batch_layer(
-                    hiddens,
-                    self._config.num_hiddens[i],
-                    activation_fn=tf.nn.relu,
-                    name="layer_{}".format(i),
+                hiddens = self._dense_batch_layer(hiddens,
+                                  self._config.num_hiddens[i],
+                                  activation_fn=tf.nn.relu,
+                                  name="layer_{}".format(i),
                 )
-            output = self._dense_batch_layer(
-                hiddens, self._config.num_hiddens[-1], activation_fn=None, name="final_layer"
+            x = self._dense_batch_layer(hiddens, self._config.num_hiddens[-1], 
+                                        activation_fn= tf.nn.sigmoid,  #None, 
+                                        name="final_layer"
             )
-            return output
+            
+            # x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
+            #                    reuse=i > 0)           
+            return x
+
 
     def _dense_batch_layer(self, input_, output_size, activation_fn=None, stddev=5.0, name="linear"):
         with tf.variable_scope(name):
@@ -258,3 +264,5 @@ class subnetwork_ff(object):
             return activation_fn(hiddens_bn)
         else:
             return hiddens_bn
+
+

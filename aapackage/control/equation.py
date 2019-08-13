@@ -93,9 +93,9 @@ class PricingOption(Equation):
         # self.correl[1,0] = -0.5
         # self.correl[0,1] = -0.5
         
-        self.correl =  np.array([[100,  -50, -40 ],
-                [-50,  100, -30 ],
-                [-40,  -30, 100 ],                
+        self.correl =  np.array([[100, 0 , 0 ],
+                [0,  100, -0 ],
+                [-0,  -0, 100 ],                
                ])/100.0
        
         dd = { "drift": self.drift.tolist(),  "vol0" :self.vol0.tolist(), "correl" : self.correl.tolist() }        

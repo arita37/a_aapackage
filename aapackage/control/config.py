@@ -2,7 +2,7 @@ import numpy as np
 import sys, os
 
 
-folder_win = r"D:/_devs/Python01/gitdev/zs3drive/attn_correl_3assets_correl_neg/"
+folder_win = r"D:/_devs/Python01/gitdev/zs3drive/ff_correl_3assets_correl_zero/"
 
 
 
@@ -29,7 +29,7 @@ class PricingOptionConfig(Config):
     dim = 3
     total_time = 1.0
     num_time_interval = 10
-    num_iterations = 5000
+    num_iterations = 2000
     
     n_hidden_lstm =dim * 3
     lr_values = list(np.array([5e-3, 5e-3]))
