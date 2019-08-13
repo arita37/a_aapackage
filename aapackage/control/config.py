@@ -2,7 +2,7 @@ import numpy as np
 import sys, os
 
 
-folder_win = r"D:/_devs/Python01/gitdev/zs3drive/correl_3assets_correl_zero/"
+folder_win = r"D:/_devs/Python01/gitdev/zs3drive/attn_correl_3assets_correl_neg/"
 
 
 

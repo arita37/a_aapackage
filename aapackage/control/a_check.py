@@ -33,10 +33,12 @@ dir1 = "/home/ubuntu/zs3drive/"
 dir1 =  r"D:/_devs/Python01/gitdev/zs3drive/"
 
 
+
+
+
 from config import  export_folder
 dir1 =  export_folder
 print( export_folder)
-
 
 ##################################################################################
 x = np.load( dir1 + "x.npy"  )
@@ -60,8 +62,8 @@ def get_sample(i) :
   df = pd.DataFrame(dd)
   return df
 
-get_sample( 2000 )[ [  "w1", "w2", "w3" ]   ] 
 
+get_sample( 12000 )[ [  "w1", "w2", "w3" ]   ] 
 
 
 get_sample( 90000 )[ [  "w1", "w2", "w3" ]   ]  
@@ -75,45 +77,37 @@ dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
 
 
 
-dfx = pd.DataFrame(  { "x1" : x[0,0,0, :] ,
-     "x2" : x[0,1,0, :] ,
-     "x3" : x[0,2,0, :] 
+#############################################################################################
+#############################################################################################
+### Sum 0...T   and calculate volatility over all samples.
+dfx = pd.DataFrame(  { "x1" : np.sum(x[:,0,0, :], axis=-1) ,
+     "x2" : np.sum( x[:,1,0, :], axis=-1) ,
+     "x3" : np.sum( x[:,2,0, :], axis=-1) 
    } )
   
-  
-dfx["r1"] = dfx["x1"].pct_change()
-dfx["v1"] = dfx["x1"].rolling(200).std()
-## 0.17
+dfx["x1"].std() , dfx["x2"].std(),  dfx["x3"].std()
 
 
-dfx["r2"] = dfx["x2"].pct_change()
-dfx["v2"] = dfx["x2"].rolling(200).std()
-## 0.12
-  
+print( 
+np.corrcoef( dfx["x1"].values , dfx["x2"].values )[1,0] ,
+
+np.corrcoef( dfx["x1"].values , dfx["x3"].values )[1,0] ,
+
+np.corrcoef( dfx["x2"].values , dfx["x3"].values )[1,0] , )
 
 
-dfx["r3"] = dfx["x3"].pct_change()
-dfx["v3"] = dfx["x3"].rolling(200).std()
-## 0.07
+Variance over time .
+Variance of all variance, Minimize.
 
 
-  
-
-dfw
 
 
+
+#############################################################################################  
+#############################################################################################
 dfw[["w2", "w1", "w3" ]].iloc[:60000, :].plot()
 
-
 dfw.to_csv(dir1 + "/weight_conv.txt" )
-
-
-
-
-
-
- w[ 5000, :, 9]
-
 
 
 dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
@@ -124,14 +118,7 @@ dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
 
 
 
-#### Scenarios :   
-  5 assets.
-  weights 0.2
-  
-  actual results
-  
-  Mean Variance
-  
+
 
 
 
@@ -260,38 +247,45 @@ Sharpe Ratio: 1.17
 
 
 
-
-
+####### MIn Vol
+mu = np.array([0.0,0.0, 0.0 ] ) 
+vol = np.array([0.23, 0.15, 0.06 ] ) 
+cor = np.array([[100,  -16, -34 ],
+                [-16,  100, -55 ],
+                [-34,  -55, 100 ],                
+               ])/100.0
+get_portfolio(mu, vol, cor) 
+# Vol {0: 0.09990258275835834, 1: 0.2160461468927457, 2: 0.684051270348896}
 
 
 
 ####### MIn Vol
-mu = np.array([0.10,0.10, 0.10 ] ) 
-vol = np.array([0.10, 0.09, 0.07 ] ) 
+mu = np.array([0.0,0.0, 0.0 ] ) 
+vol = np.array([0.20, 0.15, 0.08 ] ) 
 cor = np.array([[100,  -50, -40 ],
                 [-50,  100, -30 ],
                 [-40,  -30, 100 ],                
                ])/100.0
 get_portfolio(mu, vol, cor) 
 """
-vol [0.1  0.09 0.07] return [0.1 0.1 0.1]
+vol [0.2  0.15 0.08] return [0.1 0.1 0.1]
 cor [[ 1.  -0.5 -0.4]
  [-0.5  1.  -0.3]
  [-0.4 -0.3  1. ]]
-Min Vol {0: 0.2930947845584204, 1: 0.3265405813680311, 2: 0.3803646340735484}
+Min Vol {0: 0.20909644961889745, 1: 0.26905710025071106, 2: 0.5218464501303914}
 Expected annual return: 10.0%
-Annual volatility: 2.2%
-Sharpe Ratio: 3.66
-(0.1, 0.02182873645626371, 3.6648937587518575)
-max sharpe {0: 0.29754867962748854, 1: 0.3143903073131664, 2: 0.38806101305934504}
+Annual volatility: 3.2%
+Sharpe Ratio: 2.50
+(0.1, 0.032018079624367014, 2.4985883269250433)
+max sharpe {0: 0.20984180165594454, 1: 0.2688605769087439, 2: 0.5212976214353117}
 Expected annual return: 10.0%
-Annual volatility: 2.2%
-Sharpe Ratio: 3.67
-(0.1, 0.021775235936132644, 3.6738981949330958)
+Annual volatility: 3.2%
+Sharpe Ratio: 2.50
+(0.10000000000000002, 0.03201753047507891, 2.498631181510661)
 
 
-#
-9  0.150466  0.261428  0.588107
+
+9  0.091283  0.200547  0.708170
 
 """
 

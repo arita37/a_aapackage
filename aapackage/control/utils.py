@@ -48,8 +48,9 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
         corrbm = np.dot(correl_upper_cholesky, iidbrownian[:, :, k])  # correlated brownian
         bm_process = np.multiply(corrbm, volt)  # multiply element by elt
         # drift_adj   = drift - 0.5 * np.sum(volt*volt)   # Girsanove theorem
-        drift_adj = drift - 0.5 * np.dot(volt.T, np.dot(correl, volt))
-
+        # drift_adj = drift - 0.5 * np.dot(volt.T, np.dot(correl, volt))
+        drift_adj = drift 
+        
         price[:, 1:] = np.exp(drift_adj * dt + bm_process * np.sqrt(dt))
         price = np.cumprod(price, axis=1)  # exponen product st = st-1 *st
         allpaths[k, :] = price  # Simul. k

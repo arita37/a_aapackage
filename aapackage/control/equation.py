@@ -81,21 +81,21 @@ class PricingOption(Equation):
 
         nasset = self._dim
         self.s0    = np.ones((nasset)) * 100.0
-        self.drift = np.ones((nasset,1)) * 0.1
+        self.drift = np.ones((nasset,1)) * 0.0
         self.vol0  = np.ones((nasset,1)) * 0.2
         
-        self.vol0[0,0] = 0.10
-        self.vol0[1,0] = 0.09
-        self.vol0[2,0] = 0.07
+        self.vol0[0,0] = 0.20
+        self.vol0[1,0] = 0.15
+        self.vol0[2,0] = 0.08
 
 
         # self.correl = np.identity(nasset) 
         # self.correl[1,0] = -0.5
         # self.correl[0,1] = -0.5
         
-        self.correl =  np.array([[100,  0, 0 ],
-                [0,  100, 0 ],
-                [0,  0, 100 ],                
+        self.correl =  np.array([[100,  -50, -40 ],
+                [-50,  100, -30 ],
+                [-40,  -30, 100 ],                
                ])/100.0
        
         dd = { "drift": self.drift.tolist(),  "vol0" :self.vol0.tolist(), "correl" : self.correl.tolist() }        
