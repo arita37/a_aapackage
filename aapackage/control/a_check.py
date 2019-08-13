@@ -53,16 +53,66 @@ def get_sample(i) :
    "pret" : p[i],
    "w1" : w[i][0],
    "w2" : w[i][1],
+   "w3" : w[i][2],   
    "z1" : z[i][0],
    "z2" : z[i][1],   
   }  
   df = pd.DataFrame(dd)
   return df
 
-get_sample( 2000 ) 
+get_sample( 2000 )[ [  "w1", "w2", "w3" ]   ] 
 
 
 
+get_sample( 90000 )[ [  "w1", "w2", "w3" ]   ]  
+
+
+
+dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
+     "w2" : w[:,1,-1] ,
+     "w3" : w[:,2,-1] 
+   } )
+
+
+
+dfx = pd.DataFrame(  { "x1" : x[0,0,0, :] ,
+     "x2" : x[0,1,0, :] ,
+     "x3" : x[0,2,0, :] 
+   } )
+  
+  
+dfx["r1"] = dfx["x1"].pct_change()
+dfx["v1"] = dfx["x1"].rolling(200).std()
+## 0.17
+
+
+dfx["r2"] = dfx["x2"].pct_change()
+dfx["v2"] = dfx["x2"].rolling(200).std()
+## 0.12
+  
+
+
+dfx["r3"] = dfx["x3"].pct_change()
+dfx["v3"] = dfx["x3"].rolling(200).std()
+## 0.07
+
+
+  
+
+dfw
+
+
+dfw[["w2", "w1", "w3" ]].iloc[:60000, :].plot()
+
+
+dfw.to_csv(dir1 + "/weight_conv.txt" )
+
+
+
+
+
+
+ w[ 5000, :, 9]
 
 
 
@@ -72,16 +122,6 @@ dfw = pd.DataFrame(  { "w1" : w[:,0,-1] ,
    } )
 
 
-dfw
-
-
-dfw[["w2", "w1"]].plot()
-
-
-dfw.to_csv(dir1 + "/weight_conv.txt" )
-
-
- w[ 5000, :, 9]
 
 
 #### Scenarios :   
@@ -95,12 +135,361 @@ dfw.to_csv(dir1 + "/weight_conv.txt" )
 
 
 
-####  Scenario No stationary regime :   ############################################################
+####  Scenario No stationary regime :   ############################################
     correlation
 
 
 
   np.cos( w.t )
+
+
+
+####### MV Portfolio   ############################################################  
+from pypfopt.efficient_frontier import EfficientFrontier
+
+SigmaMatrix  = col * identiy'I)
+Cov =  SigmaMatrix x Correl X SigmaMatrix x 
+
+
+
+def get_portfolio(mu, vol, cor) :
+  volmat = np.diag(vol )
+  cov = np.dot( np.dot(volmat, cor)    , volmat )    
+  ef = EfficientFrontier(mu, cov)
+  print("vol", vol, "return", mu)
+  print("cor", cor )
+  print("Min Vol", ef.min_volatility() )
+  print( ef.portfolio_performance(verbose=True)) 
+  print("max sharpe", ef.max_sharpe() )
+  print( ef.portfolio_performance(verbose=True))   
+  
+
+mu = np.array([0.10,0.05 ] ) 
+vol = np.array([0.10,0.09 ] ) 
+cor = np.array([[100, 0 ],
+               [ 0, 100 ]])/100.0
+
+        
+volmat = np.diag(vol )
+cov = np.dot( np.dot(volmat, cor)    , volmat )
+
+
+
+####### Min Vol    ####################################
+mu = np.array([0.10,0.10 ] ) 
+vol = np.array([0.10,0.07 ] ) 
+cor = np.array([[100,  0.0 ],
+               [ 0.0, 100 ]])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+vol [0.1  0.07] return [0.1 0.1]
+cor [[1. 0.]
+ [0. 1.]]
+Min Vol {0: 0.3288590620307241, 1: 0.6711409379692759}
+Expected annual return: 10.0%
+Annual volatility: 5.7%
+Sharpe Ratio: 1.40
+(0.1, 0.057346234436332834, 1.3950349275124232)
+max sharpe {0: 0.3288589077648647, 1: 0.6711410922351353}
+Expected annual return: 10.0%
+Annual volatility: 5.7%
+Sharpe Ratio: 1.40
+(0.1, 0.057346234436335866, 1.3950349275123495)
+
+
+9   98.517625   93.469500 -0.024047  0.330275  0.669725  0.172221  0.349226
+
+"""
+
+
+
+
+####### Min Vol    ####################################
+mu = np.array([0.10, 0.10 ] ) 
+vol = np.array([0.10, 0.07 ] ) 
+cor = np.array([[100,  -50.0 ],
+               [ -50.0, 100 ]])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+vol [0.1  0.07] return [0.1 0.1]
+cor [[ 1.  -0.5]
+ [-0.5  1. ]]
+Min Vol {0: 0.3835616411209164, 1: 0.6164383588790836}
+Expected annual return: 10.0%
+Annual volatility: 4.1%
+Sharpe Ratio: 1.95
+(0.1, 0.04096440151864571, 1.9529151417868638)
+max sharpe {0: 0.3835618317352055, 1: 0.6164381682647945}
+Expected annual return: 10.0%
+Annual volatility: 4.1%
+Sharpe Ratio: 1.95
+(0.1, 0.04096440151865514, 1.9529151417864143)
+
+
+9  102.548081   96.277328 -0.000430  0.303653  0.696347  0.179486  0.411602
+
+"""
+
+
+
+
+####### Min Vol    ####################################
+mu = np.array([0.10, 0.10 ] ) 
+vol = np.array([0.10, 0.07 ] ) 
+cor = np.array([[100,  50.0 ],
+               [ 50.0, 100 ]])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+Min Vol {0: 0.18030065216589672, 1: 0.8196993478341033}
+Expected annual return: 10.0%
+Annual volatility: 6.8%
+Sharpe Ratio: 1.17
+(0.1, 0.06820538059999318, 1.1729279903762901)
+max sharpe {0: 0.17742495826898114, 1: 0.8225750417310189}
+Expected annual return: 10.0%
+Annual volatility: 6.8%
+Sharpe Ratio: 1.17
+(0.10000000000000002, 0.06820483180683885, 1.172937428048587)
+
+
+
+
+9  102.250718   98.527843  0.009094  0.067539  0.932461  0.025022  0.345460
+
+"""
+
+
+
+
+
+
+
+
+####### MIn Vol
+mu = np.array([0.10,0.10, 0.10 ] ) 
+vol = np.array([0.10, 0.09, 0.07 ] ) 
+cor = np.array([[100,  -50, -40 ],
+                [-50,  100, -30 ],
+                [-40,  -30, 100 ],                
+               ])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+vol [0.1  0.09 0.07] return [0.1 0.1 0.1]
+cor [[ 1.  -0.5 -0.4]
+ [-0.5  1.  -0.3]
+ [-0.4 -0.3  1. ]]
+Min Vol {0: 0.2930947845584204, 1: 0.3265405813680311, 2: 0.3803646340735484}
+Expected annual return: 10.0%
+Annual volatility: 2.2%
+Sharpe Ratio: 3.66
+(0.1, 0.02182873645626371, 3.6648937587518575)
+max sharpe {0: 0.29754867962748854, 1: 0.3143903073131664, 2: 0.38806101305934504}
+Expected annual return: 10.0%
+Annual volatility: 2.2%
+Sharpe Ratio: 3.67
+(0.1, 0.021775235936132644, 3.6738981949330958)
+
+
+#
+9  0.150466  0.261428  0.588107
+
+"""
+
+
+
+####### MIn Vol
+mu = np.array([0.10,0.10, 0.10 ] ) 
+vol = np.array([0.10, 0.09, 0.07 ] ) 
+cor = np.array([[100,  90, 80 ],
+                [90,  100, 70 ],
+                [80,  70, 100 ],                
+               ])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+vol [0.1  0.09 0.07] return [0.1 0.1 0.1]
+cor [[1.  0.9 0.8]
+ [0.9 1.  0.7]
+ [0.8 0.7 1. ]]
+Min Vol {0: 3.004629197474327e-18, 1: 0.11722487418658731, 2: 0.8827751258134127}
+Expected annual return: 10.0%
+Annual volatility: 7.0%
+Sharpe Ratio: 1.15
+(0.1, 0.06958850342270942, 1.1496151816061748)
+max sharpe {0: 1.3520831388634434e-16, 1: 0.11721677181184023, 2: 0.8827832281881597}
+Expected annual return: 10.0%
+Annual volatility: 7.0%
+Sharpe Ratio: 1.15
+(0.10000000000000002, 0.0695885034246841, 1.1496151815735527)
+
+
+#### Big Difference
+9  0.097814  0.487812  0.414374
+
+"""
+
+
+
+
+####### MIn Vol
+mu = np.array([0.10,0.10, 0.10 ] ) 
+vol = np.array([0.10, 0.09, 0.07 ] ) 
+cor = np.array([[100,  0, 0 ],
+                [0,  100, 0 ],
+                [0,  0, 100 ],                
+               ])/100.0
+get_portfolio(mu, vol, cor) 
+"""
+vol [0.1  0.09 0.07] return [0.1 0.1 0.1]
+cor [[1. 0. 0.]
+ [0. 1. 0.]
+ [0. 0. 1.]]
+Min Vol {0: 0.22319098495690673, 1: 0.31163688384238153, 2: 0.46517213120071177}
+Expected annual return: 10.0%
+Annual volatility: 4.8%
+Sharpe Ratio: 1.65
+(0.1, 0.048426039879695314, 1.6520037607606113)
+max sharpe {0: 0.23390006161433718, 1: 0.2887680147123651, 2: 0.4773319236732977}
+Expected annual return: 10.0%
+Annual volatility: 4.8%
+Sharpe Ratio: 1.65
+(0.1, 0.04836291002083988, 1.654160181129041)
+
+
+#Ok 
+9  0.232698  0.299768  0.467534
+
+"""
+
+
+
+
+
+
+
+####### MIn Vol
+mu = np.array([0.10,0.10, 0.10 ] ) 
+vol = np.array([0.17, 0.12, 0.073 ] ) 
+cor = np.array([[100,  0, 0 ],
+                [0,  100, 0 ],
+                [0,  0, 100 ],                
+               ])/100.0
+get_portfolio(mu, vol, cor) 
+
+
+
+"""
+vol [0.17  0.12  0.073] return [0.1 0.1 0.1]
+cor [[1. 0. 0.]
+ [0. 1. 0.]
+ [0. 0. 1.]]
+Min Vol {0: 0.11841814927242073, 1: 0.23704921186827646, 2: 0.6445326388593028}
+Expected annual return: 10.0%
+Annual volatility: 5.9%
+Sharpe Ratio: 1.37
+(0.1, 0.05855096660795398, 1.3663309870811293)
+max sharpe {0: 0.11863172689677262, 1: 0.23806269291354182, 2: 0.6433055801896856}
+Expected annual return: 10.0%
+Annual volatility: 5.9%
+Sharpe Ratio: 1.37
+(0.10000000000000002, 0.058550760292185804, 1.3663358016322262)
+
+#Ok 
+9  0.193310  0.240782  0.565908
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+print("max sharpe", ef.max_sharpe() )
+print( ef.portfolio_performance(verbose=True))  
+
+
+wsharpe = ef.weights
+
+
+cov1 = np.linalg.inv(cov)
+np.dot(cov1, mu)
+
+10/ 0.4
+
+20/0.6
+
+
+
+
+
+mu = np.array([0.10,0.05 ] ) 
+vol = np.array([0.15,0.09 ] ) 
+cor = np.array([[100,  -50.0 ],
+               [ -50.0, 100 ]])/100.0
+
+        
+volmat = np.diag(vol )
+cov = np.dot( np.dot(volmat, cor)    , volmat )
+
+
+####### Min Volaitlity
+ef = EfficientFrontier(mu, cov)
+
+print("Min Vol", ef.min_volatility() )
+print( ef.portfolio_performance(verbose=True))  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Inputs:
+
+cov_matrix
+n_assets
+tickers
+bounds
+
+Optimisation parameters:
+initial_guess
+constraints
+Output: weights
+
+Public methods:
+
+max_sharpe() optimises for maximal Sharpe ratio (a.k.a the tangency portfolio)
+min_volatility() optimises for minimum volatility
+custom_objective() optimises for some custom objective function
+efficient_risk() maximises Sharpe for a given target risk
+efficient_return() minimises risk for a given target return
+
+portfolio_performance() calculates the expected return, volatility and Sharpe ratio for the optimised portfolio.
+
+
+
+
+
+
+
+
 
 
 

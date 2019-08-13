@@ -28,6 +28,9 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
 
     allpaths = np.zeros((nsimul, nasset, nstep+1))  # ALl time st,ep
     corrbm_3d =  np.zeros((nsimul, nasset, nstep)) 
+    allret = np.zeros((nsimul, nasset, nstep+1))  # ALl time st,ep
+
+
     
     iidbrownian = np.random.normal(0, 1, (nasset, nstep, nsimul))
     # print(iidbrownian.shape)
@@ -39,6 +42,9 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
         price[:, 0] = S0
         volt = vol0
 
+        ret = np.zeros((nasset, nstep+1))
+        price[:, 0] = 0.0
+
         corrbm = np.dot(correl_upper_cholesky, iidbrownian[:, :, k])  # correlated brownian
         bm_process = np.multiply(corrbm, volt)  # multiply element by elt
         # drift_adj   = drift - 0.5 * np.sum(volt*volt)   # Girsanove theorem
@@ -46,13 +52,16 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
 
         price[:, 1:] = np.exp(drift_adj * dt + bm_process * np.sqrt(dt))
         price = np.cumprod(price, axis=1)  # exponen product st = st-1 *st
-
         allpaths[k, :] = price  # Simul. k
+
+
+        ret[:, 1:] = drift_adj * dt + bm_process * np.sqrt(dt)
+        allret[k, :] = ret  # Simul. 
 
         corrbm_3d[k, :] = corrbm
 
     if choice == "all":
-        return allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian[:, : k - 1]
+        return allret, allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian[:, : k - 1]
 
     if choice == "path":
         return allpaths

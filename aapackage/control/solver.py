@@ -285,14 +285,15 @@ class FeedForwardModel(object):
           #  tf.log((self._x[:, :M, 1:t ]) / (
           #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
         
-        w = 0.2 + z 
+        w =  z 
         w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
         all_w.append(w)
         
         ######################################################################
         # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
-        p = tf.reduce_sum(w * (
-                  self._x[:, :M, t] / self._x[:, :M, t - 1] - 1), 1)
+        # p = tf.reduce_sum(w * (self._x[:, :M, t] / self._x[:, :M, t - 1] - 1), 1)
+        p = tf.reduce_sum(w * (self._x[:, :M, t]) , 1)
+        
         all_p.append(p)
       
       # Terminal time
@@ -310,8 +311,12 @@ class FeedForwardModel(object):
       
       # Final Difference :
       #######  -Sum(ri)   +Sum(ri**2)
-      delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
+      # delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
+      delta = tf.nn.moments(p[:, 1:], axes=1)[1]*10000.0
+      
       self._loss = tf.reduce_mean(delta)
+
+
     
     
     tf.summary.scalar('loss', self._loss)

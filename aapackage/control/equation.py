@@ -83,18 +83,49 @@ class PricingOption(Equation):
         self.s0    = np.ones((nasset)) * 100.0
         self.drift = np.ones((nasset,1)) * 0.1
         self.vol0  = np.ones((nasset,1)) * 0.2
-        self.vol0[0,0] = 0.0
-        self.vol0[1,0] = 0.0
         
-        self.correl = np.identity(nasset) 
-        self.correl[1,0] = 0.0
-        self.correl[0,1] = 0.0
+        self.vol0[0,0] = 0.10
+        self.vol0[1,0] = 0.09
+        self.vol0[2,0] = 0.07
+
+
+        # self.correl = np.identity(nasset) 
+        # self.correl[1,0] = -0.5
+        # self.correl[0,1] = -0.5
         
+        self.correl =  np.array([[100,  0, 0 ],
+                [0,  100, 0 ],
+                [0,  0, 100 ],                
+               ])/100.0
+       
         dd = { "drift": self.drift.tolist(),  "vol0" :self.vol0.tolist(), "correl" : self.correl.tolist() }        
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
         
                 
     def sample(self, num_sample, clayer=0):
+        if clayer > -1 :
+
+          nsimul = num_sample
+          nasset = self._dim
+          nstep = self._num_time_interval
+          T = self._num_time_interval * self._delta_t
+        
+          s0    = self.s0
+          drift = self.drift
+          vol0  = self.vol0
+          correl = self.correl 
+
+          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+                    correl, choice="all")
+
+          # dw_sample = corrbm
+          # x_sample = allpaths
+          # return dw_sample, x_sample
+          return corrbm, allret
+
+
+
+    def sample5(self, num_sample, clayer=0):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -115,6 +146,7 @@ class PricingOption(Equation):
           # return dw_sample, x_sample
           return corrbm, allpaths
       
+        
         
     def sample4(self, num_sample, clayer=0):
         

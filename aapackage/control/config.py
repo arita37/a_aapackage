@@ -2,7 +2,7 @@ import numpy as np
 import sys, os
 
 
-folder_win = r"D:/_devs/Python01/gitdev/zs3drive/correl_0_3assets/"
+folder_win = r"D:/_devs/Python01/gitdev/zs3drive/correl_3assets_correl_zero/"
 
 
 
@@ -17,7 +17,7 @@ class Config(object):
     batch_size = 64
     valid_size = 256
     step_boundaries = [2000, 4000]
-    num_iterations = 6000
+    num_iterations = 2000
     logging_frequency = 100
     verbose = True
     y_init_range = [0, 1]
