@@ -69,7 +69,7 @@ def save_stats(w,x) :
   plt.savefig(export_folder + 'w_conv_100k.png')
   plt.close()
 
-  get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+  # get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
 
 
 
