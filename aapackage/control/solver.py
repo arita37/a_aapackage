@@ -69,6 +69,10 @@ def save_stats(w,x) :
   plt.savefig(export_folder + 'w_conv_100k.png')
   plt.close()
 
+  get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+
+
+
   #### Actual Simulation stats : correl, vol
   ### Sum(return over [0,T])
   dfx = pd.DataFrame(  { "x"+str(i+1) : np.sum(x[:,i,0, :], axis=-1) 
@@ -355,7 +359,7 @@ class FeedForwardModel(object):
       # Final Difference :
       #######  -Sum(ri)   +Sum(ri**2)
       # delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
-      delta = tf.nn.moments(p[:, 1:], axes=1)[1]*10000.0
+      delta = tf.nn.moments(p[:, 1:10], axes=1)[1]*10000.0 + tf.nn.moments(p[:, 10:20], axes=1)[1]*10000.0  + tf.nn.moments(p[:, 20:], axes=1)[1]*10000.0
       
       self._loss = tf.reduce_mean(delta)
 

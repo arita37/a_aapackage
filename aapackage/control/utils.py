@@ -43,7 +43,7 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
         volt = vol0
 
         ret = np.zeros((nasset, nstep+1))
-        price[:, 0] = 0.0
+        ret[:, 0] = 0.0
 
         corrbm = np.dot(correl_upper_cholesky, iidbrownian[:, :, k])  # correlated brownian
         bm_process = np.multiply(corrbm, volt)  # multiply element by elt
@@ -61,12 +61,85 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
 
         corrbm_3d[k, :] = corrbm
 
+
     if choice == "all":
         return allret, allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian[:, : k - 1]
 
     if choice == "path":
         return allpaths
     
+
+
+
+
+
+
+def gbm_multi_regime(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0, regime=None):
+    """
+     dS/St =  drift.dt + voldt.dWt
+     
+     Girsanov :  drift - compensator).dt
+     T      :  Years
+     S0     :  Initial vector price
+     vol0   :  Vector of volatiltiies  1..nasset  0.05  5% / pa
+     drift  :  Interest rates
+     correl :  Correlation Matrix 
+     regime indice
+  
+    """
+    nr = len(regime)
+    nstep = nstep // 3 
+    
+    # np.random.seed(1234)
+    dt = T / (1.0 * nstep)
+    drift = [ d * dt for d in drift]
+    allpaths = np.zeros((nsimul, nasset, nr*(nstep+1)))  # ALl time st,ep
+    corrbm_3d =  np.zeros((nsimul, nasset, nr*nstep))
+    allret = np.zeros((nsimul, nasset, nr*nstep + 1 )) # ALl time st,ep
+    
+    
+    iidbrownian = [ np.random.normal(0, 1, (nasset, nstep, nsimul)) for r in regime ]
+    correl_upper_cholesky = [ cholesky(correl[r], lower=False) for r in regime ]
+
+    for k in range(0, nsimul) :  # k MonteCarlo simulation
+      retall = None  
+      for r in range(nr) :
+         price = np.zeros((nasset, nstep+1))
+         price[:, 0] = S0
+        
+         ret = np.zeros((nasset, nstep+1))
+         
+         # print(r)
+         
+         volt = vol0[r]
+         corrbm = np.dot(correl_upper_cholesky[r], iidbrownian[r][:, :, k])  # correlated brownian
+         bm_process = np.multiply(corrbm, volt)  # multiply element by elt
+         drift_adj = drift[r] 
+        
+         ret[:, 1:] = drift_adj * dt + bm_process * np.sqrt(dt)
+
+         if retall is None :
+             retall = ret 
+         else :
+             # print( retall.shape, ret.shape)
+             retall = np.hstack(( retall, ret ))
+
+      allret[k, :] = retall[:, :nr*nstep + 1 ]  # Simul. 
+
+
+
+    if choice == "all":
+        return allret, allpaths, bm_process, corrbm_3d, correl_upper_cholesky, iidbrownian
+
+    if choice == "path":
+        return allpaths
+    
+
+
+
+
+
+
 
 
 def test():

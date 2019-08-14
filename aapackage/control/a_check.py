@@ -52,6 +52,7 @@ x.shape, z.shape, p.shape, w.shape
 def get_sample(i) :
   dd = { "x1" : x[i][0][0][:x.shape[3]-1],
    "x2" : x[i][1][0][:x.shape[3]-1],
+   "x3" : x[i][1][0][:x.shape[3]-1],
    "pret" : p[i],
    "w1" : w[i][0],
    "w2" : w[i][1],
@@ -62,7 +63,25 @@ def get_sample(i) :
   df = pd.DataFrame(dd)
   return df
 
-get_sample( 90000 )[ [  "w1", "w2", "w3" ]   ]  
+
+
+get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+
+
+get_sample( 120000 )[ [  "x3" ]   ].plot()
+
+
+
+
+dfs = get_sample( 10000 )
+
+
+
+dfw = pd.DataFrame(  
+   {   "w"+str(i+1) : w[50000,i, :] for i in range(w.shape[1])    }     
+ )       
+
+
 
 
 
@@ -407,10 +426,12 @@ Sharpe Ratio: 1.37
 
 
 
+ValueError: cannot reshape array of size 6336 into shape (64,3,31)
 
 
 
 
+64*3*33
 
 
 

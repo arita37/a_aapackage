@@ -2,11 +2,13 @@ import numpy as np
 import sys, os
 
 
-folder_win = r"D:/_devs/Python01/gitdev/zs3drive/ff_correl_3assets_correl_zero/"
-
-
-
+folder_win = r"D:/_devs/Python01/gitdev/zs3drive/"
 export_folder = "/home/ubuntu/zs3drive/" if sys.platform != 'win32' else folder_win
+
+
+export_folder += "/zs3drive/regime_3assets_attn/"
+
+
 if not os.path.exists(export_folder):
       os.makedirs(export_folder)
       
@@ -27,11 +29,11 @@ class Config(object):
 class PricingOptionConfig(Config):
     # 6.5 option price by formulae
     dim = 3
-    total_time = 1.0
-    num_time_interval = 10
-    num_iterations = 2000
+    total_time = 3.0
+    num_time_interval = 30
+    num_iterations = 3000
     
-    n_hidden_lstm =dim * 3
+    n_hidden_lstm =dim * 15
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     num_hiddens = [dim, dim+10, dim+10, dim]
@@ -50,7 +52,7 @@ class AllenCahnConfig(Config):
     n_hidden_lstm = 10
     lr_values = list(np.array([5e-4, 5e-4]))
     lr_boundaries = [2000]
-    num_iterations = 4000
+    num_iterations = 100
     num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [0.3, 0.6]
 

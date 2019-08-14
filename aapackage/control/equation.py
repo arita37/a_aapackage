@@ -65,9 +65,56 @@ from config import export_folder
 
 
 
+def scenario(name, nasset) :
+   if name== "zero" : 
+        s0    = np.ones((nasset)) * 100.0
+        drift = np.ones((nasset,1)) * 0.0
+        vol0  = np.ones((nasset,1)) * 0.2      
+        vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
+        correl =  np.array([[100, 0 , 0 ],
+                       [0,  100, -0 ],
+                       [-0,  -0, 100 ],                ])/100.0
+ 
+   if name== "neg" : 
+        s0    = np.ones((nasset)) * 100.0
+        drift = np.ones((nasset,1)) * 0.0
+        vol0  = np.ones((nasset,1)) * 0.2      
+        vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
+        correl =  np.array([[100, -30 , -50 ],
+                         [ -30,  100, -40 ],
+                         [ -50,  -40, 100 ],    ])/100.0
+         
+   if name== "reg" :       
+        s0    = np.ones((nasset)) * 100.0
+        drift = [ np.ones((nasset,1)) * 0.0  for i in range(3) ]     
+        
+        vol0 = [
+                 np.array([[ 0.30, 0.20, 0.05 ]]).T ,
+                 np.array([[ 0.30, 0.02, 0.30 ]]).T ,
+                 np.array([[ 0.02, 0.40, 0.30 ]]).T ,
+                ]
+        
+        correl = [ np.array([[100, 30 , 40 ],
+                         [ 40,  100, 40 ],
+                         [ 40,  40, 100 ],    ])/100.0 ,
+   
+                   np.array([[100, 50 , 40 ],
+                         [ 50,  100, 40 ],
+                         [ 40,  40, 100 ],    ])/100.0 ,
+       
+                   np.array([[100, -30 , 30 ],
+                         [ 30,  100, 30 ],
+                         [ 30,  30, 100 ],    ])/100.0 ,
+        
+                 ]
+      
+   return drift, vol0, correl      
+
+
+
 ####################################################################################################
 ####################################################################################################
-from utils import gbm_multi
+from utils import gbm_multi, gbm_multi_regime
 
 class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval):
@@ -81,24 +128,15 @@ class PricingOption(Equation):
 
         nasset = self._dim
         self.s0    = np.ones((nasset)) * 100.0
-        self.drift = np.ones((nasset,1)) * 0.0
-        self.vol0  = np.ones((nasset,1)) * 0.2
-        
-        self.vol0[0,0] = 0.20
-        self.vol0[1,0] = 0.15
-        self.vol0[2,0] = 0.08
+        #self.drift = np.ones((nasset,1)) * 0.0
+        #self.vol0  = np.ones((nasset,1)) * 0.2
+        #self.vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
 
 
-        # self.correl = np.identity(nasset) 
-        # self.correl[1,0] = -0.5
-        # self.correl[0,1] = -0.5
-        
-        self.correl =  np.array([[100, 0 , 0 ],
-                [0,  100, -0 ],
-                [-0,  -0, 100 ],                
-               ])/100.0
-       
-        dd = { "drift": self.drift.tolist(),  "vol0" :self.vol0.tolist(), "correl" : self.correl.tolist() }        
+        self.drift, self.vol0, self.correl = scenario("reg", nasset)
+
+
+        dd = { "drift": str(self.drift),  "vol0" : str(self.vol0), "correl" : str(self.correl) }        
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
         
                 
@@ -115,8 +153,11 @@ class PricingOption(Equation):
           vol0  = self.vol0
           correl = self.correl 
 
-          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
-                    correl, choice="all")
+          # allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
+          #          correl, choice="all",)
+
+          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi_regime(nsimul, nasset, nstep, T, s0, vol0, drift, 
+                    correl, choice="all", regime=[0,1,2])
 
           # dw_sample = corrbm
           # x_sample = allpaths
