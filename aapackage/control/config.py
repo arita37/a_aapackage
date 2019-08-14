@@ -14,6 +14,8 @@ if not os.path.exists(export_folder):
       
 
 
+
+
 class Config(object):
     n_layer = 4
     batch_size = 64
