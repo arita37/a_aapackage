@@ -69,7 +69,7 @@ def save_stats(w,x) :
   plt.savefig(export_folder + 'w_conv_100k.png')
   plt.close()
 
-  #### Actual Simulation stats
+  #### Actual Simulation stats : correl, vol
   ### Sum(return over [0,T])
   dfx = pd.DataFrame(  { "x"+str(i+1) : np.sum(x[:,i,0, :], axis=-1) 
                           for i in range(x.shape[1])})
