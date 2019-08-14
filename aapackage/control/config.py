@@ -3,7 +3,7 @@ import sys, os
 
 
 folder_win = r"D:/_devs/Python01/gitdev/zs3drive/"
-export_folder = "/home/ubuntu/zs3drive/" if sys.platform != 'win32' else folder_win
+export_folder = "/home/ubuntu/proj/control/" if sys.platform != 'win32' else folder_win
 
 
 export_folder += "/zs3drive/regime_3assets_attn/"
