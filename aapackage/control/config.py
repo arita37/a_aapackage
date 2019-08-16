@@ -6,7 +6,7 @@ folder_win = r"D:/_devs/Python01/gitdev/zs3drive/"
 export_folder = "/home/ubuntu/proj/control/" if sys.platform != 'win32' else folder_win
 
 
-export_folder += "/regime_3assets_attn/"
+export_folder += "/regime_3assets_reg_test/"
 
 
 if not os.path.exists(export_folder):
@@ -35,12 +35,14 @@ class PricingOptionConfig(Config):
     dim = 3
     total_time = 3.0
     num_time_interval = 30
-    num_iterations = 3000
+    num_iterations = 5000
     
     n_hidden_lstm =dim * 15
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    # num_hiddens = [dim, dim+10, dim+10, dim]
+
+    num_hiddens = [dim, dim+10, dim+10]
     y_init_range = [1, 10]
 
 

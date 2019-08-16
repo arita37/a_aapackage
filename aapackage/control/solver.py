@@ -269,6 +269,10 @@ class FeedForwardModel(object):
                                         self._T + 1],
                              name="X")
     
+    ### Regularization
+    l1_regularizer = tf.contrib.layers.l1_regularizer(  scale=0.01, scope=None)
+
+
     ### Initialization
     ### x : state,  Cost
     self._y_init = tf.Variable(tf.random_uniform(
@@ -360,12 +364,14 @@ class FeedForwardModel(object):
       #######  -Sum(ri)   +Sum(ri**2)
       # delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
       delta = tf.nn.moments(p[:, 1:10], axes=1)[1]*10000.0 + tf.nn.moments(p[:, 10:20], axes=1)[1]*10000.0  + tf.nn.moments(p[:, 20:], axes=1)[1]*10000.0
-      
+
+      weights = tf.trainable_variables()  # all vars of your graph
+      reg_penalty = tf.contrib.layers.apply_regularization(l1_regularizer, weights)
       self._loss = tf.reduce_mean(delta)
+      self._loss = self._loss  + reg_penalty  # this loss needs to be minimized
 
+  
 
-    
-    
     tf.summary.scalar('loss', self._loss)
     # train operations
     global_step = tf.get_variable(
