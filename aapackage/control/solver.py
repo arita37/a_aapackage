@@ -87,6 +87,7 @@ def save_stats(w, x, p) :
   plt.savefig(export_folder + "/w_sample_10k.png" )
   plt.close()
 
+
   #### Weight Convergence
   dfw = pd.DataFrame(  
      {   "w"+str(i+1) : w[:,i,-1] for i in range(w.shape[1])    }     
