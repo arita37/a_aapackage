@@ -41,6 +41,8 @@ def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all
 
     w = np.concatenate(w_all, axis=0)
     x = np.concatenate(x_all, axis=0)
+    p = np.concatenate(p_all, axis=0)
+
 
     np.save(os.path.join(export_folder, 'x.npy'), x)
     # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
@@ -48,13 +50,43 @@ def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all
     np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
     np.save(export_folder + '/w.npy', w )
 
-    save_stats(w, x) 
+    save_stats(w, x, p)
 
 
-def save_stats(w,x) :
-  import pandas as pd  
+def save_stats(w, x, p) :
+  import pandas as pd
   import matplotlib.pyplot as plt
-  
+
+
+  #### Weight at ome sample
+  def get_sample(i) :
+   dd = { "x1" : x[i][0][0][:x.shape[3]-1],
+      "x2" : x[i][1][0][:x.shape[3]-1],
+      "x3" : x[i][1][0][:x.shape[3]-1],
+      "pret" : p[i],
+      "w1" : w[i][0],
+      "w2" : w[i][1],
+      "w3" : w[i][2],
+   }
+   df = pd.DataFrame(dd)
+   return df
+
+  dfw1= get_sample( 100000 )
+  dfw1.to_csv(export_folder + "/weight_sample_190k.txt" )
+
+  dfw1[ [  "w1", "w2", "w3" ] ]
+  plt.savefig(export_folder + "/w_sample_100k.png" )
+  plt.close()
+
+
+
+  dfw1= get_sample( 10000 )
+  dfw1.to_csv(export_folder + "/weight_sample_10k.txt" )
+
+  dfw1[ [  "w1", "w2", "w3" ] ]
+  plt.savefig(export_folder + "/w_sample_10k.png" )
+  plt.close()
+
   #### Weight Convergence
   dfw = pd.DataFrame(  
      {   "w"+str(i+1) : w[:,i,-1] for i in range(w.shape[1])    }     
@@ -90,7 +122,44 @@ def save_stats(w,x) :
   json.dump(dd, open(export_folder + "/x_stats2.txt", mode="w"))    
     
     
-    
+"""
+
+dir1 = "/home/ubuntu/aagit/aapackage/aapackage/control/numpy_arrays/"
+
+from config import  export_folder
+dir1 =  export_folder
+print( export_folder)
+
+##################################################################################
+x = np.load( dir1 + "x.npy"  )
+z = np.load( dir1 +"z.npy"  )
+p = np.load( dir1 +"p.npy"  )
+w = np.load( dir1 +"w.npy"  )
+
+x.shape, z.shape, p.shape, w.shape
+
+##################################################################################
+def get_sample(i) :
+  dd = { "x1" : x[i][0][0][:x.shape[3]-1],
+   "x2" : x[i][1][0][:x.shape[3]-1],
+   "x3" : x[i][1][0][:x.shape[3]-1],
+   "pret" : p[i],
+   "w1" : w[i][0],
+   "w2" : w[i][1],
+   "w3" : w[i][2],   
+   "z1" : z[i][0],
+   "z2" : z[i][1],   
+  }  
+  df = pd.DataFrame(dd)
+  return df
+
+
+#### Time sample
+get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+
+
+
+"""
     
 
 
