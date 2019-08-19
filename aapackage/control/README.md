@@ -2,12 +2,19 @@
 ## Training
 
 ```
-python3 main.py --problem=SquareGradient
+
+Install
+
+install mini conda
 
 
-#### Working Install     ###########################################
-pip3 install tensorflow==1.13.1
-pip3 install scipy
+conda create -n py36 intelpython3_full -c intel
+
+pip install -r  pip_freeze.txt
+
+
+
+
 
 
 
@@ -59,29 +66,6 @@ wheel                0.33.4
 
 ```
 
-
-
-
-Command-line flags:
-
-* `problem_name`: Name of partial differential equation (PDE) to solve.
-There are seven PDEs implemented so far. See [Problems](#problems) section below.
-* `num_run`: Number of experiments to repeatedly run for the same problem.
-* `log_dir`: Directory to write event logs and output array.
-
-
-## Problems
-
-`equation.py` and `config.py` now support the following problems:
-
-* `AllenCahn`: Allen-Cahn equation with a cubic nonlinearity.
-* `HJB`: Hamilton-Jacobi-Bellman (HJB) equation.
-* `PricingOption`: Nonlinear Black-Scholes equation for the pricing of European financial derivatives
-with different interest rates for borrowing and lending.
-* `PricingDefaultRisk`: Nonlinear Black-Scholes equation with default risk in consideration.
-* `BurgesType`: Multidimensional Burgers-type PDEs with explicit solution.
-* `QuadraticGradients`: An example PDE with quadratically growing derivatives and an explicit solution.
-* `ReactionDiffusion`: Time-dependent reaction-diffusion-type example PDE with oscillating explicit solutions.
 
 
 
