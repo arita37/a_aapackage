@@ -1,21 +1,13 @@
 import numpy as np
 import sys, os
 
-
 folder_win = r"D:/_devs/Python01/gitdev/zs3drive/"
 export_folder = "/home/ubuntu/proj/control/" if sys.platform != 'win32' else folder_win
 
-
 export_folder += "/regime_3assets_reg_test/"
 
-
 if not os.path.exists(export_folder):
-      os.makedirs(export_folder)
-      
-
- 
-    
-    
+    os.makedirs(export_folder)
 
 
 class Config(object):
@@ -29,26 +21,24 @@ class Config(object):
     y_init_range = [0, 1]
     dilations = [1, 2, 4, 8]
     clayer = 1
-    
+    x_path = 'logs/x.npy'
+    dw_path = 'logs/dw.npy'
+
+
 class PricingOptionConfig(Config):
     # 6.5 option price by formulae
     dim = 3
     total_time = 3.0
     num_time_interval = 30
     num_iterations = 5000
-    
-    n_hidden_lstm =dim * 15
+
+    n_hidden_lstm = dim * 15
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     # num_hiddens = [dim, dim+10, dim+10, dim]
 
-    num_hiddens = [dim, dim+10, dim+10]
+    num_hiddens = [dim, dim + 10, dim + 10]
     y_init_range = [1, 10]
-
-
-
-
-
 
 
 class AllenCahnConfig(Config):
@@ -72,9 +62,8 @@ class HJBConfig(Config):
     lr_boundaries = [400]
     num_iterations = 10000
     lr_values = list(np.array([1e-2, 1e-2]))
-    num_hiddens = [dim, dim+50, dim+50, dim]
+    num_hiddens = [dim, dim + 50, dim + 50, dim]
     y_init_range = [0, 1]
-
 
 
 class PricingDefaultRiskConfig(Config):
@@ -85,7 +74,7 @@ class PricingDefaultRiskConfig(Config):
     lr_values = list(np.array([8e-3, 8e-3]))
     lr_boundaries = [3000]
     num_iterations = 6000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [40, 50]
 
 
@@ -97,7 +86,7 @@ class BurgesTypeConfig(Config):
     lr_values = list(np.array([1e-2, 1e-3, 1e-4]))
     lr_boundaries = [15000, 25000]
     num_iterations = 30000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [2, 4]
 
 
@@ -109,7 +98,7 @@ class QuadraticGradientsConfig(Config):
     lr_values = list(np.array([5e-3, 5e-3]))
     lr_boundaries = [2000]
     num_iterations = 4000
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
     y_init_range = [2, 4]
 
 
@@ -121,12 +110,11 @@ class ReactionDiffusionConfig(Config):
     lr_values = list(np.array([1e-2, 1e-2, 1e-2]))
     lr_boundaries = [8000, 16000]
     num_iterations = 100
-    num_hiddens = [dim, dim+10, dim+10, dim]
+    num_hiddens = [dim, dim + 10, dim + 10, dim]
 
 
 def get_config(name):
     try:
-        return globals()[name+'Config']
+        return globals()[name + 'Config']
     except KeyError:
         raise KeyError("Config for the required problem not found.")
-
