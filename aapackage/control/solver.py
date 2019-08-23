@@ -142,16 +142,16 @@ def get_sample(i) :
    "pret" : p[i],
    "w1" : w[i][0],
    "w2" : w[i][1],
-   "w3" : w[i][2],   
+   "w3" : w[i][2],
    "z1" : z[i][0],
-   "z2" : z[i][1],   
-  }  
+   "z2" : z[i][1],
+  }
   df = pd.DataFrame(dd)
   return df
 
 
 #### Time sample
-get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()
 
 
 
@@ -390,22 +390,22 @@ class FeedForwardModel(object):
                 # all_w.append(w)
                 """
                   https://stackoverflow.com/questions/37246030/how-to-change-the-temperature-of-a-softmax-output-in-keras
-                
-                
+
+
                 def softargmax(x, beta=1e10):
                    x = tf.convert_to_tensor(x)
                    x_range = tf.range(x.shape.as_list()[-1], dtype=x.dtype)
                    return tf.reduce_sum(tf.nn.softmax(x*beta) * x_range, axis=-1)
-  
-                
+
+
                 """
                 n_class =  self._dim  # n_class
                 temperature = 3.0
-                
+
                 # Define weights for the log reg, n_classes = dim.
                 W = tf.Variable(tf.zeros([self._dim, n_class ]), name='logregw')
                 b = tf.Variable(tf.zeros([ n_class ]), name='logregb')
-                
+
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
 
