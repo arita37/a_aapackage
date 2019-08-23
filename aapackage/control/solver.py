@@ -401,8 +401,8 @@ class FeedForwardModel(object):
                 temperature = 3.0
                 
                 # Define weights for the log reg, n_classes = dim.
-                W = tf.Variable(tf.zeros([self._dim, self._dim]), name='logregw')
-                b = tf.Variable(tf.zeros([self._dim]), name='logregb')
+                W = tf.Variable(tf.zeros([self._dim, n_class ]), name='logregw')
+                b = tf.Variable(tf.zeros([ n_class ]), name='logregb')
                 
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
