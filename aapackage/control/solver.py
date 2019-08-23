@@ -407,16 +407,24 @@ class FeedForwardModel(object):
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
 
-                class_label = [ [ 0.2, 0.2, 0.2 ]
-                                [ 0.2, 0.2, 0.2 ]
-                                [ 0.2, 0.2, 0.2 ]
+                class_label = [ [ 0.2, 0.2, 0.2 ],
+                                [ 0.2, 0.2, 0.2 ],
+                                [ 0.2, 0.2, 0.2 ],
                               ]
-     
-                class_label = tf.convert_to_tensor(class_label)
 
                 ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
-                #### Its a kind of pseudo ArgMax differentiable....  
-                w = tf.dot(w, class_label  )
+                #### Its a kind of pseudo ArgMax differentiable....
+                ### Average Label
+                wtemp = [0] * n_class
+                for wi in w :
+                    for label_j in class_label:
+                      wtemp = wtemp + wi*label_j
+
+
+                wtemp = tf.convert_to_tensor(wtemp)
+
+                w = wtemp   #Tensor od dim (Nsample, :M)
+
 
                 ######################################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))

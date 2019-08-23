@@ -61,6 +61,17 @@ def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
 
 
 
+import tensorflow as tf
+tf.convert_to_tensor()
+
+
+
+
+
+
+
+
+
 
 
 
