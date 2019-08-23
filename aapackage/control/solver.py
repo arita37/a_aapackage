@@ -26,6 +26,26 @@ def log(s):
   Return = sum(ri) = Total return
 
 
+Idea to have policy-Gradient :
+      discrete actions
+
+
+in RL setting :
+      Probability of actions --> Generate sample of action,
+                                 Get reward from sample.
+                                 And add reward to the cost functions.
+
+
+In COntrol problem, no sampling of action, 
+         we estimate the optimal value.
+         Based on estimate, we estimate the final cost.
+
+
+Hybrid between Optimization and RL.
+
+
+Here, we select Optimal action from ArgMax
+
 
 """
 
@@ -416,7 +436,7 @@ class FeedForwardModel(object):
 
                 ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
                 #### Its a kind of pseudo ArgMax differentiable....
-                ### Average Label
+                ### Average Label from proba
                 wtemp = [0] * n_class
                 for wi in w :
                     for label_j in class_label:
