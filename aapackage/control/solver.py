@@ -414,7 +414,7 @@ class FeedForwardModel(object):
      
                 class_label = tf.convert_to_tensor(class_label)
 
-                ### Output is a tensor of shape (Nsample, :M, 1 )
+                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
                 #### Its a kind of pseudo ArgMax differentiable....  
                 w = tf.dot(w, class_label  )
 
