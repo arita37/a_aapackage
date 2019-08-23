@@ -39,6 +39,12 @@ import numpy as np
 from config import get_config
 
 
+
+# De activate GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+
+
 ####################################################################################################
 def load_argument():
     p = ArgumentParser()
@@ -48,14 +54,12 @@ def load_argument():
     p.add_argument("--log_dir", type=str, default='./logs')
     p.add_argument("--framework", type=str, default='tf')
     p.add_argument("--usemodel", type=str, default='lstm')
-    p.add_argument("--array_dir", type=str, default='logs')
+
+    p.add_argument("--input_folder", type=str, default='in_default/')
+    p.add_argument("--output_folder", type=str, default='out_default/')
+
     arg = p.parse_args()
     return arg
-
-
-import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 def log(s):
@@ -118,14 +122,17 @@ def main():
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
-
                 model.build2()  # model.build()
+
+
                 if arg.train:
                     training_history = model.train2()  # model.train()
-
                     tf_save(tf, sess)
                 else:
-                    model.predict_sequence(os.path.join(arg.array_dir, 'x.npy'), os.path.join(arg.array_dir, 'dw.npy'))
+                    model.predict_sequence(arg.input_folder,
+                                           arg.output_folder)
+
+
         elif arg.framework == 'tch':
             training_history = train(c, bsde, arg.usemodel)
 
@@ -145,10 +152,9 @@ def main():
 
 
 if __name__ == "__main__":
-    import logging
-
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
     main()
+
 
 # arg = tf.app.arg.arg
 # tf.app.arg.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")

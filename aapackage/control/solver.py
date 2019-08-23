@@ -21,9 +21,11 @@ def log(s):
 
 
 """
-Variance Realized =  Sum(ri*:2)
-rI**2 =   Sum(wi.ri)**2
-Return = sum(ri) = Total return
+  Variance Realized =  Sum(ri*:2)
+  rI**2 =   Sum(wi.ri)**2
+  Return = sum(ri) = Total return
+
+
 
 """
 
@@ -36,7 +38,7 @@ if not os.path.exists(export_folder):
     os.makedirs(export_folder)
 
 
-def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all):
+def save_history(train_history, x_all, z_all, p_all, w_all, y_all):
     print("Writing path history on disk, {}/".format(export_folder))
 
     w = np.concatenate(w_all, axis=0)
@@ -479,6 +481,7 @@ class FeedForwardModel(object):
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
 
+
     def build(self):
         """"
            y : State
@@ -579,6 +582,7 @@ class FeedForwardModel(object):
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
 
+
     def sample_files(self, X, dW, idx):
         bs = self._config.batch_size
         dw, x = dW[bs * idx:bs * (idx + 1), ...], X[bs * idx:bs * (idx + 1), ...]
@@ -593,26 +597,41 @@ class FeedForwardModel(object):
 
         return dw_valid, x_valid
 
-    def predict_sequence(self, x_file_path, dw_file_path):
+
+    def predict_sequence(self, input_folder, output_folder="out/"):
         saver = tf.train.Saver()
-        save_path = os.path.join('ckpt', 'model.ckpt')
-        x_all, dw_all = np.load(x_file_path), np.load(dw_file_path)
+        saver.restore(self._sess, input_folder + '/model.ckpt')
+
+        x_all, dw_all = np.load(input_folder + "/x.npz" ), np.load(input_folder + "/dw.npz" )
         n = x_all.shape[0]
-        saver.restore(self._sess, save_path)
-        p_all, z_all, w_all = [], [], []
+
+        p_all, z_all, w_all, x_all, y_all = [], [], [], [], []
+
         print("Predicting over the sequence, results will be saved as np array...")
         for idx in range(n // self._config.batch_size):
             dw, x = self.sample_files(x_all, dw_all, idx)
             p, z, w = self._sess.run([self.all_p, self.all_z, self.all_w],
                                      feed_dict={self._dw: dw,
                                                 self._x: x, self._is_training: False})
+
+            y = []
             p_all.append(p)
             z_all.append(z)
             w_all.append(w)
+            x_all.append(x)
+            y_all.append(y)
+
 
         p_all = np.concatenate(p_all, axis=0)
         z_all = np.concatenate(z_all, axis=0)
         w_all = np.concatenate(w_all, axis=0)
-        np.save('logs/p.npy', p_all)
-        np.save('logs/z.npy', z_all)
-        np.save('logs/w.npy', w_all)
+        x_all = np.concatenate(x_all, axis=0)
+        y_all = np.concatenate(y_all, axis=0)
+
+        save_history( [], x_all, z_all, p_all, w_all, y_all)
+
+
+
+        #np.save('logs/p.npy', p_all)
+        #np.save('logs/z.npy', z_all)
+        #np.save('logs/w.npy', w_all)
