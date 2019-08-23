@@ -383,9 +383,14 @@ class FeedForwardModel(object):
                     #  tf.log((self._x[:, :M, 1:t ]) / (
                     #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
 
-                w = z
-                w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
-                all_w.append(w)
+                # w = z
+                # w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
+                # all_w.append(w)
+                # Define weights for the log reg, n_classes = dim.
+                W = tf.Variable(tf.zeros([self._dim, self._dim]), name='logregw')
+                b = tf.Variable(tf.zeros([self._dim]), name='logregb')
+                # let Y = Wx + b with softmax over classes
+                w = tf.nn.softmax(tf.matmul(z, W) + b)
 
                 ######################################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
@@ -565,8 +570,8 @@ class FeedForwardModel(object):
         for idx in range(n // self._config.batch_size):
             dw, x = self.sample_files(x_all, dw_all, idx)
             p, z, w = self._sess.run([self.all_p, self.all_z, self.all_w],
-                                 feed_dict={self._dw: dw,
-                                            self._x: x, self._is_training: False})
+                                     feed_dict={self._dw: dw,
+                                                self._x: x, self._is_training: False})
             p_all.append(p)
             z_all.append(z)
             w_all.append(w)

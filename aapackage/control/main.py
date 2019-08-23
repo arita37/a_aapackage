@@ -42,7 +42,7 @@ from config import get_config
 ####################################################################################################
 def load_argument():
     p = ArgumentParser()
-    p.add_argument("--train", action='store_true', default=True, help="Whether to train or predict")
+    p.add_argument("--train", action='store_true', default=False, help="Whether to train or predict")
     p.add_argument("--problem_name", type=str, default='PricingOption')
     p.add_argument("--num_run", type=int, default=1)
     p.add_argument("--log_dir", type=str, default='./logs')
