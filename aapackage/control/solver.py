@@ -386,11 +386,37 @@ class FeedForwardModel(object):
                 # w = z
                 # w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
                 # all_w.append(w)
+                """
+                  https://stackoverflow.com/questions/37246030/how-to-change-the-temperature-of-a-softmax-output-in-keras
+                
+                
+                def softargmax(x, beta=1e10):
+                   x = tf.convert_to_tensor(x)
+                   x_range = tf.range(x.shape.as_list()[-1], dtype=x.dtype)
+                   return tf.reduce_sum(tf.nn.softmax(x*beta) * x_range, axis=-1)
+  
+                
+                """
+                n_class =  self._dim  # n_class
+                temperature = 3.0
+                
                 # Define weights for the log reg, n_classes = dim.
                 W = tf.Variable(tf.zeros([self._dim, self._dim]), name='logregw')
                 b = tf.Variable(tf.zeros([self._dim]), name='logregb')
+                
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
+
+                class_label = [ [ 0.2, 0.2, 0.2 ]
+                                [ 0.2, 0.2, 0.2 ]
+                                [ 0.2, 0.2, 0.2 ]
+                              ]
+     
+                class_label = tf.convert_to_tensor(class_label)
+
+                ### Output is a tensor of shape (Nsample, :M, 1 )
+                #### Its a kind of pseudo ArgMax differentiable....  
+                w = tf.dot(w, class_label  )
 
                 ######################################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
