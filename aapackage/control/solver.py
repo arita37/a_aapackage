@@ -409,7 +409,7 @@ class FeedForwardModel(object):
                 batch_size = 64
                 for ii in range( batch_size) :
                    ### Calculate : Vector = Sum( Proba_i * class_label[i,:] ) for 1 sample
-                   wtmp = np.diag(w[ ii, :self.dim])  # 3x3 shape
+                   wtmp = np.diag(z[ ii, :self.dim])  # 3x3 shape
                    wtmp =  np.sum( np.dot( class_label, wtmp ) , axis=0)  # 1 x self.dim
                    w[ii, :] = tf.convert_to_tensor( wtmp )
 
