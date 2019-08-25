@@ -78,7 +78,8 @@ def save_stats(w, x, p):
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    #### Weight at ome sample
+
+    #### Weight at ome sample   #############################################
     def get_sample(i):
         dd = {"x1": x[i][0][0][:x.shape[3] - 1],
               "x2": x[i][1][0][:x.shape[3] - 1],
@@ -105,7 +106,8 @@ def save_stats(w, x, p):
     plt.savefig(export_folder + "/w_sample_10k.png")
     plt.close()
 
-    #### Weight Convergence
+
+    #### Weight Convergence  ###############################################
     dfw = pd.DataFrame(
         {"w" + str(i + 1): w[:, i, -1] for i in range(w.shape[1])}
     )
@@ -118,10 +120,10 @@ def save_stats(w, x, p):
     dfw.iloc[:10 ** 5, :].plot()
     plt.savefig(export_folder + 'w_conv_100k.png')
     plt.close()
-
     # get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()
 
-    #### Actual Simulation stats : correl, vol
+
+    #### Actual Simulation stats : correl, vol  ############################
     ### Sum(return over [0,T])
     dfx = pd.DataFrame({"x" + str(i + 1): np.sum(x[:, i, 0, :], axis=-1)
                         for i in range(x.shape[1])})
@@ -138,46 +140,9 @@ def save_stats(w, x, p):
     json.dump(dd, open(export_folder + "/x_stats2.txt", mode="w"))
 
 
-"""
+# dw_path = 'logs/w.npy'
+# x_path = 'logs/x.npy'
 
-dir1 = "/home/ubuntu/aagit/aapackage/aapackage/control/numpy_arrays/"
-
-from config import  export_folder
-dir1 =  export_folder
-print( export_folder)
-
-##################################################################################
-x = np.load( dir1 + "x.npy"  )
-z = np.load( dir1 +"z.npy"  )
-p = np.load( dir1 +"p.npy"  )
-w = np.load( dir1 +"w.npy"  )
-
-x.shape, z.shape, p.shape, w.shape
-
-##################################################################################
-def get_sample(i) :
-  dd = { "x1" : x[i][0][0][:x.shape[3]-1],
-   "x2" : x[i][1][0][:x.shape[3]-1],
-   "x3" : x[i][1][0][:x.shape[3]-1],
-   "pret" : p[i],
-   "w1" : w[i][0],
-   "w2" : w[i][1],
-   "w3" : w[i][2],
-   "z1" : z[i][0],
-   "z2" : z[i][1],
-  }
-  df = pd.DataFrame(dd)
-  return df
-
-
-#### Time sample
-get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()
-
-
-
-"""
-dw_path = 'logs/w.npy'
-x_path = 'logs/x.npy'
 
 
 ###################################################################################################
@@ -322,6 +287,7 @@ class FeedForwardModel(object):
         save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all)
         return np.array(train_history)
 
+
     def build2(self):
         """"
            y : State
@@ -394,6 +360,7 @@ class FeedForwardModel(object):
                 y = z
                 all_y.append(y)
 
+
                 ######################################################################
                 if t == 1:
                     w = 0.0 + z
@@ -404,12 +371,13 @@ class FeedForwardModel(object):
                     # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
                     #  tf.log((self._x[:, :M, 1:t ]) / (
                     #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
-
                 # w = z
                 # w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
                 # all_w.append(w)
-                """
-                  https://stackoverflow.com/questions/37246030/how-to-change-the-temperature-of-a-softmax-output-in-keras
+
+                n_class =  self._dim  # n_class
+                temperature = 10.0
+                beta = 1.0 / temperature
 
 
                 def softargmax(x, beta=1e10):
@@ -418,34 +386,57 @@ class FeedForwardModel(object):
                    return tf.reduce_sum(tf.nn.softmax(x*beta) * x_range, axis=-1)
 
 
-                """
-                n_class =  self._dim  # n_class
-                temperature = 3.0
+                #  z is already sigmoid per dim.
+                #  We need to flatten / peak the softmax
+                w = softargmax(z, beta=1e10)
 
+                """
                 # Define weights for the log reg, n_classes = dim.
                 W = tf.Variable(tf.zeros([self._dim, n_class ]), name='logregw')
                 b = tf.Variable(tf.zeros([ n_class ]), name='logregb')
 
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
+                """
 
-                class_label = [ [ 0.2, 0.2, 0.2 ],
-                                [ 0.2, 0.2, 0.2 ],
-                                [ 0.2, 0.2, 0.2 ],
-                              ]
+                ##### n_class X label
+                class_label = np.array([ [ 0.2, 0.3, 0.4 ],
+                                [ 0.1, 0.5, 0.1 ],
+                                [ 0.6, 0.2, 0.6 ],
+                              ])
 
-                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
-                #### Its a kind of pseudo ArgMax differentiable....
-                ### Average Label from proba
-                wtemp = [0] * n_class
-                for wi in w :
-                    for label_j in class_label:
-                      wtemp = wtemp + wi*label_j
+                ##### Not clear how to Vectorize this part in TF  ???
+                batch_size = 64
+                for ii in range( batch_size) :
+                   ### Calculate : Vector = Sum( Proba_i * class_label[i,:] ) for 1 sample
+                   wtmp = np.diag(w[ ii, :self.dim])  # 3x3 shape
+                   wtmp =  np.sum( np.dot( class_label, wtmp ) , axis=0)  # 1 x self.dim
+                   w[ii, :] = tf.convert_to_tensor( wtmp )
 
 
-                wtemp = tf.convert_to_tensor(wtemp)
+                """ TF pseudo version
+                   wtmp = tf.diag(w[ ii, :self.dim])  # 3x3 shape
+                   wtmp =  tf.reduce_sum( tf.mult( class_label, wtmp ) , axis=0)  # 1 x self.dim
+                   w[ii, :] = wtmp                        
 
-                w = wtemp   #Tensor od dim (Nsample, :M)
+                """
+
+
+                """  NUMPY version working, check purpose
+                 n_class = 3
+                 ndim
+                 i = 5
+
+                 w = np.zeros((500, 6 ))
+                 w[:, :3 ] = np.array([ 0.2, 0.3, 0.5 ])
+
+                 #### Sum( Proba_i * labe_i)
+                 wtmp = np.diag(w[ i, :self.dim])
+                 wtmp =  np.sum( np.dot(wtmp, class_label ) , axis=0)
+                 #   array([0.37, 0.31, 0.41])
+                """
+
+
 
 
                 ######################################################################

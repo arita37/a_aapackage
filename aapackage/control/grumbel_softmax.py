@@ -127,6 +127,82 @@ plt.colorbar(aspect=10, ticks=[-2, 0, 2]);
 
 
 
+####################################################################################################
+####################################################################################################
+                class_label = np.array([ [ 0.2, 0.3, 0.4 ],
+                                [ 0.1, 0.5, 0.1 ],
+                                [ 0.6, 0.2, 0.6 ],
+                              ])
+
+                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
+                #### Its a kind of pseudo ArgMax differentiable....
+                ### Average Label from proba
+                wtemp = [0] * n_class
+                for wi in w :
+                    for label_j in class_label:
+                      wtemp = wtemp + wi*label_j
+
+
+
+####################################################################################################
+####################################################################################################
+n_class = 3
+ndim
+i = 5
+
+w = np.zeros((500, 6 ))
+w[:, :3 ] = np.array([ 0.2, 0.3, 0.5 ])
+
+
+########## data setup
+### Not clear how to make diagnonal matrix from vector in TF
+wtmp = np.diag(w[ i, :self.dim])
+
+#iden  = np.identity(n_class)
+#wtmp = np.dot(iden, wtmp.reshape(1,-1) )
+
+
+#### Sum( Proba_i * labe_i)
+wtmp =  np.sum( np.dot(wtmp, class_label ) , axis=0)
+"""
+np.sum( label_final , axis=0)
+   array([0.37, 0.31, 0.41])
+
+
+"""
+
+
+
+
+wtmp = w[0, :3 ]
+
+
+
+
+
+
+                """
+                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
+                #### Its a kind of pseudo ArgMax differentiable....
+                ### Average Label from proba
+                wtemp = [0] * n_class
+                for wi in w :
+                    for label_j in class_label:
+                      wtemp = wtemp + wi*label_j
+
+
+                wtemp = tf.convert_to_tensor(wtemp)
+
+                w = wtemp   #Tensor od dim (Nsample, :M)
+                """
+
+
+
+
+
+
+
+
 
 
 
