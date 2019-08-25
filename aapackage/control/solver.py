@@ -415,6 +415,10 @@ class FeedForwardModel(object):
 
 
                 """ TF pseudo version
+                  use : ?????
+                       https://stackoverflow.com/questions/48626610/for-loop-in-a-tensor-in-tensorflow
+
+
                    wtmp = tf.diag(w[ ii, :self.dim])  # 3x3 shape
                    wtmp =  tf.reduce_sum( tf.mult( class_label, wtmp ) , axis=0)  # 1 x self.dim
                    w[ii, :] = wtmp                        

@@ -129,25 +129,25 @@ plt.colorbar(aspect=10, ticks=[-2, 0, 2]);
 
 ####################################################################################################
 ####################################################################################################
-                class_label = np.array([ [ 0.2, 0.3, 0.4 ],
-                                [ 0.1, 0.5, 0.1 ],
-                                [ 0.6, 0.2, 0.6 ],
-                              ])
+class_label = np.array([ [ 0.2, 0.3, 0.4 ],
+                [ 0.1, 0.5, 0.1 ],
+                [ 0.6, 0.2, 0.6 ],
+              ])
 
-                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
-                #### Its a kind of pseudo ArgMax differentiable....
-                ### Average Label from proba
-                wtemp = [0] * n_class
-                for wi in w :
-                    for label_j in class_label:
-                      wtemp = wtemp + wi*label_j
+### Output is a tensor of shape (Nsample, :M, 1 ), same than z
+#### Its a kind of pseudo ArgMax differentiable....
+### Average Label from proba
+wtemp = [0] * n_class
+for wi in w :
+    for label_j in class_label:
+      wtemp = wtemp + wi*label_j
 
 
 
 ####################################################################################################
 ####################################################################################################
 n_class = 3
-ndim
+ndim = 5
 i = 5
 
 w = np.zeros((500, 6 ))
@@ -171,9 +171,8 @@ np.sum( label_final , axis=0)
 
 """
 
-
-
-
+####################################################################################################
+####################################################################################################
 wtmp = w[0, :3 ]
 
 
@@ -181,20 +180,31 @@ wtmp = w[0, :3 ]
 
 
 
-                """
-                ### Output is a tensor of shape (Nsample, :M, 1 ), same than z
-                #### Its a kind of pseudo ArgMax differentiable....
-                ### Average Label from proba
-                wtemp = [0] * n_class
-                for wi in w :
-                    for label_j in class_label:
-                      wtemp = wtemp + wi*label_j
 
 
-                wtemp = tf.convert_to_tensor(wtemp)
 
-                w = wtemp   #Tensor od dim (Nsample, :M)
-                """
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
+"""
+### Output is a tensor of shape (Nsample, :M, 1 ), same than z
+#### Its a kind of pseudo ArgMax differentiable....
+### Average Label from proba
+wtemp = [0] * n_class
+for wi in w :
+    for label_j in class_label:
+      wtemp = wtemp + wi*label_j
+
+
+wtemp = tf.convert_to_tensor(wtemp)
+
+w = wtemp   #Tensor od dim (Nsample, :M)
+"""
 
 
 
