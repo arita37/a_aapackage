@@ -78,7 +78,6 @@ def save_stats(w, x, p):
     import pandas as pd
     import matplotlib.pyplot as plt
 
-
     #### Weight at ome sample   #############################################
     def get_sample(i):
         dd = {"x1": x[i][0][0][:x.shape[3] - 1],
@@ -106,7 +105,6 @@ def save_stats(w, x, p):
     plt.savefig(export_folder + "/w_sample_10k.png")
     plt.close()
 
-
     #### Weight Convergence  ###############################################
     dfw = pd.DataFrame(
         {"w" + str(i + 1): w[:, i, -1] for i in range(w.shape[1])}
@@ -121,7 +119,6 @@ def save_stats(w, x, p):
     plt.savefig(export_folder + 'w_conv_100k.png')
     plt.close()
     # get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()
-
 
     #### Actual Simulation stats : correl, vol  ############################
     ### Sum(return over [0,T])
@@ -142,7 +139,6 @@ def save_stats(w, x, p):
 
 # dw_path = 'logs/w.npy'
 # x_path = 'logs/x.npy'
-
 
 
 ###################################################################################################
@@ -287,7 +283,6 @@ class FeedForwardModel(object):
         save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all)
         return np.array(train_history)
 
-
     def build2(self):
         """"
            y : State
@@ -330,6 +325,10 @@ class FeedForwardModel(object):
         w0 = tf.Variable(tf.random.uniform([self._config.batch_size, M * self._config.clayer],
                                            minval=0.1, maxval=0.3, dtype=TF_DTYPE), name='w_init')
 
+        ##### n_class X label  ####################################################
+        n_class = self._config.dim
+        class_label = tf.random.uniform(shape=[n_class, n_class], name='class_label')
+
         all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
         with tf.variable_scope("forward"):
             for t in range(1, self._T):
@@ -360,87 +359,32 @@ class FeedForwardModel(object):
                 y = z
                 all_y.append(y)
 
-
                 ######################################################################
-                if t == 1:
-                    w = 0.0 + z
+                # if t == 1:
+                #    w = 0.0 + z
 
-                else:
-                    a = 1
-                    ### t=1 has issue
-                    # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
-                    #  tf.log((self._x[:, :M, 1:t ]) / (
-                    #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
+                # else:
+                #    a = 1
+                ### t=1 has issue
+                # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
+                #  tf.log((self._x[:, :M, 1:t ]) / (
+                #          self._x[:, :M, 0:t-1 ])), axes=2)[1] + self._smooth))
                 # w = z
                 # w = w / tf.reduce_sum(w, -1, keepdims=True)  ### Normalize Sum to 1
                 # all_w.append(w)
 
-                n_class =  self._dim  # n_class
-                temperature = 10.0
-                beta = 1.0 / temperature
-
-
-                def softargmax(x, beta=1e10):
-                   x = tf.convert_to_tensor(x)
-                   x_range = tf.range(x.shape.as_list()[-1], dtype=x.dtype)
-                   return tf.reduce_sum(tf.nn.softmax(x*beta) * x_range, axis=-1)
-
-
-                #  z is already sigmoid per dim.
-                #  We need to flatten / peak the softmax with beta = 1/temperature
-                z = softargmax(z, beta=1e10)
-
+                # Define weights for the log reg, n_classes = dim. z is dim dimensional, use log reg to
+                # convert to n_class dimensional.
                 """
-                # Define weights for the log reg, n_classes = dim.
-                W = tf.Variable(tf.zeros([self._dim, n_class ]), name='logregw')
-                b = tf.Variable(tf.zeros([ n_class ]), name='logregb')
+                W = tf.Variable(tf.zeros([self._dim, n_class]), name='logregw')
+                b = tf.Variable(tf.zeros([n_class]), name='logregb')
 
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
                 """
-
-                ##### n_class X label  ####################################################
-                class_label = np.array([ [ 0.2, 0.3, 0.4 ],
-                                       [ 0.1, 0.5, 0.1 ],
-                                       [ 0.6, 0.2, 0.6 ],
-                              ])
-
-                ##### Not clear how to Vectorize this part in TF  ???
-                batch_size = 64
-                for ii in range( batch_size) :
-                   ### Calculate : Vector = Sum( Proba_i * class_label[i,:] ) for 1 sample
-                   wtmp = np.diag(z[ ii, :self.dim])  # 3x3 shape
-                   wtmp =  np.sum( np.dot( class_label, wtmp ) , axis=0)  # 1 x self.dim
-                   w[ii, :] = tf.convert_to_tensor( wtmp )
-
-
-                """ TF pseudo version
-                   Use : ?????
-                       https://stackoverflow.com/questions/48626610/for-loop-in-a-tensor-in-tensorflow
-
-
-                   wtmp = tf.diag(z[ ii, :self.dim])  # 3x3 shape
-                   wtmp =  tf.reduce_sum( tf.mult( class_label, wtmp ) , axis=0)  # 1 x self.dim
-                   w[ii, :] = wtmp                        
-                """
-
-
-                """  NUMPY version working, check purpose
-                  n_class = 3
-                  ndim
-                  i = 5
-
-                  w = np.zeros((500, 6 ))
-                  w[:, :3 ] = np.array([ 0.2, 0.3, 0.5 ])
-
-                  #### Sum( Proba_i * labe_i)
-                  wtmp = np.diag(w[ i, :self.dim])
-                  wtmp =  np.sum( np.dot(wtmp, class_label ) , axis=0)
-                  #   array([0.37, 0.31, 0.41])
-                """
-
-
-
+                ##### Vectorized in tf
+                w = tf.linalg.diag(z)
+                w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
 
                 ######################################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
@@ -494,7 +438,6 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
-
 
     def build(self):
         """"
@@ -596,7 +539,6 @@ class FeedForwardModel(object):
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
 
-
     def sample_files(self, X, dW, idx):
         bs = self._config.batch_size
         dw, x = dW[bs * idx:bs * (idx + 1), ...], X[bs * idx:bs * (idx + 1), ...]
@@ -611,12 +553,11 @@ class FeedForwardModel(object):
 
         return dw_valid, x_valid
 
-
     def predict_sequence(self, input_folder, output_folder="out/"):
         saver = tf.train.Saver()
         saver.restore(self._sess, input_folder + '/model.ckpt')
 
-        x_all, dw_all = np.load(input_folder + "/x.npz" ), np.load(input_folder + "/dw.npz" )
+        x_all, dw_all = np.load(input_folder + "/x.npz"), np.load(input_folder + "/dw.npz")
         n = x_all.shape[0]
 
         p_all, z_all, w_all, x_all, y_all = [], [], [], [], []
@@ -635,17 +576,14 @@ class FeedForwardModel(object):
             x_all.append(x)
             y_all.append(y)
 
-
         p_all = np.concatenate(p_all, axis=0)
         z_all = np.concatenate(z_all, axis=0)
         w_all = np.concatenate(w_all, axis=0)
         x_all = np.concatenate(x_all, axis=0)
         y_all = np.concatenate(y_all, axis=0)
 
-        save_history( [], x_all, z_all, p_all, w_all, y_all)
+        save_history([], x_all, z_all, p_all, w_all, y_all)
 
-
-
-        #np.save('logs/p.npy', p_all)
-        #np.save('logs/z.npy', z_all)
-        #np.save('logs/w.npy', w_all)
+        # np.save('logs/p.npy', p_all)
+        # np.save('logs/z.npy', z_all)
+        # np.save('logs/w.npy', w_all)
