@@ -388,7 +388,7 @@ class FeedForwardModel(object):
 
                 #  z is already sigmoid per dim.
                 #  We need to flatten / peak the softmax
-                w = softargmax(z, beta=1e10)
+                z = softargmax(z, beta=1e10)
 
                 """
                 # Define weights for the log reg, n_classes = dim.
