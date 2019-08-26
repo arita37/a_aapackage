@@ -58,23 +58,25 @@ if not os.path.exists(export_folder):
     os.makedirs(export_folder)
 
 
-def save_history(train_history, x_all, z_all, p_all, w_all, y_all):
+def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all):
     print("Writing path history on disk, {}/".format(export_folder))
 
     w = np.concatenate(w_all, axis=0)
     x = np.concatenate(x_all, axis=0)
     p = np.concatenate(p_all, axis=0)
+    z = np.concatenate(z_all, axis=0)
+
 
     np.save(os.path.join(export_folder, 'x.npy'), x)
     # np.save(export_folder + '/y.npy', np.concatenate(y_all, axis=0))
-    np.save(os.path.join(export_folder, 'z.npy'), np.concatenate(z_all, axis=0))
-    np.save(os.path.join(export_folder, 'p.npy'), np.concatenate(p_all, axis=0))
+    np.save(os.path.join(export_folder, 'z.npy'), z)
+    np.save(os.path.join(export_folder, 'p.npy'), p)
     np.save(export_folder + '/w.npy', w)
 
-    save_stats(w, x, p)
+    save_stats(export_folder, z,w, x, p)
 
 
-def save_stats(w, x, p):
+def save_stats(export_folder, z,w, x, p):
     import pandas as pd
     import matplotlib.pyplot as plt
 
@@ -84,14 +86,22 @@ def save_stats(w, x, p):
               "x2": x[i][1][0][:x.shape[3] - 1],
               "x3": x[i][1][0][:x.shape[3] - 1],
               "pret": p[i],
+
+              "z1": z[i][0],
+              "z2": z[i][1],
+              "z3": z[i][2],
+
               "w1": w[i][0],
               "w2": w[i][1],
               "w3": w[i][2],
+
+
               }
+
         df = pd.DataFrame(dd)
         return df
 
-    dfw1 = get_sample(100000)
+    dfw1 = get_sample(20000)
     dfw1.to_csv(export_folder + "/weight_sample_190k.txt")
 
     dfw1[["w1", "w2", "w3"]]
@@ -327,7 +337,13 @@ class FeedForwardModel(object):
 
         ##### n_class X label  ####################################################
         n_class = self._config.dim
-        class_label = tf.random.uniform(shape=[n_class, n_class], name='class_label')
+        # class_label = tf.random.uniform(shape=[n_class, n_class], name='class_label')
+
+        class_label =  tf.convert_to_tensor( np.array([ [ 1, 1, 1 ],
+                                       [ 10, 10, 10 ],
+                                       [ 100, 100, 100 ],
+                              ]).T , name='class_label', dtype=TF_DTYPE )
+
 
         all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
         with tf.variable_scope("forward"):
@@ -353,7 +369,7 @@ class FeedForwardModel(object):
 
                 elif self._usemodel == 'biattn':
                     z = self.subnetwork.build(self._x[:, :, t - 1], t - 1) / self._dim
-                all_z.append(z)
+
 
                 ######################################################################
                 y = z
@@ -382,9 +398,16 @@ class FeedForwardModel(object):
                 # let Y = Wx + b with softmax over classes
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
                 """
-                ##### Vectorized in tf
+                ##### From softmax, pick up the right class_label and add dimension 0
+
+                # z = tf.nn.softmax(z)
+                z = z / tf.reduce_sum(z, -1, keepdims=True)
+
                 w = tf.linalg.diag(z)
                 w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
+                all_w.append(w)
+                all_z.append(z)
+
 
                 ######################################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
@@ -438,6 +461,12 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+
+
+
+
+
+
 
     def build(self):
         """"
