@@ -339,12 +339,18 @@ class FeedForwardModel(object):
         n_class = self._config.dim
         # class_label = tf.random.uniform(shape=[n_class, n_class], name='class_label')
 
-        class_label =  tf.convert_to_tensor( np.array([ [ 1, 1, 1 ],
-                                       [ 10, 10, 10 ],
-                                       [ 100, 100, 100 ],
-                              ]).T , name='class_label', dtype=TF_DTYPE )
+        class_label =  tf.convert_to_tensor( np.array([ [ 0.1, 0.2, 0.7 ],
+                                       [ 0.2, 0.6, 0.2 ],
+                                       [ 0.7, 0.1, 0.2 ],
+                              ]) , name='class_label', dtype=TF_DTYPE )
+
+        """
+          0.49538052,  0.50057834 ,0.004041157,
+          0.49538052,  0.0,        0.4041157
 
 
+
+        """
         all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
         with tf.variable_scope("forward"):
             for t in range(1, self._T):
@@ -404,7 +410,7 @@ class FeedForwardModel(object):
                 z = z / tf.reduce_sum(z, -1, keepdims=True)
 
                 w = tf.linalg.diag(z)
-                w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
+                w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
                 all_w.append(w)
                 all_z.append(z)
 

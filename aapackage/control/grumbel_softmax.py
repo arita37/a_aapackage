@@ -176,9 +176,38 @@ np.sum( label_final , axis=0)
 ####################################################################################################
 wtmp = w[0, :3 ]
 
+sess = tf.compat.v1.InteractiveSession()
+
+class_label = tf.convert_to_tensor( np.array([ [ 1, 2, 3 ],
+                [ 40, 50 , 60 ],
+                [ 70.0, 80, 90 ],
+              ]) )
+
+
+z = tf.convert_to_tensor( [ 10, 100, 1000] , dtype= tf.float64)
+w = tf.linalg.diag(z)
+w = tf.expand_dims(w, axis=0)
+
+
+w1 = tf.matmul( w, tf.expand_dims(class_label, axis=0) )
+w2 = tf.reduce_sum( w1 , axis=1)
+
+w2.eval()
+w.eval()
 
 
 
+
+
+
+
+
+
+
+
+
+####################################################################################################
+####################################################################################################
 
 
 def sample_gumbel(shape, eps=1e-20): 
