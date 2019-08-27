@@ -407,15 +407,13 @@ class FeedForwardModel(object):
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
                 """
                 ##### From softmax, pick up the right class_label and add dimension 0
-
-                # z = tf.nn.softmax(z)
                 #z = z / tf.reduce_sum(z, -1, keepdims=True)
 
-                temperature = 0.1
-                z = tf.nn.softmax( z / temperature)
+                temperature = 0.07
+                z = tf.nn.softmax( z / temperature)  #Simulate Argmax
 
+                ## Select right lavel
                 w = tf.linalg.diag(z)
-                # w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
                 w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
                 all_w.append(w)
                 all_z.append(z)

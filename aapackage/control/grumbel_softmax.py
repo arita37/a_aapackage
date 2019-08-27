@@ -184,7 +184,7 @@ class_label = tf.convert_to_tensor( np.array([ [ 1, 2, 3 ],
               ]) )
 
 
-temperature = 1.0
+temperature = 0.07
 z = tf.convert_to_tensor( [ 0.2, 0.5, 0.3 ] , dtype= tf.float64)
 z = tf.nn.softmax( z / temperature)
 z.eval()

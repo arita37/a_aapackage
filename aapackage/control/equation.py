@@ -89,7 +89,7 @@ def scenario(name, nasset) :
         drift = [ np.ones((nasset,1)) * 0.0  for i in range(3) ]     
         
         vol0 = [
-                 np.array([[ 0.30, 0.20, 0.05 ]]).T ,
+                 np.array([[ 0.30, 0.20, 0.02 ]]).T ,
                  np.array([[ 0.30, 0.02, 0.30 ]]).T ,
                  np.array([[ 0.02, 0.40, 0.30 ]]).T ,
                 ]
