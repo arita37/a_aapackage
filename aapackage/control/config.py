@@ -30,7 +30,7 @@ class PricingOptionConfig(Config):
     dim = 3
     total_time = 3.0
     num_time_interval = 30
-    num_iterations = 2000
+    num_iterations = 7000
 
     n_hidden_lstm = dim * 15
     lr_values = list(np.array([5e-3, 5e-3]))

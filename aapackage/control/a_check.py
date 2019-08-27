@@ -48,6 +48,7 @@ w = np.load( dir1 +"w.npy"  )
 
 x.shape, z.shape, p.shape, w.shape
 
+
 ##################################################################################
 def get_sample(i) :
   dd = { "x1" : x[i][0][0][:x.shape[3]-1],
@@ -65,7 +66,11 @@ def get_sample(i) :
 
 
 
-get_sample( 190000 )[ [  "w1", "w2", "w3" ]   ].plot()  
+
+
+get_sample( 100000 )[ [  "w1", "w2", "w3" ]   ].plot()
+
+
 
 
 get_sample( 120000 )[ [  "x3" ]   ].plot()

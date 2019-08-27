@@ -101,19 +101,21 @@ def save_stats(export_folder, z,w, x, p):
         df = pd.DataFrame(dd)
         return df
 
-    dfw1 = get_sample(20000)
-    dfw1.to_csv(export_folder + "/weight_sample_190k.txt")
+    def sample_save(i) :
+         dfw1 = get_sample(i)
+         dfw1.to_csv(export_folder + "/weight_sample_{i}.txt".format(i=i) )
 
-    dfw1[["w1", "w2", "w3"]]
-    plt.savefig(export_folder + "/w_sample_100k.png")
-    plt.close()
+         dfw1[["w1", "w2", "w3"]].plot()
+         plt.savefig(export_folder + "/w_sample_{i}.png".format(i=i) )
+         plt.close()
 
-    dfw1 = get_sample(10000)
-    dfw1.to_csv(export_folder + "/weight_sample_10k.txt")
 
-    dfw1[["w1", "w2", "w3"]]
-    plt.savefig(export_folder + "/w_sample_10k.png")
-    plt.close()
+    sample_save(  1000  )
+    sample_save(  10000 )
+    sample_save(  50000 )
+    sample_save( 100000 )
+    sample_save( 190000 )
+
 
     #### Weight Convergence  ###############################################
     dfw = pd.DataFrame(
@@ -407,11 +409,14 @@ class FeedForwardModel(object):
                 ##### From softmax, pick up the right class_label and add dimension 0
 
                 # z = tf.nn.softmax(z)
-                # z = z / tf.reduce_sum(z, -1, keepdims=True)
+                #z = z / tf.reduce_sum(z, -1, keepdims=True)
+
+                temperature = 0.1
+                z = tf.nn.softmax( z / temperature)
 
                 w = tf.linalg.diag(z)
-                # w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
-                w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
+                # w = tf.reduce_sum(tf.multiply(tf.expand_dims(class_label, axis=0), w), axis=1)
+                w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
                 all_w.append(w)
                 all_z.append(z)
 

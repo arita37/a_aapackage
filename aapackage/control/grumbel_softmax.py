@@ -184,7 +184,12 @@ class_label = tf.convert_to_tensor( np.array([ [ 1, 2, 3 ],
               ]) )
 
 
-z = tf.convert_to_tensor( [ 10, 100, 1000] , dtype= tf.float64)
+temperature = 1.0
+z = tf.convert_to_tensor( [ 0.2, 0.5, 0.3 ] , dtype= tf.float64)
+z = tf.nn.softmax( z / temperature)
+z.eval()
+
+
 w = tf.linalg.diag(z)
 w = tf.expand_dims(w, axis=0)
 
@@ -196,6 +201,12 @@ w2.eval()
 w.eval()
 
 
+
+
+def gumbel_softmax_sample(logits, temperature): 
+  """ Draw a sample from the Gumbel-Softmax distribution"""
+  y = logits + sample_gumbel(tf.shape(logits))
+  return tf.nn.softmax( y / temperature)
 
 
 
