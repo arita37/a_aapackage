@@ -176,6 +176,8 @@ np.sum( label_final , axis=0)
 ####################################################################################################
 wtmp = w[0, :3 ]
 
+
+import tensorflow as tf
 sess = tf.compat.v1.InteractiveSession()
 
 class_label = tf.convert_to_tensor( np.array([ [ 1, 2, 3 ],
@@ -184,7 +186,7 @@ class_label = tf.convert_to_tensor( np.array([ [ 1, 2, 3 ],
               ]) )
 
 
-temperature = 0.07
+temperature = 0.2
 z = tf.convert_to_tensor( [ 0.2, 0.5, 0.3 ] , dtype= tf.float64)
 z = tf.nn.softmax( z / temperature)
 z.eval()

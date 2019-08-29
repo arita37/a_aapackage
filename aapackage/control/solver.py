@@ -102,19 +102,25 @@ def save_stats(export_folder, z,w, x, p):
         return df
 
     def sample_save(i) :
-         dfw1 = get_sample(i)
-         dfw1.to_csv(export_folder + "/weight_sample_{i}.txt".format(i=i) )
+         try :
+           dfw1 = get_sample(i)
+           dfw1.to_csv(export_folder + "/weight_sample_{i}.txt".format(i=i) )
 
-         dfw1[["w1", "w2", "w3"]].plot()
-         plt.savefig(export_folder + "/w_sample_{i}.png".format(i=i) )
-         plt.close()
+           dfw1[["w1", "w2", "w3"]].plot()
+           plt.savefig(export_folder + "/w_sample_{i}.png".format(i=i) )
+           plt.close()
+         except :
+            pass
 
 
     sample_save(  1000  )
     sample_save(  10000 )
     sample_save(  50000 )
+    sample_save(  75000 )
     sample_save( 100000 )
+    sample_save( 150000 )
     sample_save( 190000 )
+    sample_save( 250000 )
 
 
     #### Weight Convergence  ###############################################
@@ -341,14 +347,24 @@ class FeedForwardModel(object):
         n_class = self._config.dim
         # class_label = tf.random.uniform(shape=[n_class, n_class], name='class_label')
 
-        class_label =  tf.convert_to_tensor( np.array([ [ 0.1, 0.2, 0.7 ],
-                                       [ 0.2, 0.6, 0.2 ],
-                                       [ 0.7, 0.1, 0.2 ],
+        class_label =  tf.convert_to_tensor( np.array([ [ 0.01, 0.25, 0.74 ],
+                                       [ 0.80, 0.19, 0.01 ],
+                                       [ 0.01, 0.74, 0.25 ],
                               ]) , name='class_label', dtype=TF_DTYPE )
 
         """
           0.49538052,  0.50057834 ,0.004041157,
           0.49538052,  0.0,        0.4041157
+
+Min Vol {0: 0.1386692125551192, 1: 0.1780535352118179, 2: 0.6832772522330629}
+
+
+Min Vol {0: 0.7550561932704953, 1: 0.18876404280450715, 2: 0.0561797639249976}
+
+
+Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
+
+
 
 
 
@@ -409,8 +425,8 @@ class FeedForwardModel(object):
                 ##### From softmax, pick up the right class_label and add dimension 0
                 #z = z / tf.reduce_sum(z, -1, keepdims=True)
 
-                temperature = 0.07
-                z = tf.nn.softmax( z / temperature)  #Simulate Argmax
+                temperature = 0.04
+                z = tf.nn.softmax( z / temperature, axis=-1)  #Simulate Argmax if temp --> 0
 
                 ## Select right lavel
                 w = tf.linalg.diag(z)
@@ -469,7 +485,16 @@ class FeedForwardModel(object):
             zip(grads, trainable_variables), global_step=global_step, name="train_step"
         )
         all_ops = [apply_op] + self._extra_train_ops
-        self._train_ops = tf.group(*all_ops)
+
+        """
+        # Training with EMA averages
+        ema = tf.train.ExponentialMovingAverage(decay=0.9999)
+        with tf.control_dependencies([ apply_op ]):
+           all_ops_ema = ema.apply( trainable_variables )
+        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+        """
+
+        self._train_ops = tf.group(*all_ops_ema )
         self._t_build = time.time() - t0
 
 
@@ -577,6 +602,9 @@ class FeedForwardModel(object):
         all_ops = [apply_op] + self._extra_train_ops
         self._train_ops = tf.group(*all_ops)
         self._t_build = time.time() - t0
+
+
+
 
     def sample_files(self, X, dW, idx):
         bs = self._config.batch_size

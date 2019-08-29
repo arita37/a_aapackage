@@ -165,6 +165,7 @@ class subnetwork_dila(object):
             return self.logits
 
 
+
 ###############  LSTM
 class subnetwork_lstm(object):
     def __init__(self, config):
@@ -174,9 +175,12 @@ class subnetwork_lstm(object):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
             x, s = tf.nn.static_rnn(lstm, x, dtype=TF_DTYPE)
-            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1], name='hidden_out', reuse=i > 0)
-            x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
-                                reuse=i > 0)
+
+            ### Output layer
+            x = tf.layers.dense(x[-1], self._config.dim, activation=tf.nn.sigmoid, name='hidden_out', reuse=i > 0)
+
+            # x = tf.layers.dense(x[-1], self._config.num_hiddens_lstm[-1], name='hidden_out', reuse=i > 0)
+            # x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',  reuse=i > 0)
             return x
 
 
@@ -203,10 +207,9 @@ class subnetwork_lstm_attn(object):
             x, last_state = tf.nn.static_rnn(self.rnn_cells, x, dtype=TF_DTYPE)
             
             ## FF
-            x = tf.layers.dense(x[-1], self._config.num_hiddens[-1],  name='hidden_out', reuse=i > 0)
+            x = tf.layers.dense(x[-1], self._config.num_hiddens_attn[-1],  name='hidden_out', reuse=i > 0)
             x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
-                                reuse=i > 0) 
-           
+                                reuse=i > 0)
             return x
 
 
@@ -238,13 +241,15 @@ class subnetwork_ff(object):
                                   activation_fn=tf.nn.relu,
                                   name="layer_{}".format(i),
                 )
-            x = self._dense_batch_layer(hiddens, self._config.num_hiddens[-1], 
+
+            # Output layer, sigmoid
+            x = self._dense_batch_layer(hiddens, self._config.num_hiddens[-1],   #dim diemnson
                                         activation_fn= tf.nn.sigmoid,  #None, 
                                         name="final_layer"
             )
-            
+
             # x = tf.layers.dense(x, self._config.dim, activation=tf.nn.sigmoid, name='dense_out',
-            #                    reuse=i > 0)           
+            #                  reuse=i > 0)
             return x
 
 
