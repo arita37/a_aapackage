@@ -174,6 +174,9 @@ class subnetwork_lstm(object):
     def build(self, x, i):
         with tf.variable_scope('Global_RNN', reuse=i > 0):
             lstm = tf.nn.rnn_cell.LSTMCell(self._config.n_hidden_lstm, name='lstm_cell', reuse=i > 0)
+
+            lstm = tf.nn.rnn_cell.DropoutWrapper(lstm, output_keep_prob=0.7  )
+
             x, s = tf.nn.static_rnn(lstm, x, dtype=TF_DTYPE)
 
             ### Output layer

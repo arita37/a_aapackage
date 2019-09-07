@@ -48,7 +48,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 ####################################################################################################
 def load_argument():
     p = ArgumentParser()
-    p.add_argument("--train", action='store_true', default=False, help="Whether to train or predict")
+    p.add_argument("--do", type=str, default='train/predict/generate paths')
+
     p.add_argument("--problem_name", type=str, default='PricingOption')
     p.add_argument("--num_run", type=int, default=1)
     p.add_argument("--log_dir", type=str, default='./logs')
@@ -114,7 +115,13 @@ def main():
     print(bsde)
     logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
 
-    #### Loop over run
+
+    #### Generated Sample path
+    if arg.do == "generate_path" :
+        bsde.sample_save()
+        sys.exit(0)
+
+    #### Loop over each epoch
     for k in range(1, arg.num_run + 1):
         log("Begin to solve %s with run %d" % (arg.problem_name, k))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
@@ -125,7 +132,7 @@ def main():
                 model.build2()  # model.build()
 
 
-                if arg.train:
+                if arg.do == "train":
                     training_history = model.train2()  # model.train()
                     tf_save(tf, sess)
                 else:

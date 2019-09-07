@@ -101,11 +101,16 @@ def save_stats(export_folder, z,w, x, p):
         df = pd.DataFrame(dd)
         return df
 
+
     def sample_save(i) :
          try :
            dfw1 = get_sample(i)
            dfw1.to_csv(export_folder + "/weight_sample_{i}.txt".format(i=i) )
 
+           for k in range(0,19) :
+               dfw1 = dfw1 + get_sample(i+k)
+
+           dfw1 = dfw1 / 20.0
            dfw1[["w1", "w2", "w3"]].plot()
            plt.savefig(export_folder + "/w_sample_{i}.png".format(i=i) )
            plt.close()
@@ -365,9 +370,6 @@ Min Vol {0: 0.7550561932704953, 1: 0.18876404280450715, 2: 0.0561797639249976}
 Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
 
 
-
-
-
         """
         all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
         with tf.variable_scope("forward"):
@@ -400,11 +402,20 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
                 all_y.append(y)
 
                 ######################################################################
-                # if t == 1:
-                #    w = 0.0 + z
+                if t < 3:
+                    w = 0.0 + z
 
-                # else:
+                else:
                 #    a = 1
+                  w = 0.0 + z + 0.005 / tf.sqrt(tf.nn.moments(self._x[:, :M, t-3:t ], axes=2 )[1] +0.001 )
+                  w = w / tf.reduce_sum(w , -1, keepdims=True)
+
+                """ 
+                   Filter path with low variance, 
+                   Generate all the paths and Maximum difference
+                   Monte Carlo Stratified Sampling
+
+                """
                 ### t=1 has issue
                 # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
                 #  tf.log((self._x[:, :M, 1:t ]) / (
@@ -423,14 +434,30 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
                 w = tf.nn.softmax(tf.matmul(z, W) + b)
                 """
                 ##### From softmax, pick up the right class_label and add dimension 0
-                #z = z / tf.reduce_sum(z, -1, keepdims=True)
+                # w = z / tf.reduce_sum(z, -1, keepdims=True)
+                # w = tf.nn.softmax( z , axis=-1)
+                #w = z
 
-                temperature = 0.04
-                z = tf.nn.softmax( z / temperature, axis=-1)  #Simulate Argmax if temp --> 0
+
+
+                #temperature = 0.04
+                #z = tf.nn.softmax( z / temperature, axis=-1)  #Simulate Argmax if temp --> 0
 
                 ## Select right lavel
-                w = tf.linalg.diag(z)
-                w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
+                #w = tf.linalg.diag(z)
+                #w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
+                #w = z / tf.reduce_sum(w, -1, keepdims=True)
+
+
+                #### Connection in time
+                alpha = 0.9   # lower mean high continuity
+                if t > 1 :
+                  w =  w*alpha + (1-alpha) * all_w[ -1 ]
+
+                ### Cannot get average of weight
+                # w  = tf.math.reduce_mean( w, axis=0,keepdims=True, )
+
+
                 all_w.append(w)
                 all_z.append(z)
 
@@ -457,13 +484,25 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
             # Final Difference :
             #######  -Sum(ri)   +Sum(ri**2)
             # delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
+
+
+
             delta = tf.nn.moments(p[:, 1:10], axes=1)[1] * 10000.0 + tf.nn.moments(p[:, 10:20], axes=1)[1] * 10000.0 + \
-                    tf.nn.moments(p[:, 20:], axes=1)[1] * 10000.0
+                    tf.nn.moments(p[:, 20:], axes=1)[1] * 10000.0  # \
+                    #+ 5.0 * tf.abs(1- tf.reduce_sum(all_w[-1], axis=-1)[0])
+
 
             weights = tf.trainable_variables()  # all vars of your graph
             reg_penalty = tf.contrib.layers.apply_regularization(l1_regularizer, weights)
+
+            #### Moving Average in Sample
+            #  delta = moving_average( delta,  all_delta)
+
             self._loss = tf.reduce_mean(delta)
             self._loss = self._loss + reg_penalty  # this loss needs to be minimized
+
+
+
 
         tf.summary.scalar('loss', self._loss)
         # train operations
@@ -488,13 +527,14 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
 
         """
         # Training with EMA averages
+        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+
         ema = tf.train.ExponentialMovingAverage(decay=0.9999)
         with tf.control_dependencies([ apply_op ]):
            all_ops_ema = ema.apply( trainable_variables )
-        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
         """
 
-        self._train_ops = tf.group(*all_ops_ema )
+        self._train_ops = tf.group(*all_ops )
         self._t_build = time.time() - t0
 
 

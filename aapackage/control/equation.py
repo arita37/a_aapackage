@@ -129,19 +129,61 @@ class PricingOption(Equation):
 
         nasset = self._dim
         self.s0    = np.ones((nasset)) * 100.0
-        #self.drift = np.ones((nasset,1)) * 0.0
-        #self.vol0  = np.ones((nasset,1)) * 0.2
-        #self.vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
-
 
         self.drift, self.vol0, self.correl = scenario("reg", nasset)
 
 
         dd = { "drift": str(self.drift),  "vol0" : str(self.vol0), "correl" : str(self.correl) }        
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
+
+        self.allret = np.load( os.path.join(export_folder, 'x_generated.npy') )
+        self.ii = 0
+
+
+    def sample_save(self, num_sample, clayer=0):
+        if clayer > -1 :
+
+          nsimul = num_sample
+          nasset = self._dim
+          nstep = self._num_time_interval
+          T = self._num_time_interval * self._delta_t
         
-                
+          s0    = self.s0
+          drift = self.drift
+          vol0  = self.vol0
+          correl = self.correl 
+
+
+          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi_regime(nsimul, nasset, nstep, T, s0, vol0, drift, 
+                    correl, choice="all", regime=[0,1,2])
+
+          np.save(os.path.join(export_folder, 'x_generated.npy'), allret)
+
+
+
     def sample(self, num_sample, clayer=0):
+        if clayer > -1 :
+
+          nsimul = num_sample
+          nasset = self._dim
+          nstep = self._num_time_interval
+          T = self._num_time_interval * self._delta_t
+        
+          s0    = self.s0
+          drift = self.drift
+          vol0  = self.vol0
+          correl = self.correl 
+
+          corrbm = []
+          allret = self.allret[ self.ii:self.ii+num_samples,  :,  :]
+          self.ii = self.ii + num_samples
+
+          return corrbm, allret
+
+
+
+
+    def sample_multi(self, num_sample, clayer=0):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -164,6 +206,7 @@ class PricingOption(Equation):
           # x_sample = allpaths
           # return dw_sample, x_sample
           return corrbm, allret
+
 
 
 

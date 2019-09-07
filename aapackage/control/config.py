@@ -12,11 +12,11 @@ if not os.path.exists(export_folder):
 
 class Config(object):
     n_layer = 4
-    batch_size = 64
+    batch_size = 32
     valid_size = 256
     step_boundaries = [2000, 4000]
     num_iterations = 2000
-    logging_frequency = 100
+    logging_frequency = 500
     verbose = True
     y_init_range = [0, 1]
     dilations = [1, 2, 4, 8]
@@ -25,12 +25,14 @@ class Config(object):
     dw_path = 'logs/dw.npy'
 
 
+
+
 class PricingOptionConfig(Config):
     # 6.5 option price by formulae
     dim = 3
     total_time = 3.0
     num_time_interval = 30
-    num_iterations = 1000
+    num_iterations = 5000
 
 
     n_hidden_lstm = dim * 15

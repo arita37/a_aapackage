@@ -37,8 +37,15 @@ dir1 =  r"D:/_devs/Python01/gitdev/zs3drive/"
 
 
 from config import  export_folder
+
+export_folder += "/ATTN_OK/"
+
+
 dir1 =  export_folder
 print( export_folder)
+
+
+
 
 ##################################################################################
 x = np.load( dir1 + "x.npy"  )
@@ -66,18 +73,63 @@ def get_sample(i) :
 
 
 
-flag = True
-istart = 10000
-n= 5000
-for i in range(istart, istart+n) :
-  mi = get_sample( i )[ [  "w1", "w2", "w3" ]   ].values
-  if flag :
-      mavg= mi
-      flag= False
-  else :
-      mavg = mavg + mi
+def get_avg_weights_avg(istart , n) :
+  """
+     Generate average path
 
-mavg = mavg / n
+  """
+  flag = True
+  istart = 10000
+  alpha = 2.0 / (1 + n)
+  for i in range(istart, istart+n) :
+     mi = get_sample( i )[ [  "w1", "w2", "w3" ]   ].values
+     if flag :
+        mavg= mi
+        flag= False
+     else :
+        mavg = (1-alpha) * mavg + alpha * mi
+
+  mavg = mavg / n
+  return mavg
+
+
+
+def get_avg_weights(istart , n) :
+  """
+     Generate average path
+
+  """
+  flag = True
+  alpha = 2.0 / (1 + n)
+  for i in range(istart, istart+n) :
+     mi = get_sample( i )[ [  "w1", "w2", "w3" ]   ].values
+     if flag :
+        mavg= mi
+        flag= False
+     else :
+        mavg = mavg + mi
+
+  mavg = mavg / n
+  return mavg
+
+
+
+
+wref = get_avg_weights( 250000 , 10000)
+
+
+conv = []
+for ii in [  100, 1000,  5000, 10000, 50000, 75000, 100000 ] :
+   wii = get_avg_weights( ii , 10)
+   ss = np.sum( np.abs(wii - wref ) )
+   conv.append( [ ii, ss ] )
+
+conv = pd.DataFrame(conv)
+
+
+
+
+
 
 
 
@@ -100,9 +152,6 @@ dfs = get_sample( 10000 )
 dfw = pd.DataFrame(  
    {   "w"+str(i+1) : w[50000,i, :] for i in range(w.shape[1])    }     
  )       
-
-
-
 
 
 
@@ -132,23 +181,152 @@ dfx = pd.DataFrame(  { "x1" : np.sum(x[:,0,0, :], axis=-1) ,
 
 
 ### StdDev on All samples   ################################################################
-print( dfx["x1"].std() , dfx["x2"].std(),  dfx["x3"].std() )
+print( dfx["x1"].iloc[70000:].std() ,
+       dfx["x2"].iloc[70000:].std(),
+       dfx["x3"].iloc[70000:].std() )
+
 
 
 print( 
 np.corrcoef( dfx["x1"].values , dfx["x2"].values )[1,0] ,
-
 np.corrcoef( dfx["x1"].values , dfx["x3"].values )[1,0] ,
-
 np.corrcoef( dfx["x2"].values , dfx["x3"].values )[1,0] , )
 
 
-Variance over time .
-Variance of all variance, Minimize.
+# Variance over time .
+# Variance of all variance, Minimize.
 
 
 #############################################################################################
 #############################################################################################
+
+
+lstm case :
+0.8768692571423832 0.4037771837493705 0.6542703240322705
+
+
+print( 
+np.corrcoef( dfx["x1"].values , dfx["x2"].values )[1,0] ,
+np.corrcoef( dfx["x1"].values , dfx["x3"].values )[1,0] ,
+np.corrcoef( dfx["x2"].values , dfx["x3"].values )[1,0] , )
+-0.05382411231162706 0.15236271774585355 -0.1325180706074834
+
+
+x1, x2 : -0.05382411231162706
+x1, x3 : 0.15236271774585355
+x2, x3 : -0.132518070607483
+
+
+
+####### Min Vol  ###############################################################
+mu = np.array([0.0,0.0, 0.0 ] ) 
+vol = np.array([ 0.8768692571423832, 0.4037771837493705, 0.6542703240322705 ] )
+
+
+vol = np.array([0.17537385, 0.08075544, 0.13085406 ])
+
+
+
+
+0.17537385 / 0.08075544
+0.13085406  / 0.08075544
+
+
+
+vol = np.array([  0.217, 0.155, 0.10 ] )
+
+
+
+### OK
+vol = np.array([  0.217, 0.205, 0.095 ] )
+get_portfolio(mu, vol, cor)
+
+
+
+vol =  np.array([  0.05, 0.1, 0.40  ])
+
+
+
+
+cor = np.array([[1, -0.05  , 0.155 ],
+                [ -0.05,  1, -0.133 ],
+                [ 0.155,  -0.133, 1 ],    ])
+
+
+
+vol =  np.array([  0.22, 0.12, 0.10  ])
+get_portfolio(mu, vol, cor)
+
+
+
+# Min Vol {0: 0.1320482495945816, 1: 0.6296475250970386, 2: 0.23830422530837983}
+
+#################################################################################
+np.array([[  0.30, 0.20, 0.10 ]])
+np.array([[  0.05, 0.1, 0.40  ]])
+np.array([[  0.4, 0.05, 0.10 ]])
+
+
+
+Min Vol {0: 0.08128650094084645, 1: 0.1841598762510494, 2: 0.7345536228081043}
+
+Min Vol {0: 0.7899944958414977, 1: 0.197749872407619, 2: 0.012255631750883351}
+
+
+
+
+
+
+### OK
+vol = np.array([  0.21, 0.20, 0.095 ] )
+get_portfolio(mu, vol, cor)
+# Min Vol {0: 0.09775235128906033, 1: 0.2010420832179841, 2: 0.7012055654929555}
+
+
+
+vol = np.array([  0.12, 0.115, 0.225 ] )
+get_portfolio(mu, vol, cor)
+Min Vol {0: 0.6884777837865801, 1: 0.19155468433509454, 2: 0.11996753187832536}
+
+
+
+
+
+vol = np.array([  0.30, 0.23, 0.14 ] )
+get_portfolio(mu, vol, cor)
+
+
+
+
+
+######### FInal
+
+vol = np.array([  0.21, 0.20, 0.095 ] )
+vol = np.array([  0.12, 0.115, 0.225 ] )
+vol = np.array([  0.30, 0.23, 0.14 ] )
+
+
+
+cor = np.array([[1, -0.05  , 0.15 ],
+                [ -0.05,  1, -0.13 ],
+                [ 0.15,  -0.13, 1 ],    ])
+
+
+
+
+    0< t_n < T_1: & ~\\
+    ~ & \rho_{n}^{i, j} = \left( 0.21, 0.20, 0.095  \right) \\
+    ~ & \sigma_{n}^{k}=  \left( -0.05, 0.15, -0.13  \right) \\
+    
+    T_1 \leq t_n < T_2: & \\
+    ~ & \rho_{n}^{i, j} = \left( 0.12, 0.115, 0.225  \right) \\
+    ~ & \sigma_{n}^{k}=  \left( -0.05, 0.15, -0.13  \right) \\
+
+    T_2 \leq t_n < T_3: & \\
+    ~ & \rho_{n}^{i, j} = \left( 0.30, 0.23, 0.14  \right) \\
+    ~ & \sigma_{n}^{k}=  \left( -0.05, 0.15, -0.13  \right) \\
+
+
 
 
 
