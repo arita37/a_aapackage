@@ -339,9 +339,10 @@ class FeedForwardModel(object):
                 #        - self._bsde.delta_t * (self._bsde.f_tf(TT[t], self._x[:, :, t], y_old, z))
                 #        + tf.reduce_sum(z * self._dw[:, :, t], 1, keepdims=True))
 
-                ## Neural Network per Time Step, Calculate Gradient
-                ######################################################################
-                ## Z = [batch, dim * clayer] -> [batch, 4] for optionprice config
+
+                #### z is raw value of control #####################################################
+                ### We stack multi-dimension to have X as 3D tensor.
+                ## Z = [batch, dim * clayer] , dim : nb of assets
                 if self._usemodel == 'lstm':
                     z = self.subnetwork.build([self._x[:, :, t - 1]], t - 1) / self._dim
 
@@ -352,17 +353,19 @@ class FeedForwardModel(object):
                     z = self.subnetwork.build([self._x[:, :self._dim, t - 1]], t - 1) / self._dim
 
                 elif self._usemodel == 'dila':
-                    z = self.subnetwork.build([self._x[:, :, t - 1]], t - 1) / self._dim
+                    z = self.subnetwork.build([self._x[:, :self._dim, t - 1]], t - 1) / self._dim
 
                 elif self._usemodel == 'biattn':
-                    z = self.subnetwork.build(self._x[:, :, t - 1], t - 1) / self._dim
+                    z = self.subnetwork.build(self._x[:, :self._dim, t - 1], t - 1) / self._dim
 
 
-                ######################################################################
+                #####y intermediate ################################################################
                 y = z
                 all_y.append(y)
 
-                ######################################################################
+
+
+                ### Weight dynamics from z, y, #####################################################
                 if t < 3:
                     w = 0.0 + z
 
@@ -370,6 +373,7 @@ class FeedForwardModel(object):
                 #    a = 1
                   w = 0.0 + z + 0.005 / tf.sqrt(tf.nn.moments(self._x[:, :M, t-3:t ], axes=2 )[1] +0.001 )
                   w = w / tf.reduce_sum(w , -1, keepdims=True)
+
 
                 """ 
                    Filter path with low variance, 
@@ -387,20 +391,15 @@ class FeedForwardModel(object):
 
                 # Define weights for the log reg, n_classes = dim. z is dim dimensional, use log reg to
                 # convert to n_class dimensional.
-                """
-                W = tf.Variable(tf.zeros([self._dim, n_class]), name='logregw')
-                b = tf.Variable(tf.zeros([n_class]), name='logregb')
 
-                # let Y = Wx + b with softmax over classes
-                w = tf.nn.softmax(tf.matmul(z, W) + b)
-                """
-                ##### From softmax, pick up the right class_label and add dimension 0
                 # w = z / tf.reduce_sum(z, -1, keepdims=True)
                 # w = tf.nn.softmax( z , axis=-1)
-                #w = z
 
 
 
+
+                ### Policy-Gradient type : pre-selection of weights    #############################
+                ##### From softmax, pick up the right class_label and add dimension 0
                 #temperature = 0.04
                 #z = tf.nn.softmax( z / temperature, axis=-1)  #Simulate Argmax if temp --> 0
 
@@ -408,9 +407,17 @@ class FeedForwardModel(object):
                 #w = tf.linalg.diag(z)
                 #w = tf.reduce_sum(tf.matmul(tf.expand_dims(class_label, axis=0), w), axis=1)
                 #w = z / tf.reduce_sum(w, -1, keepdims=True)
+                """
+                W = tf.Variable(tf.zeros([self._dim, n_class]), name='logregw')
+                b = tf.Variable(tf.zeros([n_class]), name='logregb')
+
+                # let Y = Wx + b with softmax over classes
+                w = tf.nn.softmax(tf.matmul(z, W) + b)
+                """
 
 
-                #### Connection in time
+
+                #### Smoothing in time axis for w ##################################################
                 alpha = 0.9   # lower mean high continuity
                 if t > 1 :
                   w =  w*alpha + (1-alpha) * all_w[ -1 ]
@@ -423,7 +430,7 @@ class FeedForwardModel(object):
                 all_z.append(z)
 
 
-                ######################################################################
+                #### Portfolio  return #############################################################
                 # p =  p_old * (1 + tf.reduce_sum( w * (self._x[:, :, t] / self._x[:, :, t-1] - 1), 1))
                 # p = tf.reduce_sum(w * (self._x[:, :M, t] / self._x[:, :M, t - 1] - 1), 1)
                 p = tf.reduce_sum(w * (self._x[:, :M, t]), 1)
@@ -442,15 +449,19 @@ class FeedForwardModel(object):
             self.all_p = tf.stack(all_p, axis=-1)
             p = self.all_p
 
-            # Final Difference :
+            # Final Loss :
             #######  -Sum(ri)   +Sum(ri**2)
-            # delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
+            delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
 
 
+            ####### Sum(ri**2)
+            delta =   tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
 
-            delta = tf.nn.moments(p[:, 1:10], axes=1)[1] * 10000.0 + tf.nn.moments(p[:, 10:20], axes=1)[1] * 10000.0 + \
-                    tf.nn.moments(p[:, 20:], axes=1)[1] * 10000.0  # \
-                    #+ 5.0 * tf.abs(1- tf.reduce_sum(all_w[-1], axis=-1)[0])
+
+            ####### Decomposition by time period
+            #delta = tf.nn.moments(p[:, 1:10], axes=1)[1] * 10000.0 + tf.nn.moments(p[:, 10:20], axes=1)[1] * 10000.0 + \
+            #        tf.nn.moments(p[:, 20:], axes=1)[1] * 10000.0  # \
+            #        #+ 5.0 * tf.abs(1- tf.reduce_sum(all_w[-1], axis=-1)[0])
 
 
             weights = tf.trainable_variables()  # all vars of your graph

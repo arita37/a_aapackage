@@ -83,6 +83,12 @@ Sample generator   bdse.sample generates time series sample of X :  4D tensor st
 
 
 
+ """ 
+                   Filter path with low variance, 
+                   Generate all the paths and Maximum difference
+                   Monte Carlo Stratified Sampling
+
+ """
 
 
 
