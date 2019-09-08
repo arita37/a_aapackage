@@ -1,7 +1,8 @@
 """
-The main file to run BSDE solver to solve parabolic partial differential equations (PDEs).
-
+Conda activate
 source activate py36c
+
+
 
 For fully connected layers:
 python  main.py  --train --problem_name PricingOption  --usemodel ff
@@ -116,7 +117,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)-6s %(message)s")
 
 
-    #### Generated Sample path
+    #### Generated Sample path  ONLY
     if arg.do == "generate_path" :
         bsde.sample_save()
         sys.exit(0)

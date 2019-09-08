@@ -1,6 +1,8 @@
 import logging
 import os
 import time
+import sys
+
 
 import numpy as np
 import tensorflow as tf
@@ -20,44 +22,15 @@ def log(s):
     logging.info(s)
 
 
-"""
-  Variance Realized =  Sum(ri*:2)
-  rI**2 =   Sum(wi.ri)**2
-  Return = sum(ri) = Total return
-
-
-Idea to have policy-Gradient :
-      discrete actions
-
-
-in RL setting :
-      Probability of actions --> Generate sample of action,
-                                 Get reward from sample.
-                                 And add reward to the cost functions.
-
-
-In COntrol problem, no sampling of action, 
-         we estimate the optimal value.  Does not modify the state.
-         Based on estimate, we estimate the final cost.
-
-Hybrid between Optimization and RL.
-Here, we select Optimal action from ArgMax
-
-
-
-
-
-"""
-
 ####################################################################################################
-import sys
-
 from config import export_folder
 
 if not os.path.exists(export_folder):
     os.makedirs(export_folder)
 
 
+
+####################################################################################################
 def save_history(export_folder, train_history, x_all, z_all, p_all, w_all, y_all):
     print("Writing path history on disk, {}/".format(export_folder))
 
@@ -160,8 +133,7 @@ def save_stats(export_folder, z,w, x, p):
     json.dump(dd, open(export_folder + "/x_stats2.txt", mode="w"))
 
 
-# dw_path = 'logs/w.npy'
-# x_path = 'logs/x.npy'
+s
 
 
 ###################################################################################################
@@ -265,6 +237,8 @@ class FeedForwardModel(object):
         ##################################################################
         return dw_valid, x_valid
 
+
+
     def train2(self):
         t0 = time.time()
 
@@ -357,20 +331,7 @@ class FeedForwardModel(object):
                                        [ 0.01, 0.74, 0.25 ],
                               ]) , name='class_label', dtype=TF_DTYPE )
 
-        """
-          0.49538052,  0.50057834 ,0.004041157,
-          0.49538052,  0.0,        0.4041157
 
-Min Vol {0: 0.1386692125551192, 1: 0.1780535352118179, 2: 0.6832772522330629}
-
-
-Min Vol {0: 0.7550561932704953, 1: 0.18876404280450715, 2: 0.0561797639249976}
-
-
-Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
-
-
-        """
         all_p, all_z, all_w, all_y = [p0], [z0], [w0], []
         with tf.variable_scope("forward"):
             for t in range(1, self._T):
@@ -660,7 +621,13 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
 
         return dw_valid, x_valid
 
+
+
     def predict_sequence(self, input_folder, output_folder="out/"):
+        """
+          Given an input of time series sample, predict the sequences.
+
+        """
         saver = tf.train.Saver()
         saver.restore(self._sess, input_folder + '/model.ckpt')
 
@@ -691,6 +658,7 @@ Min Vol {0: 0.03636362758587138, 1: 0.6909091098785403, 2: 0.2727272625355884}
 
         save_history([], x_all, z_all, p_all, w_all, y_all)
 
-        # np.save('logs/p.npy', p_all)
-        # np.save('logs/z.npy', z_all)
-        # np.save('logs/w.npy', w_all)
+
+
+
+

@@ -10,6 +10,9 @@ if not os.path.exists(export_folder):
     os.makedirs(export_folder)
 
 
+
+
+
 class Config(object):
     n_layer = 4
     batch_size = 32
@@ -35,15 +38,20 @@ class PricingOptionConfig(Config):
     num_iterations = 5000
 
 
+    ## FF
+    num_hiddens_ff = [dim, dim + 10, dim + 10, dim]
+
+
+    ### LSTM part
     n_hidden_lstm = dim * 15
     num_hiddens_lstm = [ dim *10 ]
 
 
+    ### Attention LSTM Part
     n_hidden_attn = dim * 15
     num_hiddens_attn = [ dim *10 ]
 
 
-    num_hiddens_ff = [dim, dim + 10, dim + 10, dim]
 
 
     lr_values = list(np.array([5e-3, 1e-3]))
@@ -53,77 +61,6 @@ class PricingOptionConfig(Config):
 
     y_init_range = [1, 10]
 
-
-class AllenCahnConfig(Config):
-    total_time = 0.3
-    num_time_interval = 10
-    dim = 10
-    n_hidden_lstm = 10
-    lr_values = list(np.array([5e-4, 5e-4]))
-    lr_boundaries = [2000]
-    num_iterations = 100
-    num_hiddens = [dim, dim + 10, dim + 10, dim]
-    y_init_range = [0.3, 0.6]
-
-
-class HJBConfig(Config):
-    # Y_0 is about 4.5901.
-    dim = 100
-    total_time = 1.0
-    n_hidden_lstm = 10
-    num_time_interval = 20
-    lr_boundaries = [400]
-    num_iterations = 10000
-    lr_values = list(np.array([1e-2, 1e-2]))
-    num_hiddens = [dim, dim + 50, dim + 50, dim]
-    y_init_range = [0, 1]
-
-
-class PricingDefaultRiskConfig(Config):
-    dim = 100
-    total_time = 1
-    n_hidden_lstm = 100
-    num_time_interval = 40
-    lr_values = list(np.array([8e-3, 8e-3]))
-    lr_boundaries = [3000]
-    num_iterations = 6000
-    num_hiddens = [dim, dim + 10, dim + 10, dim]
-    y_init_range = [40, 50]
-
-
-class BurgesTypeConfig(Config):
-    dim = 50
-    total_time = 0.2
-    n_hidden_lstm = 100
-    num_time_interval = 30
-    lr_values = list(np.array([1e-2, 1e-3, 1e-4]))
-    lr_boundaries = [15000, 25000]
-    num_iterations = 30000
-    num_hiddens = [dim, dim + 10, dim + 10, dim]
-    y_init_range = [2, 4]
-
-
-class QuadraticGradientsConfig(Config):
-    dim = 100
-    total_time = 1.0
-    n_hidden_lstm = 100
-    num_time_interval = 30
-    lr_values = list(np.array([5e-3, 5e-3]))
-    lr_boundaries = [2000]
-    num_iterations = 4000
-    num_hiddens = [dim, dim + 10, dim + 10, dim]
-    y_init_range = [2, 4]
-
-
-class ReactionDiffusionConfig(Config):
-    dim = 100
-    total_time = 1.0
-    n_hidden_lstm = 100
-    num_time_interval = 30
-    lr_values = list(np.array([1e-2, 1e-2, 1e-2]))
-    lr_boundaries = [8000, 16000]
-    num_iterations = 100
-    num_hiddens = [dim, dim + 10, dim + 10, dim]
 
 
 def get_config(name):
