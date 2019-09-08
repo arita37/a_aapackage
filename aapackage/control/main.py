@@ -19,8 +19,10 @@ python main.py --do train --problem_name PricingOption --usemodel dila
 For global bi-directional rnn with attention
 python main.py --do train --problem_name PricingOption --usemodel biattn
 
+
 To predict sequences from disk, use:
-python main.py --usemodel lstm --array_dir='path/to/directory/where/x.npy/and/dw.npy/are/located'
+python main.py --do predict --usemodel lstm --array_dir='path/to/directory/where/x.npy/and/dw.npy/are/located'
+
 
 For tenosrboard, run this from the 'control' directory.
 tensorboard   --logdir=logs/
