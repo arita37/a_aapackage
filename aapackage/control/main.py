@@ -2,7 +2,7 @@
 Conda activate
 source activate py36c
 
-
+cd control
 
 For fully connected layers:
 python  main.py  --train --problem_name PricingOption  --usemodel ff
@@ -32,12 +32,12 @@ To use old build() and train() methods, set clayer to 1 in config file.
 """
 import json
 import logging
-import os
+import os, sys
 from argparse import ArgumentParser
 import numpy as np
 
 ####################################################################################################
-from config import get_config
+from config import get_config, export_folder
 
 
 
@@ -81,12 +81,12 @@ def config_dump(conf, path_prefix):
         )
 
 
-def tf_save(tf, sess, modelname="model.ckpt"):
-    if not os.path.exists('ckpt'):
-        os.makedirs('ckpt')
+def tf_save(tf, sess, folder, modelname="model.ckpt"):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
     saver = tf.train.Saver()
-    save_path = saver.save(sess, os.path.join('ckpt', modelname))
+    save_path = saver.save(sess,   folder + "/" + modelname )
     print("TensorFlow Checkpoints saved in {}".format(save_path))
 
 
@@ -99,6 +99,7 @@ def main():
     path_prefix = os.path.join(arg.log_dir, arg.problem_name)
     config_dump(c, path_prefix)
 
+    # Get generator
     if arg.framework == 'tf':
         import tensorflow as tf
         from equation import get_equation as get_equation_tf
@@ -127,16 +128,20 @@ def main():
         log("Begin to solve %s with run %d" % (arg.problem_name, k))
         log("Y0_true: %.4e" % bsde.y_init) if bsde.y_init else None
         if arg.framework == 'tf':
+
+            ### Model building
             tf.reset_default_graph()
             with tf.Session() as sess:
                 model = FFtf(c, bsde, sess, arg.usemodel)
                 model.build2()  # model.build()
 
 
+                # Training
                 if arg.do == "train":
                     training_history = model.train2()  # model.train()
-                    tf_save(tf, sess)
-                else:
+                    tf_save(tf, sess, export_folder + "/model/", "model.ckpt")
+
+                elif arg.do == "predict" :
                     model.predict_sequence(arg.input_folder,
                                            arg.output_folder)
 
@@ -144,8 +149,8 @@ def main():
         elif arg.framework == 'tch':
             training_history = train(c, bsde, arg.usemodel)
 
-        if bsde.y_init:
-            log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init), )
+        #if bsde.y_init:
+        #    log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init), )
 
         # save training history
         if arg.train:
@@ -164,6 +169,9 @@ if __name__ == "__main__":
     main()
 
 
+
+
+
 # arg = tf.app.arg.arg
 # tf.app.arg.DEFINE_string("problem_name", "HJB", """The name of partial differential equation.""")
 # tf.app.arg.DEFINE_integer(
@@ -172,3 +180,7 @@ if __name__ == "__main__":
 # tf.app.arg.DEFINE_string(
 #    "log_dir", "./logs", """Directory where to write event logs and output array."""
 # )
+
+
+
+    

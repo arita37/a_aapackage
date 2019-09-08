@@ -198,11 +198,11 @@ class PricingOption(Equation):
           vol0  = self.vol0
           correl = self.correl 
 
-          # allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
-          #          correl, choice="all",)
+          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift,
+                     correl, choice="all",)
 
-          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi_regime(nsimul, nasset, nstep, T, s0, vol0, drift, 
-                    correl, choice="all", regime=[0,1,2])
+          # allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi_regime(nsimul, nasset, nstep, T, s0, vol0, drift,
+          #          correl, choice="all", regime=[0,1,2])
 
           # dw_sample = corrbm
           # x_sample = allpaths

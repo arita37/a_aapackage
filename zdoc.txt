@@ -39,6 +39,458 @@ util.a_python()
 
 
 
+########## CONDA CHEAT SHEET   ################################################
+conda update conda
+conda install PACKAGENAME
+conda update PACKAGENAME
+conda install --help
+
+conda create --name py35 python=3.5
+conda create --clone py35 --name py35-2
+conda list --revisions
+conda install --revision 2
+conda list --explicit > bio-env.txt
+conda env remove --name bio-env
+
+source deactivate
+conda env create --file bio-env.txt
+conda create --name bio-env biopython
+conda create --name py34 python=3.4
+
+conda search PACKAGENAME
+
+Specifying version numbers
+Ways to specify a package version number for use with conda create or conda install commands, and in meta.yaml files.
+
+Fuzzy numpy=1.11 1.11.0, 1.11.1, 1.11.2, 1.11.18 etc.
+Exact numpy==1.11 1.11.0
+
+Greater than or equal to "numpy>=1.11" 1.11.0 or higher
+OR "numpy=1.11.1|1.11.3" 1.11.1, 1.11.3
+AND "numpy>=1.8,<2" 1.8, 1.9, not 2.0
+
+
+
+
+###################################################################################
+### Online editor
+./code-server /home/ubuntu
+
+
+#### Install the latest Intel® Optimization for TensorFlow* from Intel Channel
+#### TensorFlow* version: 1.13.1
+
+conda install tensorflow -c intel
+
+
+#### Get Intel® Optimization for TensorFlow* from Intel® Distribution for Python
+conda create -n py36intel intelpython3_full -c intel
+
+conda install -c anaconda pandas-profiling  ipykernel
+
+
+
+pip install plotly # Plotly is a pre-requisite before installing cufflinks
+pip install cufflinks
+
+
+
+
+#########
+conda create -n py36_tf14 python=3.6.5  -y  && source activate py36_tf14
+conda install  -c anaconda  tensorflow=1.14 -y
+conda install -c anaconda scikit-learn pandas matplotlib seaborn  -y
+
+
+
+
+
+###########
+conda create -n py36_tf19 python=3.6.5  -y
+source activate py36_tf19
+conda install  -c anaconda  tensorflow=1.9 -y
+conda install -c anaconda scikit-learn pandas matplotlib -y
+
+
+
+
+#########
+conda create -n py36_tf13 python=3.6.5  -y
+source activate py36_tf13
+conda install  -c anaconda  tensorflow=1.13.1
+conda install -c anaconda scikit-learn pandas matplotlib -y
+
+
+
+
+########### Dropbox install   #####################################################
+https://www.ostechnix.com/dbxfs-mount-dropbox-folder-locally-as-virtual-file-system-in-linux/
+elise 327 for access
+
+
+
+
+
+
+
+########### Mecab install   #####################################################
+https://stackoverflow.com/questions/51246394/install-ipadic-on-ubuntu-16-04-for-mecab-japanese-tokenizer
+
+
+
+
+
+########### Spark install   #####################################################
+https://medium.com/@josemarcialportilla/installing-scala-and-spark-on-ubuntu-5665ee4b62b1
+
+Need Java 8
+https://stackoverflow.com/questions/43231110/error-on-starting-spark-with-start-all-sh
+
+
+https://www.digitalocean.com/community/tutorials/how-to-install-java-with-apt-on-ubuntu-18-04
+sudo apt install openjdk-8-jdk
+java -version
+
+
+cd zconda/spark/bin/spark-shell
+println("Spark shell is running")
+
+https://towardsdatascience.com/how-to-use-pyspark-on-your-computer-9c7180075617
+Add into Shell
+
+
+https://www.digitalocean.com/community/tutorials/how-to-install-hadoop-in-stand-alone-mode-on-ubuntu-16-04
+
+
+
+
+
+######### Conda PACK ############################################################################
+Conda package https://conda.github.io/conda-pack/
+
+# Pack environment my_env into out_name.tar.gz
+  conda pack -n py36d -o zconda/py36d.tar.gz
+  conda pack -p /explicit/path/to/my_env  -o zconda/py36d.tar.gz
+
+# Unpack environment into directory `my_env`
+mkdir -p my_env
+tar -xzf my_env.tar.gz -C my_env
+
+source my_env/bin/activate   # Activate the environment. This adds `my_env/bin` to your path
+
+conda-unpack                 # Cleanup prefixes from in the active environment
+ipython --version
+
+source my_env/bin/deactivate
+
+
+
+
+
+############### Horovod PyTorch Distributed  #######################################################
+conda install torchvision=0.2.0  pytorch=0.4.1 -c pytorch
+conda install -c conda-forge cffi 
+pip install horovod==0.16.2
+pip install toml
+
+
+
+
+
+
+
+############### DL framwork ########################################################################
+"""
+Lightweight Functional interface to wrap access
+to Deep Learning, RLearning models.
+Logic follows Scikit Learn API and simple for easy extentions.Logic
+
+
+1) Installation as follow
+   source activate yourCOndaEnv
+   cd /home/ubuntu/aagit/aapackage/
+   pip install -e .
+
+This will install editable package, and this can be used
+   from aapackage.mlmodel import models
+
+2) All code and data are in this folder
+  /home/ubuntu/aagit/aapackage/mlmodel/
+
+
+
+
+
+
+
+
+
+#!/bin/bash
+
+reset
+
+sudo apt-get update
+#sudo apt-get install -y wget python python-cffi python-pip
+#sudo pip install torchvision==0.2.0
+#sudo pip install torch==0.4.1 -f https://download.pytorch.org/whl/cpu/stable
+
+
+echo "Open MPI"
+
+mkdir openmpi
+cd ./openmpi
+wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz
+# steps from: https://www.open-mpi.org/faq/?category=building#easy-build
+gunzip -c openmpi-4.0.1.tar.gz | tar xf -
+cd openmpi-4.0.1
+./configure --prefix=/usr/local
+sudo make all install
+sudo ldconfig
+
+
+
+
+# sudo pip install horovod
+
+echo "Done!"
+
+
+
+
+
+
+
+####### Conda  #####################################################################################
+toenv() {
+    source activate $1
+}
+
+conda_install() {
+  conda create -n  $1    python=3.6.7
+  source activate $1
+
+  conda install --yes   mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch scikit-learn   \
+                   chainer  dask     
+
+  pip install optuna
+
+  #pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0 configmy==0.14.87 \ 
+  #            github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 \ 
+  #            tabulate==0.8.2 uritemplate==3.0.0
+
+  # pip install pytest==4.3.0 toml
+
+  # pip install dcgpy
+
+
+  ##Install TF with AVEC AVX TF 1.9
+  conda uninstall --yes tensorflow  --force
+  pip install --ignore-installed --upgrade https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl 
+   
+   
+  python ztest_conda.py 
+
+  #  pip uninstall tensorflow --no-deps
+}
+
+
+
+
+
+
+
+
+############### conda DL #######################################################
+conda create -n  py36f    python=3.6.7
+
+conda install -y  tensorflow=1.9.0 keras xgboost  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel pandas        
+conda install matplotlib seaborn --no-update-deps
+
+
+##Install TF with AVC
+conda uninstall tensorflow --force
+anaconda3/envs/py36d/bin/pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  
+
+
+
+
+##################################################################################
+############### conda DL 2 #######################################################
+conda create -n  py36d    python=3.6.7
+
+conda install -y  mkl tensorflow=1.9.0 keras pytorch   pandas  scikit-learn    ipykernel 
+conda install matplotlib seaborn --no-update-deps
+
+
+pip install -e /home/ubuntu/aagit/aapackage 
+pip install optuna
+
+########## Install TF with AVC  ##########
+conda uninstall tensorflow --force
+anaconda3/envs/py36d/bin/pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  
+
+
+
+##################################################################################
+############### TensorFlow AVX 512 ###############################################
+conda create -n  py35f    python=3.5.2
+anaconda3/envs/py35f/bin/pip install --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.13.0-ubuntu16.04-py3-avx512f/tensorflow-1.12.0-cp35-cp35m-linux_x86_64.whl
+
+conda install -y  mkl pandas  scikit-learn  ipykernel
+
+
+
+
+
+
+########### Bayesian Optim  ######################################################
+# conda install botorch 
+anaconda3/envs/py36d/bin/pip install botorch
+anaconda3/envs/py36d/bin/pip install ax-platform  
+ 
+conda install xgboost  lightgbm catboost chainer  dask
+
+anaconda3/envs/py36d/bin/pip  install paramiko arrow==0.10.0 attrdict==2.0.0 kmodes==0.9 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0             
+
+
+
+anaconda3/envs/py36d/bin/pip uninstall sklearn     --no-update-deps
+
+
+conda install scikit-learn --no-update-deps
+  
+
+
+##############################################################################
+##############################################################################
+
+
+
+conda create --clone py36d --name py36d2
+
+
+
+http://nlp_architect.nervanasys.com/installation.html
+export NLP_ARCHITECT_BE=CPU
+pip install nlp-architect
+
+
+
+
+##############################################################################
+conda create -n  py36e    python=3.6.7
+
+conda install -y mkl tensorflow=1.9.0 xgboost  keras  lightgbm catboost pytorch scikit-learn  chainer  dask  ipykernel        
+
+# pip install arrow==0.10.0 attrdict==2.0.0 backports.shutil-get-terminal-size==1.0.0  github3.py==1.2.0 jwcrypto==0.6.0 kmodes==0.9 rope-py3k==0.9.4.post1 tables==3.3.0 tabulate==0.8.2 uritemplate==3.0.0             
+
+##Install TF with
+conda uninstall tensorflow --force
+
+anaconda3/envs/py36d/bin/pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  
+
+
+
+
+pip install --ignore-installed --upgrade https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl 
+
+pip install --ignore-installed --upgrade  https://github.com/lakshayg/tensorflow-build/releases/download/tf1.9.0-ubuntu16.04-py36/tensorflow-1.9.0-cp36-cp36m-linux_x86_64.whl  --user
+
+
+
+conda install dask --no-update-deps
+
+conda install torchvision --no-update-deps
+
+
+### 2.0 alpha
+pip install       https://github.com/inoryy/tensorflow-optimized-wheels/releases/download/v2.0.0a0/tensorflow-2.0.0a0-cp37-cp37m-linux_x86_64.whl
+
+
+
+conda install pygmo
+
+
+
+
+########### Bash
+
+conda_export() {
+  dd1=`date +%Y%m%d`
+  echo $dd1  
+
+  source activate base  
+  conda env export -n $1  > /home/ubuntu/zconda/$1_$dd1-env.yml         # | grep -v "^prefix: "
+  conda list --explicit -n $1  > /home/ubuntu/zconda/$1_$dd1-link.txt
+  ls /home/ubuntu/zconda/     
+}
+
+
+conda_export_all() {
+  NOW=$(date "+%Y%m%d")
+
+  echo $NOW
+  mkdir /home/ubuntu/zconda/env-$NOW
+  ENVS=$(conda env list | grep '^\w' | cut -d' ' -f1)
+  for env in $ENVS; do
+     #source activate $env
+     # conda env export > $HOME/tmp/envs-$NOW/$env.yml
+     echo "Exporting $env"
+     conda env export -n $env  > /home/ubuntu/zconda/env-$NOW/$env-$NOW-env.yml         # | grep -v "^prefix: "
+     conda list --explicit -n $env  > /home/ubuntu/zconda/env-$NOW/$env-$NOW-link.txt
+  done
+}
+
+
+
+
+
+
+########## pylint
+
+sudo apt install pylint3
+"/usr/local/bin/pylint".
+
+/usr/local/bin/python
+
+
+/usr/local/bin/p
+
+
+
+#! /usr/bin/python3
+from pylint import run_pylint
+run_pylint()
+
+
+
+conda install seaborn --no-update-deps
+
+
+    import seaborn as sns
+ModuleNotFoundError: No module named 'seaborn'
+
+
+-strict-channel-priority
+ 	Packages in lower priority channels are not considered if a package with the same name appears in a higher priority channel.
+--no-channel-priority
+ 	Package version takes precedence over channel priority. Overrides the value given by conda config --show channel_priority.
+--no-deps	Do not install, update, remove, or change dependencies. This WILL lead to broken environments and inconsistent behavior. Use at your own risk.
+--only-deps	Only install dependencies.
+--no-pin	Ignore pinned file.
+--prune	Remove packages that have previously been brought into the environment to satisfy dependencies of user-requested packages, but are no longer needed.
+--force-reinstall
+ 	Ensure that any user-requested package for the current operation is uninstalled and reinstalled, even if that package already exists in the environment.
+--freeze-installed, --no-update-deps
+ 	Do not update or change already-installed dependencies.
+--update-deps	Update dependencies.
+-S, --satisfied-skip-solve
+ 	Exit early and do not run the solver if the requested specs are satisfied. Also skips aggressive updates as configured by 'aggressive_update_packages'. Similar to the default behavior of 'pip install'.
+--update-all, --all
+ 	Update all installed packages in the environment.
+
+
+
 
 
 
