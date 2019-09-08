@@ -10,7 +10,7 @@ from scipy.linalg import cholesky
 
 
 
-def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice=0):
+def gbm_multi(nsimul, nasset, nstep, T, S0, vol0, drift, correl, choice="all"):
     """
      dS/St =  drift.dt + voldt.dWt
      

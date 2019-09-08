@@ -88,7 +88,7 @@ def scenario(name, nasset) :
                          [ -30,  100, -40 ],
                          [ -50,  -40, 100 ],    ])/100.0
          
-   if name== "reg" :       
+   if name== "regime" :
         s0    = np.ones((nasset)) * 100.0
         drift = [ np.ones((nasset,1)) * 0.0  for i in range(3) ]     
         
@@ -133,13 +133,14 @@ class PricingOption(Equation):
         nasset = self._dim
         self.s0    = np.ones((nasset)) * 100.0
 
-        self.drift, self.vol0, self.correl = scenario("reg", nasset)
+        self.drift, self.vol0, self.correl = scenario("neg", nasset)
 
 
         dd = { "drift": str(self.drift),  "vol0" : str(self.vol0), "correl" : str(self.correl) }        
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
 
-        self.allret = np.load( os.path.join(export_folder, 'x_generated.npy') )
+        ####  only if path are pre-generated
+        # self.allret = np.load( os.path.join(export_folder, 'x_generated.npy') )
         self.ii = 0
 
 
@@ -164,7 +165,7 @@ class PricingOption(Equation):
 
 
 
-    def sample(self, num_sample, clayer=0):
+    def sample_fromfile(self, num_sample, clayer=0):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -186,7 +187,7 @@ class PricingOption(Equation):
 
 
 
-    def sample_multi(self, num_sample, clayer=0):
+    def sample(self, num_sample, clayer=0):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -213,7 +214,7 @@ class PricingOption(Equation):
 
 
 
-    def sample5(self, num_sample, clayer=0):
+    def sample_backup(self, num_sample, clayer=0):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -229,8 +230,6 @@ class PricingOption(Equation):
           allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift, 
                     correl, choice="all")
 
-          # dw_sample = corrbm
-          # x_sample = allpaths
           # return dw_sample, x_sample
           return corrbm, allpaths
       

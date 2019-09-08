@@ -22,10 +22,18 @@ class Config(object):
     logging_frequency = 500
     verbose = True
     y_init_range = [0, 1]
+
+
     dilations = [1, 2, 4, 8]
+
+
+    #Stacking
     clayer = 1
-    x_path = 'logs/x.npy'
-    dw_path = 'logs/dw.npy'
+
+
+
+    # x_path = 'logs/x.npy'
+    # dw_path = 'logs/dw.npy'
 
 
 
@@ -52,6 +60,8 @@ class PricingOptionConfig(Config):
     num_hiddens_attn = [ dim *10 ]
 
 
+    ### Dilatons model
+    dilations = [1, 2, 4, 8]
 
 
     lr_values = list(np.array([5e-3, 1e-3]))
@@ -67,4 +77,4 @@ def get_config(name):
     try:
         return globals()[name + 'Config']
     except KeyError:
-        raise KeyError("Config for the required problem not found.")
+        raise KeyError("Config for the required  not found.")

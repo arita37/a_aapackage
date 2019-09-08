@@ -153,7 +153,7 @@ def main():
         #    log("% error of Y0: %s{:.2%}".format(abs(bsde.y_init - training_history[-1, 2]) / bsde.y_init), )
 
         # save training history
-        if arg.train:
+        if arg.do == "train":
             np.savetxt(
                 "{}_training_history_{}.csv".format(path_prefix, k),
                 training_history,
