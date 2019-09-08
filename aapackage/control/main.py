@@ -8,16 +8,16 @@ For fully connected layers:
 python  main.py  --train --problem_name PricingOption  --usemodel ff
 
 For global lstm layer:
-python  main.py --train --problem_name PricingOption  --usemodel lstm
+python  main.py --do train --problem_name PricingOption  --usemodel lstm
 
 For global lstm with attention:
-python  main.py  --train --problem_name PricingOption  --usemodel attn
+python  main.py  --do train --problem_name PricingOption  --usemodel attn
 
 For global dilated rnn:
-python main.py --train --problem_name PricingOption --usemodel dila
+python main.py --do train --problem_name PricingOption --usemodel dila
 
 For global bi-directional rnn with attention
-python main.py --train --problem_name PricingOption --usemodel biattn
+python main.py --do train --problem_name PricingOption --usemodel biattn
 
 To predict sequences from disk, use:
 python main.py --usemodel lstm --array_dir='path/to/directory/where/x.npy/and/dw.npy/are/located'

@@ -133,13 +133,13 @@ def save_stats(export_folder, z,w, x, p):
     json.dump(dd, open(export_folder + "/x_stats2.txt", mode="w"))
 
 
-s
+
 
 
 ###################################################################################################
 class FeedForwardModel(object):
     """
-       Global model over the full time steps
+       Global model over the full time steps period, control output
     """
 
     def __init__(self, config, bsde, sess, usemodel):
@@ -176,37 +176,6 @@ class FeedForwardModel(object):
         # self._config.num_iterations = None  # "Nepoch"
         # self._train_ops = None  # Gradient, Vale,
 
-    def train(self):
-        t0 = time.time()
-
-        ## Validation DATA : Brownian part, drift part from MC simulation
-        # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
-        #################################################################
-        dw_valid, x_valid = self.generate_feed()
-        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
-
-        # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        self._train_ops = tf.group([self._train_ops, update_ops])
-
-        # initialization
-        self._sess.run(tf.global_variables_initializer())
-        val_writer = tf.summary.FileWriter('logs', self._sess.graph)
-        merged = tf.summary.merge_all()
-        train_history = []  # to save iteration results
-
-        for step in range(self._config.num_iterations + 1):
-            # Generate MC sample AS the training input
-            dw_train, x_train = self.generate_feed()
-
-            self._sess.run(self._train_ops,
-                           feed_dict={self._dw: dw_train,
-                                      self._x: x_train, self._is_training: True}, )
-
-            ### Validation Data Eval.
-            self.validation_train(feed_dict_valid, train_history, merged, t0, step, val_writer)
-
-        return np.array(train_history)
 
     def validation_train(self, feed_dict_valid, train_history, merged, t0, step, val_writer):
         if step % self._config.logging_frequency != 0:
@@ -375,12 +344,6 @@ class FeedForwardModel(object):
                   w = w / tf.reduce_sum(w , -1, keepdims=True)
 
 
-                """ 
-                   Filter path with low variance, 
-                   Generate all the paths and Maximum difference
-                   Monte Carlo Stratified Sampling
-
-                """
                 ### t=1 has issue
                 # w = 0.0 + z + 1 / tf.sqrt((tf.nn.moments(
                 #  tf.log((self._x[:, :M, 1:t ]) / (
@@ -449,7 +412,9 @@ class FeedForwardModel(object):
             self.all_p = tf.stack(all_p, axis=-1)
             p = self.all_p
 
-            # Final Loss :
+
+
+            ##### Final Loss :  ####################################################################
             #######  -Sum(ri)   +Sum(ri**2)
             delta =  -tf.reduce_sum(p[:, 1:], 1) + tf.nn.moments(p[:, 1:], axes=1)[1]*10.0
 
@@ -472,7 +437,7 @@ class FeedForwardModel(object):
 
             self._loss = tf.reduce_mean(delta)
             self._loss = self._loss + reg_penalty  # this loss needs to be minimized
-
+            ########################################################################################
 
 
 
@@ -512,7 +477,92 @@ class FeedForwardModel(object):
 
 
 
+    def sample_files(self, X, dW, idx):
+        bs = self._config.batch_size
+        dw, x = dW[bs * idx:bs * (idx + 1), ...], X[bs * idx:bs * (idx + 1), ...]
 
+        dw_valid = np.reshape(dw,
+                              [self._config.batch_size,
+                               self._config.clayer * self._dim, self._T])
+
+        x_valid = np.reshape(x,
+                             [self._config.batch_size,
+                              self._config.clayer * self._dim, self._T + 1])
+
+        return dw_valid, x_valid
+
+
+
+    def predict_sequence(self, input_folder, output_folder="out/"):
+        """
+          Given an input of time series sample, predict the sequences.
+
+        """
+        saver = tf.train.Saver()
+        saver.restore(self._sess, input_folder + '/model.ckpt')
+
+        x_all, dw_all = np.load(input_folder + "/x.npz"), np.load(input_folder + "/dw.npz")
+        n = x_all.shape[0]
+
+        p_all, z_all, w_all, x_all, y_all = [], [], [], [], []
+
+        print("Predicting over the sequence, results will be saved as np array...")
+        for idx in range(n // self._config.batch_size):
+            dw, x = self.sample_files(x_all, dw_all, idx)
+            p, z, w = self._sess.run([self.all_p, self.all_z, self.all_w],
+                                     feed_dict={self._dw: dw,
+                                                self._x: x, self._is_training: False})
+
+            y = []
+            p_all.append(p)
+            z_all.append(z)
+            w_all.append(w)
+            x_all.append(x)
+            y_all.append(y)
+
+        p_all = np.concatenate(p_all, axis=0)
+        z_all = np.concatenate(z_all, axis=0)
+        w_all = np.concatenate(w_all, axis=0)
+        x_all = np.concatenate(x_all, axis=0)
+        y_all = np.concatenate(y_all, axis=0)
+
+        save_history([], x_all, z_all, p_all, w_all, y_all)
+
+
+
+    ################################################################################################
+    ################################################################################################
+    def train(self):
+        t0 = time.time()
+
+        ## Validation DATA : Brownian part, drift part from MC simulation
+        # dw_valid, x_valid = self._bsde.sample(self._config.batch_size)
+        #################################################################
+        dw_valid, x_valid = self.generate_feed()
+        feed_dict_valid = {self._dw: dw_valid, self._x: x_valid, self._is_training: False}
+
+        # update_ops = tf.compat.v1.get_collection(tf.GraphKeys.UPDATE_OPS)  # V1 compatibility
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        self._train_ops = tf.group([self._train_ops, update_ops])
+
+        # initialization
+        self._sess.run(tf.global_variables_initializer())
+        val_writer = tf.summary.FileWriter('logs', self._sess.graph)
+        merged = tf.summary.merge_all()
+        train_history = []  # to save iteration results
+
+        for step in range(self._config.num_iterations + 1):
+            # Generate MC sample AS the training input
+            dw_train, x_train = self.generate_feed()
+
+            self._sess.run(self._train_ops,
+                           feed_dict={self._dw: dw_train,
+                                      self._x: x_train, self._is_training: True}, )
+
+            ### Validation Data Eval.
+            self.validation_train(feed_dict_valid, train_history, merged, t0, step, val_writer)
+
+        return np.array(train_history)
 
 
     def build(self):
@@ -617,57 +667,6 @@ class FeedForwardModel(object):
 
 
 
-
-    def sample_files(self, X, dW, idx):
-        bs = self._config.batch_size
-        dw, x = dW[bs * idx:bs * (idx + 1), ...], X[bs * idx:bs * (idx + 1), ...]
-
-        dw_valid = np.reshape(dw,
-                              [self._config.batch_size,
-                               self._config.clayer * self._dim, self._T])
-
-        x_valid = np.reshape(x,
-                             [self._config.batch_size,
-                              self._config.clayer * self._dim, self._T + 1])
-
-        return dw_valid, x_valid
-
-
-
-    def predict_sequence(self, input_folder, output_folder="out/"):
-        """
-          Given an input of time series sample, predict the sequences.
-
-        """
-        saver = tf.train.Saver()
-        saver.restore(self._sess, input_folder + '/model.ckpt')
-
-        x_all, dw_all = np.load(input_folder + "/x.npz"), np.load(input_folder + "/dw.npz")
-        n = x_all.shape[0]
-
-        p_all, z_all, w_all, x_all, y_all = [], [], [], [], []
-
-        print("Predicting over the sequence, results will be saved as np array...")
-        for idx in range(n // self._config.batch_size):
-            dw, x = self.sample_files(x_all, dw_all, idx)
-            p, z, w = self._sess.run([self.all_p, self.all_z, self.all_w],
-                                     feed_dict={self._dw: dw,
-                                                self._x: x, self._is_training: False})
-
-            y = []
-            p_all.append(p)
-            z_all.append(z)
-            w_all.append(w)
-            x_all.append(x)
-            y_all.append(y)
-
-        p_all = np.concatenate(p_all, axis=0)
-        z_all = np.concatenate(z_all, axis=0)
-        w_all = np.concatenate(w_all, axis=0)
-        x_all = np.concatenate(x_all, axis=0)
-        y_all = np.concatenate(y_all, axis=0)
-
-        save_history([], x_all, z_all, p_all, w_all, y_all)
 
 
 
