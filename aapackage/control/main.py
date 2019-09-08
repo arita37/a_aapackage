@@ -1,8 +1,8 @@
 """
-Conda activate
 source activate py36c
-
 cd control
+
+
 
 For fully connected layers:
 python  main.py  --train --problem_name PricingOption  --usemodel ff
@@ -13,6 +13,9 @@ python  main.py --do train --problem_name PricingOption  --usemodel lstm
 For global lstm with attention:
 python  main.py  --do train --problem_name PricingOption  --usemodel attn
 
+
+
+### Not yet tested
 For global dilated rnn:
 python main.py --do train --problem_name PricingOption --usemodel dila
 
@@ -105,7 +108,7 @@ def main():
     if arg.framework == 'tf':
         import tensorflow as tf
         from equation import get_equation as get_equation_tf
-        from solver import FeedForwardModel as FFtf
+        from solver import globalModel as FFtf
 
         bsde = get_equation_tf(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
 

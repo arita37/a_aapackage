@@ -137,7 +137,7 @@ def save_stats(export_folder, z,w, x, p):
 
 
 ###################################################################################################
-class FeedForwardModel(object):
+class globalModel(object):
     """
        Global model over the full time steps period, control output
     """

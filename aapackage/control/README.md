@@ -67,17 +67,20 @@ Sample generator   bdse.sample generates time series sample of X :  4D tensor st
 
 
      
-################## Things for improvement :
+################## Things for improvement :  #######################################################
+0) Enhance the state vector X :
+   Add 2nd moments.
 
 1) Implement Sequence to Sequence LSTM and test it
-
-
 
 
 2) Regularization  with Graph in TF 2.0
 
 
 3) Change the Loss
+
+
+
 
 
 
