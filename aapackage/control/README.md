@@ -22,13 +22,17 @@ https://github.com/davidenunes/tensorflow-wheels/releases/download/r1.14.cp37.gp
 ################## Files
 main.py : File to run the training.
 
-
-config.py :  configuation file
+config.py :  configuation file, and NN hyper parameters
 
 solver.py :
-   file where the TF graph, train
-   
+   file where the TF graph, train are defined
+   globalModel :
+       build2 :  Create the model Graph using submodels.py
+       train2 :  train our model using generated data self.Sample
 
+       build, train : used if our model works by doing some tests.
+
+   
 submodels.py : where LSTM, FFoward and Attn LSTM are defined , related to solver.py
 
 
