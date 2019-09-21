@@ -193,12 +193,13 @@ class globalModel(object):
     def generate_feed(self):
         dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)  #new at each time
+            ##### Sample dynamic at every time
+            # dw, x = self._bsde.sample(self._config.batch_size, clayer)  #new at each time
 
-            # From file each time, wiht Global counter ii
-            # dw, x = self._bsde.sample_fromfile(self._config.batch_size, clayer)
+            ##### Sample from file , wiht Global counter ii
+            dw, x = self._bsde.sample_fromfile(self._config.batch_size, clayer)
 
-
+            # print("dw.shape", dw.shape,  "x.shape", x.shape )
             dw_valid.append(dw)
             x_valid.append(x)
 

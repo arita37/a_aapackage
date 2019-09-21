@@ -16,12 +16,14 @@ Clayer :  We want to enhance input by NEW features : (think of Layer in CNN )
    clayer=3 :    (Feature_ret1, Feature_ret3, Feature_ret3)
 
 
+
+###############################################################################
 ### Generated on disk: 100k sample of numpy 3D tensors
  python equation.py  --do sample_save --n_sample 100000
 
 
 ### Load from disk and sample generate
-python equation.py  --do sample_load 
+python equation.py  --do sample_load  
 
 
 
@@ -153,7 +155,7 @@ def scenario(name, nasset) :
 ####################################################################################################
 
 class PricingOption(Equation):
-    def __init__(self, dim, total_time, num_time_interval):
+    def __init__(self, dim, total_time, num_time_interval, clayer=1, num_sample=200000):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
         self._sigma = 0.30
@@ -167,6 +169,8 @@ class PricingOption(Equation):
 
         self.drift, self.vol0, self.correl = scenario("neg", nasset)
 
+        self.num_sample = num_sample
+        self.clayer = clayer
 
         ### Export sampling data confiuration
         dd = { "drift": str(self.drift),  "vol0" : str(self.vol0), "correl" : str(self.correl) }        
@@ -202,8 +206,16 @@ class PricingOption(Equation):
 
     def sample_load(self, filename):
          # Load from file
-         self.allret = np.load( os.path.join(export_folder, filename) )
+         try :
+            self.allret = np.load( os.path.join(export_folder, filename) )
+         except :
+            print("No file", filename, "Generating New one")
+            self.sample_save(self.num_sample, self.clayer, filename )
+            self.allret = np.load( os.path.join(export_folder, filename) )
+
+
          print("Loaded:", filename, self.allret.shape )
+
 
 
     def sample_fromfile(self, num_sample, clayer=0,  filename='x_generated.npy' ):
@@ -214,6 +226,7 @@ ValueError: cannot reshape array of size 2976 into shape (32,3,30)
         """
         if self.allret is None :
            self.sample_load(filename)
+
 
         if clayer > -1 :
           nsimul = num_sample
@@ -231,8 +244,13 @@ ValueError: cannot reshape array of size 2976 into shape (32,3,30)
           allret = self.allret[ self.ii:self.ii + num_sample,  :,  :]
           self.ii = self.ii + num_sample
 
-
+          ## This one is NOT used
           corrbm = np.empty_like(allret)
+          corrbm = corrbm[:, :, :-1]  # time step rescale to T
+
+          # print(allret.shape)
+          if self.ii < 3 :
+              print("xhsape", x.shape)
 
 
           return corrbm, allret
@@ -241,6 +259,7 @@ ValueError: cannot reshape array of size 2976 into shape (32,3,30)
 
 
     def sample(self, num_sample, clayer=0):
+        ### Official version
         if clayer > -1 :
 
           nsimul = num_sample
@@ -262,8 +281,9 @@ ValueError: cannot reshape array of size 2976 into shape (32,3,30)
           # dw_sample = corrbm
           # x_sample = allpaths
           # return dw_sample, x_sample
-          return corrbm, allret
+          # print(allret.shape)
 
+          return corrbm, allret
 
 
 
@@ -362,6 +382,7 @@ def os_file_stat(filename):
   (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(filename)
   print( filename,  size/1E6,  ",last modified: %s" % time.ctime(mtime))
 
+
 def load_argument():
     p = ArgumentParser()
     p.add_argument("--do", type=str, default='train/predict/generate paths')
@@ -369,11 +390,6 @@ def load_argument():
     p.add_argument("--n_sample", type=int, default=1)
 
 
-    p.add_argument("--log_dir", type=str, default='./logs')
-
-
-    p.add_argument("--input_folder", type=str, default='in_default/')
-    p.add_argument("--output_folder", type=str, default='out_default/')
 
     arg = p.parse_args()
     return arg
