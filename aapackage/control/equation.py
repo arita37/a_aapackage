@@ -157,7 +157,7 @@ def scenario(name, nasset) :
 ####################################################################################################
 class PricingOption(Equation):
     def __init__(self, dim, total_time, num_time_interval, clayer=1, num_sample=200000,
-                 scenario_choice="neg", filename="x_generated"):
+                 scenario_choice="neg", filename="x_generated.npy"):
         super(PricingOption, self).__init__(dim, total_time, num_time_interval)
         self._x_init = np.ones(self._dim) * 100
         self._sigma = 0.30
