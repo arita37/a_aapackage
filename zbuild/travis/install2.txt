@@ -6,7 +6,7 @@
 
 # License: 3-clause BSD
 
-set -e
+set -e  # Exit on error.
 
 # Fix the compilers to workaround avoid having the Python 3.4 build
 # lookup for g++44 unexpectedly.
@@ -16,12 +16,12 @@ export CXX=g++
 
 echo 'List files from cached directories'
 echo 'pip:'
-ls $HOME/.cache/pip
+ls "${HOME}"/.cache/pip
 echo 'download'
-ls $HOME/download
+ls "${HOME}"/download
 
 
-if [[ "$DISTRIB" == "conda" ]]; then
+if [[ "$DISTRIB" == conda ]]; then
     # Deactivate the travis-provided virtual environment and setup a
     # conda-based environment instead
     deactivate
@@ -32,7 +32,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
     cd
     mkdir -p download
     cd download
-    echo "Cached in $HOME/download :"
+    echo "Cached in ${HOME}/download :"
     ls -l
     echo
     if [[ ! -f miniconda.sh ]]
@@ -59,7 +59,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
         conda remove --yes --features mkl || echo "MKL not installed"
     fi
 
-elif [[ "$DISTRIB" == "ubuntu" ]]; then
+elif [[ "$DISTRIB" == ubuntu ]]; then
     # At the time of writing numpy 1.9.1 is included in the travis
     # virtualenv but we want to used numpy installed through apt-get
     # install.
@@ -70,7 +70,7 @@ elif [[ "$DISTRIB" == "ubuntu" ]]; then
     pip install nose
 fi
 
-if [[ "$COVERAGE" == "true" ]]; then
+if [[ "$COVERAGE" == true ]]; then
     pip install coverage coveralls
 fi
 
