@@ -1,14 +1,44 @@
+"""
+4D generation is as follow :
+   List of size Clayer (number of layer) of 3D tensor
+       [Nsample, Mdim, Time_steps]
 
+  sample == [ 3Dtensor_1, 3Dtensor_2,  3Dtensor_3,  ...   ]
+
+
+Nsample : Nb of Simulation sample  (ie data sample size) 
+Mdim : Nb of assets  (3  in our case)
+Time_steps : nb of time steps (ex : 30 , 10 step per year)
+
+Clayer :  We want to enhance input by NEW features : (think of Layer in CNN )
+   clayer=1 :    (return1, return2, return3)
+   clayer=2 :    (Variance_ret1, variance_ret3, variance_ret3)
+   clayer=3 :    (Feature_ret1, Feature_ret3, Feature_ret3)
+
+
+### Generated on disk: 100k sample of numpy 3D tensors
+ python equation.py  --do sample_save --n_sample 100000
+
+
+### Load from disk and sample generate
+python equation.py  --do sample_load 
+
+
+
+
+"""
 import sys, os
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 from scipy.stats import multivariate_normal as normal
+from argparse import ArgumentParser
+import json
 
 
+from os.path import join as osp
 
 ####################################################################################################
 from utils import gbm_multi, gbm_multi_regime
-import json
 from config import export_folder
 
 
@@ -70,24 +100,26 @@ def get_equation(name, dim, total_time, num_time_interval):
 
 
 def scenario(name, nasset) :
-   if name== "zero" : 
+   if name== "zero" :   # Zero correl
         s0    = np.ones((nasset)) * 100.0
         drift = np.ones((nasset,1)) * 0.0
         vol0  = np.ones((nasset,1)) * 0.2      
         vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
         correl =  np.array([[100, 0 , 0 ],
                        [0,  100, -0 ],
-                       [-0,  -0, 100 ],                ])/100.0
- 
-   if name== "neg" : 
+                       [-0,  -0, 100 ],                ])*0.01
+
+
+   if name== "neg" :  # negative correl
         s0    = np.ones((nasset)) * 100.0
         drift = np.ones((nasset,1)) * 0.0
         vol0  = np.ones((nasset,1)) * 0.2      
         vol0 =  np.array([[ 0.20, 0.15, 0.08 ]]).T 
         correl =  np.array([[100, -30 , -50 ],
                          [ -30,  100, -40 ],
-                         [ -50,  -40, 100 ],    ])/100.0
-         
+                         [ -50,  -40, 100 ],    ])*0.01
+
+
    if name== "regime" :
         s0    = np.ones((nasset)) * 100.0
         drift = [ np.ones((nasset,1)) * 0.0  for i in range(3) ]     
@@ -101,15 +133,15 @@ def scenario(name, nasset) :
         
         correl = [ np.array([[100, 0 , 40 ],
                              [ 0,  100, -20 ],
-                             [ 40,  -20, 100 ],    ])/100.0 ,
+                             [ 40,  -20, 100 ],    ])*0.01 ,
    
                    np.array([[100, 0 , 40 ],
                              [ 0,  100, -20 ],
-                             [ 40,  -20, 100 ],    ])/100.0  ,
+                             [ 40,  -20, 100 ],    ])*0.01  ,
        
                    np.array([[100, 0 , 40 ],
                              [ 0,  100, -20 ],
-                             [ 40,  -20, 100 ],    ])/100.0
+                             [ 40,  -20, 100 ],    ])*0.01
         
                  ]
 
@@ -136,15 +168,17 @@ class PricingOption(Equation):
         self.drift, self.vol0, self.correl = scenario("neg", nasset)
 
 
+        ### Export sampling data confiuration
         dd = { "drift": str(self.drift),  "vol0" : str(self.vol0), "correl" : str(self.correl) }        
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
 
         ####  only if path are pre-generated
         # self.allret = np.load( os.path.join(export_folder, 'x_generated.npy') )
         self.ii = 0
+        self.allret = None
 
 
-    def sample_save(self, num_sample, clayer=0):
+    def sample_save(self, num_sample, clayer=0, filename='x_generated.npy'):
         if clayer > -1 :
 
           nsimul = num_sample
@@ -158,16 +192,30 @@ class PricingOption(Equation):
           correl = self.correl 
 
 
-          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi_regime(nsimul, nasset, nstep, T, s0, vol0, drift, 
-                    correl, choice="all", regime=[0,1,2])
+          allret, allpaths, bm_process, corrbm, correl_upper_cholesky, iidbrownian = gbm_multi(nsimul, nasset, nstep, T, s0, vol0, drift,
+                     correl, choice="all",)
 
-          np.save(os.path.join(export_folder, 'x_generated.npy'), allret)
+          np.save(os.path.join(export_folder, filename), allret)
+          #print( os.listdir( export_folder ) )
+          os_file_stat( os.path.join(export_folder, filename) )
 
 
+    def sample_load(self, filename):
+         # Load from file
+         self.allret = np.load( os.path.join(export_folder, filename) )
+         print("Loaded:", filename, self.allret.shape )
 
-    def sample_fromfile(self, num_sample, clayer=0):
+
+    def sample_fromfile(self, num_sample, clayer=0,  filename='x_generated.npy' ):
+        """
+        
+ValueError: cannot reshape array of size 2976 into shape (32,3,30)
+
+        """
+        if self.allret is None :
+           self.sample_load(filename)
+
         if clayer > -1 :
-
           nsimul = num_sample
           nasset = self._dim
           nstep = self._num_time_interval
@@ -178,9 +226,14 @@ class PricingOption(Equation):
           vol0  = self.vol0
           correl = self.correl 
 
-          corrbm = []
-          allret = self.allret[ self.ii:self.ii+num_samples,  :,  :]
-          self.ii = self.ii + num_samples
+
+          # Seelect sample
+          allret = self.allret[ self.ii:self.ii + num_sample,  :,  :]
+          self.ii = self.ii + num_sample
+
+
+          corrbm = np.empty_like(allret)
+
 
           return corrbm, allret
 
@@ -276,6 +329,7 @@ class PricingOption(Equation):
 
 
     def f_tf(self, t, x, y, z):
+        import tensorflow as tf
         temp = tf.reduce_sum(z, 1, keepdims=True) / self._sigma
         return (
             - self._rl * y
@@ -285,17 +339,97 @@ class PricingOption(Equation):
 
 
     def g_tf(self, t, x):
+        import tensorflow as tf
         temp = tf.reduce_max(x, 1, keepdims=True)
         return tf.maximum(temp - 100, 0)  
 
 
 
 
+####################################################################################################
+####################################################################################################
 
 
 
 ####################################################################################################
-####################################################################################################
+class dict2(object):
+    def __init__(self, d):
+        self.__dict__ = d
+
+
+def os_file_stat(filename):
+  import time
+  (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(filename)
+  print( filename,  size/1E6,  ",last modified: %s" % time.ctime(mtime))
+
+def load_argument():
+    p = ArgumentParser()
+    p.add_argument("--do", type=str, default='train/predict/generate paths')
+    p.add_argument("--problem_name", type=str, default='PricingOption')
+    p.add_argument("--n_sample", type=int, default=1)
+
+
+    p.add_argument("--log_dir", type=str, default='./logs')
+
+
+    p.add_argument("--input_folder", type=str, default='in_default/')
+    p.add_argument("--output_folder", type=str, default='out_default/')
+
+    arg = p.parse_args()
+    return arg
+
+
+
+if __name__ == "__main__":
+   arg = load_argument()
+   print(arg)
+
+   c = dict2({ "dim" : 3, "total_time": 3.0, "num_time_interval": 30,
+               "num_sample": 10,  "clayer" : 2
+            })
+
+   # from config import get_config, export_folder
+   # c = get_config(arg.problem_name)
+
+   from equation import get_equation as get_equation_tf
+   bsde = get_equation_tf(arg.problem_name, c.dim, c.total_time, c.num_time_interval)
+
+
+   ## Basic sampling
+   # dw, x = bsde.sample( num_sample= c.num_sample, clayer= c.clayer )
+   # print(x, x.shape)
+
+
+   if arg.do == "sample_save" :
+     ## Save sampling on disk
+     bsde.sample_save( arg.n_sample, c.clayer, filename='x_generated.npy' )
+     sys.exit(0)
+
+
+
+   if arg.do == "sample_fromfile" :
+     ## Load sampling on disk
+     bsde.sample_load( filename='x_generated.npy')
+
+
+     ## load sampling disk, bsde.ii is GLOBAL COUNT for sampling
+     dw, x = bsde.sample_fromfile( 3, c.clayer )
+     print(x, x.shape, bsde.ii)
+
+
+     dw, x = bsde.sample_fromfile( 4, c.clayer )
+     print(x, x.shape, bsde.ii)
+
+
+
+
+
+
+
+
+
+
+
 
 
 

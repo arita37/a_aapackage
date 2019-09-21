@@ -4,6 +4,7 @@ import time
 import sys
 
 
+
 import numpy as np
 import tensorflow as tf
 
@@ -188,10 +189,16 @@ class globalModel(object):
               % (step, loss, init, dt0))
         val_writer.add_summary(summary, step)
 
+
     def generate_feed(self):
         dw_valid, x_valid = [], []
         for clayer in range(self._config.clayer):
-            dw, x = self._bsde.sample(self._config.batch_size, clayer)
+            dw, x = self._bsde.sample(self._config.batch_size, clayer)  #new at each time
+
+            # From file each time, wiht Global counter ii
+            # dw, x = self._bsde.sample_fromfile(self._config.batch_size, clayer)
+
+
             dw_valid.append(dw)
             x_valid.append(x)
 
