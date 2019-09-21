@@ -177,7 +177,6 @@ class PricingOption(Equation):
         json.dump(dd,  open(  export_folder + "param_file.txt", "w") )
 
         ####  only if path are pre-generated
-        # self.allret = np.load( os.path.join(export_folder, 'x_generated.npy') )
         self.ii = 0
         self.allret = None
 

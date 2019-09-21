@@ -1,0 +1,40 @@
+### Generated on disk: 100k sample of numpy 3D tensors
+ python equation.py  --do sample_save --n_sample 100000
+
+
+
+### Load from disk and sample generate
+python equation.py  --do sample_load  
+
+
+
+
+
+
+###############################################################################
+4D generation is as follow :
+   List of size Clayer (number of layer) of 3D tensor
+       [Nsample, Mdim, Time_steps]
+
+  sample == [ 3Dtensor_1, 3Dtensor_2,  3Dtensor_3,  ...   ]
+
+
+Nsample : Nb of Simulation sample  (ie data sample size) 
+Mdim : Nb of assets  (3  in our case)
+Time_steps : nb of time steps (ex : 30 , 10 step per year)
+
+Clayer :  We want to enhance input by NEW features : (think of Layer in CNN )
+   clayer=1 :    (return1, return2, return3)
+   clayer=2 :    (Variance_ret1, variance_ret3, variance_ret3)
+   clayer=3 :    (Feature_ret1, Feature_ret3, Feature_ret3)
+
+
+
+###############################################################################
+
+
+
+
+
+
+
