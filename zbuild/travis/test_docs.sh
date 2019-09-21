@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
-set -x
+set -e  # Exit on error.
+set -x  # Print executed commands to the terminal.
 
 make test-doc
