@@ -1,7 +1,9 @@
 # Introduction
-This is imported project of a 6th place solution for kaggle competition "Web Traffic Forecasting"(https://github.com/sjvasquez/web-traffic-forecasting) by Sean Vasquez, a student MIT. Based on WaveNet from Google DeepMind, the CNN solution first encodes the features of the training data include the web hits every day and other information including country , agent, access, projects, using covolution with dilations. Then it predicts the future hits using temporal covolution with dilations based on the input(x), convolution results(conv_inputs), and stacked features (decoded features for prediction).
 
-The original solution works for tensorflow 1.3.0 and python 2.7, I makes some changes to work for python 3.4.
+Based on WaveNet from Google DeepMind, the CNN solution first encodes the features of the training data include the web hits every day and other information including country , agent, access, projects, using covolution with dilations. Then it predicts the future hits using temporal covolution with dilations based on the input(x), convolution results(conv_inputs).
+
+Works for tensorflow 1.3.0  python 3.4.
+ 
 
 # Run the code
 1. Download the data from kaggle for this competition, unpack train_2.csv.zip into directory data/raw/ and change file to train_final.csv
