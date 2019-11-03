@@ -252,7 +252,7 @@ class Net(nn.Module):
 
                 P_list = Variable(dtype(upper_limit_n))
 
-                # if args.random_level == 2:
+                # if arg.random_level == 2:
                 #
                 #     total_sum = torch.sum(exp_g[:valid_doc_num])
                 #     denom = Variable(dtype(upper_limit_n))
@@ -268,7 +268,7 @@ class Net(nn.Module):
                 #     for i in range(upper_limit_n):
                 #         P_list[i] = exp_g[perm[i]] / denom[i]
 
-                # if args.random_level == 1 or args.random_level == 21:
+                # if arg.random_level == 1 or arg.random_level == 21:
                 for i in range(upper_limit_n):
                     P_list[i] = exp_g[i] / torch.sum(exp_g[i:valid_doc_num])  # one-hot groundtruth
 
@@ -345,14 +345,14 @@ fold_num = int(re.search(r"Fold([0-9]+)/", args.model_path).group(1))
 
 for epoch in range(args.epochs):
 
-    # if args.random_level == 21:
-    #     if epoch % (args.epochs / len(input_string[(fold_num, args.iter)])) == 0:
-    #         selected_index = int(epoch / (args.epochs / len(input_string[(fold_num, args.iter)])))
-    #         print fold_num, args.iter, selected_index,input_string[(fold_num, args.iter)][min(selected_index,2)]
+    # if arg.random_level == 21:
+    #     if epoch % (arg.epochs / len(input_string[(fold_num, arg.iter)])) == 0:
+    #         selected_index = int(epoch / (arg.epochs / len(input_string[(fold_num, arg.iter)])))
+    #         print fold_num, arg.iter, selected_index,input_string[(fold_num, arg.iter)][min(selected_index,2)]
     #
     #         input_sorted = torch.load(
-    #             "/".join(args.model_path.split("/")[:-1]) + "/input.txt.1." + str(
-    #                 input_string[(fold_num, args.iter)][min(selected_index,2)]))
+    #             "/".join(arg.model_path.split("/")[:-1]) + "/input.txt.1." + str(
+    #                 input_string[(fold_num, arg.iter)][min(selected_index,2)]))
 
     # for query in range(input_sorted.data.size()[0]):
     # for k in range(10):
@@ -379,7 +379,7 @@ for epoch in range(args.epochs):
     # print "Before gradient"
     # Apply gradients
     # for param in model.conv2.parameters():
-    #     param.data.add_(-args.lr * param.grad.data)
+    #     param.data.add_(-arg.lr * param.grad.data)
 
     optimizer.step()
 
@@ -397,7 +397,7 @@ for epoch in range(args.epochs):
             # if abs(neg_log_sum_loss.data[0] - prev_loss[query]) < 1e-5:
             torch.save(model.state_dict(), open(args.model_path, "w"))
             # scores_test = model.forward(input_test)
-            # model.save_scores(scores_test, output_test, args.test_output)
+            # model.save_scores(scores_test, output_test, arg.test_output)
             break
         if (epoch % 20 == 0):
             # print model.print_param()

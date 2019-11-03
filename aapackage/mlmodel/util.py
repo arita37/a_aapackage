@@ -1,35 +1,40 @@
 # -*- coding: utf-8 -*-
 import toml
+import os, sys
 
 
 ##########################################################################
-def load_config(args, config_file, config_mode, verbose=0):
-    ##### Load file params as dict namespace #############################
-    import toml
-    class to_namespace(object):
-        def __init__(self, adict):
-            self.__dict__.update(adict)
-            
-        def get(self, key):
-            return self.__dict__.get(key)
+class to_namespace(object):
+  def __init__(self, adict):
+    self.__dict__.update(adict)
+  
+  def get(self, key):
+    return self.__dict__.get(key)
 
+
+
+
+
+def load_config(args, config_file, config_mode, verbose=0):
+    ##### Load file dict_params as dict namespace #############################
+    import toml
     print(config_file) if verbose else None
 
     try:
        pars = toml.load(config_file)
-       # print(args.param_file, pars)
+       # print(arg.param_file, model_params)
 
 
        pars = pars[config_mode]  # test / prod
        print(config_file, pars) if verbose else None
 
-       ### Overwrite params from CLI input and merge with toml file
+       ### Overwrite dict_params from CLI input and merge with toml file
        for key, x in vars(args).items():
           if x is not None:  # only values NOT set by CLI
              pars[key] = x
 
-       # print(pars)
-       pars = to_namespace(pars)  #  like object/namespace pars.instance
+       # print(model_params)
+       pars = to_namespace(pars)  #  like object/namespace model_params.instance
        return pars
        
     except Exception as e:
@@ -43,8 +48,33 @@ def val(x,xdefault) :
    return x if x is not None  else xdefault
   except :
       return xdefault
-      
-      
+
+
+
+def get_recursive_files(folderPath, ext):
+    results = os.listdir(folderPath)
+    outFiles = []
+    for file in results:
+      if os.path.isdir(os.path.join(folderPath, file)):
+        outFiles += get_recursive_files(os.path.join(folderPath, file), ext)
+      elif re.match(ext, file):
+        outFiles.append(file)
+  
+    return outFiles
+
+
+def os_filename_current(f):
+   pass
+
+
+def os_folder_parent(f):
+  pass
+
+
+
+
+  
+
 
 """
 from datetime import datetime, timedelta
@@ -73,15 +103,15 @@ class ModelFactory():
 # this datasampler is sent to the model
 class DataSampler():
     def __init__(self, file_name = '../dataset/GOOG-year.csv', timestamp =5):
-        self.df = pd.read_csv()
-        self.date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+        self.data_params = pd.read_csv()
+        self.date_ori = pd.to_datetime(data_params.iloc[:, 0]).tolist()
         self.minmax = MinMaxScaler()
         self.timestamp = timestamp
         self.df_log = self.preprocess_df()
     
     def preprocess_df(self):
-        self.minmax.fit(self.df.iloc[:, 1:].astype('float32'))
-        df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
+        self.minmax.fit(self.data_params.iloc[:, 1:].astype('float32'))
+        df_log = minmax.transform(data_params.iloc[:, 1:].astype('float32'))
         df_log = pd.DataFrame(df_log)
         return df_log
 

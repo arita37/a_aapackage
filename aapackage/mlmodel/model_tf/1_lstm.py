@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-python  model_dl/1_lstm.py
+python  model_tf/1_lstm.py
 
 
 """
@@ -14,6 +14,7 @@ import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 
 
+from util import set_root_dir
 
 ####################################################################################################
 class Model:
@@ -50,11 +51,12 @@ class Model:
             drop, self.X, initial_state=self.hidden_layer, dtype=tf.float32
         )
         self.logits = tf.layers.dense(self.outputs[-1], output_size)
+        
+        ### Regression loss
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
 
   
-
 def fit(model, df):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
@@ -115,7 +117,6 @@ def predict(model, sess, df, get_hidden_state=False, init_value=None):
     return output_predict
 
 
-
 def get_params(choice="test", ncol_input=1, ncol_output=1):
     # output parms
     if choice=="test":
@@ -125,17 +126,17 @@ def get_params(choice="test", ncol_input=1, ncol_output=1):
             "size": ncol_input,
             "size_layer": 128,
             "output_size": ncol_output,
-            "timestep": 5,
-            "epoch": 5,
+            "timestep": 4,
+            "epoch": 2,
         }
 
 
+def reset_model():
+    tf.reset_default_graph()
+    
 
-def set_root_dir() :
-    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    parent_dir = os.path.dirname(current_dir)
-    sys.path.insert(0, parent_dir)
-    return parent_dir
+
+
     
 
 def get_dataset(filename="dataset/GOOG-year.csv"):
@@ -152,29 +153,31 @@ def get_dataset(filename="dataset/GOOG-year.csv"):
     return df_log
 
 
-def test(filename="dataset/GOOG-year.csv"):
+def test(data_path="dataset/GOOG-year.csv", reset=True):
     set_root_dir()
-    df = get_dataset(filename)
+    df = get_dataset(data_path)
     
     from models import create, fit, predict
     module, model = create(
-        "model_dl.1_lstm",
+        "model_tf.1_lstm",
         get_params("test", ncol_input= df.shape[1], ncol_output= df.shape[1] )
     )
 
     sess = fit(model, module, df)
     predictions = predict(model, module, sess, df)
     print(predictions)
+    tf.reset_default_graph()
+    
 
-
-def test2(filename="dataset/GOOG-year.csv"):
-    df_log = get_dataset(filename)
+def test2(data_path="dataset/GOOG-year.csv"):
+    df_log = get_dataset(data_path)
     p      = get_params("test", ncol_input=df_log.shape[1], ncol_output=df_log.shape[1] )
         
     model = Model(**p)
     sess  = fit(model, df_log)
     predictions = predict(model, sess, df_log)
     print(predictions)
+
 
 
 
@@ -196,13 +199,13 @@ if __name__ == "__main__":
     future_day = 50
 
     # In[2]:
-    df = pd.read_csv("../dataset/GOOG-year.csv")
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    df.head()
+    data_params = pd.read_csv("../dataset/GOOG-year.csv")
+    date_ori = pd.to_datetime(data_params.iloc[:, 0]).tolist()
+    data_params.head()
 
     # In[3]:
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
-    df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
+    minmax = MinMaxScaler().fit(data_params.iloc[:, 1:].astype("float32"))
+    df_log = minmax.transform(data_params.iloc[:, 1:].astype("float32"))
     df_log = pd.DataFrame(df_log)
     df_log.head()
 
@@ -273,25 +276,25 @@ if __name__ == "__main__":
     current_palette = sns.color_palette("Paired", 12)
     fig = plt.figure(figsize=(15, 10))
     ax = plt.subplot(111)
-    x_range_original = np.arange(df.shape[0])
+    x_range_original = np.arange(data_params.shape[0])
     x_range_future = np.arange(df_log.shape[0])
-    ax.plot(x_range_original, df.iloc[:, 1], label="true Open", color=current_palette[0])
+    ax.plot(x_range_original, data_params.iloc[:, 1], label="true Open", color=current_palette[0])
     ax.plot(
         x_range_future, anchor(df_log[:, 0], 0.5), label="predict Open", color=current_palette[1]
     )
-    ax.plot(x_range_original, df.iloc[:, 2], label="true High", color=current_palette[2])
+    ax.plot(x_range_original, data_params.iloc[:, 2], label="true High", color=current_palette[2])
     ax.plot(
         x_range_future, anchor(df_log[:, 1], 0.5), label="predict High", color=current_palette[3]
     )
-    ax.plot(x_range_original, df.iloc[:, 3], label="true Low", color=current_palette[4])
+    ax.plot(x_range_original, data_params.iloc[:, 3], label="true Low", color=current_palette[4])
     ax.plot(
         x_range_future, anchor(df_log[:, 2], 0.5), label="predict Low", color=current_palette[5]
     )
-    ax.plot(x_range_original, df.iloc[:, 4], label="true Close", color=current_palette[6])
+    ax.plot(x_range_original, data_params.iloc[:, 4], label="true Close", color=current_palette[6])
     ax.plot(
         x_range_future, anchor(df_log[:, 3], 0.5), label="predict Close", color=current_palette[7]
     )
-    ax.plot(x_range_original, df.iloc[:, 5], label="true Adj Close", color=current_palette[8])
+    ax.plot(x_range_original, data_params.iloc[:, 5], label="true Adj Close", color=current_palette[8])
     ax.plot(
         x_range_future,
         anchor(df_log[:, 4], 0.5),
@@ -309,12 +312,12 @@ if __name__ == "__main__":
 
     fig = plt.figure(figsize=(20, 8))
     plt.subplot(1, 2, 1)
-    plt.plot(x_range_original, df.iloc[:, 1], label="true Open", color=current_palette[0])
-    plt.plot(x_range_original, df.iloc[:, 2], label="true High", color=current_palette[2])
-    plt.plot(x_range_original, df.iloc[:, 3], label="true Low", color=current_palette[4])
-    plt.plot(x_range_original, df.iloc[:, 4], label="true Close", color=current_palette[6])
-    plt.plot(x_range_original, df.iloc[:, 5], label="true Adj Close", color=current_palette[8])
-    plt.xticks(x_range_original[::60], df.iloc[:, 0].tolist()[::60])
+    plt.plot(x_range_original, data_params.iloc[:, 1], label="true Open", color=current_palette[0])
+    plt.plot(x_range_original, data_params.iloc[:, 2], label="true High", color=current_palette[2])
+    plt.plot(x_range_original, data_params.iloc[:, 3], label="true Low", color=current_palette[4])
+    plt.plot(x_range_original, data_params.iloc[:, 4], label="true Close", color=current_palette[6])
+    plt.plot(x_range_original, data_params.iloc[:, 5], label="true Adj Close", color=current_palette[8])
+    plt.xticks(x_range_original[::60], data_params.iloc[:, 0].tolist()[::60])
     plt.legend()
     plt.title("true market")
     plt.subplot(1, 2, 2)
@@ -345,7 +348,7 @@ if __name__ == "__main__":
 
     fig = plt.figure(figsize=(15, 10))
     ax = plt.subplot(111)
-    ax.plot(x_range_original, df.iloc[:, -1], label="true Volume")
+    ax.plot(x_range_original, data_params.iloc[:, -1], label="true Volume")
     ax.plot(x_range_future, anchor(df_log[:, -1], 0.5), label="predict Volume")
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9])
@@ -358,8 +361,8 @@ if __name__ == "__main__":
 
     fig = plt.figure(figsize=(20, 8))
     plt.subplot(1, 2, 1)
-    plt.plot(x_range_original, df.iloc[:, -1], label="true Volume")
-    plt.xticks(x_range_original[::60], df.iloc[:, 0].tolist()[::60])
+    plt.plot(x_range_original, data_params.iloc[:, -1], label="true Volume")
+    plt.xticks(x_range_original[::60], data_params.iloc[:, 0].tolist()[::60])
     plt.legend()
     plt.title("true market volume")
     plt.subplot(1, 2, 2)

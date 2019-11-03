@@ -18,8 +18,8 @@ from importlib import import_module
 
 def create(modelname="", params=None, modelonly=1):
     """
-      modelname:  model_dl_tch.mlp.py
-      model_dl_tch/****
+      modelname:  model_tch.mlp.py
+      model_tch/****
       
     """
     modelname = modelname.replace(".py", "")

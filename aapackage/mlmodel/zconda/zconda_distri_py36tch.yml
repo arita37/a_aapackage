@@ -1,7 +1,7 @@
 name: py36tch
 channels:
   - pytorch
-  - conda-forge
+  - zconda-forge
   - defaults
 dependencies:
   - ca-certificates=2019.3.9=hecc5488_0

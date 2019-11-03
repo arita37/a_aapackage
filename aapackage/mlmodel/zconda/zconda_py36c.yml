@@ -1,6 +1,6 @@
 name: py36d
 channels:
-  - conda-forge
+  - zconda-forge
   - defaults
 dependencies:
   - _py-xgboost-mutex=2.0=cpu_0

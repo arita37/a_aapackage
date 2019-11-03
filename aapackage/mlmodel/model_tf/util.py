@@ -18,6 +18,7 @@ from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import tensorflow as tf
+import os, sys, inspect
 
 
 def batch_invert_permutation(permutations):
@@ -41,3 +42,12 @@ def one_hot(length, index):
     result = np.zeros(length)
     result[index] = 1
     return result
+
+
+def set_root_dir():
+    current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    parent_dir = os.path.dirname(current_dir)
+    sys.path.insert(0, parent_dir)
+    return parent_dir
+
+

@@ -27,7 +27,7 @@ class Model:
 
 def fit(model, df):
     """
-      df : dateframe containing the training data
+      data_params : dateframe containing the training data
     
     """
     for i in range(model.epoch):
@@ -80,7 +80,7 @@ def test(filename="dataset/GOOG-year.csv"):
     df_log = pd.DataFrame(df_log)
 
     module, model = create(
-        "model_dl_tch/1_lstm",
+        "model_tch/1_lstm",
         {
             "learning_rate": 0.001,
             "num_layers": 1,

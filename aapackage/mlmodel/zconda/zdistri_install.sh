@@ -1,11 +1,11 @@
 #!/bin/bash
 
 reset
-which conda
+which zconda
 
 
 echo "Conda Install"
-conda env create -n py36tch -f zpy36tch.yml
+zconda env create -n py36tch -f zpy36tch.yml
 
 
 echo "Open MPI"

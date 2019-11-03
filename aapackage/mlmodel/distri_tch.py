@@ -1,10 +1,10 @@
 """
 Pytorch distributed
-### Distributed with OPENMPI with 2 nodes,  model_dl_tch.mlp
-./distri_run.sh  2    model_dl_tch.mlp
+### Distributed with OPENMPI with 2 nodes,  model_tch.mlp
+./distri_run.sh  2    model_tch.mlp
 
 
-python   distri_model_tch.py   --model model_dl_tch.mlp
+python   distri_model_tch.py   --model model_tch.mlp
 
 
 """
@@ -44,7 +44,7 @@ def load_arguments():
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help=" test/ prod /uat")
 
-    p.add_argument("--model", default="model_dl_tch.mlp.py", help=" net")
+    p.add_argument("--model", default="model_tch.mlp.py", help=" net")
     p.add_argument("--data", default="mnist", help=" mnist")
 
     p.add_argument("--batch-size", type=int, default=64, metavar="N", help="batchsize training")
@@ -58,7 +58,7 @@ def load_arguments():
     p.add_argument("--fp16-allreduce", action="store_true", default=False, help="fp16 in allreduce")
 
     ### Should be store in toml file
-    p.add_argument("--model_params_name",  default='test', help="model params as Dict")
+    p.add_argument("--model_params_name",  default='test', help="model dict_params as Dict")
 
 
     args = p.parse_args()

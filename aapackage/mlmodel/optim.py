@@ -16,16 +16,14 @@ python optim.py --do search --ntrials 1  --config_file data.json --optim_method 
 python optim.py --do search --ntrials 1  --config_file data.json --optim_method prune
 
 ###### Model standalone run
-python  models.py  --modelname model_dl.1_lstm.py  --do test
+python  models.py  --modelname model_tf.1_lstm.py  --do test
 
 
 
 ###### HyperParam standalone run
-python optim.py --modelname model_dl.1_lstm.py  --do test
+python optim.py --modelname model_tf.1_lstm.py  --do test
 
-
-
-python optim.py --modelname model_dl.1_lstm.py  --do search
+python optim.py --modelname model_tf.1_lstm.py  --do search
 
 
 
@@ -44,9 +42,11 @@ import pandas as pd
 
 import optuna
 
-from util import load_config
-from models import create, module_load, save
-###############################################################################
+####################################################################################################
+
+from util import load_config, to_namespace
+from models import create, module_load, save_tf
+####################################################################################################
 
 
 
@@ -57,32 +57,52 @@ def create_model_name(save_folder, model_name) :
     
     
 
-def optim(modelname="model_dl.1_lstm.py", 
+def optim(modelname="model_tf.1_lstm.py",
           pars= {},      
           df = None,
           optim_engine="optuna",
           optim_method="normal/prune",
           save_folder="model_save/", log_folder="logs/",ntrials=2) :
+    """
+        Generic interface of  Hyper-optimize
+    :param modelname:
+    :param pars:
+    :param df:
+    :param optim_engine:
+    :param optim_method:
+    :param save_folder:
+    :param log_folder:
+    :param ntrials:
+    :return:
+    """
 
-          print(pars)
+    print(pars)
 
-          if df is None:
-             return -1
-        
-          if optim_engine == "optuna" :
-            return optim_optuna(modelname,  pars, df, optim_method,
-                                save_folder, log_folder,ntrials) 
-          return None
-                    
+    if df is None:
+         return -1
+    
+    if optim_engine == "optuna" :
+        return optim_optuna(modelname,  pars, df, optim_method,
+                            save_folder, log_folder,ntrials)
+    return None
+    
 
-def optim_optuna(modelname="model_dl.1_lstm.py", 
-          pars= {},      
-          df = None,
-          optim_method="normal/prune",
-          save_folder="/mymodel/", log_folder="",ntrials=2) :
+def optim_optuna(modelname="model_tf.1_lstm.py",
+                 model_params= {},
+                 data_params = {},
+                 optim_method="normal/prune",
+                 save_folder="/mymodel/", log_folder="", ntrials=2) :
     """
        Interface layer to Optuna  for hyperparameter optimization
        return Best Parameters 
+
+    optuna create-study --study-name "distributed-example" --storage "sqlite:///example.db"
+    
+    https://optuna.readthedocs.io/en/latest/tutorial/distributed.html
+     if __name__ == '__main__':
+    study = optuna.load_study(study_name='distributed-example', storage='sqlite:///example.db')
+    study.optimize(objective, n_trials=100)
+    
 
     weight_decay = trial.suggest_loguniform('weight_decay', 1e-10, 1e-3)
     optimizer = trial.suggest_categorical('optimizer', ['MomentumSGD', 'Adam']) # Categorical parameter
@@ -92,13 +112,14 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
     drop_path_rate = trial.suggest_discrete_uniform('drop_path_rate', 0.0, 1.0, 0.1) # Discrete-uniform parameter
     """
     
-    module = module_load(modelname)    
+    module = module_load(modelname)
 
     def objective(trial):
-        param_dict =  module.get_params(choice="test", ncol_input=df.shape[1], ncol_output=df.shape[1])
-        for t,p  in pars.items():
+        param_dict =  module.get_params(choice="test", ncol_input=data_params.shape[1],
+                                        ncol_output=data_params.shape[1])
+        for t,p  in model_params.items():
             pres = None
-            #p = pars[t]
+            #p = model_params[t]
             x = p['type']
             
             if x=='log_uniform':
@@ -122,55 +143,54 @@ def optim_optuna(modelname="model_dl.1_lstm.py",
             param_dict[t] = pres
             
         model = module.Model(**param_dict)
-        sess = module.fit(model,df)
+        
+        df = data_loader(data_params)
+        sess = module.fit(model, df)
         stats = model.stats["loss"]
         del sess
         del model
-        tf.reset_default_graph()
+        try :
+           tf.reset_default_graph()
+        except Exception as e :
+           print(e)
+          
         return stats
         
+    ###### Hyper-optimization through study   ####################################
     if optim_method=='prune':
         study = optuna.create_study(pruner=optuna.pruners.MedianPruner())
     else:
         study = optuna.create_study()  # Create a new study.
-    
-    """
-    optuna create-study --study-name "distributed-example" --storage "sqlite:///example.db"
-    
-    https://optuna.readthedocs.io/en/latest/tutorial/distributed.html
-     if __name__ == '__main__':
-    study = optuna.load_study(study_name='distributed-example', storage='sqlite:///example.db')
-    study.optimize(objective, n_trials=100)
-    
-    
-    
-    """
+
     study.optimize(objective, n_trials=ntrials)  # Invoke optimization of the objective function.
     param_dict =  study.best_params
-    param_dict.update(module.get_params(choice="test", ncol_input=df.shape[1], 
-                                        ncol_output=df.shape[1]))
-    
-    ### Run best model
+    param_dict.update(module.get_params(choice="test", ncol_input=data_params.shape[1],
+                                        ncol_output=data_params.shape[1]))
+
+        
+    ### Run Model with best   ###################################################
     model = module.Model(**param_dict)
-    sess = module.fit(model,df)
+    df = data_loader(data_params)
+    sess = module.fit(model,  df)
+
     
-    #### Saving 
-    modelname = modelname.replace(".", "_") # this is the module name which contains .
+    #### Saving     #############################################################
+    modelname = modelname.replace(".", "-") # this is the module name which contains .
     save_folder = save_folder + "/" + modelname
     if not(os.path.isdir(save_folder)):
         os.makedirs(save_folder)
-    file_path = os.path.join(save_folder,modelname+'.ckpt')
+    file_path = f"{save_folder}/{modelname}.ckpt"
 
-    save(sess,file_path)
+    save_tf(sess, file_path)
 
 
-    ### Update with Best values
+    ### Save Stats   ###############################################################################
     study_trials = study.trials_dataframe()
-    study_trials.to_csv(os.path.join(save_folder,modelname+'_study.csv'))
+    study_trials.to_csv(f"{save_folder}/{modelname}_study.csv")
     
     param_dict["best_value"] = study.best_value
     param_dict["file_path"] = file_path 
-    json.dump( param_dict,  os.path.join(save_folder, modelname+'_params.csv') )
+    json.dump( param_dict,  f"{save_folder}/{modelname}_params.json" )
     
     return param_dict
 
@@ -193,10 +213,12 @@ def load_arguments(config_file= None ):
 
     p.add_argument("--do", default="test", help="what to do test or search") 
     p.add_argument("--ntrials", default=100, help='number of trials during the hyperparameters tuning')
-    p.add_argument("--modelname", default="model_dl.1_lstm.py",  help="name of the model to be tuned this name will be used to save the model")  
-    p.add_argument("--data_path", default="dataset/GOOG-year_small.csv",  help="path of the training file")  
-    p.add_argument('--optim_engine', default='optuna',help='Optimization engine') 
-    p.add_argument('--optim_method', default='normal/prune',help='Optimization method')  
+    p.add_argument('--optim_engine', default='optuna',help='Optimization engine')
+    p.add_argument('--optim_method', default='normal/prune',help='Optimization method')
+    
+    p.add_argument("--modelname", default="model_tf.1_lstm.py",  help="name of the model to be tuned this name will be used to save the model")
+    p.add_argument("--data_path", default="dataset/GOOG-year_small.csv",  help="path of the training file")
+    
     p.add_argument('--save_folder', default='model_save',help='folder that will contain saved version of best model')  
     
     args = p.parse_args()
@@ -204,11 +226,13 @@ def load_arguments(config_file= None ):
     return args
 
 
-def data_loader(file_name='dataset/GOOG-year.csv'):
-    df = pd.read_csv(file_name)
+
+def data_loader(data_params):
+    
+    if data_params["file_name"] == "pandas" :
+      df = pd.read_csv(data_params["file_name"])
     
     date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-
 
     minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype('float32'))
     df_log = minmax.transform(df.iloc[:, 1:].astype('float32'))
@@ -226,7 +250,7 @@ def test_all():
         "timestep":      {"type" : 'categorical', "value": [5] },
         "epoch":        {"type" : 'categorical', "value": [5] },
     }  
-    res = optim('model_dl.1_lstm', pars=pars, df = df_log,ntrials=7 )  
+    res = optim('model_tf.1_lstm', pars=pars, df = df_log,ntrials=7 )
     print(res)
 
 
@@ -237,10 +261,10 @@ def test_fast():
         "num_layers":    {"type": "int", "init": 2,  "range" :(2, 4)}, 
         "size_layer":    {"type" : 'categorical', "value": [128, 256 ] },
         "timestep":      {"type" : 'categorical', "value": [5] },
-        "epoch":        {"type" : 'categorical', "value": [2] },
+        "epoch":         {"type" : 'categorical', "value": [2] },
     }  
     
-    res = optim('model_dl.1_lstm', pars=pars, df = df_log,ntrials=3,
+    res = optim('model_tf.1_lstm', pars=pars, df = df_log,ntrials=3,
                 optim_method="prune", )  
     print("\n#############  Finished OPTIMIZATION  ###############") 
     print(res)
@@ -249,31 +273,34 @@ def test_fast():
 
 
 if __name__ == "__main__":
-    #test_all() # tot test all te modules inside model_dl
-    args = load_arguments()
-
+    #test_all() # tot test all te modules inside model_tf
+    arg = load_arguments()
    
     import logging
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 
-    if args.do == "test"  :
+    if arg.do == "test"  :
         test_fast()
 
 
-    if args.do == "search"  :
-        df_log = data_loader(args.data_path)
-        d = json.load(open(args.config_file,'r'))  #Config
+    if arg.do == "search"  :
+        df_log = data_loader(arg.data_path)
+        model_params = json.load(open(arg.config_file, 'r'))  #Config
+        data_params = { "data_path" : arg.data_path, "data_type": "pandas" }
         
-        res = optim(args.modelname, d, 
-                    ntrials=int(args.ntrials), 
-                    optim_engine=args.optim_engine, 
-                    optim_method=args.optim_method, 
-                    df=df_log, 
-                    save_folder=args.save_folder)  # '1_lstm'
+        res = optim(arg.modelname, model_params,
+                    ntrials=int(arg.ntrials),
+                    optim_engine=arg.optim_engine,
+                    optim_method=arg.optim_method,
+                    df=df_log,
+                    save_folder=arg.save_folder)  # '1_lstm'
                     
         print("#############  Finished OPTIMIZATION  ###############")            
         print(res)
     
+
+
+
 
         

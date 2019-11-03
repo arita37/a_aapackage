@@ -11,7 +11,7 @@
 			"file": "/D/Dropbox/_text/email1.txt",
 			"settings":
 			{
-				"buffer_size": 128533,
+				"buffer_size": 131490,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -31,7 +31,7 @@
 			"file": "/D/Dropbox/_text/coding.txt",
 			"settings":
 			{
-				"buffer_size": 278508,
+				"buffer_size": 283509,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -40,7 +40,7 @@
 			"file": "ztodo_list.txt",
 			"settings":
 			{
-				"buffer_size": 5903,
+				"buffer_size": 6178,
 				"line_ending": "Windows"
 			}
 		},
@@ -48,7 +48,7 @@
 			"contents": "Proba calibration :\n  actual proba == Model probabiliy.\n\n  Find Kaiso that \n    Actual proba == Model probability +- error\n\n    A set of range s1, s2, s3, ....sn  \n    Actual probability\n\n\n\n\n\n\n\n\n#########################################################################\n\naccumulate experience : 経験を積む\nmigaite: improve\njiko keihatsu : self-improvement\nkizukitai : to build\nkajika suru : visualize\nKeiei-jin ni tsutaeru : tell management.\nteiryoki :  quantitative.\nkeii-jin : Management Team\njakuten / iiten : good point\n\nOn one hand : 一方では\nOn other hand : 一方で, sono atode\n\n\n2)#### Rakuten, which role\n   Principal Data Scientist, \n   Project no kouken, kikai gakushuu no riyou\n\n   3-tsu no project :\n     1 Search Recommender system\n     2 Data processing : NLP\n     3 Scoring model : user data, score model.\n\n\n3) #### Jakuten / Tsuyuoi ten ?\n  nihongo ha mada tarinai desu\n  joujou ni joutatsu shite imasu.\n\n\n4)#### Naze Rakuten wo detai ?\n  Recruiter kara, \n  Career no tame, Axa to Axa group wo kyoumi ga aru.\n  Izen no Hoken gaisha to Big Data \n  wo ikasu koto ga arimasu.\n\n\n5)#### Manager toshite, Nani ga dekimasu ?\n   ING de assistant manager toshite,\n   financial engineering team wo kanri shite.\n   Modelling no kaizen no tame,\n\n   on other hand, kinyu system development.\n\n   Shin shouhin no kaihatsu no tame,\n      actuary to hataraita.\n\n   ooha na keiken, manager toshite, bukka ni keiken wo tsutaete, \n\n\n6)##### Hoka no bumon to, communication process dou shimasu ka ?\n   Kaisha no houshin, yari kata wo benkyou shimasu.\n\n\n7) ############### Naze  Axa wo kyoumi ga arimasu ka ?\n  Moto moto, Izen on kinyu no keiken wo ikashitai desu.\n\n  Nagai aida ni, Axa Group wo kyoumi ga arimaru.\n  Axa Group ha Nihon de, Gaikuoku de career ga kanou ga arimasu.\n\n  Kinyou kaisha to Hoken gaisha deha arimasen.\n  Big Data ha ok desuga, Business ha \"beginner\", \n  Business keiken ga nai, hanashi nikui desu.\n\n  Hoken no pricing model wo keiken ga arimashita.\n  Actuary to hatarita kara,\n\n\n8) ############### dona project ?\nProject kouken ni shinagara,  izen no keiken wo ikashitai desu.\nShoshitara, project no sakusei.\n\n\n9) ############# Manager to Specialist no path   ?\n10 nen kan, Kinyuu to Hoken Gaisha to Big Data ga arimasuka, \nsenior manager to tame, manager toshite, keiken no share shi yasui to omoimasu.\nData Senryaku ni kouken shimasu.\n\nGenzai, specialist level ga takai to omoimasu, amari shinpo dekinai.\nDaigaku de benkyou igai, shinpo ga dekinai to omoimasu.\n\n\n\n2 tsu noo bubun ni wakeru koto gadekimasu.\n  Project no senryaku\n  Project no jitsu no gitjutsu no riyou : Deep Learning, Jitsu model.\n\n\n10) #### Big data system  no riyou ?\n   Senmon desu.\n   Search system no tsukuru tameni :\n      Kafka, Spark, Hadoop system.\n\n    \n11) #### API system wo tsukuru\n\n\n\n\n13) ####   \n\n\n\n\n\n\n\n\n\n\n##### Question to Company :   ###########################################\n  Zama na request\n\n1) Gutani teki dona Project ni sanka  shinakya ?\n\n2) Tatoeba, project no output ha\n  model mataha API system ですか？\n\n3) Team no yakimu wari\n\n4) Data senryaku\n\n \n  Team deha, Sugakusha mataha Actuary no shushin ha irashaimasuka ?\n\n\n\n\n\n\n\nYoku mirareru machigai wa, jiko shōkai o motomerareta toki ni \njiko PR o shite shimau case desu. Futatsu no chigai wa nani ka to iu to, jiko shōkai wa `aisatsu' to `komyunikēshon no kikkake-tsukuri' de, jiko PR wa `nōryoku ya iyoku no apīru'desu. \n\nMensetsu-kan kara sureba, jiko shōkai o motomete iru no ni,\n tsuyomi, sukiru, chishiki, kachikan, iyoku nado o hanasa rete wa tōtotsu-sa ni konwaku shite shimaimasu. `Shitsumon no ito o rikai shiteinai noda na' to komyunikēshonsukiru o utagawa reru koto ni mo nari kanemasen. Jiko shōkai to shite hanasu koto to, jiko PR to shite hanasu koto wa wakete kangaemashou.\n\n\n\n\n\nShūkatsu no mensetsude wa jiko PR ya shibō dōki wa kanarazu kika reru shitsumon'nanode, hotondo subete no gakusei-san ga junbi shite kimasu. Shikashi, mensetsu ga hajimatte ichiban saisho ni `kantan ni jiko shōkai o shite kudasai' to iwa reta toki ni, junbi fusoku de awatete shimau gakusei-san ga takusan irasshaimasu. Jiko shōkai to wa jiko PR to wa dō chigau nodeshou ka? Nani o hanashitara yoi nodeshou ka? Korera no gimon o kaiketsu subeku, jiko shōkai to jiko PR no chigai to jiko shōkai de hanasubeki naiyō ni tsuite go setsumei shite ikimasu. Jiko shōkai o shite kudasai to iwa rete mo awatenai yō ni, shikkari jiko shōkai no naiyō o haaku shite ikimashou. Mokuji `jiko shōkai' to `jiko PR' no chigai entorīshīto ga aru ni mo kakawarazu, mensetsu de jiko shōkai o jisshi suru riyū mensetsu de jiko shōkai ni yōsuru jikan no meyasu mensetsu no jiko shōkai ni kanarazu hitsuyōna jōhō mensetsu de yoku aru damena jiko shōkai no reibun mensetsu de tasha to sa o tsukeru, miryoku-tekina jiko shōkai no reibun mensetsu de umaku jiko shōkai o suru kotsu matome\n\n\n\n####################################################################\n部下を持ったことはありますか。\n  Hai, 2 persons wo motte imasu.\n\n\n\n・部下の指導において、重要であると考えることは何ですか。\n・翻訳業務には対応できますか。\n・通訳業務には対応できますか。\n\n・今後は、専門職としてのスキルを磨いてゆきたいですか。それとも、マネジメントを行ってみたいですか。\n\n・複数の部門との調整を行うにはどのような手段を使いますか。\n・自己啓発のために行っていることはありますか。\n・リスク管理のキャリアを築きたいと考えたのはどうしてですか。\n・ITのどのような言語を使用することができますか。\n\n・当社における大きなリスクは何であると考えますか。\n・事業保険、医療保険、死亡保険、年金保険のどの保険についても基礎的な商品知識はありますか。\n\n・リスクを可視化するにはどのような手法を使いますか。\n・リスクを表すにおいて、定量的リスク指標のなかで、一番重要であると思う指標は何ですか。\n\n・定性的リスクを経営陣に伝えるには、どのような手法を利用しますか。\n\n・苦手な業務は何ですか。\n\n\n\n\n\n—————————————————————————-----------------------------------------\n\n· Have you ever had a subordinate?\n· What do you think is important in guidance of subordinates?\n· Can you handle translation work?\n· Can you handle interpreting work?\n· Do you want to develop your professional skills in the future? Or would you like to do management?\n· What measures will you use to coordinate with multiple departments?\n· Do you have something to do for self-development?\n· Why did you want to build a career in risk management?\n· Which languages ​​like IT can you use?\n\n· What do you think is a major risk in our company?\n· Do you have any basic product knowledge about insurance such as business insurance, medical insurance, death insurance, annuity insurance?\n· What kind of method is used to visualize risk?\n• What are the most important indicators of quantitative risk indicators in representing risk?\n· What sort of method is used to convey qualitative risk to management?\n· What is a weak business?\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nHello Sir,\n\nAm working at Rakuten Tokyo .as Principal Data Science.\nHave some interest at Indeed by having a top notch engineering reputation \n(also a friend working there).\n\nMy specialties are :\n   Quantitative Finance (modelling and al., stats)\n   Japanese NLP.\n   Fintech \n   Search Ranking Algo / Recommender system.\n   User data analysis. \n   Can speakr Japanese fluently , 10 work years exp. (finance as quant \\, mainly)\n\nAm not looking actively but happy to discuss if one role may fit.\nMy github is \nhttps://github.com/arita37\n   \n\n\n\n\n############################################################################\n############################################################################\nHello, \n\nI am principal Data Scientist at Rakuten , \nworking on large data analysis (ML prediction, classification, ...) for Japanese\nretail.\n\nI have strong interest in Cogent Lab activity due to my background in Finance, and \ncurrent activity in Data Science.\n\nI believe my technical profile and deep knowledge of business (finance, retail) can match Cogent Lab activity.\n\nFor example of projects where I can contribute :\n   Japanese retail business (forecast, recommender system, search)\n   Asset Management : Low frequency\n\n\n\n\n\n\n\n\n",
 			"file": "/D/Dropbox/_text/interview3.txt",
 			"file_size": 8829,
-			"file_write_time": 131925219376305946,
+			"file_write_time": 131925219370000000,
 			"settings":
 			{
 				"buffer_size": 7593,
@@ -222,7 +222,7 @@
 	],
 	"find":
 	{
-		"height": 27.0
+		"height": 24.0
 	},
 	"find_in_files":
 	{
@@ -281,15 +281,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 128533,
+						"buffer_size": 131490,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								489,
-								489
+								0,
+								0
 							]
 						],
 						"settings":
@@ -337,15 +337,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 278508,
+						"buffer_size": 283509,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3236,
-								3236
+								0,
+								0
 							]
 						],
 						"settings":
@@ -367,7 +367,7 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5903,
+						"buffer_size": 6178,
 						"regions":
 						{
 						},
@@ -380,7 +380,9 @@
 						],
 						"settings":
 						{
-							"syntax": "Packages/Text/Plain text.tmLanguage"
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 504.0,
@@ -482,7 +484,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 27.0
+		"height": 24.0
 	},
 	"input":
 	{
@@ -519,7 +521,7 @@
 	"project": "zzsublime.sublime-project",
 	"replace":
 	{
-		"height": 50.0
+		"height": 44.0
 	},
 	"save_all_on_build": true,
 	"select_file":

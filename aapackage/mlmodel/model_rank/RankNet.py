@@ -391,7 +391,7 @@ def load_from_ckpt(ckpt_file, epoch, model):
 
 if __name__ == "__main__":
     parser = get_args_parser()
-    # add additional args for RankNet
+    # add additional arg for RankNet
     parser.add_argument(
         "--train_algo", dest="train_algo", default=SUM_SESSION,
         choices=[SUM_SESSION, ACC_GRADIENT, BASELINE],

@@ -290,7 +290,7 @@ def MDP_for_gradient(model, input_unsorted, output_unsorted):  # equation 4
             # to_gradient=Gt*torch.log(score_exp[selected_doc[query,t].data.numpy()[0]]/torch.sum(score_exp*masks[query,t]))
             # to_gradient.backward()
             # for param in model.parameters():
-            #     param.data += args.lr * param.grad.data
+            #     param.data += arg.lr * param.grad.data
             # epoch+=1
             #
             # if epoch%2==0:
@@ -299,13 +299,13 @@ def MDP_for_gradient(model, input_unsorted, output_unsorted):  # equation 4
             #     neg_log_sum_loss = model.seqMLELoss(scores, output_sorted)
             #
             #     if (epoch % 2 == 0):
-            #         torch.save(model.state_dict(), open(args.model_path, "w"))
-            #         model.eval(input_unsorted, output_unsorted, args.train_output, args.training_set,
-            #                    args.eval_output + ".train",neg_log_sum_loss)
-            #         model.eval(input_valid_unsorted, output_valid_unsorted, args.valid_output, args.valid_set,
-            #                    args.eval_output + ".valid",neg_log_sum_loss)
-            #         model.eval(input_test_unsorted, output_test_unsorted, args.test_output, args.test_set,
-            #                    args.eval_output + ".test",neg_log_sum_loss)
+            #         torch.save(model.state_dict(), open(arg.model_path, "w"))
+            #         model.eval(input_unsorted, output_unsorted, arg.train_output, arg.training_set,
+            #                    arg.eval_output + ".train",neg_log_sum_loss)
+            #         model.eval(input_valid_unsorted, output_valid_unsorted, arg.valid_output, arg.valid_set,
+            #                    arg.eval_output + ".valid",neg_log_sum_loss)
+            #         model.eval(input_test_unsorted, output_test_unsorted, arg.test_output, arg.test_set,
+            #                    arg.eval_output + ".test",neg_log_sum_loss)
 
             sum += Gt * log_pi[query, t]  #one of the variables needed for gradient computation has been modified by an inplace operation
 
@@ -321,11 +321,11 @@ model = Net(m)
 
 print args
 
-# model.eval(input_unsorted, output_unsorted, args.train_output, args.training_set, args.eval_output + ".train")
-# model.eval(input_valid_unsorted, output_valid_unsorted, args.valid_output, args.valid_set,
-#            args.eval_output + ".valid")
-# model.eval(input_test_unsorted, output_test_unsorted, args.test_output, args.test_set,
-#            args.eval_output + ".test")
+# model.eval(input_unsorted, output_unsorted, arg.train_output, arg.training_set, arg.eval_output + ".train")
+# model.eval(input_valid_unsorted, output_valid_unsorted, arg.valid_output, arg.valid_set,
+#            arg.eval_output + ".valid")
+# model.eval(input_test_unsorted, output_test_unsorted, arg.test_output, arg.test_set,
+#            arg.eval_output + ".test")
 
 fold_num = int(re.search(r"Fold([0-9]+)/", args.model_path).group(1))
 prev_loss=float("inf")
