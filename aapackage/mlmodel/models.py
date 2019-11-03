@@ -7,6 +7,7 @@ Logic follows Scikit Learn API and simple for easy extentions.Logic
 ######### Code sample  ##########################################################
 from models import create
 # module, model = create_full("model_tf.1_lstm.py", dict_params= model_params)  # Net
+
 model_params =  { "learning_rate": 0.001, "num_layers": 1,
             "size": ncol_input, "size_layer": 128, "output_size": ncol_output, "timestep": 4,  "epoch": 2,}
 data_params = {}
@@ -76,7 +77,7 @@ def module_load(modelname=""):
 def create(module, model_params=None):
     """
       Create Instance of the model from loaded module model
-      module *****/
+      module *****/myfile.py
       model_params : dict paras
 
     """
@@ -87,16 +88,15 @@ def create(module, model_params=None):
     return model
 
 
-def create_full(modelname="", dict_params=None, choice=['module', "model"]):
+def create_full(modelname="", model_params=None, choice=['module', "model"]):
     """
       Create Instance of the model
       modelname:  model_tf.1_lstm.py
-      model_*****/
       dict_params : dict paras
 
     """
     module = module_load(modelname=modelname)
-    model = module.Model(**dict_params)
+    model = module.Model(**model_params)
     return module, model
 
 
@@ -227,9 +227,12 @@ def load_arguments(config_file= None ):
 
 
                                  
-def get_params(args) :                               
-   model_params = args.config.get("model_params")                          
-   data_params = args.config.get("data_params")  
+def get_params(arg) :    
+   js = json.load(open(arg.config_file, 'r'))  #Config     
+   js = js[arg.config_mode]  #test /uat /prod                              
+   model_params = js.get("model_params")                          
+   data_params = js.get("data_params")  
+                                                              
    return model_params, data_params                              
                                  
                                  
@@ -240,7 +243,6 @@ if __name__ == "__main__":
     if args.do == "testall"  :
         print(args.do)
         test_all()
-
 
     if args.do == "test"  :
         print(args.do)
@@ -263,7 +265,7 @@ if __name__ == "__main__":
                                  
         module = module_load(args.modelname)  # '1_lstm'
         model = load(folder_name)                         
-        module.predict(model, data_params)
+        module.predict(model, data_params, data_params["target_folder"] )
 
 
 
