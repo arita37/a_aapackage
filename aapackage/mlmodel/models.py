@@ -4,13 +4,26 @@ Lightweight Functional interface to wrap access to Deep Learning, RLearning mode
 Logic follows Scikit Learn API and simple for easy extentions.Logic
 
 
+######### Code sample  ##########################################################
 from models import create
-model = create_instance("model_tf.1_lstm.py", dict_params=params_dict)  # Net
+# module, model = create_full("model_tf.1_lstm.py", dict_params= model_params)  # Net
+model_params =  { "learning_rate": 0.001, "num_layers": 1,
+            "size": ncol_input, "size_layer": 128, "output_size": ncol_output, "timestep": 4,  "epoch": 2,}
+data_params = {}
+
+module = module_load(modelname="model_tf.1_lstm.py")
+model = module.create(module, model_params)
+
+df = data_loader(data_params)
+sess = module.fit(model, df)
+stats = model.stats["loss"]
+module.save("myfolder/")
 
 
 
+######### Command line sample  #################################################
 ### RL model
-python  models.py  --modelname model_rl.4_policygradient  --do test
+python  models.py  --modelname model_tf.rl.4_policygradient  --do test
 
 
 ### TF DNN model
@@ -30,8 +43,8 @@ import re
 from importlib import import_module
 
 # from aapackage.mlmodel import util
-import pandas as pd
-import tensorflow as tf
+# import pandas as pd
+# import tensorflow as tf
 
 
 
@@ -46,30 +59,45 @@ def module_load(modelname=""):
     """
       Load the file which contains the model description
       modelname:  model_tf.1_lstm.py
-      model_*****/      
-      
+      model_*****/
+
     """
     print(modelname)
     modelname = modelname.replace(".py", "")
-    
+
     try :
-      module = import_module("{a}".format(a=modelname))
+      module = import_module(f"{modelname}")
     except Exception as e :
-      raise NameError("Module {} notfound, {}".format(modelname, e))    
-    
+      raise NameError("Module {} notfound, {}".format(modelname, e))
+
     return module
 
 
 
-def create(modelname="", dict_params=None, choice=['module', "model"]):
+
+def create(module, model_params=None):
+    """
+      Create Instance of the model from loaded module model
+      module *****/
+      model_params : dict paras
+
+    """
+    if model_params is None :
+      model_params = module.get_params()
+
+    model = module.Model(**model_params)
+    return model
+
+
+def create_full(modelname="", dict_params=None, choice=['module', "model"]):
     """
       Create Instance of the model
       modelname:  model_tf.1_lstm.py
       model_*****/
       dict_params : dict paras
-      
+
     """
-    module = module_load(modelname=modelname)  
+    module = module_load(modelname=modelname)
     model = module.Model(**dict_params)
     return module, model
 
@@ -85,54 +113,56 @@ def predict(model, module, sess, X, **kwargs):
 def load(folder_name, model_type="", filename=None **kwargs):
     if model_type == "tf" :
         return load_tf(folder_name)
-    
+
     if model_type == "tch" :
         return load_tch(folder_name)
-    
+
     if model_type == "pkl" :
-        return load_pkl(folder_name, filename)
+        return load_pkl(folder_name)
 
 
-def save(folder_name, model_type="", filename=None ** kwargs):
+def save(folder_name, modelname=None, model_type="tf", ** kwargs):
     if model_type == "tf":
-        return  1
+      #save_folder = save_folder + "/" + modelname
+      if not(os.path.isdir(folder_name)):
+        os.makedirs(folder_name)
+      file_path = f"{folder_name}/{modelname}.ckpt"
+      save_tf(sess, file_path)
+      print(file_path)
+
+
     if model_type == "tch":
         return 1
-    
+
     if model_type == "pkl":
         return 1
 
 
 
-####################################################################################################
-def create_instance_tch(name="net", params={}):
-    _, model = create(name, params)
-    return model
-
-
+########## TF specific ################################################################################
 def load_tf(filename):
-    saver = tf.train.Saver()
-    sess = tf.Session()
-    saver.restore(sess, filename)
     return sess
-
-
-def load_tch(filename):
-    saver = tf.train.Saver()
-    sess = tf.Session()
-    saver.restore(sess, filename)
-    return sess
-
-
-def load_pkl(folder_name) :
-    pass
-
 
 
 def save_tf(sess, file_path):
     saver = tf.train.Saver()
     return saver.save(sess, file_path)
-    
+
+
+########## pyTorch specific ##########################################################################
+def create_instance_tch(name="net", params={}):
+    _, model = create(name, params)
+    return model
+
+def load_tch(filename):
+    return sess
+
+
+
+
+########## Other model specific #####################################################################
+def load_pkl(folder_name, filename=None) :
+    pass
 
 def predict_file(model, foldername=None, fileprefix=None):
     pass
@@ -144,29 +174,35 @@ def fit_file(model, foldername=None, fileprefix=None):
 
 
 
+
+
 ####################################################################################################
 ####################################################################################################
 def test_all(parent_folder="model_tf"):
     module_names = get_recursive_files(parent_folder, r"[0-9]+_.+\.py$")
     module_names.sort()
     print(module_names)
-    
+
     failed_scripts = []
-    import tensorflow as tf
+
+    if parent_folder == "model_tf" :
+       import tensorflow as tf
 
     for module_name in module_names:
         print("#######################")
         print(module_name)
-        print("######################")
+        print("#######################")
         try :
-          module = import_module("{}.{}".format(parent_folder, module_name.replace(".py", "")))
+          module = import_module(f'{parent_folder}.{module_name.replace(".py", "")}')
           module.test()
           del module
         except Exception as e:
           print("Failed", e)
 
 
+
 ####################################################################################################
+############CLI Command ############################################################################
 def load_arguments(config_file= None ):
     """
         Load CLI input, load config.toml , overwrite config.toml by CLI Input
@@ -179,13 +215,13 @@ def load_arguments(config_file= None ):
     p = argparse.ArgumentParser()
     p.add_argument("--config_file", default=config_file, help="Params File")
     p.add_argument("--config_mode", default="test", help="test/ prod /uat")
-    p.add_argument("--log_file", help="log.log")  
+    p.add_argument("--log_file", help="log.log")
 
-    p.add_argument("--do", default="test", help="test") 
+    p.add_argument("--do", default="test", help="test")
     p.add_argument("--modelname", default="model_tf.1_lstm.py",  help=".")
-    p.add_argument("--dataname", default="model_tf.1_lstm.py",  help=".")
+    p.add_argument("--dataname", default="dataset/google.csv",  help=".")
     p.add_argument("--data", default="model_tf.1_lstm.py",  help=".")
-    
+
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
@@ -211,10 +247,13 @@ if __name__ == "__main__":
     if args.do == "fit"  :
         module = module_load(args.modelname)  # '1_lstm'
         module.fit()
-        
-        
+
+
     if args.do == "predict"  :
         module = module_load(args.modelname)  # '1_lstm'
-        module.predict()        
+        module.predict()
+
+
+
 
 

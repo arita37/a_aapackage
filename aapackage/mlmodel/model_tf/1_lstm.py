@@ -1,11 +1,11 @@
 # coding: utf-8
 """
+LSTM Time series predictions
 python  model_tf/1_lstm.py
 
 
 """
 import os, sys, inspect
-
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -15,11 +15,9 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 from util import set_root_dir
-
 ####################################################################################################
 class Model:
-    def __init__(
-        self,
+    def __init__(self,
         learning_rate,
         num_layers,
         size,
@@ -30,9 +28,9 @@ class Model:
         epoch=5,
     ):
         self.epoch = epoch
-        self.stats = {"loss":0.0, 
+        self.stats = {"loss":0.0,
                       "loss_history": [] }
-        
+
         self.timestep = timestep
         self.hidden_layer_size = num_layers * 2 * size_layer
 
@@ -51,19 +49,36 @@ class Model:
             drop, self.X, initial_state=self.hidden_layer, dtype=tf.float32
         )
         self.logits = tf.layers.dense(self.outputs[-1], output_size)
-        
+
         ### Regression loss
         self.cost = tf.reduce_mean(tf.square(self.Y - self.logits))
         self.optimizer = tf.train.AdamOptimizer(learning_rate).minimize(self.cost)
 
-  
-def fit(model, df):
+
+
+def get_dataset(filename="dataset/GOOG-year.csv"):
+    set_root_dir()
+
+    df = pd.read_csv(filename)
+    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
+    print( filename )
+    print(df.head(5))
+
+    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
+    df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
+    df_log = pd.DataFrame(df_log)
+    return df_log
+
+
+def fit(model, df, nfreq=100):
     sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
     for i in range(model.epoch):
-
-        init_value = np.zeros((1, model.hidden_layer_size))
         total_loss = 0
+
+
+        ######## Model specific  ########################################
+        init_value = np.zeros((1, model.hidden_layer_size))
         for k in range(0, df.shape[0] - 1, model.timestep):
             index = min(k + model.timestep, df.shape[0] - 1)
             batch_x = np.expand_dims(df.iloc[k:index, :].values, axis=0)
@@ -74,17 +89,23 @@ def fit(model, df):
             )
             init_value = last_state
             total_loss += loss
+        ####### End Model specific    ##################################
+
+
         total_loss /= df.shape[0] // model.timestep
         model.stats["loss"] = total_loss
-        
-        if (i + 1) % 100 == 0:
+
+        if (i + 1) % nfreq == 0:
             print("epoch:", i + 1, "avg loss:", total_loss)
     return sess
 
 
-def stats(model):
+
+def stats_compute(model, sess, df, get_hidden_state=False, init_value=None):
+    # Compute stats on training
+    arr_out = predict(model, sess, df, get_hidden_state=False, init_value=None)
     return model.stats
-    
+
 
 
 def predict(model, sess, df, get_hidden_state=False, init_value=None):
@@ -133,33 +154,15 @@ def get_params(choice="test", ncol_input=1, ncol_output=1):
 
 def reset_model():
     tf.reset_default_graph()
-    
-
-
-
-    
-
-def get_dataset(filename="dataset/GOOG-year.csv"):
-    set_root_dir()
-    
-    df = pd.read_csv(filename)
-    date_ori = pd.to_datetime(df.iloc[:, 0]).tolist()
-    print( filename )
-    print(df.head(5))
-
-    minmax = MinMaxScaler().fit(df.iloc[:, 1:].astype("float32"))
-    df_log = minmax.transform(df.iloc[:, 1:].astype("float32"))
-    df_log = pd.DataFrame(df_log)    
-    return df_log
 
 
 def test(data_path="dataset/GOOG-year.csv", reset=True):
     set_root_dir()
     df = get_dataset(data_path)
-    
-    from models import create, fit, predict
-    module, model = create(
-        "model_tf.1_lstm",
+
+    from models import create_full, fit, predict
+    module, model = create_full(
+        "model_tf.1_lstm",  #replace by generic name catching
         get_params("test", ncol_input= df.shape[1], ncol_output= df.shape[1] )
     )
 
@@ -167,12 +170,12 @@ def test(data_path="dataset/GOOG-year.csv", reset=True):
     predictions = predict(model, module, sess, df)
     print(predictions)
     tf.reset_default_graph()
-    
+
 
 def test2(data_path="dataset/GOOG-year.csv"):
     df_log = get_dataset(data_path)
     p      = get_params("test", ncol_input=df_log.shape[1], ncol_output=df_log.shape[1] )
-        
+
     model = Model(**p)
     sess  = fit(model, df_log)
     predictions = predict(model, sess, df_log)
@@ -185,7 +188,7 @@ def test2(data_path="dataset/GOOG-year.csv"):
 ####################################################################################################
 if __name__ == "__main__":
     test2()
-    
+
     """
     import seaborn as sns
     sns.set()
