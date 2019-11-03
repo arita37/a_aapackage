@@ -3,21 +3,18 @@
 Lightweight Functional interface to wrap Hyper-parameter Optimization
 
 1st engine is optuna
-
 https://optuna.readthedocs.io/en/stable/installation.html
 https://github.com/pfnet/optuna/blob/master/examples/tensorflow_estimator_simple.py
 https://github.com/pfnet/optuna/tree/master/examples
+
 
 ###### Model param search
 
 #for normal optimization search method
 python optim.py --do search --ntrials 1  --config_file data.json --optim_method normal
+
 # for pruning method
 python optim.py --do search --ntrials 1  --config_file data.json --optim_method prune
-
-###### Model standalone run
-python  models.py  --modelname model_tf.1_lstm.py  --do test
-
 
 
 ###### HyperParam standalone run
@@ -184,7 +181,7 @@ def load_arguments(config_file= None ):
     """
     if config_file is None  :
       cur_path = os.path.dirname(os.path.realpath(__file__))
-      config_file = os.path.join(cur_path, "config.toml")
+      config_file = os.path.join(cur_path, "optim_config_default.json")
     print(config_file)
 
     p = argparse.ArgumentParser()
@@ -193,14 +190,22 @@ def load_arguments(config_file= None ):
     p.add_argument("--log_file", help="File to save the logging")
 
     p.add_argument("--do", default="test", help="what to do test or search")
+
+    ## optim params
     p.add_argument("--ntrials", default=100, help='number of trials during the hyperparameters tuning')
     p.add_argument('--optim_engine', default='optuna',help='Optimization engine')
     p.add_argument('--optim_method', default='normal/prune',help='Optimization method')
+    p.add_argument('--save_folder', default='model_save',help='folder that will contain saved version of best model')
 
+
+    ## model_params
     p.add_argument("--modelname", default="model_tf.1_lstm.py",  help="name of the model to be tuned this name will be used to save the model")
+
+
+    ## data_params
     p.add_argument("--data_path", default="dataset/GOOG-year_small.csv",  help="path of the training file")
 
-    p.add_argument('--save_folder', default='model_save',help='folder that will contain saved version of best model')
+
 
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
@@ -258,15 +263,23 @@ if __name__ == "__main__":
     import logging
     logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
-
     if arg.do == "test"  :
         test_fast()
 
+    if arg.do == "test_all"  :
+        test_all()
+
 
     if arg.do == "search"  :
-        model_params = json.load(open(arg.config_file, 'r'))  #Config
-        data_params  = { "data_path" : arg.data_path, "data_type": "pandas" }
-        optim_params = { 'engine': "optuna", "method" : 'prune' }
+        js = json.load(open(arg.config_file, 'r'))  #Config
+
+        model_params = js.get(["model_params"])
+        data_params = js.get(["data_params"])
+        optim_params = js.get(["optim_params"])
+
+        model_params  = {} if model_params is None
+        data_params  = { "data_path" : arg.data_path, "data_type": "pandas" } if data_params is None
+        optim_params = { 'engine': "optuna", "method" : 'prune' }  if optim_params is None
 
         res = optim(arg.modelname,
                     model_params,
