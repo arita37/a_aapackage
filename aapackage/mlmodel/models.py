@@ -73,8 +73,6 @@ def module_load(modelname=""):
     return module
 
 
-
-
 def create(module, model_params=None):
     """
       Create Instance of the model from loaded module model
@@ -102,15 +100,15 @@ def create_full(modelname="", dict_params=None, choice=['module', "model"]):
     return module, model
 
 
-def fit(model, module, X, **kwargs):
-    return module.fit(model, X, **kwargs)
+def fit(model, module, data_params, **kwargs):
+    return module.fit(model, data_params, **kwargs)
 
 
-def predict(model, module, sess, X, **kwargs):
-    return module.predict(model, sess, X, **kwargs)
+def predict(model, module, sess, data_params, **kwargs):
+    return module.predict(model, sess, data_params, **kwargs)
 
 
-def load(folder_name, model_type="", filename=None **kwargs):
+def load(folder_name, model_type="tf", filename=None, **kwargs):
     if model_type == "tf" :
         return load_tf(folder_name)
 
@@ -175,7 +173,6 @@ def fit_file(model, foldername=None, fileprefix=None):
 
 
 
-
 ####################################################################################################
 ####################################################################################################
 def test_all(parent_folder="model_tf"):
@@ -209,7 +206,7 @@ def load_arguments(config_file= None ):
     """
     if config_file is None  :
       cur_path = os.path.dirname(os.path.realpath(__file__))
-      config_file = os.path.join(cur_path, "config.toml")
+      config_file = os.path.join(cur_path, "models_config.json")
     print(config_file)
 
     p = argparse.ArgumentParser()
@@ -220,14 +217,22 @@ def load_arguments(config_file= None ):
     p.add_argument("--do", default="test", help="test")
     p.add_argument("--modelname", default="model_tf.1_lstm.py",  help=".")
     p.add_argument("--dataname", default="dataset/google.csv",  help=".")
-    p.add_argument("--data", default="model_tf.1_lstm.py",  help=".")
-
+                                 
+    p.add_argument("--save_folder", default="ztest/",  help=".")
+    p.add_argument("--load_folder", default="ztest/",  help=".")
+                                 
     args = p.parse_args()
     args = load_config(args, args.config_file, args.config_mode, verbose=0)
     return args
 
 
-
+                                 
+def get_params(args) :                               
+   model_params = args.config.get("model_params")                          
+   data_params = args.config.get("data_params")  
+   return model_params, data_params                              
+                                 
+                                 
 if __name__ == "__main__":
     # test_all() # tot test all te modules inside model_tf
     args = load_arguments()
@@ -245,13 +250,20 @@ if __name__ == "__main__":
 
 
     if args.do == "fit"  :
+        model_params, data_params = get_params(args)                          
+                                 
         module = module_load(args.modelname)  # '1_lstm'
-        module.fit()
+        model = module.create(**model_params)                         
+        sess = module.fit(model, data_params)
+        save(sess, args.save_folder)
 
-
+                                 
     if args.do == "predict"  :
+        model_params, data_params = get_params(args)      
+                                 
         module = module_load(args.modelname)  # '1_lstm'
-        module.predict()
+        model = load(folder_name)                         
+        module.predict(model, data_params)
 
 
 
