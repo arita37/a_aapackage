@@ -111,3 +111,6 @@ venv.bak/
 .mypy_cache/
 /aapackage.egg-info
 /pip-wheel-metadata
+/*.sublime-project
+/*.sublime-workspace
+/zzsublime.sublime-workspace
