@@ -12,8 +12,8 @@ from collections import OrderedDict
 
 
 #####################################################################################
-dirsession = r"C:/Users/kevin.noel/Box/Data Science Department/Personal/znono/a/session/"
-dirmodel = r"C:/Users/kevin.noel/Box/Data Science Department/Personal/znono/a/model/"
+dirsession = r"C:/a/session/"
+dirmodel = r"C:/model/"
 
 print('os.getcwd', os.getcwd())
 print('dirsession', dirsession)
